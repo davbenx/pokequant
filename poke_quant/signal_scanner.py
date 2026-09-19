@@ -15,6 +15,9 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 import datetime
 import pandas as pd
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.config import PLATFORM_FEES, DEFAULT_EUR_USD
 from poke_quant.data.storage import load_price_matrix, load_metadata
@@ -39,12 +42,13 @@ def load_user_holdings() -> List[Dict[str, Any]]:
 def scan_signals(
     current_prices: Optional[Dict[str, float]] = None,
     metadata: Optional[Dict[str, Any]] = None,
-    today_dt: Optional[datetime.date] = None
+    today_dt: Optional[datetime.date] = None,
+    allowed_tiers: Optional[List[str]] = None
 ) -> Dict[str, Any]:
     """
     Esegue la scansione completa di mercato per generare:
-      - Segnali BUY di mercato (prodotti Tier S/A in finestra Mesi 4-14 a sconto)
-      - Segnali SELL di portafoglio (posizioni possedute con target raggiunto o time-stop)
+      - Segnali BUY di mercato (prodotti Tier S/A/B in finestra Mesi 4-14 a sconto)
+      - Segnali SELL di portafoglio (Tranche 1 a 18m/+70%, Tranche 2 a 30m/+150%, Time-Stop 48m)
       - Alert di watchlist (prodotti prossimi all'ingresso nella finestra d'acquisto)
     """
     if today_dt is None:
@@ -52,6 +56,9 @@ def scan_signals(
 
     if metadata is None:
         metadata = load_metadata() or {}
+
+    if allowed_tiers is None:
+        allowed_tiers = ["S", "A", "B"]
 
     if current_prices is None:
         prices_df = load_price_matrix()
@@ -73,7 +80,7 @@ def scan_signals(
             continue
 
         tier = meta.get("set_tier", "B")
-        if tier not in ["S", "A"]:
+        if tier not in allowed_tiers:
             continue
 
         rel_str = meta.get("release_date")
@@ -123,7 +130,7 @@ def scan_signals(
                 "status": f"Nuovo set in avvicinamento (tra {4 - age_months} mesi inizia la finestra ristampa)"
             })
 
-    # 2. SCANSIONE SEGNALI SELL SU POSIZIONI POSSEDUTE
+    # 2. SCANSIONE SEGNALI SELL SU POSIZIONI POSSEDUTE (ROTAZIONE TRANCHE 1 & 2)
     holdings = load_user_holdings()
     for h in holdings:
         item_id = h.get("item_id")
@@ -136,25 +143,43 @@ def scan_signals(
         holding_months = (today_dt.year - b_dt.year) * 12 + (today_dt.month - b_dt.month)
 
         if cur_px > 0 and buy_px > 0:
-            # Calcolo netto Cardmarket
             friction = calculate_sale_friction(cur_px, item_type="sealed", platform="cardmarket")
             net_proceeds_unit = friction.net_proceeds
             net_pnl_unit = net_proceeds_unit - buy_px
             net_roi = net_pnl_unit / buy_px
 
-            # Condizione Uscita A: 30+ mesi e ROI Netto >= +150%
-            if holding_months >= 30 and net_roi >= 1.50:
+            # Condizione Uscita A1: Tranche 1 Rotazione (18+ mesi e ROI Netto >= +70%)
+            if 18 <= holding_months < 30 and net_roi >= 0.70:
+                trim_qty = max(1, qty // 2) if qty > 1 else 1
+                sell_signals.append({
+                    "item_id": item_id,
+                    "name": h.get("name", item_id),
+                    "quantity": trim_qty,
+                    "total_quantity": qty,
+                    "buy_date": buy_date_str,
+                    "holding_months": holding_months,
+                    "buy_price": buy_px,
+                    "current_price": cur_px,
+                    "net_proceeds": net_proceeds_unit * trim_qty,
+                    "net_roi_pct": net_roi * 100,
+                    "signal_type": "TRANCHE 1 ROTAZIONE",
+                    "trigger": f"TRANCHE 1 ROTAZIONE (+{net_roi*100:.1f}% netto dopo {holding_months} mesi). Vendere {trim_qty}/{qty} box per ruotare capitale su nuovi set."
+                })
+            # Condizione Uscita A2: Tranche 2 Finale (30+ mesi e ROI Netto >= +150%)
+            elif holding_months >= 30 and net_roi >= 1.50:
                 sell_signals.append({
                     "item_id": item_id,
                     "name": h.get("name", item_id),
                     "quantity": qty,
+                    "total_quantity": qty,
                     "buy_date": buy_date_str,
                     "holding_months": holding_months,
                     "buy_price": buy_px,
                     "current_price": cur_px,
                     "net_proceeds": net_proceeds_unit * qty,
                     "net_roi_pct": net_roi * 100,
-                    "trigger": f"TARGET PROFIT RAGGIUNTO (+{net_roi*100:.1f}% netto dopo {holding_months} mesi)"
+                    "signal_type": "TRANCHE 2 FINALE",
+                    "trigger": f"TARGET PROFIT FINALE RAGGIUNTO (+{net_roi*100:.1f}% netto dopo {holding_months} mesi)"
                 })
             # Condizione Uscita B: 48+ mesi (Time-Stop di rotazione)
             elif holding_months >= 48:
@@ -162,12 +187,14 @@ def scan_signals(
                     "item_id": item_id,
                     "name": h.get("name", item_id),
                     "quantity": qty,
+                    "total_quantity": qty,
                     "buy_date": buy_date_str,
                     "holding_months": holding_months,
                     "buy_price": buy_px,
                     "current_price": cur_px,
                     "net_proceeds": net_proceeds_unit * qty,
                     "net_roi_pct": net_roi * 100,
+                    "signal_type": "TIME-STOP ROTAZIONE",
                     "trigger": f"TIME-STOP ROTAZIONE (Holding di {holding_months} mesi >= 4 anni)"
                 })
 
@@ -179,6 +206,43 @@ def scan_signals(
         "total_monitored_items": len(metadata),
         "user_holdings_count": len(holdings)
     }
+
+
+def scan_historical_signals(
+    prices_df: Optional[pd.DataFrame] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+    allowed_tiers: Optional[List[str]] = None,
+    initial_cash: float = 10000.0,
+    enable_rotation: bool = True
+) -> pd.DataFrame:
+    """
+    Esegue la simulazione dell'Optimal Sealed Strategy su tutta la timeline storica
+    e restituisce la cronologia completa di tutti i segnali operativi (2021-2026).
+    """
+    from poke_quant.engine.strategies.optimal_sealed_strategy import OptimalSealedStrategy
+    from poke_quant.engine.backtester import Backtester
+
+    if prices_df is None:
+        prices_df = load_price_matrix()
+    if metadata is None:
+        metadata = load_metadata()
+
+    strat = OptimalSealedStrategy(
+        allowed_tiers=allowed_tiers or ["S", "A", "B"],
+        enable_dynamic_rotation=enable_rotation,
+        max_allocation_pct=0.12
+    )
+    bt = Backtester(
+        strategy=strat,
+        historical_prices_df=prices_df,
+        items_metadata=metadata,
+        initial_cash=initial_cash
+    )
+    res = bt.run()
+    if res.signals_history:
+        df = pd.DataFrame(res.signals_history)
+        return df
+    return pd.DataFrame()
 
 
 def format_telegram_alert(scan_results: Dict[str, Any]) -> str:

@@ -24,11 +24,14 @@ def calculate_sale_friction(
     item_type: str = "single",  # "single" oppure "sealed"
     platform: str = "cardmarket",
     seller_absorbs_shipping: bool = False,
-    packaging_cost: float = 0.60
+    packaging_cost: float = 0.60,
+    slippage_pct: float = 0.0,
+    carrying_cost: float = 0.0
 ) -> SaleFrictionResult:
     """
     Calcola l'importo netto incassato dalla vendita di un articolo tenendo conto
-    di commissioni di piattaforma e spese a carico del venditore.
+    di commissioni di piattaforma, spese di spedizione, eventuale slippage di liquidità
+    e costi vivi di stoccaggio/assicurazione (carrying cost).
     """
     if gross_price <= 0:
         return SaleFrictionResult(0.0, platform, 0.0, 0.0, 0.0, 0.0)
@@ -45,14 +48,15 @@ def calculate_sale_friction(
             shipping_cost = SHIPPING_COSTS["single_tracked"]
 
     total_shipping_pack = shipping_cost + packaging_cost
-    net_proceeds = gross_price - platform_fee - total_shipping_pack
-    effective_friction_pct = (gross_price - net_proceeds) / gross_price
+    slippage_amount = gross_price * slippage_pct
+    net_proceeds = gross_price - platform_fee - total_shipping_pack - slippage_amount - carrying_cost
+    effective_friction_pct = (gross_price - net_proceeds) / gross_price if gross_price > 0 else 0.0
 
     return SaleFrictionResult(
         gross_price=gross_price,
         platform=platform,
         platform_fee=platform_fee,
-        shipping_and_packaging=total_shipping_pack,
+        shipping_and_packaging=total_shipping_pack + slippage_amount + carrying_cost,
         net_proceeds=net_proceeds,
         effective_friction_pct=effective_friction_pct
     )

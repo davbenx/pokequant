@@ -9,7 +9,12 @@
     "release_date": "2021-08-27",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "Eeveelutions"
+    "chase_mascot": "Eeveelutions",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "lost_origin_bb": {
     "name": "Lost Origin Booster Box",
@@ -21,7 +26,12 @@
     "release_date": "2022-09-09",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "Giratina"
+    "chase_mascot": "Giratina",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "fusion_strike_bb": {
     "name": "Fusion Strike Booster Box",
@@ -33,7 +43,12 @@
     "release_date": "2021-11-12",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "Gengar"
+    "chase_mascot": "Gengar",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "brilliant_stars_bb": {
     "name": "Brilliant Stars Booster Box",
@@ -45,7 +60,12 @@
     "release_date": "2022-02-25",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "Charizard"
+    "chase_mascot": "Charizard",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "chilling_reign_bb": {
     "name": "Chilling Reign Booster Box",
@@ -57,7 +77,12 @@
     "release_date": "2021-06-18",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "Galarian Birds"
+    "chase_mascot": "Galarian Birds",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "silver_tempest_bb": {
     "name": "Silver Tempest Booster Box",
@@ -69,7 +94,12 @@
     "release_date": "2022-11-11",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "Lugia"
+    "chase_mascot": "Lugia",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "astral_radiance_bb": {
     "name": "Astral Radiance Booster Box",
@@ -81,7 +111,12 @@
     "release_date": "2022-05-27",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "Origin Formes"
+    "chase_mascot": "Origin Formes",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "battle_styles_bb": {
     "name": "Battle Styles Booster Box",
@@ -93,7 +128,12 @@
     "release_date": "2021-03-19",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "Tyranitar"
+    "chase_mascot": "Tyranitar",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "vivid_voltage_bb": {
     "name": "Vivid Voltage Booster Box",
@@ -105,7 +145,12 @@
     "release_date": "2020-11-13",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "Pikachu"
+    "chase_mascot": "Pikachu",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "darkness_ablaze_bb": {
     "name": "Darkness Ablaze Booster Box",
@@ -117,7 +162,12 @@
     "release_date": "2020-08-14",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "Charizard VMAX"
+    "chase_mascot": "Charizard VMAX",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "rebel_clash_bb": {
     "name": "Rebel Clash Booster Box",
@@ -129,7 +179,12 @@
     "release_date": "2020-05-01",
     "msrp": 140.0,
     "era": "sword_shield",
-    "chase_mascot": "None"
+    "chase_mascot": "None",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "paldea_evolved_bb": {
     "name": "Paldea Evolved Booster Box",
@@ -141,7 +196,12 @@
     "release_date": "2023-06-09",
     "msrp": 160.0,
     "era": "scarlet_violet",
-    "chase_mascot": "Magikarp"
+    "chase_mascot": "Magikarp",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "twilight_masquerade_bb": {
     "name": "Twilight Masquerade Booster Box",
@@ -153,7 +213,12 @@
     "release_date": "2024-05-24",
     "msrp": 160.0,
     "era": "scarlet_violet",
-    "chase_mascot": "Greninja"
+    "chase_mascot": "Greninja",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "team_up_bb": {
     "name": "Team Up Booster Box",
@@ -165,7 +230,12 @@
     "release_date": "2019-02-15",
     "msrp": 120.0,
     "era": "sun_moon",
-    "chase_mascot": "Latias & Latios"
+    "chase_mascot": "Latias & Latios",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "cosmic_eclipse_bb": {
     "name": "Cosmic Eclipse Booster Box",
@@ -177,7 +247,12 @@
     "release_date": "2019-11-01",
     "msrp": 120.0,
     "era": "sun_moon",
-    "chase_mascot": "Arceus Dialga Palkia"
+    "chase_mascot": "Arceus Dialga Palkia",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "unbroken_bonds_bb": {
     "name": "Unbroken Bonds Booster Box",
@@ -189,7 +264,12 @@
     "release_date": "2019-05-03",
     "msrp": 120.0,
     "era": "sun_moon",
-    "chase_mascot": "Reshiram & Charizard"
+    "chase_mascot": "Reshiram & Charizard",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "unified_minds_bb": {
     "name": "Unified Minds Booster Box",
@@ -201,7 +281,12 @@
     "release_date": "2019-08-02",
     "msrp": 120.0,
     "era": "sun_moon",
-    "chase_mascot": "Mewtwo & Mew"
+    "chase_mascot": "Mewtwo & Mew",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "ultra_prism_bb": {
     "name": "Ultra Prism Booster Box",
@@ -213,7 +298,12 @@
     "release_date": "2018-02-02",
     "msrp": 120.0,
     "era": "sun_moon",
-    "chase_mascot": "Lillie"
+    "chase_mascot": "Lillie",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "crimson_invasion_bb": {
     "name": "Crimson Invasion Booster Box",
@@ -225,7 +315,12 @@
     "release_date": "2017-11-03",
     "msrp": 120.0,
     "era": "sun_moon",
-    "chase_mascot": "None"
+    "chase_mascot": "None",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "crown_zenith_etb": {
     "name": "Crown Zenith Elite Trainer Box",
@@ -237,7 +332,12 @@
     "release_date": "2023-01-20",
     "msrp": 55.0,
     "era": "sword_shield",
-    "chase_mascot": "Giratina / Mewtwo"
+    "chase_mascot": "Giratina / Mewtwo",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "celebrations_etb": {
     "name": "Celebrations Elite Trainer Box",
@@ -250,7 +350,12 @@
     "msrp": 55.0,
     "era": "sword_shield",
     "chase_mascot": "Base Charizard Reprints",
-    "last_psa_price": 115.79
+    "last_psa_price": 115.79,
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "shining_fates_etb": {
     "name": "Shining Fates Elite Trainer Box",
@@ -263,7 +368,12 @@
     "msrp": 55.0,
     "era": "sword_shield",
     "chase_mascot": "Shiny Charizard VMAX",
-    "last_psa_price": 8.33
+    "last_psa_price": 8.33,
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "hidden_fates_etb": {
     "name": "Hidden Fates Elite Trainer Box",
@@ -276,7 +386,12 @@
     "msrp": 50.0,
     "era": "sun_moon",
     "chase_mascot": "Shiny Charizard GX",
-    "last_psa_price": 128.7
+    "last_psa_price": 128.7,
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "scarlet_violet_151_etb": {
     "name": "Scarlet & Violet 151 Elite Trainer Box",
@@ -289,7 +404,12 @@
     "msrp": 55.0,
     "era": "scarlet_violet",
     "chase_mascot": "Original 151 Gen 1",
-    "last_psa_price": 86.98
+    "last_psa_price": 86.98,
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "scarlet_violet_151_bundle": {
     "name": "Scarlet & Violet 151 Booster Bundle (6 Packs)",
@@ -302,7 +422,12 @@
     "msrp": 30.0,
     "era": "scarlet_violet",
     "chase_mascot": "Original 151 Gen 1",
-    "last_psa_price": 78.54
+    "last_psa_price": 78.54,
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "umbreon_vmax_215": {
     "name": "Umbreon VMAX Alternate Art (Moonbreon)",
@@ -312,7 +437,13 @@
     "release_date": "2021-08-27",
     "launch_price": 280.0,
     "era": "modern",
-    "last_psa_price": 1940.94
+    "last_psa_price": 1940.94,
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.001,
+    "gem_rate": 0.75,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "rayquaza_vmax_218": {
     "name": "Rayquaza VMAX Alternate Art",
@@ -322,7 +453,13 @@
     "release_date": "2021-08-27",
     "launch_price": 240.0,
     "era": "modern",
-    "last_psa_price": 1030.5
+    "last_psa_price": 1030.5,
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.001,
+    "gem_rate": 0.75,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "giratina_v_186": {
     "name": "Giratina V Alternate Art",
@@ -332,7 +469,13 @@
     "release_date": "2022-09-09",
     "launch_price": 220.0,
     "era": "modern",
-    "last_psa_price": 861.11
+    "last_psa_price": 861.11,
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.001,
+    "gem_rate": 0.75,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "gengar_vmax_271": {
     "name": "Gengar VMAX Alternate Art",
@@ -342,7 +485,13 @@
     "release_date": "2021-11-12",
     "launch_price": 130.0,
     "era": "modern",
-    "last_psa_price": 849.54
+    "last_psa_price": 849.54,
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.001,
+    "gem_rate": 0.75,
+    "language": "en",
+    "franchise": "pokemon"
   },
   "charizard_v_154": {
     "name": "Charizard V Alternate Art",
@@ -352,6 +501,399 @@
     "release_date": "2022-02-25",
     "launch_price": 180.0,
     "era": "modern",
-    "last_psa_price": 277.78
+    "last_psa_price": 277.78,
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.001,
+    "gem_rate": 0.75,
+    "language": "en",
+    "franchise": "pokemon"
+  },
+  "roaring_skies_bb": {
+    "name": "Roaring Skies Booster Box",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "S",
+    "game_slug": "pokemon-roaring-skies",
+    "item_slug": "booster-box",
+    "release_date": "2015-05-06",
+    "msrp": 100.0,
+    "era": "xy",
+    "chase_mascot": "Mega Rayquaza",
+    "language": "en",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "evolutions_bb": {
+    "name": "Evolutions Booster Box",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "S",
+    "game_slug": "pokemon-evolutions",
+    "item_slug": "booster-box",
+    "release_date": "2016-11-02",
+    "msrp": 100.0,
+    "era": "xy",
+    "chase_mascot": "Base Charizard Holo",
+    "language": "en",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005
+  },
+  "flashfire_bb": {
+    "name": "Flashfire Booster Box",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "S",
+    "game_slug": "pokemon-flashfire",
+    "item_slug": "booster-box",
+    "release_date": "2014-05-07",
+    "msrp": 100.0,
+    "era": "xy",
+    "chase_mascot": "Mega Charizard X & Y",
+    "language": "en",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "ancient_origins_bb": {
+    "name": "Ancient Origins Booster Box",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "A",
+    "game_slug": "pokemon-ancient-origins",
+    "item_slug": "booster-box",
+    "release_date": "2015-08-12",
+    "msrp": 100.0,
+    "era": "xy",
+    "chase_mascot": "Shiny Mega Rayquaza",
+    "language": "en",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "burning_shadows_bb": {
+    "name": "Burning Shadows Booster Box",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "A",
+    "game_slug": "pokemon-burning-shadows",
+    "item_slug": "booster-box",
+    "release_date": "2017-08-04",
+    "msrp": 120.0,
+    "era": "sun_moon",
+    "chase_mascot": "Charizard GX Rainbow",
+    "language": "en",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "lost_thunder_bb": {
+    "name": "Lost Thunder Booster Box",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "A",
+    "game_slug": "pokemon-lost-thunder",
+    "item_slug": "booster-box",
+    "release_date": "2018-11-02",
+    "msrp": 120.0,
+    "era": "sun_moon",
+    "chase_mascot": "Lugia GX",
+    "language": "en",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "obsidian_flames_bb": {
+    "name": "Obsidian Flames Booster Box",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "B",
+    "game_slug": "pokemon-obsidian-flames",
+    "item_slug": "booster-box",
+    "release_date": "2023-08-11",
+    "msrp": 160.0,
+    "era": "scarlet_violet",
+    "chase_mascot": "Charizard ex Tera",
+    "language": "en",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005
+  },
+  "paradox_rift_bb": {
+    "name": "Paradox Rift Booster Box",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "B",
+    "game_slug": "pokemon-paradox-rift",
+    "item_slug": "booster-box",
+    "release_date": "2023-11-03",
+    "msrp": 160.0,
+    "era": "scarlet_violet",
+    "chase_mascot": "Roaring Moon",
+    "language": "en",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005
+  },
+  "temporal_forces_bb": {
+    "name": "Temporal Forces Booster Box",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "B",
+    "game_slug": "pokemon-temporal-forces",
+    "item_slug": "booster-box",
+    "release_date": "2024-03-22",
+    "msrp": 160.0,
+    "era": "scarlet_violet",
+    "chase_mascot": "Walking Wake / Iron Leaves",
+    "language": "en",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005
+  },
+  "jp_vstar_universe_bb": {
+    "name": "VSTAR Universe Booster Box [JP]",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "S",
+    "game_slug": "pokemon-japanese-vstar-universe",
+    "item_slug": "booster-box",
+    "release_date": "2022-12-02",
+    "msrp": 50.0,
+    "era": "sword_shield",
+    "chase_mascot": "Arceus VSTAR Gold UR",
+    "language": "jp",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005
+  },
+  "jp_vmax_climax_bb": {
+    "name": "VMAX Climax Booster Box [JP]",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "S",
+    "game_slug": "pokemon-japanese-vmax-climax",
+    "item_slug": "booster-box",
+    "release_date": "2021-12-03",
+    "msrp": 50.0,
+    "era": "sword_shield",
+    "chase_mascot": "Rayquaza CSR / Red Pikachu",
+    "language": "jp",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005
+  },
+  "jp_shiny_star_v_bb": {
+    "name": "Shiny Star V Booster Box [JP]",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "S",
+    "game_slug": "pokemon-japanese-shiny-star-v",
+    "item_slug": "booster-box",
+    "release_date": "2020-11-20",
+    "msrp": 50.0,
+    "era": "sword_shield",
+    "chase_mascot": "Shiny Charizard VMAX SSR",
+    "language": "jp",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005
+  },
+  "jp_tag_all_stars_bb": {
+    "name": "Tag All Stars Booster Box [JP]",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "S",
+    "game_slug": "pokemon-japanese-tag-all-stars",
+    "item_slug": "booster-box",
+    "release_date": "2019-10-04",
+    "msrp": 50.0,
+    "era": "sun_moon",
+    "chase_mascot": "Gold Reshiram & Charizard UR",
+    "language": "jp",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "jp_shiny_treasure_bb": {
+    "name": "Shiny Treasure ex Booster Box [JP]",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "B",
+    "game_slug": "pokemon-japanese-shiny-treasure-ex",
+    "item_slug": "booster-box",
+    "release_date": "2023-12-01",
+    "msrp": 45.0,
+    "era": "scarlet_violet",
+    "chase_mascot": "Shiny Charizard ex SSR",
+    "language": "jp",
+    "franchise": "pokemon",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.005
+  },
+  "op01_romance_dawn_bb": {
+    "name": "Romance Dawn Booster Box [OP-01]",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "S",
+    "game_slug": "one-piece-romance-dawn",
+    "item_slug": "booster-box",
+    "release_date": "2022-12-02",
+    "msrp": 100.0,
+    "era": "one_piece",
+    "chase_mascot": "Shanks Manga Rare",
+    "language": "en",
+    "franchise": "one_piece",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "op02_paramount_war_bb": {
+    "name": "Paramount War Booster Box [OP-02]",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "A",
+    "game_slug": "one-piece-paramount-war",
+    "item_slug": "booster-box",
+    "release_date": "2023-03-10",
+    "msrp": 100.0,
+    "era": "one_piece",
+    "chase_mascot": "Ace Manga Rare",
+    "language": "en",
+    "franchise": "one_piece",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "op03_pillars_strength_bb": {
+    "name": "Pillars of Strength Booster Box [OP-03]",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "B",
+    "game_slug": "one-piece-pillars-of-strength",
+    "item_slug": "booster-box",
+    "release_date": "2023-06-30",
+    "msrp": 100.0,
+    "era": "one_piece",
+    "chase_mascot": "Sogeking Manga Rare",
+    "language": "en",
+    "franchise": "one_piece",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "op05_new_era_bb": {
+    "name": "Awakening of the New Era Booster Box [OP-05]",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "S",
+    "game_slug": "one-piece-awakening-of-the-new-era",
+    "item_slug": "booster-box",
+    "release_date": "2023-12-08",
+    "msrp": 100.0,
+    "era": "one_piece",
+    "chase_mascot": "Luffy Gear 5 Manga Rare",
+    "language": "en",
+    "franchise": "one_piece",
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "op06_wings_captain_bb": {
+    "name": "Wings of the Captain Booster Box [OP-06]",
+    "type": "sealed",
+    "product_type": "booster_box",
+    "set_tier": "B",
+    "game_slug": "one-piece-wings-of-the-captain",
+    "item_slug": "booster-box",
+    "release_date": "2024-03-15",
+    "msrp": 100.0,
+    "era": "one_piece",
+    "chase_mascot": "Zoro Manga Rare",
+    "language": "en",
+    "franchise": "one_piece",
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.005
+  },
+  "magikarp_203": {
+    "name": "Magikarp #203 Illustration Rare",
+    "type": "single",
+    "game_slug": "pokemon-paldea-evolved",
+    "item_slug": "magikarp-203",
+    "release_date": "2023-06-09",
+    "launch_price": 35.0,
+    "era": "modern",
+    "language": "en",
+    "franchise": "pokemon",
+    "gem_rate": 0.65,
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.001,
+    "last_psa_price": 3703.7
+  },
+  "greninja_ex_214": {
+    "name": "Greninja ex #214 Special Illustration Rare",
+    "type": "single",
+    "game_slug": "pokemon-twilight-masquerade",
+    "item_slug": "greninja-ex-214",
+    "release_date": "2024-05-24",
+    "launch_price": 160.0,
+    "era": "modern",
+    "language": "en",
+    "franchise": "pokemon",
+    "gem_rate": 0.73,
+    "liquidity_tier": "tier_1_daily",
+    "slippage_pct": 0.01,
+    "holding_cost_annual_pct": 0.001,
+    "last_psa_price": 689.69
+  },
+  "latias_latios_170": {
+    "name": "Latias & Latios GX #170 Alternate Art",
+    "type": "single",
+    "game_slug": "pokemon-team-up",
+    "item_slug": "latias-&-latios-gx-170",
+    "release_date": "2019-02-15",
+    "launch_price": 250.0,
+    "era": "sun_moon",
+    "language": "en",
+    "franchise": "pokemon",
+    "gem_rate": 0.42,
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.03,
+    "holding_cost_annual_pct": 0.001,
+    "last_psa_price": 14513.89
+  },
+  "charizard_gx_sv49": {
+    "name": "Charizard GX #SV49 Shiny",
+    "type": "single",
+    "game_slug": "pokemon-hidden-fates",
+    "item_slug": "charizard-gx-sv49",
+    "release_date": "2019-09-20",
+    "launch_price": 300.0,
+    "era": "sun_moon",
+    "language": "en",
+    "franchise": "pokemon",
+    "gem_rate": 0.615,
+    "liquidity_tier": "tier_2_weekly",
+    "slippage_pct": 0.02,
+    "holding_cost_annual_pct": 0.001,
+    "last_psa_price": 1307.18
   }
 }

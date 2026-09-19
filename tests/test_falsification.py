@@ -40,3 +40,37 @@ def test_falsification_tier_c_underperformance():
 
     # Tier C non deve generare l'alpha di Tier S/A
     assert res.cagr < 0.15
+
+
+def test_falsification_cross_tcg_one_piece():
+    """Verifica che la strategia mantenga rendimenti positivi anche sul franchise One Piece TCG."""
+    prices_df = load_price_matrix()
+    metadata = load_metadata()
+
+    meta_op = {k: v for k, v in metadata.items() if v.get("franchise") == "one_piece"}
+    cols_op = [c for c in prices_df.columns if c in meta_op]
+    prices_op = prices_df[cols_op]
+
+    strat = OptimalSealedStrategy(allowed_tiers=["S", "A"], target_roi=1.0)
+    bt = Backtester(strat, prices_op, meta_op, initial_cash=10000.0, platform="cardmarket")
+    res = bt.run()
+
+    assert res.cagr > 0.10  # One Piece genera rendimento superiore all'inflazione/benchmark
+    assert res.final_nav > 10000.0
+
+
+def test_falsification_macro_benchmark_correlation():
+    """Verifica che la correlazione con S&P 500 reale sia bassa (decorrelazione asset alternativo)."""
+    from poke_quant.data.storage import load_macro_matrix
+    prices_df = load_price_matrix()
+    metadata = load_metadata()
+    macro_df = load_macro_matrix()
+
+    if macro_df is not None and "spy" in macro_df:
+        strat = OptimalSealedStrategy()
+        bt = Backtester(strat, prices_df, metadata, initial_cash=10000.0, benchmark_series=macro_df["spy"])
+        res = bt.run()
+
+        assert res.beta < 0.80  # Beta significativamente inferiore a 1
+        assert abs(res.correlation_benchmark) < 0.60  # Decorrelazione confermata
+

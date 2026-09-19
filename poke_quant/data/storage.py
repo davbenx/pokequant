@@ -43,3 +43,18 @@ def load_metadata(filename: str = "items_metadata.json") -> Optional[Dict[str, A
         return None
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def save_macro_matrix(df: pd.DataFrame, filename: str = "macro_benchmarks.csv"):
+    path = ensure_cache_dir() / filename
+    df.to_csv(path, index=True)
+
+
+def load_macro_matrix(filename: str = "macro_benchmarks.csv") -> Optional[pd.DataFrame]:
+    path = ensure_cache_dir() / filename
+    if not path.exists():
+        return None
+    df = pd.read_csv(path, index_col=0)
+    df.index = pd.to_datetime(df.index)
+    return df
+

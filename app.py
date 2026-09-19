@@ -14,17 +14,19 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from poke_quant.config import PLATFORM_FEES, SHIPPING_COSTS, GRADING_DEFAULT
+from poke_quant.data.storage import load_price_matrix, load_metadata, load_macro_matrix
 from poke_quant.data.price_fetcher import build_and_cache_universe
 from poke_quant.data.catalog_fetcher import fetch_all_sets, fetch_cards_by_set
 from poke_quant.engine.backtester import Backtester
 from poke_quant.engine.strategies.sealed_accumulator import SealedAccumulatorStrategy
 from poke_quant.engine.strategies.chase_dip_buyer import ChaseDipBuyerStrategy
+from poke_quant.engine.strategies.optimal_sealed_strategy import OptimalSealedStrategy
 from poke_quant.engine.friction import evaluate_grading_arbitrage
 from poke_quant.validation.statistical_validation import deflated_sharpe_ratio, pbo_cscv
 
 # Configurazione pagina
 st.set_page_config(
-    page_title="PokeQuant — Motore Quantitativo Pokémon TCG",
+    page_title="PokeQuant — Motore Quantitativo Pokémon & One Piece TCG",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -48,23 +50,42 @@ st.markdown("""
 
 @st.cache_data(show_spinner=False)
 def get_cached_data():
-    prices_df, meta = build_and_cache_universe(force_refresh=False)
-    return prices_df, meta
+    prices_df = load_price_matrix()
+    meta = load_metadata()
+    if prices_df is None or meta is None:
+        prices_df, meta = build_and_cache_universe(force_refresh=False)
+    macro_df = load_macro_matrix()
+    return prices_df, meta, macro_df
 
 
 def main():
     st.title("⚡ PokeQuant — Quantitative Investment Engine")
-    st.caption("Motore istituzionale per il calcolo di convenienza, Edge e backtest di strategie su carte e prodotti sigillati Pokémon.")
+    st.caption("Motore istituzionale per il calcolo di convenienza, Edge e backtest di strategie su carte e prodotti sigillati (Pokémon & One Piece TCG).")
 
     # Caricamento dati
     with st.spinner("Caricamento serie storiche reali..."):
-        prices_df, metadata = get_cached_data()
+        full_prices_df, full_metadata, macro_df = get_cached_data()
 
     # --- SIDEBAR: PARAMETRI GLOBALI & FRIZIONI ---
     st.sidebar.header("⚙️ Parametri di Portafoglio")
     initial_cash = st.sidebar.number_input("Capitale Iniziale (€)", min_value=1000.0, max_value=500000.0, value=10000.0, step=1000.0)
     
-    st.sidebar.subheader("Frizioni di Mercato")
+    st.sidebar.subheader("Benchmark & Covarianza")
+    bench_choice = st.sidebar.selectbox(
+        "Benchmark di Confronto",
+        options=["S&P 500 Reale (SPY ETF)", "Oro Reale (GLD ETF)", "Bitcoin Reale (BTC)", "Tasso Fisso (10% CAGR)"]
+    )
+    benchmark_cagr = 0.10
+    benchmark_series = None
+    if macro_df is not None:
+        if "S&P 500" in bench_choice and "spy" in macro_df:
+            benchmark_series = macro_df["spy"]
+        elif "Oro" in bench_choice and "gold" in macro_df:
+            benchmark_series = macro_df["gold"]
+        elif "Bitcoin" in bench_choice and "btc" in macro_df:
+            benchmark_series = macro_df["btc"]
+
+    st.sidebar.subheader("Frizioni di Mercato & Custodia")
     platform = st.sidebar.selectbox(
         "Piattaforma Principale di Vendita",
         options=["cardmarket", "ebay", "direct_private"],
@@ -75,7 +96,35 @@ def main():
         }[x]
     )
     absorb_shipping = st.sidebar.checkbox("Venditore assorbe spedizione tracciata", value=False)
-    benchmark_cagr = st.sidebar.slider("Benchmark Annuo di Confronto (es. S&P 500)", min_value=0.04, max_value=0.15, value=0.10, step=0.01, format="%.2f")
+    apply_slippage = st.sidebar.checkbox("Slippage di Liquidità (1-2%)", value=True)
+    apply_holding = st.sidebar.checkbox("Costi di Custodia/Storage (0.5%/anno)", value=True)
+
+    st.sidebar.subheader("Universo Prodotti")
+    universe_filter = st.sidebar.selectbox(
+        "Filtro Categoria Asset",
+        options=[
+            f"Tutti gli Asset ({len(full_metadata)})",
+            "Solo Pokémon",
+            "Solo One Piece TCG",
+            "Solo Edizioni Giapponesi [JP]",
+            "Solo Sealed Booster Box"
+        ]
+    )
+
+    # Filtraggio dinamico dell'universo
+    if "Solo One Piece" in universe_filter:
+        metadata = {k: v for k, v in full_metadata.items() if v.get("franchise") == "one_piece"}
+    elif "Solo Edizioni Giapponesi" in universe_filter:
+        metadata = {k: v for k, v in full_metadata.items() if v.get("language") == "jp"}
+    elif "Solo Pokémon" in universe_filter:
+        metadata = {k: v for k, v in full_metadata.items() if v.get("franchise") == "pokemon"}
+    elif "Solo Sealed" in universe_filter:
+        metadata = {k: v for k, v in full_metadata.items() if v.get("type") == "sealed"}
+    else:
+        metadata = full_metadata
+
+    active_cols = [c for c in full_prices_df.columns if c in metadata]
+    prices_df = full_prices_df[active_cols]
 
     # --- TABS PRINCIPALI ---
     tab1, tab_radar, tab2, tab3, tab4 = st.tabs([
@@ -87,42 +136,54 @@ def main():
     ])
 
     # =========================================================================
-    # TAB 1: BACKTEST STRATEGIE
+    # TAB 1: BACKTEST STRATEGIE & ROTAZIONE CAPITALE
     # =========================================================================
     with tab1:
-        st.subheader("Simulazione Strategie su Prezzi di Transazione Reali")
-        
+        st.subheader("Simulazione Strategie su Prezzi Reali & Rotazione Dinamica del Capitale")
+        st.caption("Esegue la strategia su 68 mesi di prezzi reali (2021-2026), gestendo liquidità, ingressi su reprint e rotazioni scalari (Tranche 1 & 2).")
+
         col_ctrl1, col_ctrl2, col_ctrl3 = st.columns(3)
         with col_ctrl1:
             strat_choice = st.selectbox(
                 "Strategia da Eseguire",
                 options=[
-                    "Strategia Ottimale Validata (Tier S/A)",
-                    "Sealed Accumulator (Configurabile)",
+                    "Strategia Ottimale Validata (Tier S/A/B con Rotazione)",
+                    "Sealed Accumulator (Standard)",
                     "Chase Card Dip Buyer (Singole)",
                     "Confronto Strategie (Ottimale vs Standard vs Singole)"
                 ]
             )
         
         with col_ctrl2:
-            target_roi_pct = st.slider("Target ROI di Uscita (%)", min_value=30, max_value=250, value=150, step=10) / 100.0
+            target_roi_pct = st.slider("Target ROI Uscita Finale Tranche 2 (%)", min_value=50, max_value=250, value=150, step=10) / 100.0
         with col_ctrl3:
-            min_hold = st.slider("Periodo Minimo di Detenzione (Mesi)", min_value=6, max_value=40, value=30, step=2)
+            min_hold = st.slider("Periodo Minimo Detenzione Finale (Mesi)", min_value=12, max_value=48, value=30, step=2)
+
+        # Controlli Rotazione del Capitale & PAC
+        col_rot1, col_rot2, col_rot3, col_rot4 = st.columns(4)
+        with col_rot1:
+            enable_rotation = st.checkbox("🔄 Abilita Rotazione Dinamica (Tranche 1)", value=True, help="Vende parzialmente (50%) le posizioni a +70% ROI dopo 18 mesi (Out-of-Print) per liberare liquidità e comprare i nuovi set a MSRP.")
+        with col_rot2:
+            tranche1_roi = st.slider("Target ROI Tranche 1 (%)", min_value=40, max_value=120, value=70, step=5) / 100.0 if enable_rotation else 0.70
+        with col_rot3:
+            tranche1_hold = st.slider("Mesi Minimi Tranche 1 (Hold)", min_value=12, max_value=24, value=18, step=1) if enable_rotation else 18
+        with col_rot4:
+            max_alloc_pct = st.slider("Cap Allocazione per Singolo Set (%)", min_value=5, max_value=25, value=12, step=1, help="10-12% permette di detenere 8-10 set in contemporanea evitando il blocco della liquidità.") / 100.0
 
         # Filtri avanzati espandibili
-        with st.expander("🛠️ Parametri Avanzati di Selezione & Timing (Tiers, Prodotti, Finestra di Ingresso)"):
+        with st.expander("🛠️ Parametri Avanzati (Tiers, PAC Mensile, Finestra di Ingresso)"):
             f_col1, f_col2, f_col3 = st.columns(3)
             with f_col1:
-                selected_tiers = st.multiselect("Filtro Tier Qualitativo", options=["S", "A", "B", "C"], default=["S", "A"])
+                selected_tiers = st.multiselect("Filtro Tier Qualitativo", options=["S", "A", "B", "C"], default=["S", "A", "B"])
             with f_col2:
-                selected_ptypes = st.multiselect("Tipologia di Prodotto", options=["booster_box", "specialty_etb", "specialty_bundle"], default=["booster_box", "specialty_bundle"], format_func=lambda x: {"booster_box": "Booster Box (36 bustine)", "specialty_etb": "Specialty ETB", "specialty_bundle": "Specialty Bundle (6 bustine)"}[x])
+                monthly_dca = st.number_input("PAC Mensile Liquidità (€ / mese)", min_value=0.0, max_value=2000.0, value=0.0, step=50.0, help="Iniezione di risparmio mensile per accumulo continuo.")
             with f_col3:
                 buy_min_m = st.number_input("Mese Minimo dal Lancio (Inizio Finestra)", min_value=0, max_value=12, value=4)
                 buy_max_m = st.number_input("Mese Massimo dal Lancio (Fine Finestra)", min_value=6, max_value=24, value=14)
 
         from poke_quant.engine.strategies.optimal_sealed_strategy import OptimalSealedStrategy
 
-        # 1. Strategia Ottimale Validata
+        # 1. Strategia Ottimale Validata con Rotazione
         strat_optimal = OptimalSealedStrategy(
             allowed_tiers=selected_tiers,
             min_buy_age_months=buy_min_m,
@@ -131,7 +192,11 @@ def main():
             min_hold_months=min_hold,
             target_roi=target_roi_pct,
             max_hold_months=48,
-            max_allocation_pct=0.20
+            max_allocation_pct=max_alloc_pct,
+            enable_dynamic_rotation=enable_rotation,
+            tranche1_roi=tranche1_roi,
+            tranche1_min_hold_months=tranche1_hold,
+            tranche1_pct=0.50
         )
         bt_optimal = Backtester(
             strategy=strat_optimal,
@@ -140,7 +205,11 @@ def main():
             initial_cash=initial_cash,
             platform=platform,
             seller_absorbs_shipping=absorb_shipping,
-            benchmark_cagr=benchmark_cagr
+            benchmark_cagr=benchmark_cagr,
+            benchmark_series=benchmark_series,
+            apply_liquidity_slippage=apply_slippage,
+            apply_holding_cost=apply_holding,
+            monthly_cash_injection=monthly_dca
         )
         res_optimal = bt_optimal.run()
 
@@ -159,7 +228,11 @@ def main():
             initial_cash=initial_cash,
             platform=platform,
             seller_absorbs_shipping=absorb_shipping,
-            benchmark_cagr=benchmark_cagr
+            benchmark_cagr=benchmark_cagr,
+            benchmark_series=benchmark_series,
+            apply_liquidity_slippage=apply_slippage,
+            apply_holding_cost=apply_holding,
+            monthly_cash_injection=monthly_dca
         )
         res_sealed = bt_sealed.run()
 
@@ -178,16 +251,20 @@ def main():
             initial_cash=initial_cash,
             platform=platform,
             seller_absorbs_shipping=absorb_shipping,
-            benchmark_cagr=benchmark_cagr
+            benchmark_cagr=benchmark_cagr,
+            benchmark_series=benchmark_series,
+            apply_liquidity_slippage=apply_slippage,
+            apply_holding_cost=apply_holding,
+            monthly_cash_injection=monthly_dca
         )
         res_chase = bt_chase.run()
 
         # Selezione dei risultati da visualizzare
-        if strat_choice == "Strategia Ottimale Validata (Tier S/A)":
+        if "Ottimale" in strat_choice:
             active_results = [res_optimal]
-        elif strat_choice == "Sealed Accumulator (Configurabile)":
+        elif "Sealed Accumulator" in strat_choice:
             active_results = [res_sealed]
-        elif strat_choice == "Chase Card Dip Buyer (Singole)":
+        elif "Chase Card" in strat_choice:
             active_results = [res_chase]
         else:
             active_results = [res_optimal, res_sealed, res_chase]
@@ -198,18 +275,26 @@ def main():
             metric_rows.append({
                 "Strategia": r.strategy_name.replace("Strategy", ""),
                 "Capitale Finale": f"{r.final_nav:,.2f} €",
-                "ROI Netto Totale": f"{r.total_net_return*100:+.1f}%",
+                "ROI Netto": f"{r.total_net_return*100:+.1f}%",
                 "CAGR Netto": f"{r.cagr*100:+.2f}%",
-                "Alpha Netto vs S&P": f"{r.alpha_annualized*100:+.2f}%",
+                "Alpha Netto": f"{r.alpha_annualized*100:+.2f}%",
                 "Sharpe": f"{r.sharpe:.2f}",
-                "Sortino": f"{r.sortino:.2f}" if not np.isnan(r.sortino) else "N/A",
                 "Max Drawdown": f"{r.max_drawdown*100:.2f}%",
-                "Calmar": f"{r.calmar:.2f}" if not np.isnan(r.calmar) else "N/A",
-                "Trades": r.total_trades,
+                "Rotazioni (Tranche 1)": r.rotation_trades_count,
+                "Turnover": f"{r.turnover_ratio*100:.1f}%",
+                "Trades Chiusi": r.total_trades,
+                "Posizioni Aperte": len(r.open_positions),
                 "Win Rate": f"{r.win_rate*100:.1f}%",
                 "Frizioni Pagate": f"{r.total_fees_paid:,.2f} €"
             })
         st.dataframe(pd.DataFrame(metric_rows).set_index("Strategia"), use_container_width=True)
+
+        # Regimi Macro
+        with st.expander("📊 Rendimento per Regime Macro Economico (Optimal Sealed Strategy)"):
+            r_cols = st.columns(len(res_optimal.regime_performance))
+            for i, (regime, val) in enumerate(res_optimal.regime_performance.items()):
+                with r_cols[i]:
+                    st.metric(regime.split(" ")[0], f"{val*100:+.1f}%")
 
         # Grafico Plotly NAV Curve
         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, row_heights=[0.7, 0.3], subplot_titles=("Evoluzione del Capitale Netto (NAV)", "Drawdown Storico"))
@@ -218,11 +303,11 @@ def main():
         bench_df = res_sealed.benchmark_nav
         fig.add_trace(go.Scatter(
             x=bench_df.index, y=bench_df.values,
-            mode='lines', name=f"Benchmark ({benchmark_cagr*100:.0f}% CAGR)",
+            mode='lines', name=f"Benchmark ({bench_choice})",
             line=dict(color='gray', dash='dash', width=2)
         ), row=1, col=1)
 
-        colors = {"SealedAccumulatorStrategy": "#2b8a3e", "ChaseDipBuyerStrategy": "#1971c2"}
+        colors = {"OptimalSealedStrategy": "#2b8a3e", "SealedAccumulatorStrategy": "#1971c2", "ChaseDipBuyerStrategy": "#e8590c"}
         for r in active_results:
             c = colors.get(r.strategy_name, "#495057")
             fig.add_trace(go.Scatter(
@@ -246,8 +331,113 @@ def main():
         fig.update_yaxes(title_text="Drawdown %", row=2, col=1)
         st.plotly_chart(fig, use_container_width=True)
 
-        # Dettaglio Operazioni Concluse
-        st.subheader("Registro Operazioni Concluse (Trades Realizzati)")
+        # SEZIONE 1: PORTAFOGLIO ATTIVO IN DETENZIONE (POSIZIONI APERTE)
+        st.subheader("💼 Portafoglio Attivo in Detenzione (Posizioni Aperte a Fine Backtest)")
+        st.caption("Asset reali ancora custoditi in inventario al termine del periodo (Mark-to-Market su prezzi di clearing reali).")
+        
+        primary_res = res_optimal if "Ottimale" in strat_choice or len(active_results) == 1 else active_results[0]
+        if primary_res.open_positions:
+            tot_inv_val = sum(p["current_value"] for p in primary_res.open_positions)
+            tot_inv_cost = sum(p["total_cost"] for p in primary_res.open_positions)
+            tot_unrealized_pnl = tot_inv_val - tot_inv_cost
+            tot_unrealized_roi = (tot_unrealized_pnl / tot_inv_cost) * 100 if tot_inv_cost > 0 else 0.0
+            last_cash = float(primary_res.nav_history["cash"].iloc[-1])
+
+            op_m1, op_m2, op_m3, op_m4, op_m5 = st.columns(5)
+            with op_m1:
+                st.metric("Box in Inventario", f"{sum(p['quantity'] for p in primary_res.open_positions)} pz", f"{len(primary_res.open_positions)} Set")
+            with op_m2:
+                st.metric("Valore Attuale Inventario", f"{tot_inv_val:,.2f} €")
+            with op_m3:
+                st.metric("Capitale di Carico", f"{tot_inv_cost:,.2f} €")
+            with op_m4:
+                st.metric("PnL Non Realizzato", f"{tot_unrealized_pnl:+,.2f} €", f"{tot_unrealized_roi:+.1f}% ROI")
+            with op_m5:
+                st.metric("Cassa Residua Libera", f"{last_cash:,.2f} €")
+
+            op_rows = []
+            for p in primary_res.open_positions:
+                op_rows.append({
+                    "Articolo": p["item_name"],
+                    "Tipo": p["item_type"],
+                    "Q.tà (Box)": p["quantity"],
+                    "Data Acquisto": p["buy_date"],
+                    "Holding (Mesi)": p["holding_months"],
+                    "Carico Unitario": f"{p['buy_price_unit']:.2f} €",
+                    "Prezzo Attuale": f"{p['current_price']:.2f} €",
+                    "Valore di Mercato": f"{p['current_value']:,.2f} €",
+                    "PnL Non Realizzato": f"{p['unrealized_pnl']:+,.2f} €",
+                    "ROI Non Realizzato": f"{p['unrealized_roi']*100:+.1f}%"
+                })
+            st.dataframe(pd.DataFrame(op_rows).set_index("Articolo"), use_container_width=True)
+        else:
+            st.info("Nessuna posizione aperta in portafoglio a fine periodo (100% liquidità).")
+
+        # SEZIONE 2: CRONOLOGIA COMPLETA DEI SEGNALI STORICI (2021-2026)
+        st.subheader("📡 Cronologia Completa dei Segnali Storici Generati (2021 - 2026)")
+        st.caption("Registro cronologico completo di ogni decisione generata dal motore di trading: BUY su reprint dip, vendite parziali Tranche 1 e uscite Tranche 2.")
+        
+        if primary_res.signals_history:
+            sig_df = pd.DataFrame(primary_res.signals_history)
+            sig_df["Year"] = sig_df["date"].str[:4]
+
+            # Filtri interattivi
+            c_sf1, c_sf2, c_sf3 = st.columns([2, 2, 2])
+            with c_sf1:
+                year_filter = st.selectbox(
+                    "Filtra per Anno",
+                    options=["Tutti gli Anni (2021-2026)"] + sorted(sig_df["Year"].unique().tolist())
+                )
+            with c_sf2:
+                action_filter = st.selectbox(
+                    "Filtra per Tipologia Azione",
+                    options=["Tutte le Azioni", "Solo BUY (Acquisti)", "Solo SELL (Vendite & Rotazioni)"]
+                )
+            with c_sf3:
+                st.metric("Totale Segnali Generati", f"{len(sig_df)} Segnali", help="Numero complessivo di eventi operativi eseguiti")
+
+            # Grafico a barre segnali per anno
+            yearly_counts = sig_df.groupby(["Year", "action"]).size().unstack(fill_value=0)
+            fig_sig = go.Figure()
+            if "BUY" in yearly_counts.columns:
+                fig_sig.add_trace(go.Bar(x=yearly_counts.index, y=yearly_counts["BUY"], name="BUY (Acquisto)", marker_color="#2b8a3e"))
+            if "SELL" in yearly_counts.columns:
+                fig_sig.add_trace(go.Bar(x=yearly_counts.index, y=yearly_counts["SELL"], name="SELL (Rotazione / Uscita)", marker_color="#e03131"))
+            fig_sig.update_layout(
+                title="Distribuzione Temporale dei Segnali Operativi per Anno (2021-2026)",
+                barmode="group", height=280, margin=dict(l=20, r=20, t=40, b=20)
+            )
+            st.plotly_chart(fig_sig, use_container_width=True)
+
+            # Applicazione filtri
+            filtered_sigs = sig_df.copy()
+            if year_filter != "Tutti gli Anni (2021-2026)":
+                filtered_sigs = filtered_sigs[filtered_sigs["Year"] == year_filter]
+            if "BUY" in action_filter:
+                filtered_sigs = filtered_sigs[filtered_sigs["action"] == "BUY"]
+            elif "SELL" in action_filter:
+                filtered_sigs = filtered_sigs[filtered_sigs["action"] == "SELL"]
+
+            # Tabella formattata segnali
+            sig_disp = []
+            for _, s in filtered_sigs.iterrows():
+                badge_action = "🟢 BUY" if s["action"] == "BUY" else "🔴 SELL"
+                sig_disp.append({
+                    "Data": s["date"],
+                    "Azione": badge_action,
+                    "Prodotto": s["item_name"],
+                    "Q.tà": s["quantity"],
+                    "Prezzo Unit.": f"{s['price']:.2f} €",
+                    "Controvalore": f"{s['total_value']:,.2f} €",
+                    "Cassa Prima": f"{s['portfolio_cash_before']:,.2f} €",
+                    "Motivazione & Trigger": s["reason"]
+                })
+            st.dataframe(pd.DataFrame(sig_disp), use_container_width=True, hide_index=True)
+        else:
+            st.info("Nessun segnale generato con i parametri attuali.")
+
+        # SEZIONE 3: REGISTRO OPERAZIONI CONCLUSE (TRADES REALIZZATI)
+        st.subheader("📜 Registro Operazioni Concluse (Trades Realizzati)")
         all_trades = pd.concat([r.trades_df for r in active_results if not r.trades_df.empty])
         if not all_trades.empty:
             disp_trades = all_trades.copy()
@@ -266,16 +456,17 @@ def main():
     # TAB RADAR: SEGNALI LIVE & AUTOMAZIONE
     # =========================================================================
     with tab_radar:
-        st.subheader("📡 Radar Segnali Operativi in Tempo Reale")
+        st.subheader("📡 Radar Segnali Operativi in Tempo Reale & Scanner Storico")
         st.markdown("""
-        Questo modulo analizza l'intero catalogo di mercato e le tue posizioni aperte (`portfolio_holdings.json`),
-        identificando automaticamente i segnali di **BUY** (finestra ristampa a sconto) e di **SELL** (target raggiunto).
+        Questo modulo analizza l'intero catalogo di mercato (Pokémon & One Piece TCG) e le posizioni registrate,
+        identificando i segnali di **BUY** (finestra di ristampa a sconto), **Tranche 1 Rotazione** (sblocco liquidità al 50% dopo 18m) e **Tranche 2** (uscita finale).
         """)
 
-        from poke_quant.signal_scanner import scan_signals, format_telegram_alert, send_telegram_message
+        from poke_quant.signal_scanner import scan_signals, scan_historical_signals, format_telegram_alert, send_telegram_message
 
         current_px_map = prices_df.iloc[-1].to_dict()
-        scan_res = scan_signals(current_prices=current_px_map, metadata=metadata)
+        radar_tiers = st.multiselect("Tier Monitorati dal Radar", options=["S", "A", "B", "C"], default=["S", "A", "B"], key="radar_tiers_sel")
+        scan_res = scan_signals(current_prices=current_px_map, metadata=metadata, allowed_tiers=radar_tiers)
 
         buys = scan_res.get("buy_signals", [])
         sells = scan_res.get("sell_signals", [])
@@ -289,25 +480,36 @@ def main():
                 **{b['name']}** (Tier {b['tier']})  
                 • Prezzo Corrente: **{b['current_price']:.1f} €** (MSRP: {b['msrp']:.1f} € | {b['diff_vs_msrp_pct']:+.1f}%)  
                 • Età del Set: **{b['age_months']} mesi** (Piena finestra di ristampa 4-14 mesi)  
-                • **Azione**: Acquisto consigliato fino a un massimo del 20% del capitale.
+                • **Azione**: Acquisto consigliato (allocazione target 10-12% del capitale).
                 """)
         else:
-            st.info("Nessun segnale di BUY attivo sul mercato oggi. I set di Tier S/A sono fuori dalla finestra di ristampa o sopra la soglia MSRP.")
+            st.info("Nessun set attualmente nella finestra di acquisto (Mesi 4-14) con prezzo <= 1.15x MSRP. I set monitorati rimangono in watchlist.")
 
-        # Sezione SELL
-        st.markdown("### 🔴 Segnali di Vendita di Portafoglio (SELL)")
+        # Sezione SELL (Rotazioni Tranche 1 & Uscite Finali)
+        st.markdown("### 🔄 Segnali di Vendita & Rotazione Capitale (SELL)")
         if sells:
             for s in sells:
-                st.error(f"""
-                **{s['name']}** (Q.tà: {s['quantity']} pz)  
-                • Prezzo di Vendita Stimato: **{s['current_price']:.1f} €** (Carico medio: {s['buy_price']:.1f} €)  
-                • Rendimento Netto: **+{s['net_roi_pct']:.1f}%** (Incasso netto: {s['net_proceeds']:.1f} €)  
-                • Holding Period: **{s['holding_months']} mesi**  
-                • **Trigger**: {s['trigger']}  
-                • **Azione**: Mettere in vendita su Cardmarket.
-                """)
+                sig_t = s.get("signal_type", "SELL")
+                if "TRANCHE 1" in sig_t:
+                    st.warning(f"""
+                    **🔄 {s['name']} — ROTAZIONE TRANCHE 1**  
+                    • **Consiglio Operativo**: Vendere **{s['quantity']} su {s['total_quantity']} box** per liberare liquidità.  
+                    • Prezzo Unitario Stimato: **{s['current_price']:.1f} €** (Carico: {s['buy_price']:.1f} €)  
+                    • Rendimento Netto: **+{s['net_roi_pct']:.1f}%** | Incasso Netto Stimato: **{s['net_proceeds']:.1f} €**  
+                    • Holding Period: **{s['holding_months']} mesi** (Fase Out-of-Print attiva).  
+                    • **Motivazione**: Sbloccare capitale per reinvestire nei nuovi set di Tier S/A/B in finestra di sconto.
+                    """)
+                else:
+                    st.error(f"""
+                    **🔴 {s['name']} — USCITA FINALE (TRANCHE 2)** (Q.tà: {s['quantity']} pz)  
+                    • Prezzo Unitario Stimato: **{s['current_price']:.1f} €** (Carico: {s['buy_price']:.1f} €)  
+                    • Rendimento Netto: **+{s['net_roi_pct']:.1f}%** | Incasso Netto Stimato: **{s['net_proceeds']:.1f} €**  
+                    • Holding Period: **{s['holding_months']} mesi**  
+                    • **Trigger**: {s['trigger']}  
+                    • **Azione**: Mettere in vendita su Cardmarket.
+                    """)
         else:
-            st.info("Nessuna posizione in portafoglio ha ancora raggiunto il target di vendita (+150% netto o 48 mesi di hold).")
+            st.info("Nessuna posizione in portafoglio ha attualmente raggiunto le soglie di rotazione Tranche 1 (+70% a 18m) o Tranche 2 (+150% a 30m).")
 
         # Watchlist
         if watchlist:
@@ -315,6 +517,31 @@ def main():
                 st.dataframe(pd.DataFrame(watchlist)[["name", "tier", "age_months", "current_price", "msrp", "status"]].rename(columns={
                     "name": "Prodotto", "tier": "Tier", "age_months": "Età (Mesi)", "current_price": "Prezzo (€)", "msrp": "MSRP (€)", "status": "Stato Monitoraggio"
                 }), use_container_width=True)
+
+        # SEZIONE STORICO SEGNALI RADAR MULTI-ANNO
+        with st.expander("📜 Esplora Segnali Storici del Radar (Timeline 2021 - 2026)"):
+            st.caption("Visualizza l'attivazione storica degli alert d'acquisto e di vendita per ogni set dal 2021 a oggi.")
+            hist_radar_df = scan_historical_signals(prices_df=prices_df, metadata=metadata, allowed_tiers=radar_tiers)
+            if not hist_radar_df.empty:
+                hist_radar_df["Year"] = hist_radar_df["date"].str[:4]
+                yr_rad = st.selectbox("Seleziona Anno Storico", options=["Tutti gli Anni"] + sorted(hist_radar_df["Year"].unique().tolist()), key="yr_rad_sel")
+                
+                disp_rad = hist_radar_df.copy()
+                if yr_rad != "Tutti gli Anni":
+                    disp_rad = disp_rad[disp_rad["Year"] == yr_rad]
+                
+                rows_rad = []
+                for _, r in disp_rad.iterrows():
+                    rows_rad.append({
+                        "Data Segnale": r["date"],
+                        "Azione": "🟢 BUY" if r["action"] == "BUY" else "🔴 SELL",
+                        "Set / Prodotto": r["item_name"],
+                        "Quantità": r["quantity"],
+                        "Prezzo (€)": f"{r['price']:.2f} €",
+                        "Valore (€)": f"{r['total_value']:,.2f} €",
+                        "Trigger / Motivazione": r["reason"]
+                    })
+                st.dataframe(pd.DataFrame(rows_rad), use_container_width=True, hide_index=True)
 
         # Sezione Gestione Posizioni Reali del Portafoglio
         from poke_quant.signal_scanner import load_user_holdings

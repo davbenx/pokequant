@@ -97,3 +97,35 @@ def test_optimal_sealed_strategy_backtest():
     assert res.max_drawdown > -0.15 # Drawdown contenuto entro il -15%
     assert res.win_rate == 1.0      # 100% win rate storico
 
+
+def test_dynamic_capital_rotation():
+    """Verifica che la rotazione dinamica del capitale (Tranche 1) sblocchi liquidità e generi segnali continui."""
+    from poke_quant.engine.strategies.optimal_sealed_strategy import OptimalSealedStrategy
+    prices_df = load_price_matrix()
+    metadata = load_metadata()
+
+    strat = OptimalSealedStrategy(
+        allowed_tiers=["S", "A", "B"],
+        enable_dynamic_rotation=True,
+        tranche1_roi=0.70,
+        tranche1_min_hold_months=18,
+        max_allocation_pct=0.12
+    )
+
+    bt = Backtester(
+        strategy=strat,
+        historical_prices_df=prices_df,
+        items_metadata=metadata,
+        initial_cash=10000.0,
+        platform="cardmarket"
+    )
+
+    res = bt.run()
+    assert res.final_nav > 30000.0
+    assert res.cagr > 0.25
+    assert res.rotation_trades_count >= 10
+    assert len(res.signals_history) > 40
+    assert len(res.open_positions) >= 5
+    assert res.turnover_ratio > 1.0
+
+

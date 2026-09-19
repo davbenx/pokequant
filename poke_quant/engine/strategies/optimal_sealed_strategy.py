@@ -33,9 +33,13 @@ class OptimalSealedStrategy:
         min_hold_months: int = 30,
         target_roi: float = 1.50,
         max_hold_months: int = 48,
-        max_allocation_pct: float = 0.20
+        max_allocation_pct: float = 0.12,
+        enable_dynamic_rotation: bool = True,
+        tranche1_roi: float = 0.70,
+        tranche1_min_hold_months: int = 18,
+        tranche1_pct: float = 0.50
     ):
-        self.allowed_tiers = allowed_tiers or ["S", "A"]
+        self.allowed_tiers = allowed_tiers or ["S", "A", "B"]
         self.min_buy_age_months = min_buy_age_months
         self.max_buy_age_months = max_buy_age_months
         self.max_msrp_multiplier = max_msrp_multiplier
@@ -43,6 +47,15 @@ class OptimalSealedStrategy:
         self.target_roi = target_roi
         self.max_hold_months = max_hold_months
         self.max_allocation_pct = max_allocation_pct
+        self.enable_dynamic_rotation = enable_dynamic_rotation
+        self.tranche1_roi = tranche1_roi
+        self.tranche1_min_hold_months = tranche1_min_hold_months
+        self.tranche1_pct = tranche1_pct
+        self.trimmed_positions: set = set()
+
+    def reset(self):
+        """Reinizializza lo stato interno per simulazioni indipendenti."""
+        self.trimmed_positions = set()
 
     def generate_signals(
         self,
@@ -54,7 +67,7 @@ class OptimalSealedStrategy:
         cur_dt = pd.to_datetime(current_date)
         total_nav = portfolio.get_total_nav({k: v["current_price"] for k, v in market_snapshot.items()})
 
-        # 1. Vendite (Uscite)
+        # 1. Vendite (Uscite & Rotazione Scalare Tranche 1)
         for item_id, pos in list(portfolio.positions.items()):
             if item_id not in market_snapshot:
                 continue
@@ -64,7 +77,30 @@ class OptimalSealedStrategy:
             holding_m = max(1, (cur_dt.year - buy_dt.year) * 12 + (cur_dt.month - buy_dt.month))
             unrealized_roi = (cur_price - cost_basis) / cost_basis if cost_basis > 0 else 0.0
 
-            # Condizione di uscita A: target ROI raggiunto dopo holding minimo (Out-of-Print confermato)
+            # Uscita Tranche 1 (Rotazione del Capitale):
+            # A 18+ mesi (Out-of-Print confermato) e ROI >= +70%, liquida il 50% per ruotare su nuovi set
+            if (self.enable_dynamic_rotation and 
+                item_id not in self.trimmed_positions and 
+                holding_m >= self.tranche1_min_hold_months and 
+                unrealized_roi >= self.tranche1_roi and 
+                pos.quantity > 1):
+                qty_to_sell = max(1, int(round(pos.quantity * self.tranche1_pct)))
+                if qty_to_sell >= pos.quantity:
+                    qty_to_sell = pos.quantity // 2
+                if qty_to_sell > 0:
+                    signals.append(Signal(
+                        action="SELL",
+                        item_id=item_id,
+                        item_name=pos.item_name,
+                        item_type=pos.item_type,
+                        quantity=qty_to_sell,
+                        target_price=cur_price,
+                        reason=f"Tranche 1 Rotazione (+{unrealized_roi*100:.1f}%) a {holding_m}m - Sblocco Liquidità"
+                    ))
+                    self.trimmed_positions.add(item_id)
+                    continue
+
+            # Uscita Tranche 2 (Moonbag): target ROI raggiunto dopo holding minimo
             if holding_m >= self.min_hold_months and unrealized_roi >= self.target_roi:
                 signals.append(Signal(
                     action="SELL",
@@ -73,9 +109,10 @@ class OptimalSealedStrategy:
                     item_type=pos.item_type,
                     quantity=pos.quantity,
                     target_price=cur_price,
-                    reason=f"Target ROI raggiunto (+{unrealized_roi*100:.1f}%) a {holding_m} mesi"
+                    reason=f"Tranche 2 Uscita Finale (+{unrealized_roi*100:.1f}%) a {holding_m}m"
                 ))
-            # Condizione di uscita B: Time-stop massimo (4 anni)
+                self.trimmed_positions.discard(item_id)
+            # Condizione di uscita alternativa: Time-stop massimo (4 anni)
             elif holding_m >= self.max_hold_months:
                 signals.append(Signal(
                     action="SELL",
@@ -84,10 +121,11 @@ class OptimalSealedStrategy:
                     item_type=pos.item_type,
                     quantity=pos.quantity,
                     target_price=cur_price,
-                    reason=f"Time-stop massimo ({holding_m} mesi)"
+                    reason=f"Time-stop massimo ({holding_m}m)"
                 ))
+                self.trimmed_positions.discard(item_id)
 
-        # 2. Acquisti (Ingressi)
+        # 2. Acquisti (Ingressi su reprint dip)
         max_item_budget = total_nav * self.max_allocation_pct
         for item_id, info in market_snapshot.items():
             if info.get("type") != "sealed":
@@ -98,7 +136,7 @@ class OptimalSealedStrategy:
             if p_type not in ["booster_box", "specialty_bundle"]:
                 continue
 
-            # Filtro Tier: solo S o A
+            # Filtro Tier: S, A o B
             tier = info.get("set_tier", "B")
             if tier not in self.allowed_tiers:
                 continue
@@ -119,7 +157,7 @@ class OptimalSealedStrategy:
             if cur_price > msrp * self.max_msrp_multiplier:
                 continue
 
-            # Cap allocazione
+            # Cap allocazione per singolo set
             cur_pos_cost = portfolio.positions[item_id].total_cost if item_id in portfolio.positions else 0.0
             if cur_pos_cost >= max_item_budget:
                 continue
@@ -136,7 +174,7 @@ class OptimalSealedStrategy:
                     item_type="sealed",
                     quantity=qty,
                     target_price=cur_price,
-                    reason=f"Acquisto {p_type} Tier {tier} a {cur_price:.1f}€ (MSRP: {msrp:.1f}€)"
+                    reason=f"Acquisto {p_type} Tier {tier} ({age_m}m) a {cur_price:.1f}€ (MSRP: {msrp:.1f}€)"
                 ))
 
         return signals

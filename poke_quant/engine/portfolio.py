@@ -92,7 +92,9 @@ class Portfolio:
         unit_gross_price: float,
         date: str,
         platform: str = "cardmarket",
-        seller_absorbs_shipping: bool = False
+        seller_absorbs_shipping: bool = False,
+        slippage_pct: float = 0.0,
+        carrying_cost: float = 0.0
     ) -> Optional[ClosedTrade]:
         """Esegue la vendita parziale o totale di una posizione, calcolando fee e incasso netto."""
         if item_id not in self.positions or self.positions[item_id].quantity < quantity:
@@ -104,7 +106,9 @@ class Portfolio:
             gross_price=gross_total,
             item_type=pos.item_type,
             platform=platform,
-            seller_absorbs_shipping=seller_absorbs_shipping
+            seller_absorbs_shipping=seller_absorbs_shipping,
+            slippage_pct=slippage_pct,
+            carrying_cost=carrying_cost
         )
 
         cost_basis = pos.buy_price_unit * quantity
