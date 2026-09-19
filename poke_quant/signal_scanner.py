@@ -70,8 +70,9 @@ def scan_signals(
     buy_signals = []
     watchlist_items = []
     sell_signals = []
+    all_sealed_evaluations = []
 
-    # 1. SCANSIONE SEGNALI BUY DI MERCATO
+    # 1. SCANSIONE SEGNALI BUY E MATRICE FINESTRE D'ACQUISTO DI MERCATO
     for item_id, meta in metadata.items():
         if meta.get("type") != "sealed":
             continue
@@ -80,33 +81,87 @@ def scan_signals(
             continue
 
         tier = meta.get("set_tier", "B")
-        if tier not in allowed_tiers:
-            continue
-
         rel_str = meta.get("release_date")
         if not rel_str:
             continue
 
-        rel_dt = pd.to_datetime(rel_str).date()
-        age_months = (today_dt.year - rel_dt.year) * 12 + (today_dt.month - rel_dt.month)
+        try:
+            rel_dt = pd.to_datetime(rel_str).date()
+            age_months = (today_dt.year - rel_dt.year) * 12 + (today_dt.month - rel_dt.month)
+        except Exception:
+            continue
 
-        cur_px = current_prices.get(item_id, 0.0)
-        msrp = meta.get("msrp", 140.0)
-        max_allowed_buy_px = msrp * 1.15
+        cur_px = float(current_prices.get(item_id, 0.0))
+        msrp = float(meta.get("msrp", 140.0) or 140.0)
+        max_allowed_buy_px = round(msrp * 1.15, 2)
+        margin_vs_max = round(max_allowed_buy_px - cur_px, 2)
+        margin_vs_max_pct = round(((max_allowed_buy_px - cur_px) / max_allowed_buy_px) * 100, 1) if max_allowed_buy_px > 0 else 0.0
+        diff_vs_msrp = round(((cur_px - msrp) / msrp) * 100, 1) if msrp > 0 else 0.0
+        months_left = max(0, 14 - age_months)
 
-        # Caso A: Prodotto nella finestra ottimale di acquisto (Mesi 4-14)
+        # Determinazione Stato Finestra e Azione Operativa
+        if 4 <= age_months <= 11 and cur_px > 0 and cur_px <= max_allowed_buy_px:
+            w_status = "🟢 IN FINESTRA OTTIMALE"
+            w_action = "COMPRA SUBITO (Accumulo Dip)"
+            w_desc = f"Mese {age_months}/14 ({months_left}m rimasti). Prezzo a sconto vs Prezzo Max {max_allowed_buy_px:.1f}€."
+        elif 12 <= age_months <= 14 and cur_px > 0 and cur_px <= max_allowed_buy_px:
+            w_status = "⏳ FINESTRA IN CHIUSURA"
+            w_action = "ULTIMA CHIAMATA (Pre-OOP)"
+            w_desc = f"Mese {age_months}/14 ({months_left}m rimasto). Ultime scorte a prezzo accessibile prima del phase-out."
+        elif 1 <= age_months < 4:
+            w_status = "🟡 IN AVVICINAMENTO"
+            w_action = f"ATTENDERE (Tra {4 - age_months}m reprint)"
+            w_desc = f"Set recente ({age_months}m). Attendere la prima ondata di ristampe/sconti distributore."
+        elif 4 <= age_months <= 14 and cur_px > max_allowed_buy_px:
+            w_status = "⚠️ SOPRA PREZZO MAX"
+            w_action = "NON COMPRARE (Prezzo Gonfio)"
+            w_desc = f"In finestra temporale ({age_months}m) ma prezzo {cur_px:.1f}€ supera il cap max {max_allowed_buy_px:.1f}€ (+15% MSRP)."
+        else:
+            w_status = "🔒 FINESTRA CHIUSA (OOP)"
+            w_action = "SOLO CUSTODIA (Holding OOP)"
+            w_desc = f"Età {age_months}m > 14m: Set ufficialmente Out-of-Print. Non inseguire il prezzo a mercato."
+
+        all_sealed_evaluations.append({
+            "item_id": item_id,
+            "name": meta.get("name", item_id),
+            "tier": tier,
+            "release_date": rel_str,
+            "age_months": age_months,
+            "months_left": months_left,
+            "current_price": cur_px,
+            "msrp": msrp,
+            "max_buy_price": max_allowed_buy_px,
+            "margin_vs_max": margin_vs_max,
+            "margin_vs_max_pct": margin_vs_max_pct,
+            "diff_vs_msrp_pct": diff_vs_msrp,
+            "window_status": w_status,
+            "action": w_action,
+            "description": w_desc,
+            "is_in_buy_window": (4 <= age_months <= 14) and (cur_px > 0) and (cur_px <= max_allowed_buy_px)
+        })
+
+        # Filtraggio sui soli tier autorizzati per i segnali live di alert
+        if tier not in allowed_tiers:
+            continue
+
+        # Caso A: Prodotto nella finestra ottimale di acquisto (Mesi 4-14, Prezzo <= Max Buy Price)
         if 4 <= age_months <= 14:
-            discount_or_premium = ((cur_px - msrp) / msrp) * 100 if msrp > 0 else 0.0
             if cur_px > 0 and cur_px <= max_allowed_buy_px:
                 buy_signals.append({
                     "item_id": item_id,
                     "name": meta.get("name", item_id),
                     "tier": tier,
                     "age_months": age_months,
+                    "months_left_in_window": months_left,
                     "current_price": cur_px,
                     "msrp": msrp,
-                    "diff_vs_msrp_pct": discount_or_premium,
-                    "reason": f"Tier {tier} in finestra ottimale ({age_months} mesi) a {cur_px:.1f}€ (MSRP: {msrp:.1f}€, {discount_or_premium:+.1f}%)"
+                    "max_buy_price": max_allowed_buy_px,
+                    "margin_vs_max": margin_vs_max,
+                    "margin_vs_max_pct": margin_vs_max_pct,
+                    "diff_vs_msrp_pct": diff_vs_msrp,
+                    "window_status": w_status,
+                    "action_badge": "🟢 COMPRA SUBITO" if age_months <= 11 else "⏳ ULTIMA CHIAMATA",
+                    "reason": f"Tier {tier} in finestra ({age_months} mesi, {months_left}m residui). Prezzo {cur_px:.1f}€ vs Prezzo Max {max_allowed_buy_px:.1f}€ (Margine {margin_vs_max:+.1f}€, MSRP {msrp:.1f}€)"
                 })
             else:
                 watchlist_items.append({
@@ -114,9 +169,11 @@ def scan_signals(
                     "name": meta.get("name", item_id),
                     "tier": tier,
                     "age_months": age_months,
+                    "months_left": months_left,
                     "current_price": cur_px,
                     "msrp": msrp,
-                    "status": f"In finestra ({age_months}m) ma prezzo alto ({cur_px:.1f}€ vs limite {max_allowed_buy_px:.1f}€)"
+                    "max_buy_price": max_allowed_buy_px,
+                    "status": f"In finestra ({age_months}m) ma prezzo {cur_px:.1f}€ supera il cap max {max_allowed_buy_px:.1f}€ (+15% MSRP)"
                 })
         # Caso B: Prodotto in avvicinamento alla finestra (Mesi 1-3)
         elif 1 <= age_months < 4:
@@ -125,9 +182,11 @@ def scan_signals(
                 "name": meta.get("name", item_id),
                 "tier": tier,
                 "age_months": age_months,
+                "months_left": months_left,
                 "current_price": cur_px,
                 "msrp": msrp,
-                "status": f"Nuovo set in avvicinamento (tra {4 - age_months} mesi inizia la finestra ristampa)"
+                "max_buy_price": max_allowed_buy_px,
+                "status": f"Nuovo set in avvicinamento (tra {4 - age_months} mesi inizia finestra ristampa, cap {max_allowed_buy_px:.1f}€)"
             })
 
     # 2. SCANSIONE SEGNALI SELL SU POSIZIONI POSSEDUTE (ROTAZIONE TRANCHE 1 & 2)
@@ -203,6 +262,7 @@ def scan_signals(
         "buy_signals": buy_signals,
         "sell_signals": sell_signals,
         "watchlist": watchlist_items,
+        "all_evaluations": all_sealed_evaluations,
         "total_monitored_items": len(metadata),
         "user_holdings_count": len(holdings)
     }
@@ -261,11 +321,14 @@ def format_telegram_alert(scan_results: Dict[str, Any]) -> str:
     if buys:
         lines.append(f"🟢 *SEGNALI DI ACQUISTO (BUY)* [{len(buys)}]")
         for b in buys:
+            max_px = b.get('max_buy_price', b['msrp'] * 1.15)
+            rem_m = b.get('months_left_in_window', max(0, 14 - b['age_months']))
             lines.append(
                 f"• *{b['name']}* (Tier {b['tier']})\n"
-                f"  Prezzo: *{b['current_price']:.1f} €* (MSRP: {b['msrp']:.1f} €, {b['diff_vs_msrp_pct']:+.1f}%)\n"
-                f"  Età Set: {b['age_months']} mesi (Finestra Ristampa Attiva)\n"
-                f"  Azione: Comprare (Max 15-20% del capitale)\n"
+                f"  Prezzo Corrente: *{b['current_price']:.1f} €* | Prezzo Max Acquisto: *{max_px:.1f} €* (MSRP: {b['msrp']:.1f} €)\n"
+                f"  Margine di Sicurezza: *{b.get('margin_vs_max', max_px - b['current_price']):+.1f} €* ({b.get('margin_vs_max_pct', 0.0):+.1f}% sotto limite)\n"
+                f"  Finestra di Acquisto: *Mese {b['age_months']}/14* ({rem_m} mesi residui prima di Out-of-Print)\n"
+                f"  Azione Consigliata: *{b.get('action_badge', 'COMPRA SUBITO')}* (Allocazione max 10-12% portafoglio)\n"
             )
 
     if sells:

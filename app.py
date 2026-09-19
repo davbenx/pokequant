@@ -684,29 +684,81 @@ def main():
 
         # SEZIONE 1: PORTAFOGLIO ATTIVO IN DETENZIONE (POSIZIONI APERTE)
         st.markdown('<div class="section-title">💼 Portafoglio Attivo in Detenzione (Posizioni Aperte a Fine Backtest)</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">Box fisicamente custoditi a Settembre 2026, valutati al prezzo di clearing reale su Cardmarket.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc">Box fisicamente custoditi a Settembre 2026: monitoraggio dello stato della finestra d\'acquisto e del Prezzo Massimo Consentito.</div>', unsafe_allow_html=True)
 
         if res_optimal.open_positions:
             op_rows = []
             for p in res_optimal.open_positions:
+                cur_p = p["current_price"]
+                max_p = p.get("max_buy_price", round(p["buy_price_unit"] * 1.15, 2))
+                is_win = p.get("is_in_buy_window", False)
+                w_status = p.get("window_status", "N/D")
+                
+                # Azione operativa istantanea
+                if is_win:
+                    act_badge = "🟢 ACCUMULA (DCA)"
+                elif p["holding_months"] >= 18 and p["unrealized_roi"] >= 0.70:
+                    act_badge = "🔄 RUOTA (Tranche 1)"
+                elif p["holding_months"] >= 30 and p["unrealized_roi"] >= 1.50:
+                    act_badge = "🔴 ESCI (Target 150%)"
+                else:
+                    act_badge = "🔒 CUSTODIA (OOP)"
+
                 op_rows.append({
                     "Set / Articolo": p["item_name"],
-                    "Q.tà (Box)": p["quantity"],
+                    "Q.tà": p["quantity"],
                     "Data Acquisto": p["buy_date"],
-                    "Holding (Mesi)": p["holding_months"],
-                    "Carico Unitario": f"{p['buy_price_unit']:.2f} €",
-                    "Prezzo Attuale": f"{p['current_price']:.2f} €",
-                    "Valore di Mercato": f"{p['current_value']:,.2f} €",
+                    "Holding": f"{p['holding_months']}m",
+                    "Carico": f"{p['buy_price_unit']:.2f} €",
+                    "Prezzo Attuale": f"{cur_p:.2f} €",
+                    "Prezzo Max Acquisto": f"{max_p:.2f} €",
+                    "Finestra d'Acquisto": w_status,
+                    "Azione Operativa": act_badge,
+                    "Valore MTM": f"{p['current_value']:,.2f} €",
                     "PnL Non Realizzato": f"{p['unrealized_pnl']:+,.2f} €",
                     "ROI Non Realizzato": f"{p['unrealized_roi']*100:+.1f}%"
                 })
             st.dataframe(pd.DataFrame(op_rows).set_index("Set / Articolo"), use_container_width=True)
+
+            # GUIDA OPERATIVA LEAN & ACTION-ORIENTED
+            st.markdown("##### ⚡ Decisione Operativa Lean su Posizioni in Portafoglio (Riacquisto vs Custodia)")
+            c_acc1, c_acc2 = st.columns(2)
+            with c_acc1:
+                accumulabili = [p for p in res_optimal.open_positions if p.get("is_in_buy_window", False)]
+                acc_names = ", ".join([f"**{p['item_name']}** ({p['current_price']:.1f}€ vs Max {p['max_buy_price']:.1f}€)" for p in accumulabili]) if accumulabili else "Nessuna posizione attualmente in finestra (tutti i set posseduti sono Out-of-Print)."
+                st.markdown(f"""
+                <div style="background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.3); border-radius:10px; padding:14px; margin-bottom:12px;">
+                    <div style="font-weight:700; color:#10b981; font-size:13.5px; margin-bottom:6px;">
+                        🟢 POSIZIONI ANCORA IN FINESTRA BUONA D'ACQUISTO (ACCUMULABILI)
+                    </div>
+                    <div style="font-size:12px; color:#cbd5e1; line-height:1.5;">
+                        • <strong>Set Reperibili</strong>: {acc_names}<br>
+                        • <strong>Azione Consentita</strong>: È possibile incrementare la posizione via PAC/DCA perché il prezzo è rigorosamente inferiore al Prezzo Massimo di Acquisto (+15% MSRP) e non sono ancora cessate le ristampe.<br>
+                        • <strong>Limite di Rischio</strong>: Non superare il 12% di allocazione complessiva per singolo set.
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            with c_acc2:
+                oop_pos = [p for p in res_optimal.open_positions if not p.get("is_in_buy_window", False)]
+                oop_names = ", ".join([f"**{p['item_name']}** (+{p['unrealized_roi']*100:.0f}%)" for p in oop_pos[:3]]) if oop_pos else "Nessuna posizione in stato Out-of-Print."
+                st.markdown(f"""
+                <div style="background:rgba(148, 163, 184, 0.08); border:1px solid rgba(148, 163, 184, 0.3); border-radius:10px; padding:14px; margin-bottom:12px;">
+                    <div style="font-weight:700; color:#cbd5e1; font-size:13.5px; margin-bottom:6px;">
+                        🔒 POSIZIONI A FINESTRA CHIUSA (SOLO CUSTODIA / OOP)
+                    </div>
+                    <div style="font-size:12px; color:#94a3b8; line-height:1.5;">
+                        • <strong>Set in Cassaforte</strong>: {oop_names} {f'e altri {len(oop_pos)-3}' if len(oop_pos) > 3 else ''}<br>
+                        • <strong>Azione Tassativa</strong>: <u>NON RIACQUISTARE A MERCATO</u>. L'offerta di ristampa è chiusa ed il prezzo è già cresciuto oltre il limite di sicurezza.<br>
+                        • <strong>Target Operativo</strong>: Mantenere le unità sigillate fino al target di rotazione Tranche 1 (+70%) o uscita finale (+150%).
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
         else:
             st.info("Nessuna posizione aperta in inventario.")
 
         # SEZIONE 2: CRONOLOGIA COMPLETA SEGNALI STORICI
         st.markdown('<div class="section-title">📡 Cronologia Completa dei Segnali Storici Generati (2021 - 2026)</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">85 eventi operativi storici generati dal modello: acquisti sui dip di reprint, rotazioni scalari Tranche 1 e uscite Tranche 2.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc">85 eventi operativi storici generati dal modello con indicazione del Prezzo Massimo di Acquisto e del trigger quantitativo.</div>', unsafe_allow_html=True)
 
         if res_optimal.signals_history:
             sig_df = pd.DataFrame(res_optimal.signals_history)
@@ -747,12 +799,14 @@ def main():
             sig_rows = []
             for _, s in filtered_df.iterrows():
                 badge = "🟢 BUY" if s["action"] == "BUY" else ("🔄 TRANCHE 1" if "Tranche 1" in s["reason"] else "🔴 SELL")
+                max_p_str = f"{s['max_buy_price']:.2f} €" if "max_buy_price" in s and s["max_buy_price"] > 0 else "-"
                 sig_rows.append({
                     "Data": s["date"],
                     "Azione": badge,
                     "Prodotto": s["item_name"],
                     "Quantità": s["quantity"],
                     "Prezzo Unitario": f"{s['price']:.2f} €",
+                    "Prezzo Max Acquisto": max_p_str,
                     "Controvalore": f"{s['total_value']:,.2f} €",
                     "Cassa Residua Prima": f"{s['portfolio_cash_before']:,.2f} €",
                     "Motivazione / Trigger": s["reason"]
@@ -776,20 +830,36 @@ def main():
     # TAB RADAR: SEGNALI LIVE & LIVE DESK
     # =========================================================================
     with tab_radar:
-        st.markdown('<div class="section-title">📡 Radar Segnali Operativi in Tempo Reale & Scanner Storico</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">Monitoraggio automatico dei set in finestra di reprint a sconto (BUY) e identificazione dei target di rotazione e uscita (SELL).</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">📡 Radar Segnali Operativi in Tempo Reale & Scanner delle Finestre d\'Acquisto</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc">Monitoraggio automatico dei set in finestra di reprint a sconto (BUY), verifica del Prezzo Massimo di Acquisto e target di rotazione/uscita (SELL).</div>', unsafe_allow_html=True)
 
-        current_px_map = prices_df.iloc[-1].to_dict()
-        rc1, rc2 = st.columns([3, 1])
-        with rc1:
+        rc_snap, rc_tier = st.columns([2, 2])
+        with rc_snap:
+            snapshot_opts = {
+                "Ultima Rilevazione di Mercato (Settembre 2026)": "2026-09-01",
+                "Dicembre 2024 (Ciclo Twilight Masquerade / Temporal Forces / OP-06)": "2024-12-01",
+                "Maggio 2024 (Fase Scarlet & Violet 151 / Obsidian Flames)": "2024-05-01",
+                "Dicembre 2023 (Fase Paldea Evolved / OP-03 Pillars)": "2023-12-01",
+                "Novembre 2022 (Fase Lost Origin / Silver Tempest)": "2022-11-01",
+                "Data Attuale di Sistema (Oggi)": "today"
+            }
+            chosen_snap_lbl = st.selectbox("📅 Snapshot Temporale del Radar", options=list(snapshot_opts.keys()), index=0)
+            snap_val = snapshot_opts[chosen_snap_lbl]
+            if snap_val == "today":
+                eval_dt = datetime.date.today()
+                eval_px_map = prices_df.iloc[-1].to_dict()
+            else:
+                eval_dt = pd.to_datetime(snap_val).date()
+                eval_px_map = prices_df.loc[snap_val].to_dict() if snap_val in prices_df.index else prices_df.iloc[-1].to_dict()
+
+        with rc_tier:
             radar_tiers = st.multiselect("Tier Monitorati dal Radar", options=["S", "A", "B", "C"], default=["S", "A", "B"])
-        with rc2:
-            st.caption(f"Asset Scannerizzati: {len(metadata)}")
 
-        scan_res = scan_signals(current_prices=current_px_map, metadata=metadata, allowed_tiers=radar_tiers)
+        scan_res = scan_signals(current_prices=eval_px_map, metadata=metadata, today_dt=eval_dt, allowed_tiers=radar_tiers)
         buys = scan_res.get("buy_signals", [])
         sells = scan_res.get("sell_signals", [])
         watchlist = scan_res.get("watchlist", [])
+        all_evals = scan_res.get("all_evaluations", [])
 
         # Live Signals Layout
         l_col1, l_col2 = st.columns(2)
@@ -797,24 +867,29 @@ def main():
             st.markdown("#### 🟢 Opportunità di Acquisto sul Mercato (BUY)")
             if buys:
                 for b in buys:
+                    badge_cls = "pill-emerald" if "COMPRA" in b.get("action_badge", "") else "pill-amber"
                     st.markdown(f"""
                     <div class="signal-card signal-card-buy">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong style="font-size:15px; color:#f8fafc;">{b['name']}</strong>
-                            <span class="pill-tag pill-emerald">Tier {b['tier']}</span>
+                            <strong style="font-size:15.5px; color:#f8fafc;">{b['name']}</strong>
+                            <div>
+                                <span class="pill-tag {badge_cls}">{b.get('action_badge', '🟢 COMPRA SUBITO')}</span>
+                                <span class="pill-tag pill-slate">Tier {b['tier']}</span>
+                            </div>
                         </div>
-                        <div style="margin-top:8px; display:flex; gap:16px;">
-                            <div><span style="color:#94a3b8; font-size:11px;">PREZZO CORRENTE:</span><br><strong style="font-size:16px; color:#10b981;">{b['current_price']:.1f} €</strong></div>
-                            <div><span style="color:#94a3b8; font-size:11px;">MSRP UFFICIALE:</span><br><strong style="font-size:16px; color:#cbd5e1;">{b['msrp']:.1f} €</strong> ({b['diff_vs_msrp_pct']:+.1f}%)</div>
-                            <div><span style="color:#94a3b8; font-size:11px;">ETÀ SET:</span><br><strong style="font-size:16px; color:#cbd5e1;">{b['age_months']} Mesi</strong></div>
+                        <div style="margin-top:10px; display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; background:rgba(15,23,42,0.6); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+                            <div><span style="color:#94a3b8; font-size:11px;">PREZZO ATTUALE:</span><br><strong style="font-size:16px; color:#10b981;">{b['current_price']:.2f} €</strong></div>
+                            <div><span style="color:#94a3b8; font-size:11px;">PREZZO MAX ACQUISTO:</span><br><strong style="font-size:16px; color:#fbbf24;">{b['max_buy_price']:.2f} €</strong></div>
+                            <div><span style="color:#94a3b8; font-size:11px;">RISPARMIO SOTTO MAX:</span><br><strong style="font-size:16px; color:#38bdf8;">{b['margin_vs_max']:+.2f} € ({b['margin_vs_max_pct']:+.1f}%)</strong></div>
+                            <div><span style="color:#94a3b8; font-size:11px;">FINESTRA D'ACQUISTO:</span><br><strong style="font-size:16px; color:#cbd5e1;">Mese {b['age_months']}/14 ({b['months_left_in_window']}m rimasti)</strong></div>
                         </div>
-                        <div style="margin-top:8px; font-size:12px; color:#94a3b8;">
-                            🎯 <em>Finestra ottimale di accumulo post-reprint (Mesi 4-14). Allocazione consigliata 10-12%.</em>
+                        <div style="margin-top:10px; font-size:12.5px; color:#cbd5e1; line-height:1.45;">
+                            🎯 <strong>Azione Istituzionale Consigliata</strong>: Il set si trova nella finestra di massimo sconto post-reprint. Il prezzo è inferiore al tetto massimo di {b['max_buy_price']:.2f} € (+15% MSRP di {b['msrp']:.1f} €) di ben <strong>{b['margin_vs_max']:.2f} €</strong>. Allocare fino a un massimo del 10-12% del portafoglio (orizzonte 30-36 mesi).
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
             else:
-                st.info("Nessun set attualmente all'interno della finestra di acquisto (Mesi 4-14) con prezzo <= 1.15x MSRP. I set monitorati rimangono in watchlist.")
+                st.info(f"Nessun set attualmente all'interno della finestra di acquisto (Mesi 4-14 con prezzo <= Prezzo Max di Acquisto) per lo snapshot {eval_dt.strftime('%d/%m/%Y')}. Tutti i set monitorati rimangono in watchlist o sono già Out-of-Print.")
 
         with l_col2:
             st.markdown("#### 🔄 Uscite & Rotazioni di Portafoglio (SELL)")
@@ -832,7 +907,7 @@ def main():
                                 • <strong>Consiglio Operativo</strong>: Vendere <strong>{s['quantity']} su {s['total_quantity']} box</strong>.<br>
                                 • Prezzo di Vendita Stimato: <strong>{s['current_price']:.1f} €</strong> (Carico medio: {s['buy_price']:.1f} €)<br>
                                 • Incasso Netto Stimato: <strong>{s['net_proceeds']:.1f} €</strong> dopo {s['holding_months']} mesi (Out-of-Print confermato).<br>
-                                • <em>Sblocca cassa per reinvestire nei nuovi set a MSRP.</em>
+                                • <em>Sblocca cassa per reinvestire nei nuovi set in finestra d'acquisto a MSRP.</em>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -851,13 +926,54 @@ def main():
                         </div>
                         """, unsafe_allow_html=True)
             else:
-                st.info("Nessuna posizione in portafoglio ha ancora raggiunto i target di rotazione o uscita.")
+                st.info("Nessuna posizione in portafoglio ha ancora raggiunto i target di rotazione o uscita per questa data.")
 
-        # Watchlist
+        # SEZIONE: MATRICE COMPLETA DEL MERCATO SEALED (FINESTRE & PREZZI MASSIMI)
+        st.markdown("---")
+        st.markdown('<div class="section-title">⚡ Matrice Operativa Rapida di Tutti i Box Sealed (Finestre & Prezzi Max)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc">Quadro strategico unificato su tutti i set sealed: verifica immediata di quali box sono ancora acquistabili a sconto, in chiusura o già Out-of-Print.</div>', unsafe_allow_html=True)
+
+        if all_evals:
+            mat_filter = st.radio(
+                "Filtro Rapido Matrice",
+                ["Tutti i Box Sealed", "🟢 Solo in Finestra d'Acquisto", "⏳ Finestra in Chiusura (Pre-OOP)", "🟡 In Avvicinamento (Attendere)", "🔒 Finestra Chiusa (OOP)"],
+                horizontal=True
+            )
+            eval_rows = []
+            for ev in all_evals:
+                st_w = ev["window_status"]
+                if "Solo in Finestra" in mat_filter and "🟢" not in st_w and "⏳" not in st_w:
+                    continue
+                if "In Chiusura" in mat_filter and "⏳" not in st_w:
+                    continue
+                if "In Avvicinamento" in mat_filter and "🟡" not in st_w:
+                    continue
+                if "Finestra Chiusa" in mat_filter and "🔒" not in st_w and "⚠️" not in st_w:
+                    continue
+
+                eval_rows.append({
+                    "Set / Box": ev["name"],
+                    "Tier": ev["tier"],
+                    "Data Rilascio": ev["release_date"],
+                    "Età (Mesi)": f"{ev['age_months']}m",
+                    "Prezzo Attuale": f"{ev['current_price']:.2f} €",
+                    "MSRP Ufficiale": f"{ev['msrp']:.2f} €",
+                    "Prezzo Max Acquisto": f"{ev['max_buy_price']:.2f} €",
+                    "Margine vs Max": f"{ev['margin_vs_max']:+.2f} € ({ev['margin_vs_max_pct']:+.1f}%)",
+                    "Stato Finestra": ev["window_status"],
+                    "Mesi Residui": f"{ev['months_left']}m" if ev['months_left'] > 0 else "0m (OOP)",
+                    "Azione Operativa Immediata": ev["action"]
+                })
+            if eval_rows:
+                st.dataframe(pd.DataFrame(eval_rows).set_index("Set / Box"), use_container_width=True)
+            else:
+                st.info("Nessun prodotto corrisponde al filtro selezionato.")
+
+        # Watchlist Prodotti Monitorati
         if watchlist:
-            with st.expander(f"👀 Watchlist Prodotti Monitorati ({len(watchlist)} Set)"):
-                st.dataframe(pd.DataFrame(watchlist)[["name", "tier", "age_months", "current_price", "msrp", "status"]].rename(columns={
-                    "name": "Set / Prodotto", "tier": "Tier", "age_months": "Età (Mesi)", "current_price": "Prezzo Attuale (€)", "msrp": "MSRP (€)", "status": "Stato Monitoraggio"
+            with st.expander(f"👀 Watchlist Set Fuori Finestra o in Avvicinamento ({len(watchlist)} Set)"):
+                st.dataframe(pd.DataFrame(watchlist)[["name", "tier", "age_months", "current_price", "msrp", "max_buy_price", "status"]].rename(columns={
+                    "name": "Set / Prodotto", "tier": "Tier", "age_months": "Età (Mesi)", "current_price": "Prezzo Attuale (€)", "msrp": "MSRP (€)", "max_buy_price": "Prezzo Max (€)", "status": "Stato Monitoraggio"
                 }), use_container_width=True)
 
         # SEZIONE STORICO DEL RADAR
@@ -869,12 +985,14 @@ def main():
                 df_hr = hist_radar if y_sel == "Tutti gli Anni" else hist_radar[hist_radar["Year"] == y_sel]
                 rows_r = []
                 for _, r in df_hr.iterrows():
+                    max_p_str = f"{r['max_buy_price']:.2f} €" if "max_buy_price" in r and r["max_buy_price"] > 0 else "-"
                     rows_r.append({
                         "Data": r["date"],
                         "Azione": "🟢 BUY" if r["action"] == "BUY" else ("🔄 ROTAZIONE" if "Tranche 1" in r["reason"] else "🔴 SELL"),
                         "Set": r["item_name"],
                         "Quantità": r["quantity"],
                         "Prezzo": f"{r['price']:.2f} €",
+                        "Prezzo Max Acquisto": max_p_str,
                         "Valore": f"{r['total_value']:,.2f} €",
                         "Trigger": r["reason"]
                     })
@@ -882,13 +1000,13 @@ def main():
 
         # Gestione Posizioni Reali
         st.markdown("---")
-        st.markdown('<div class="section-title">💼 Gestione Posizioni Possedute (portfolio_holdings.json)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">💼 Gestione Posizioni Reali Possedute (portfolio_holdings.json)</div>', unsafe_allow_html=True)
         h_data = load_user_holdings()
         if h_data:
             h_rows = []
             for h in h_data:
                 iid = h.get("item_id")
-                px = current_px_map.get(iid, h.get("buy_price_unit", 0.0))
+                px = eval_px_map.get(iid, h.get("buy_price_unit", 0.0))
                 b_px = h.get("buy_price_unit", 0.0)
                 qty = h.get("quantity", 1)
                 cost = b_px * qty
@@ -896,12 +1014,33 @@ def main():
                 net_val = (px * 0.95 - 0.60) * qty
                 pnl = net_val - cost
                 roi = pnl / cost if cost > 0 else 0.0
+                
+                m_info = metadata.get(iid, {})
+                msrp_val = float(m_info.get("msrp") or 140.0)
+                max_p = round(msrp_val * 1.15, 2)
+                
+                # Finestra di acquisto
+                rel_str = m_info.get("release_date")
+                if rel_str:
+                    try:
+                        rel_d = pd.to_datetime(rel_str).date()
+                        age_m = (eval_dt.year - rel_d.year) * 12 + (eval_dt.month - rel_d.month)
+                    except Exception:
+                        age_m = 24
+                else:
+                    age_m = 24
+
+                is_reaccumulabile = (4 <= age_m <= 14) and (px <= max_p)
+                w_status = f"🟢 IN FINESTRA ({max(0, 14 - age_m)}m rimasti)" if is_reaccumulabile else ("🔒 CHIUSA (OOP)" if age_m > 14 else "⚠️ SOPRA MAX")
+
                 h_rows.append({
                     "Prodotto": h.get("name", iid),
                     "Quantità": qty,
                     "Data Acquisto": h.get("buy_date"),
                     "Prezzo Carico": f"{b_px:.1f} €",
                     "Prezzo Attuale": f"{px:.1f} €",
+                    "Prezzo Max Acquisto": f"{max_p:.1f} €",
+                    "Stato Finestra": w_status,
                     "Valore Netto": f"{net_val:.1f} €",
                     "PnL Netto": f"{pnl:+,.1f} €",
                     "ROI Netto %": f"{roi*100:+.1f}%"

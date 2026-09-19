@@ -114,6 +114,9 @@ class Backtester:
 
             # Registra la cronologia completa dei segnali generati
             for sig in signals:
+                meta_sig = self.items_metadata.get(sig.item_id, {})
+                msrp_sig = float(meta_sig.get("msrp") or 140.0)
+                max_buy_px = round(msrp_sig * 1.15, 2)
                 all_signals.append({
                     "date": date_str,
                     "action": sig.action,
@@ -122,6 +125,8 @@ class Backtester:
                     "item_type": sig.item_type,
                     "quantity": sig.quantity,
                     "price": sig.target_price,
+                    "msrp": msrp_sig,
+                    "max_buy_price": max_buy_px,
                     "total_value": sig.quantity * sig.target_price,
                     "reason": sig.reason,
                     "portfolio_cash_before": cash_before,
@@ -249,6 +254,40 @@ class Backtester:
                 held_m = max(1, (last_dt.year - b_dt.year) * 12 + (last_dt.month - b_dt.month))
             except Exception:
                 held_m = 1
+
+            # Informazioni su MSRP, Prezzo Massimo d'Acquisto e Finestra di Acquisto
+            meta = self.items_metadata.get(item_id, {})
+            msrp = float(meta.get("msrp") or 140.0)
+            max_buy_price = round(msrp * 1.15, 2)
+            rel_str = meta.get("release_date")
+            if rel_str:
+                try:
+                    rel_dt = pd.to_datetime(rel_str)
+                    set_age_m = max(0, (last_dt.year - rel_dt.year) * 12 + (last_dt.month - rel_dt.month))
+                except Exception:
+                    set_age_m = held_m + 6
+            else:
+                set_age_m = held_m + 6
+
+            months_left = max(0, 14 - set_age_m)
+            is_in_window = (4 <= set_age_m <= 14) and (cur_px <= max_buy_price)
+
+            if is_in_window:
+                if set_age_m <= 11:
+                    w_status = f"🟢 IN FINESTRA ({months_left}m rimasti)"
+                else:
+                    w_status = f"⏳ IN CHIUSURA ({months_left}m rimasti)"
+                w_verdict = f"Accumulabile: Prezzo {cur_px:.2f}€ <= Max {max_buy_price:.2f}€ (MSRP {msrp:.2f}€)"
+            elif set_age_m < 4:
+                w_status = f"🟡 RECENTE ({4 - set_age_m}m a reprint)"
+                w_verdict = "Set in lancio, attendere finestra ristampe (Mesi 4-14)"
+            elif set_age_m <= 14 and cur_px > max_buy_price:
+                w_status = "⚠️ SOPRA PREZZO MAX"
+                w_verdict = f"Prezzo {cur_px:.2f}€ > Limite Max {max_buy_price:.2f}€ (+15% MSRP)"
+            else:
+                w_status = "🔒 FINESTRA CHIUSA (OOP)"
+                w_verdict = f"Età {set_age_m}m > 14m: Set Out-of-Print. Solo holding/vendita."
+
             open_positions.append({
                 "item_id": item_id,
                 "item_name": pos.item_name,
@@ -261,7 +300,14 @@ class Backtester:
                 "current_value": mkt_val,
                 "unrealized_pnl": unrealized_pnl,
                 "unrealized_roi": unrealized_roi,
-                "holding_months": held_m
+                "holding_months": held_m,
+                "msrp": msrp,
+                "max_buy_price": max_buy_price,
+                "set_age_months": set_age_m,
+                "is_in_buy_window": is_in_window,
+                "months_left_in_window": months_left,
+                "window_status": w_status,
+                "window_verdict": w_verdict
             })
 
         # Metriche di Rotazione del Capitale e Turnover
