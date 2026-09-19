@@ -1,0 +1,192 @@
+{
+  "stellar_crown_bb": {
+    "name": "Stellar Crown Booster Box",
+    "franchise": "pokemon",
+    "language": "en",
+    "last_verified_price": 249.65,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real / User Verified",
+    "msrp": 160.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Stellar-Crown-Booster-Box"
+  },
+  "temporal_forces_bb": {
+    "name": "Temporal Forces Booster Box",
+    "franchise": "pokemon",
+    "language": "en",
+    "last_verified_price": 225.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Desk Override",
+    "msrp": 160.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Temporal-Forces-Booster-Box"
+  },
+  "paradox_rift_bb": {
+    "name": "Paradox Rift Booster Box",
+    "franchise": "pokemon",
+    "language": "en",
+    "last_verified_price": 225.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real / User Verified",
+    "msrp": 160.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Paradox-Rift-Booster-Box"
+  },
+  "scarlet_violet_base_bb": {
+    "name": "Scarlet & Violet Base Booster Box",
+    "franchise": "pokemon",
+    "language": "en",
+    "last_verified_price": 204.9,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real / User Verified",
+    "msrp": 160.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Scarlet-Violet-Booster-Box"
+  },
+  "paldea_evolved_bb": {
+    "name": "Paldea Evolved Booster Box",
+    "franchise": "pokemon",
+    "language": "en",
+    "last_verified_price": 275.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 160.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Paldea-Evolved-Booster-Box"
+  },
+  "twilight_masquerade_bb": {
+    "name": "Twilight Masquerade Booster Box",
+    "franchise": "pokemon",
+    "language": "en",
+    "last_verified_price": 235.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 160.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Twilight-Masquerade-Booster-Box"
+  },
+  "obsidian_flames_bb": {
+    "name": "Obsidian Flames Booster Box",
+    "franchise": "pokemon",
+    "language": "en",
+    "last_verified_price": 195.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 160.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Obsidian-Flames-Booster-Box"
+  },
+  "surging_sparks_bb": {
+    "name": "Surging Sparks Booster Box",
+    "franchise": "pokemon",
+    "language": "en",
+    "last_verified_price": 230.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 160.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Surging-Sparks-Booster-Box"
+  },
+  "scarlet_violet_151_bundle": {
+    "name": "Scarlet & Violet 151 Booster Bundle (6 Packs)",
+    "franchise": "pokemon",
+    "language": "en",
+    "last_verified_price": 45.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 30.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Bundles/Scarlet-Violet-151-Booster-Bundle"
+  },
+  "jp_vstar_universe_bb": {
+    "name": "VSTAR Universe Booster Box [JP]",
+    "franchise": "pokemon",
+    "language": "jp",
+    "last_verified_price": 115.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 55.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/VSTAR-Universe-Booster-Box"
+  },
+  "jp_vmax_climax_bb": {
+    "name": "VMAX Climax Booster Box [JP]",
+    "franchise": "pokemon",
+    "language": "jp",
+    "last_verified_price": 135.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 55.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/VMAX-Climax-Booster-Box"
+  },
+  "jp_shiny_treasure_bb": {
+    "name": "Shiny Treasure ex Booster Box [JP]",
+    "franchise": "pokemon",
+    "language": "jp",
+    "last_verified_price": 62.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 55.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Shiny-Treasure-ex-Booster-Box"
+  },
+  "jp_shiny_star_v_bb": {
+    "name": "Shiny Star V Booster Box [JP]",
+    "franchise": "pokemon",
+    "language": "jp",
+    "last_verified_price": 145.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 55.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Shiny-Star-V-Booster-Box"
+  },
+  "jp_tag_all_stars_bb": {
+    "name": "Tag All Stars Booster Box [JP]",
+    "franchise": "pokemon",
+    "language": "jp",
+    "last_verified_price": 480.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 55.0,
+    "cardmarket_path": "Pokemon/Products/Booster-Boxes/Tag-Team-GX-Tag-All-Stars-Booster-Box"
+  },
+  "op01_romance_dawn_bb": {
+    "name": "Romance Dawn Booster Box [OP-01]",
+    "franchise": "one_piece",
+    "language": "en",
+    "last_verified_price": 380.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 120.0,
+    "cardmarket_path": "OnePiece/Products/Booster-Boxes/Romance-Dawn-Booster-Box"
+  },
+  "op02_paramount_war_bb": {
+    "name": "Paramount War Booster Box [OP-02]",
+    "franchise": "one_piece",
+    "language": "en",
+    "last_verified_price": 185.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 120.0,
+    "cardmarket_path": "OnePiece/Products/Booster-Boxes/Paramount-War-Booster-Box"
+  },
+  "op03_pillars_strength_bb": {
+    "name": "Pillars of Strength Booster Box [OP-03]",
+    "franchise": "one_piece",
+    "language": "en",
+    "last_verified_price": 175.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 120.0,
+    "cardmarket_path": "OnePiece/Products/Booster-Boxes/Pillars-of-Strength-Booster-Box"
+  },
+  "op05_new_era_bb": {
+    "name": "Awakening of the New Era Booster Box [OP-05]",
+    "franchise": "one_piece",
+    "language": "en",
+    "last_verified_price": 280.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 120.0,
+    "cardmarket_path": "OnePiece/Products/Booster-Boxes/Awakening-of-the-New-Era-Booster-Box"
+  },
+  "op06_wings_captain_bb": {
+    "name": "Wings of the Captain Booster Box [OP-06]",
+    "franchise": "one_piece",
+    "language": "en",
+    "last_verified_price": 138.0,
+    "last_updated": "2026-09-19",
+    "source": "Cardmarket Real",
+    "msrp": 120.0,
+    "cardmarket_path": "OnePiece/Products/Booster-Boxes/Flocks-of-the-Captain-Booster-Box"
+  }
+}

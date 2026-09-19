@@ -17,6 +17,14 @@ from plotly.subplots import make_subplots
 
 from poke_quant.config import PLATFORM_FEES, SHIPPING_COSTS, GRADING_DEFAULT
 from poke_quant.data.storage import load_price_matrix, load_metadata, load_macro_matrix
+from poke_quant.data.cardmarket_bridge import (
+    load_cardmarket_quotes,
+    update_cardmarket_quote,
+    get_cardmarket_live_prices,
+    get_cardmarket_deep_link,
+    evaluate_cardmarket_item
+)
+from poke_quant.data.europe_market_calibrator import get_market_price_matrix, calibrate_price_matrix_for_europe
 from poke_quant.data.price_fetcher import build_and_cache_universe
 from poke_quant.data.catalog_fetcher import fetch_all_sets, fetch_cards_by_set
 from poke_quant.engine.backtester import Backtester
@@ -365,8 +373,8 @@ def generate_executive_report(
 # 2. DATA CACHING & INITIALIZATION
 # =============================================================================
 @st.cache_data(show_spinner=False)
-def get_cached_data():
-    prices_df = load_price_matrix()
+def get_cached_data(regime: str = "europe_cardmarket"):
+    prices_df = get_market_price_matrix(regime)
     meta = load_metadata()
     if prices_df is None or meta is None:
         prices_df, meta = build_and_cache_universe(force_refresh=False)
@@ -375,26 +383,6 @@ def get_cached_data():
 
 
 def main():
-    # Caricamento dati
-    with st.spinner("Inizializzazione feed prezzi e asset reali..."):
-        full_prices_df, full_metadata, macro_df = get_cached_data()
-
-    # --- COMPACT NAV HEADER ---
-    st.markdown("""
-    <div class="nav-header">
-        <div class="nav-brand">
-            <span class="nav-title">⚡ PokeQuant Quantitative Terminal</span>
-            <span style="color:#64748b; font-size:12px; margin-left:6px;">| Institutional Collectibles & Alternative Alpha Engine</span>
-        </div>
-        <div class="pill-group">
-            <span class="pill-tag pill-emerald">● 53 Asset Reali</span>
-            <span class="pill-tag pill-blue">● 68 Mesi Storico</span>
-            <span class="pill-tag pill-amber">● Rotazione Scalare</span>
-            <span class="pill-tag pill-purple">● 8 Test Popperiani</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
     # --- SESSION STATE INITIALIZATION ---
     if "current_capital" not in st.session_state:
         st.session_state["current_capital"] = 10000.0
@@ -402,9 +390,44 @@ def main():
         st.session_state["sb_initial_cash_input"] = 10000.0
     if "sb_capital_mode" not in st.session_state:
         st.session_state["sb_capital_mode"] = "💰 Capitale Dedicato a PokeQuant"
+    if "sb_market_regime" not in st.session_state:
+        st.session_state["sb_market_regime"] = "🇪🇺 Europa (Cardmarket EUR · IVA · Fee 5%)"
+
+    current_regime_str = st.session_state.get("sb_market_regime", "🇪🇺 Europa (Cardmarket EUR · IVA · Fee 5%)")
+    current_market_regime = "europe_cardmarket" if "Europa" in current_regime_str else "us_global"
+
+    with st.spinner(f"Inizializzazione feed ({current_market_regime})..."):
+        full_prices_df, full_metadata, macro_df = get_cached_data(current_market_regime)
+
+    # --- COMPACT NAV HEADER ---
+    st.markdown(f"""
+    <div class="nav-header">
+        <div class="nav-brand">
+            <span class="nav-title">⚡ PokeQuant Quantitative Terminal</span>
+            <span style="color:#64748b; font-size:12px; margin-left:6px;">| Institutional Collectibles & Alternative Alpha Engine</span>
+        </div>
+        <div class="pill-group">
+            <span class="pill-tag pill-emerald">● {len(full_prices_df.columns)} Asset Reali</span>
+            <span class="pill-tag pill-blue">● {len(full_prices_df)} Mesi Storico</span>
+            <span class="pill-tag pill-purple">● {'🇪🇺 Cardmarket EUR' if current_market_regime == 'europe_cardmarket' else '🇺🇸 PriceCharting USD'}</span>
+            <span class="pill-tag pill-amber">● Rotazione Scalare</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # --- SIDEBAR: PARAMETRI GLOBALI & AMBIENTE ---
     with st.sidebar:
+        st.markdown("### 🌍 Mercato di Riferimento")
+        market_regime_choice = st.selectbox(
+            "Regime & Benchmark Dati",
+            options=[
+                "🇪🇺 Europa (Cardmarket EUR · IVA · Fee 5%)",
+                "🇺🇸 Globale (PriceCharting USD · Floor USA)"
+            ],
+            key="sb_market_regime",
+            help="Scegli se eseguire il backtest e i segnali sul mercato europeo Cardmarket (in Euro, con IVA inclusa, fee Cardmarket 5% e spread linguistico) o sui dati storici americani grezzi PriceCharting (in Dollari)."
+        )
+
         st.markdown("### ⚙️ Definizione Capitale & Allocazione")
         capital_mode = st.radio(
             "Modalità Inserimento Capitale",
@@ -547,6 +570,7 @@ def main():
         cmd_h1, cmd_h2 = st.columns([3, 2])
         with cmd_h1:
             desk_snap_opts = {
+                "📡 Cardmarket Live Desk (Quotazioni Reali UE · ENG/JAP/One Piece)": "cardmarket_live",
                 "Dicembre 2024 (Ciclo Recente - 5 BUY Attivi)": "2024-12-01",
                 "Settembre 2026 (Rotazioni & Asset Maturo)": "2026-09-01",
                 "Maggio 2024 (Fase Scarlet & Violet 151)": "2024-05-01",
@@ -556,7 +580,12 @@ def main():
             }
             chosen_desk_snap = st.selectbox("📅 Snapshot Temporale Desk", options=list(desk_snap_opts.keys()), index=0, key="cmd_desk_snap_sel")
             desk_snap_val = desk_snap_opts[chosen_desk_snap]
-            if desk_snap_val == "today":
+            if desk_snap_val == "cardmarket_live":
+                d_eval_dt = datetime.date.today()
+                d_eval_px = prices_df.iloc[-1].to_dict()
+                cm_live_p = get_cardmarket_live_prices()
+                d_eval_px.update(cm_live_p)
+            elif desk_snap_val == "today":
                 d_eval_dt = datetime.date.today()
                 d_eval_px = prices_df.iloc[-1].to_dict()
             else:
@@ -728,7 +757,85 @@ def main():
                 s_cm_url = get_cardmarket_url(s_name, s_meta.get("franchise", "pokemon"))
                 st.markdown(f'<div style="text-align:right; margin-top:8px;"><a href="{s_cm_url}" target="_blank" class="cm-btn">🛒 Compra su Cardmarket ↗</a></div>', unsafe_allow_html=True)
 
-        # 39-Set Sealed Matrix
+        # --- 📡 CARDMARKET LIVE DESK (MONITORAGGIO PREZZI REALI UE) ---
+        st.markdown("---")
+        st.markdown('<div class="section-title">📡 Cardmarket Live Desk — Prezzi Reali UE (ENG · JAP · One Piece)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc">Quotazioni reali sincronizzate dal marketplace europeo Cardmarket. Monitoraggio istantaneo dello scostamento rispetto al Prezzo Massimo Consentito (Cap 161€ / +15% MSRP) e salvaguardia del capitale.</div>', unsafe_allow_html=True)
+
+        cm_d_c1, cm_d_c2 = st.columns([3, 1])
+        with cm_d_c1:
+            cm_desk_filter = st.radio(
+                "Filtro Mercato Desk:",
+                options=["Tutti gli Asset", "🇬🇧 Pokémon ENG", "🇯🇵 Pokémon JAP", "🏴‍☠️ One Piece TCG"],
+                horizontal=True,
+                key="cm_desk_cat_filter"
+            )
+        with cm_d_c2:
+            st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
+            cm_show_editor = st.toggle("✏️ Modifica / Aggiorna Prezzo", value=False, key="cm_desk_toggle_edit")
+
+        cm_f_filter = None
+        cm_l_filter = None
+        if "Pokémon ENG" in cm_desk_filter:
+            cm_f_filter = "pokemon"
+            cm_l_filter = "en"
+        elif "Pokémon JAP" in cm_desk_filter:
+            cm_f_filter = "pokemon"
+            cm_l_filter = "jp"
+        elif "One Piece" in cm_desk_filter:
+            cm_f_filter = "one_piece"
+
+        cm_all_quotes = load_cardmarket_quotes()
+        cm_eval_list = []
+        for q_id, q_val in cm_all_quotes.items():
+            q_fr = q_val.get("franchise", "pokemon")
+            q_lg = q_val.get("language", "en")
+            if cm_f_filter and q_fr != cm_f_filter:
+                continue
+            if cm_l_filter and q_lg != cm_l_filter:
+                continue
+            meta_q = metadata.get(q_id, {})
+            live_p = float(q_val.get("last_verified_price", 0.0))
+            ev = evaluate_cardmarket_item(q_id, meta_q, live_p, current_date=d_eval_dt)
+            cm_eval_list.append(ev)
+
+        if cm_eval_list:
+            for ev in cm_eval_list:
+                badge_html = f'<span class="pill-tag pill-{ev["badge_color"]}">{ev["status_label"]}</span>'
+                delta_col = "#ef4444" if ev["delta_vs_cap"] > 0 else "#10b981"
+                delta_sign = "+" if ev["delta_vs_cap"] > 0 else ""
+                
+                gc1, gc2, gc3, gc4, gc5 = st.columns([3, 1.4, 1.6, 2.5, 1.5])
+                with gc1:
+                    st.markdown(f"**{ev['name']}**<br><span style='font-size:11px; color:#94a3b8;'>{ev['franchise'].upper()} · {ev['language'].upper()} · Mese {ev['age_months']}/14</span>", unsafe_allow_html=True)
+                with gc2:
+                    st.markdown(f"<span style='font-size:14px; font-weight:700; color:#f8fafc;'>{ev['live_price']:.2f} €</span><br><span style='font-size:11px; color:#64748b;'>Cardmarket Live</span>", unsafe_allow_html=True)
+                with gc3:
+                    st.markdown(f"<span style='font-size:12px; color:#94a3b8;'>Cap: <strong>{ev['max_buy_px']:.1f} €</strong></span><br><span style='font-size:11px; color:{delta_col}; font-weight:600;'>{delta_sign}{ev['delta_vs_cap_pct']:.1f}% vs Cap</span>", unsafe_allow_html=True)
+                with gc4:
+                    st.markdown(f"{badge_html}<br><span style='font-size:11px; color:#cbd5e1;'>{ev['action_desc'][:46]}...</span>", unsafe_allow_html=True)
+                with gc5:
+                    st.markdown(f"<div style='margin-top:6px;'><a href='{ev['cardmarket_url']}' target='_blank' class='cm-btn' style='font-size:11px; padding:3px 8px;'>Cardmarket ↗</a></div>", unsafe_allow_html=True)
+                st.markdown("<div style='border-bottom:1px solid rgba(255,255,255,0.05); margin:3px 0;'></div>", unsafe_allow_html=True)
+
+        if cm_show_editor:
+            st.markdown("##### ✏️ Sincronizza Prezzo Rilevato su Cardmarket")
+            ec1, ec2, ec3, ec4 = st.columns([3, 2, 2, 2])
+            with ec1:
+                ed_id = st.selectbox("Seleziona Set", options=list(cm_all_quotes.keys()), format_func=lambda x: f"{cm_all_quotes[x]['name']} ({cm_all_quotes[x]['language'].upper()})", key="cm_ed_sel_id")
+            with ec2:
+                cur_v = float(cm_all_quotes[ed_id].get("last_verified_price", 100.0))
+                ed_new_px = st.number_input("Prezzo Minimo Reale (€)", min_value=1.0, max_value=25000.0, value=cur_v, step=1.0, key="cm_ed_px_input")
+            with ec3:
+                ed_lang = st.selectbox("Lingua Rilevata", options=["en", "it", "jp"], index=0 if cm_all_quotes[ed_id].get("language")=="en" else (1 if cm_all_quotes[ed_id].get("language")=="it" else 2), key="cm_ed_lang_sel")
+            with ec4:
+                st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
+                if st.button("⚡ Salva & Ricalcola", type="primary", use_container_width=True, key="cm_ed_save_btn"):
+                    update_cardmarket_quote(ed_id, ed_new_px, language=ed_lang, source="Cardmarket Desk User Override")
+                    st.success(f"Aggiornato {ed_id} a {ed_new_px:.2f} €!")
+                    st.rerun()
+
+        # Matrice Sealed
         st.markdown('<div class="section-title" style="margin-top:16px;">⚡ Matrice Operativa di Tutti i Box Sealed (Finestre & Prezzi Max)</div>', unsafe_allow_html=True)
         st.markdown('<div class="section-desc">Quadro strategico unificato su tutti i set sealed: verifica immediata di quali box sono ancora acquistabili a sconto, in chiusura o già Out-of-Print.</div>', unsafe_allow_html=True)
 
@@ -905,6 +1012,13 @@ def main():
     with tab_backtest:
         st.markdown('<div class="section-title">⚡ Simulatore Strategie con Rotazione Dinamica Scalare</div>', unsafe_allow_html=True)
         st.markdown('<div class="section-desc">Esecuzione quantitativa su 68 mesi di prezzi reali (2021-2026), sblocco periodico di liquidità e reinvestimento nei reprint moderni.</div>', unsafe_allow_html=True)
+
+        regime_badge = (
+            "🇪🇺 **Regime Calibrato: Mercato Europeo Cardmarket (EUR)** · IVA reale inclusa nei floor distributivi (125-135€) · Commissioni Cardmarket 5% + 0.60€ · Spread linguistico attivo"
+            if current_market_regime == "europe_cardmarket"
+            else "🇺🇸 **Regime Globale/USA: PriceCharting (USD)** · Dati eBay/TCGPlayer USA grezzi non filtrati per il mercato europeo"
+        )
+        st.info(regime_badge)
 
         # PRESETS FRICTIONLESS (One-Click Setup)
         preset_col1, preset_col2 = st.columns([3, 1])
