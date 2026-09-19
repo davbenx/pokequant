@@ -395,9 +395,13 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # --- SIDEBAR: PARAMETRI GLOBALI & AMBIENTE ---
+    # --- SESSION STATE INITIALIZATION ---
     if "current_capital" not in st.session_state:
         st.session_state["current_capital"] = 10000.0
+    if "sb_initial_cash_input" not in st.session_state:
+        st.session_state["sb_initial_cash_input"] = 10000.0
+    if "sb_capital_mode" not in st.session_state:
+        st.session_state["sb_capital_mode"] = "💰 Capitale Dedicato a PokeQuant"
 
     # --- SIDEBAR: PARAMETRI GLOBALI & AMBIENTE ---
     with st.sidebar:
@@ -405,6 +409,7 @@ def main():
         capital_mode = st.radio(
             "Modalità Inserimento Capitale",
             options=["💰 Capitale Dedicato a PokeQuant", "🌐 Patrimonio Totale + Quota %"],
+            key="sb_capital_mode",
             help="Scegli se inserire direttamente l'ammontare allocato a PokeQuant o calcolarlo come quota percentuale del tuo patrimonio complessivo."
         )
 
@@ -412,7 +417,6 @@ def main():
             initial_cash = st.number_input(
                 "Capitale Allocato a PokeQuant (€)",
                 min_value=500.0, max_value=1000000.0,
-                value=float(st.session_state["current_capital"]),
                 step=500.0,
                 key="sb_initial_cash_input",
                 help="Ammontare monetario netto interamente dedicato alla strategia sui box sigillati."
@@ -502,6 +506,11 @@ def main():
     active_cols = [c for c in full_prices_df.columns if c in metadata]
     prices_df = full_prices_df[active_cols]
 
+    def _update_capital_preset(new_cap: float):
+        st.session_state["current_capital"] = float(new_cap)
+        st.session_state["sb_initial_cash_input"] = float(new_cap)
+        st.session_state["sb_capital_mode"] = "💰 Capitale Dedicato a PokeQuant"
+
     # --- QUICK CAPITAL BAR (One-Click Allocation Switcher) ---
     st.markdown('<div style="font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:4px;">⚡ Allocazione Rapida Capitale:</div>', unsafe_allow_html=True)
     q1, q2, q3, q4, q5, q6 = st.columns(6)
@@ -510,11 +519,14 @@ def main():
         with col:
             is_active = (abs(initial_cash - cap_val) < 1.0)
             btn_lbl = f"{int(cap_val/1000)}k €" if cap_val >= 1000 else f"{int(cap_val)} €"
-            if st.button(f"{'● ' if is_active else ''}{btn_lbl}", key=f"btn_cap_{int(cap_val)}", type="primary" if is_active else "secondary", use_container_width=True):
-                st.session_state["current_capital"] = cap_val
-                if "sb_initial_cash_input" in st.session_state:
-                    st.session_state["sb_initial_cash_input"] = cap_val
-                st.rerun()
+            st.button(
+                f"{'● ' if is_active else ''}{btn_lbl}",
+                key=f"btn_cap_{int(cap_val)}",
+                type="primary" if is_active else "secondary",
+                use_container_width=True,
+                on_click=_update_capital_preset,
+                args=(cap_val,)
+            )
 
     # --- TABS PRINCIPALI (5-TAB COCKPIT) ---
     tab_cmd, tab_backtest, tab_psa, tab_audit, tab_catalog = st.tabs([
