@@ -1104,15 +1104,28 @@ def main():
 
         with aud2:
             st.markdown("#### Probability of Backtest Overfitting (PBO / CSCV)")
-            perf_mat = np.column_stack([
-                res_optimal.monthly_returns.values,
-                res_sealed.monthly_returns.values,
-                res_chase.monthly_returns.values
-            ])
-            pbo_val = pbo_cscv(perf_mat, n_splits=4 if len(perf_mat) >= 16 else 2)
-            st.metric("PBO Score", f"{pbo_val:.2f}", "Rischio Overfitting Nullo" if pbo_val == 0.0 else "Rischio Moderato")
-            if pbo_val <= 0.10:
-                st.success("✅ **Zero Overfitting**: La strategia vincente in-sample si riconferma top performer out-of-sample in tutte le partizioni CSCV.")
+            try:
+                common_idx = res_optimal.monthly_returns.index.intersection(
+                    res_sealed.monthly_returns.index
+                ).intersection(res_chase.monthly_returns.index)
+                
+                if len(common_idx) >= 8:
+                    perf_mat = np.column_stack([
+                        res_optimal.monthly_returns.loc[common_idx].values,
+                        res_sealed.monthly_returns.loc[common_idx].values,
+                        res_chase.monthly_returns.loc[common_idx].values
+                    ])
+                    n_sp = 4 if len(perf_mat) >= 16 else 2
+                    pbo_val = pbo_cscv(perf_mat, n_splits=n_sp)
+                    st.metric("PBO Score", f"{pbo_val:.2f}", "Rischio Overfitting Nullo" if pbo_val == 0.0 else "Rischio Moderato")
+                    if pbo_val <= 0.10:
+                        st.success("✅ **Zero Overfitting**: La strategia vincente in-sample si riconferma top performer out-of-sample in tutte le partizioni CSCV.")
+                    else:
+                        st.info(f"PBO calcolato: {pbo_val:.2%}")
+                else:
+                    st.info("Campione temporale insufficiente per il calcolo del PBO.")
+            except Exception as e:
+                st.warning(f"Calcolo CSCV non disponibile: {e}")
 
         st.markdown("---")
         st.markdown("#### Risultati della Suite di Falsificazione (8 Test Popperiani)")

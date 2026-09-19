@@ -85,8 +85,16 @@ def pbo_cscv(performance_matrix: np.ndarray, n_splits: int = 8) -> float:
     T, N = performance_matrix.shape
     if N < 2:
         raise ValueError("servono almeno 2 varianti da confrontare per calcolare il PBO")
-    if T % n_splits != 0:
-        raise ValueError(f"T={T} periodi non divisibile per n_splits={n_splits}")
+    if n_splits < 2 or n_splits % 2 != 0:
+        raise ValueError("n_splits deve essere un numero pari >= 2")
+    if T < n_splits:
+        raise ValueError(f"T={T} periodi insufficienti per n_splits={n_splits}")
+
+    # Se T non è un multiplo esatto di n_splits, scartiamo i residui iniziali
+    rem = T % n_splits
+    if rem > 0:
+        performance_matrix = performance_matrix[rem:, :]
+        T = performance_matrix.shape[0]
 
     block_size = T // n_splits
     blocks = [performance_matrix[i*block_size:(i+1)*block_size, :] for i in range(n_splits)]

@@ -25,3 +25,30 @@ def test_pbo_cscv_random_noise():
     noise_matrix = rng.normal(0.0, 0.05, size=(64, 10))
     pbo = pbo_cscv(noise_matrix, n_splits=8)
     assert 0.25 <= pbo <= 0.75
+
+
+def test_pbo_cscv_non_divisible_periods():
+    # Verifica che T=67 (numero primo) non sollevi ValueError ma scarti i residui iniziali
+    rng = np.random.default_rng(123)
+    mat = rng.normal(0.01, 0.04, size=(67, 3))
+    pbo_4 = pbo_cscv(mat, n_splits=4)
+    assert 0.0 <= pbo_4 <= 1.0
+
+    pbo_8 = pbo_cscv(mat, n_splits=8)
+    assert 0.0 <= pbo_8 <= 1.0
+
+
+def test_pbo_cscv_invalid_inputs():
+    rng = np.random.default_rng(99)
+    # N < 2
+    with pytest.raises(ValueError, match="almeno 2 varianti"):
+        pbo_cscv(rng.normal(0, 1, size=(50, 1)), n_splits=4)
+
+    # n_splits dispari
+    with pytest.raises(ValueError, match="numero pari"):
+        pbo_cscv(rng.normal(0, 1, size=(50, 2)), n_splits=3)
+
+    # T < n_splits
+    with pytest.raises(ValueError, match="insufficienti"):
+        pbo_cscv(rng.normal(0, 1, size=(3, 2)), n_splits=4)
+
