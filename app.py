@@ -307,12 +307,40 @@ def main():
 
     # --- SIDEBAR: PARAMETRI GLOBALI & AMBIENTE ---
     with st.sidebar:
-        st.markdown("### ⚙️ Parametri di Portafoglio")
-        initial_cash = st.number_input(
-            "Capitale Iniziale (€)",
-            min_value=1000.0, max_value=500000.0, value=10000.0, step=1000.0,
-            help="Capitale di partenza disponibile per l'allocazione."
+        st.markdown("### ⚙️ Definizione Capitale & Allocazione")
+        capital_mode = st.radio(
+            "Modalità Inserimento Capitale",
+            options=["💰 Capitale Dedicato a PokeQuant", "🌐 Patrimonio Totale + Quota %"],
+            help="Scegli se inserire direttamente l'ammontare allocato a PokeQuant o calcolarlo come quota percentuale del tuo patrimonio complessivo."
         )
+
+        if "Dedicato" in capital_mode:
+            initial_cash = st.number_input(
+                "Capitale Allocato a PokeQuant (€)",
+                min_value=500.0, max_value=1000000.0, value=10000.0, step=500.0,
+                help="Ammontare monetario netto interamente dedicato alla strategia sui box sigillati."
+            )
+            total_investable_wealth = initial_cash
+            alloc_pct_val = 100.0
+        else:
+            total_investable_wealth = st.number_input(
+                "Patrimonio Complessivo Investibile (€)",
+                min_value=2000.0, max_value=5000000.0, value=100000.0, step=5000.0,
+                help="Valore complessivo del patrimonio liquido/investibile (Azioni, Obbligazioni, Cassa, Alternativi)."
+            )
+            alloc_pct_val = st.slider(
+                "Quota Alternativi PokeQuant (%)",
+                min_value=1.0, max_value=30.0, value=10.0, step=0.5,
+                help="Percentuale del patrimonio totale allocata alla strategia PokeQuant (consigliata: 5% - 15%)."
+            )
+            initial_cash = round(total_investable_wealth * (alloc_pct_val / 100.0), 2)
+            core_capital = total_investable_wealth - initial_cash
+            st.markdown(f"""
+            <div style="background:rgba(56, 189, 248, 0.08); border:1px solid rgba(56, 189, 248, 0.25); border-radius:8px; padding:10px; font-size:12px; margin-bottom:10px;">
+                • <strong>Capitale Allocato PokeQuant</strong>: <span style="color:#38bdf8; font-weight:700;">{initial_cash:,.2f} €</span> ({alloc_pct_val:.1f}%)<br>
+                • <strong>Patrimonio Core (S&P 500 / Bond)</strong>: <span style="color:#94a3b8;">{core_capital:,.2f} €</span> ({100.0 - alloc_pct_val:.1f}%)
+            </div>
+            """, unsafe_allow_html=True)
 
         st.markdown("### 📊 Benchmark di Mercato")
         bench_choice = st.selectbox(
@@ -432,7 +460,7 @@ def main():
             target_roi = 1.50
             min_h = 30
             sel_tiers = ["S", "A", "B"]
-            dca_val = 250.0
+            dca_val = round(initial_cash * 0.025, 0)  # 2.5% del capitale di partenza al mese
         else:
             enable_rot = True
             t1_roi = 0.70
@@ -564,9 +592,33 @@ def main():
                 <div class="kpi-label">Composizione Attuale</div>
                 <div class="kpi-value">{len(res_optimal.open_positions)} Set Attivi</div>
                 <div class="kpi-sub kpi-sub-neutral">💼 {tot_inv_val:,.0f}€ Inv. | 💵 {last_cash:,.0f}€ Cassa</div>
-            </div>
         </div>
         """, unsafe_allow_html=True)
+
+        # Ripartizione Proporzionale dei Box Indivisibili
+        open_box_cnt = sum(p["quantity"] for p in res_optimal.open_positions) if res_optimal.open_positions else 0
+        closed_box_cnt = int(res_optimal.trades_df["quantity"].sum()) if not res_optimal.trades_df.empty else 0
+        total_boxes_managed = open_box_cnt + closed_box_cnt
+        net_profit_abs = res_optimal.final_nav - initial_cash
+
+        st.markdown(f"""
+        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(30, 41, 59, 0.45); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 18px; margin-top:12px; margin-bottom:14px; font-size:13px; color:#cbd5e1;">
+            <div>💰 <strong>Capitale Iniziale Allocato</strong>: <span style="color:#f8fafc; font-weight:700;">{initial_cash:,.2f} €</span></div>
+            <div>📈 <strong>Profitto Netto Assoluto</strong>: <span style="color:#10b981; font-weight:700;">+{net_profit_abs:,.2f} €</span></div>
+            <div>📦 <strong>Box Fisici Gestiti</strong>: <span style="color:#38bdf8; font-weight:700;">{total_boxes_managed} Unità Intere</span> ({open_box_cnt} in custodia + {closed_box_cnt} ruotati)</div>
+            <div>⚡ <strong>Modello di Scalabilità</strong>: <span style="color:#fbbf24; font-weight:600;">Lotto Minimo Discreto (No Frazioni)</span></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        with st.expander("ℹ️ Come Scala la Strategia sui Box Indivisibili (Discrete Unit Lot Sizing)"):
+            st.markdown(r"""
+            **Principio Quantitativo dell'Indivisibilità degli Asset Reali:**
+            - **Nessuna Frazione Astratta**: Nei mercati azionari o crypto è possibile acquistare frazioni (es. 0.35 azioni). I Booster Box sono **beni fisici discreti e indivisibili** ($q \in \mathbb{N}_{\ge 1}$).
+            - **Scaling Proporzionale Matematico**: Variando il capitale (es. da 2.500 € a 100.000 €), l'algoritmo scala il budget per set ($NAV \times \text{Cap \%}$) e applica la divisione intera per il prezzo unitario reale ($\lfloor \text{Budget} / P_i \rfloor$).
+            - **Regola del Lotto Minimo per Piccoli Capitali (< 3.000 €)**: Se il budget teorico del 12% è inferiore al prezzo di 1 box (es. 120 € su 1.000 € di capitale con un box da 135 €), il sistema **autorizza comunque l'acquisto di 1 box intero** purché la cassa lo copra e non si superi il 35% del NAV totale. Questo evita che i conti piccoli restino a zero acquisti!
+            - **Resto Indivisibile (Cash Buffer)**: La frazione monetaria non sufficiente a comprare un ulteriore box intero rimane liquida in cassa, pronta per i reprint successivi o per assorbire prodotti più accessibili (es. Specialty Bundle da 30-35 €).
+            - **Rotazione Tranche 1 Discreta**: Se la posizione ha $\ge 2$ box, si vende il $50\%$ intero ($\lfloor q / 2 \rfloor$). Se la posizione è di $1$ solo box, il sigillo non viene violato: il box rimane intero fino al target finale (+150%).
+            """)
 
         # Tabella di Comparazione Istituzionale
         comp_rows = [

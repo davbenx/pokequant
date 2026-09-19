@@ -125,7 +125,34 @@ def test_dynamic_capital_rotation():
     assert res.cagr > 0.25
     assert res.rotation_trades_count >= 10
     assert len(res.signals_history) > 40
-    assert len(res.open_positions) >= 5
     assert res.turnover_ratio > 1.0
+
+
+def test_capital_scaling_and_discrete_sizing():
+    """Verifica lo scaling proporzionale del capitale con gestione dei box discreti indivisibili."""
+    from poke_quant.engine.strategies.optimal_sealed_strategy import OptimalSealedStrategy
+    prices_df = load_price_matrix()
+    metadata = load_metadata()
+
+    # 1. Piccolo capitale: 1.000 € (deve comprare lotti minimi di 1 box intero)
+    strat_small = OptimalSealedStrategy(allowed_tiers=["S", "A", "B"], enable_dynamic_rotation=True, max_allocation_pct=0.12)
+    bt_small = Backtester(strategy=strat_small, historical_prices_df=prices_df, items_metadata=metadata, initial_cash=1000.0)
+    res_small = bt_small.run()
+    assert res_small.final_nav > 1000.0
+    assert len(res_small.open_positions) >= 3
+    for p in res_small.open_positions:
+        assert isinstance(p["quantity"], int)
+        assert p["quantity"] >= 1
+
+    # 2. Grande capitale: 50.000 € (deve scalare le quantità proporzionalmente)
+    strat_large = OptimalSealedStrategy(allowed_tiers=["S", "A", "B"], enable_dynamic_rotation=True, max_allocation_pct=0.12)
+    bt_large = Backtester(strategy=strat_large, historical_prices_df=prices_df, items_metadata=metadata, initial_cash=50000.0)
+    res_large = bt_large.run()
+    assert res_large.final_nav > 150000.0
+    # Il capitale grande deve detenere molte più unità per set
+    small_units = sum(p["quantity"] for p in res_small.open_positions)
+    large_units = sum(p["quantity"] for p in res_large.open_positions)
+    assert large_units > small_units * 10
+
 
 

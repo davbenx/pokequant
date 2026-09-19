@@ -166,6 +166,14 @@ class OptimalSealedStrategy:
             budget = min(available_cash, max_item_budget - cur_pos_cost)
             qty = int(budget // cur_price)
 
+            # Regola del Lotto Minimo Indivisibile (Discrete Unit Lot Sizing):
+            # I box sealed sono beni fisici non splittabili. Per conti di capitalizzazione ridotta
+            # (dove max_item_budget < cur_price), se non possediamo ancora questo set e la cassa
+            # disponibile copre l'acquisto senza superare il 35% del NAV totale, autorizziamo 1 box.
+            if qty < 1 and cur_pos_cost == 0 and available_cash >= cur_price:
+                if cur_price <= total_nav * 0.35:
+                    qty = 1
+
             if qty >= 1:
                 signals.append(Signal(
                     action="BUY",

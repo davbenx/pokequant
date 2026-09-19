@@ -122,6 +122,11 @@ class SealedAccumulatorStrategy:
             budget_to_use = min(available_cash, max_item_budget - current_pos_cost)
             qty_to_buy = int(budget_to_use // current_price)
 
+            # Regola del Lotto Minimo Indivisibile
+            if qty_to_buy < 1 and current_pos_cost == 0 and available_cash >= current_price:
+                if current_price <= total_nav * 0.35:
+                    qty_to_buy = 1
+
             if qty_to_buy >= 1:
                 signals.append(Signal(
                     action="BUY",
