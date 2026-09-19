@@ -1,0 +1,19 @@
+# Ambienti virtuali Python
+.venv/
+venv/
+ENV/
+env/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test e copertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Log e file temporanei
+*.log
+.DS_Store

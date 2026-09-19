@@ -1,0 +1,16 @@
+[
+  {
+    "item_id": "lost_origin_bb",
+    "name": "Lost Origin Booster Box",
+    "quantity": 2,
+    "buy_date": "2023-01-15",
+    "buy_price_unit": 140.0
+  },
+  {
+    "item_id": "fusion_strike_bb",
+    "name": "Fusion Strike Booster Box",
+    "quantity": 3,
+    "buy_date": "2022-04-10",
+    "buy_price_unit": 110.0
+  }
+]

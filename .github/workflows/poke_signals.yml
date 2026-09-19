@@ -1,0 +1,33 @@
+name: PokeQuant Signal Scanner
+
+on:
+  schedule:
+    # Esegue ogni lunedì alle 08:00 UTC (09:00 / 10:00 ora italiana)
+    - cron: '0 8 * * 1'
+  workflow_dispatch: # Permette anche il trigger manuale con un clic da GitHub
+
+jobs:
+  scan-and-alert:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Installa Dipendenze
+        run: |
+          pip install -r requirements.txt
+
+      - name: Esegui Scanner Segnali e Invia Notifica Telegram
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PYTHONPATH: .
+        run: |
+          python poke_quant/signal_scanner.py
