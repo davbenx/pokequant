@@ -514,7 +514,7 @@ def main():
     # --- QUICK CAPITAL BAR (One-Click Allocation Switcher) ---
     st.markdown('<div style="font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:4px;">⚡ Allocazione Rapida Capitale:</div>', unsafe_allow_html=True)
     q1, q2, q3, q4, q5, q6 = st.columns(6)
-    cap_presets = [2500.0, 5000.0, 10000.0, 25000.0, 50000.0, 100000.0]
+    cap_presets = [2500.0, 5000.0, 10000.0, 20000.0, 50000.0, 100000.0]
     for col, cap_val in zip([q1, q2, q3, q4, q5, q6], cap_presets):
         with col:
             is_active = (abs(initial_cash - cap_val) < 1.0)
