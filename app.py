@@ -43,15 +43,16 @@ CUSTOM_CSS = """
 
 html, body, [class*="css"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #cbd5e1;
 }
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
 }
 ::-webkit-scrollbar-track {
-    background: #0b0f19;
+    background: #080c14;
 }
 ::-webkit-scrollbar-thumb {
     background: #1e293b;
@@ -61,58 +62,43 @@ html, body, [class*="css"] {
     background: #334155;
 }
 
-/* Hero Header Banner */
-.hero-banner {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.75) 100%);
+/* Compact Nav Header (Linear / Ramp style) */
+.nav-header {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(8, 12, 20, 0.95) 100%);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 22px 26px;
-    margin-bottom: 22px;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-bottom: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 10px;
+    backdrop-filter: blur(12px);
 }
-
-.hero-left {
-    max-width: 680px;
-}
-
-.hero-title {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: #f8fafc;
-    margin-bottom: 6px;
+.nav-brand {
     display: flex;
     align-items: center;
-    gap: 10px;
-}
-
-.hero-subtitle {
-    font-size: 13.5px;
-    color: #94a3b8;
-    line-height: 1.5;
-}
-
-.pill-group {
-    display: flex;
     gap: 8px;
     flex-wrap: wrap;
 }
+.nav-title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    color: #f8fafc;
+}
 
+/* Pill Tags */
 .pill-tag {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
+    gap: 4px;
+    padding: 3px 8px;
     border-radius: 9999px;
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
 }
 .pill-emerald {
     background: rgba(16, 185, 129, 0.12);
@@ -120,9 +106,9 @@ html, body, [class*="css"] {
     border: 1px solid rgba(16, 185, 129, 0.28);
 }
 .pill-blue {
-    background: rgba(59, 130, 246, 0.12);
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.28);
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.28);
 }
 .pill-amber {
     background: rgba(245, 158, 11, 0.12);
@@ -134,53 +120,69 @@ html, body, [class*="css"] {
     color: #c084fc;
     border: 1px solid rgba(168, 85, 247, 0.28);
 }
+.pill-slate {
+    background: rgba(148, 163, 184, 0.12);
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
 
-/* Executive KPI Cards Grid */
+/* Micro-HUD Strip */
+.hud-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: #cbd5e1;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Executive KPI Grid (4 Compact Cards) */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 14px;
-    margin-bottom: 22px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
 }
-
 .kpi-card {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.7) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 16px 18px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
-    transition: all 0.2s ease-in-out;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 12px 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.15s ease-in-out;
 }
 .kpi-card:hover {
-    border-color: rgba(99, 102, 241, 0.35);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+    border-color: rgba(56, 189, 248, 0.3);
+    transform: translateY(-1px);
 }
-
 .kpi-label {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.5px;
     color: #94a3b8;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
-
 .kpi-value {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 23px;
+    font-size: 21px;
     font-weight: 700;
     color: #f8fafc;
-    letter-spacing: -0.5px;
-    margin-bottom: 3px;
+    letter-spacing: -0.4px;
 }
-
 .kpi-sub {
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 500;
+    margin-top: 2px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
 }
 .kpi-sub-emerald { color: #10b981; }
 .kpi-sub-blue { color: #60a5fa; }
@@ -188,48 +190,39 @@ html, body, [class*="css"] {
 .kpi-sub-rose { color: #f43f5e; }
 .kpi-sub-neutral { color: #94a3b8; }
 
-/* Action Cards */
+/* Signal Action Cards */
 .signal-card {
-    background: rgba(15, 23, 42, 0.7);
-    border-radius: 12px;
-    padding: 15px 18px;
-    margin-bottom: 12px;
-    border-left: 4px solid;
+    background: rgba(15, 23, 42, 0.65);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    border-left: 3px solid;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(8px);
 }
-.signal-card-buy {
-    border-left-color: #10b981;
-    border-top: 1px solid rgba(16, 185, 129, 0.2);
-    border-right: 1px solid rgba(16, 185, 129, 0.08);
-    border-bottom: 1px solid rgba(16, 185, 129, 0.08);
-}
-.signal-card-rotate {
-    border-left-color: #fbbf24;
-    border-top: 1px solid rgba(245, 158, 11, 0.2);
-    border-right: 1px solid rgba(245, 158, 11, 0.08);
-    border-bottom: 1px solid rgba(245, 158, 11, 0.08);
-}
-.signal-card-sell {
-    border-left-color: #f43f5e;
-    border-top: 1px solid rgba(244, 63, 94, 0.2);
-    border-right: 1px solid rgba(244, 63, 94, 0.08);
-    border-bottom: 1px solid rgba(244, 63, 94, 0.08);
-}
+.signal-card-buy { border-left-color: #10b981; }
+.signal-card-rotate { border-left-color: #fbbf24; }
+.signal-card-sell { border-left-color: #f43f5e; }
+.signal-card-vault { border-left-color: #38bdf8; }
 
 /* Tabs Styling */
 .stTabs [data-baseweb="tab-list"] {
     background: rgba(15, 23, 42, 0.6);
-    padding: 6px;
-    border-radius: 12px;
+    padding: 4px;
+    border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.06);
-    gap: 6px;
+    gap: 4px;
+    margin-bottom: 12px;
 }
 .stTabs [data-baseweb="tab"] {
-    height: 42px;
-    border-radius: 8px;
+    height: 38px;
+    border-radius: 7px;
     color: #94a3b8;
     font-weight: 500;
-    padding: 0 16px;
+    font-size: 13px;
+    padding: 0 14px;
     border: none !important;
 }
 .stTabs [aria-selected="true"] {
@@ -240,45 +233,36 @@ html, body, [class*="css"] {
 
 /* Section Header */
 .section-title {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 700;
     letter-spacing: -0.3px;
     color: #f1f5f9;
-    margin-top: 14px;
-    margin-bottom: 4px;
+    margin-top: 8px;
+    margin-bottom: 2px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 .section-desc {
-    font-size: 12.5px;
+    font-size: 12px;
     color: #94a3b8;
-    margin-bottom: 14px;
-}
-
-/* Quick preset container */
-.preset-box {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 14px 18px;
-    margin-bottom: 18px;
+    margin-bottom: 10px;
 }
 
 /* Cardmarket 1-Click Action Buttons */
 .cm-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     background: rgba(16, 185, 129, 0.12);
     border: 1px solid rgba(16, 185, 129, 0.35);
     color: #10b981 !important;
-    padding: 5px 12px;
-    border-radius: 8px;
-    font-size: 11.5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 600;
     text-decoration: none !important;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
 .cm-btn:hover {
     background: rgba(16, 185, 129, 0.25);
@@ -296,38 +280,6 @@ html, body, [class*="css"] {
     border-color: #fbbf24;
     color: #fcd34d !important;
     transform: translateY(-1px);
-}
-
-/* Executive Desk Operativo Container */
-.desk-container {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.75) 100%);
-    border: 1px solid rgba(56, 189, 248, 0.25);
-    border-radius: 16px;
-    padding: 18px 22px;
-    margin-bottom: 22px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
-}
-.desk-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 14px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding-bottom: 12px;
-}
-.desk-title {
-    font-size: 18px;
-    font-weight: 800;
-    color: #f8fafc;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.desk-subtitle {
-    font-size: 12.5px;
-    color: #94a3b8;
 }
 </style>
 """
@@ -427,19 +379,16 @@ def main():
     with st.spinner("Inizializzazione feed prezzi e asset reali..."):
         full_prices_df, full_metadata, macro_df = get_cached_data()
 
-    # --- HERO BANNER ---
+    # --- COMPACT NAV HEADER ---
     st.markdown("""
-    <div class="hero-banner">
-        <div class="hero-left">
-            <div class="hero-title">⚡ PokeQuant Quantitative Terminal</div>
-            <div class="hero-subtitle">
-                Motore quantitativo istituzionale per investimenti in collezionabili TCG (Pokémon & One Piece).
-                Modellazione analitica dei costi di attrito, rotazione dinamica del capitale e audit statistico anti-overfitting.
-            </div>
+    <div class="nav-header">
+        <div class="nav-brand">
+            <span class="nav-title">⚡ PokeQuant Quantitative Terminal</span>
+            <span style="color:#64748b; font-size:12px; margin-left:6px;">| Institutional Collectibles & Alternative Alpha Engine</span>
         </div>
         <div class="pill-group">
             <span class="pill-tag pill-emerald">● 53 Asset Reali</span>
-            <span class="pill-tag pill-blue">● 68 Mesi Storico Reale</span>
+            <span class="pill-tag pill-blue">● 68 Mesi Storico</span>
             <span class="pill-tag pill-amber">● Rotazione Scalare</span>
             <span class="pill-tag pill-purple">● 8 Test Popperiani</span>
         </div>
@@ -554,7 +503,7 @@ def main():
     prices_df = full_prices_df[active_cols]
 
     # --- QUICK CAPITAL BAR (One-Click Allocation Switcher) ---
-    st.markdown('<div style="font-size:13px; font-weight:600; color:#94a3b8; margin-bottom:6px;">⚡ Selettore Rapido Capitale (One-Click Allocation):</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:4px;">⚡ Allocazione Rapida Capitale:</div>', unsafe_allow_html=True)
     q1, q2, q3, q4, q5, q6 = st.columns(6)
     cap_presets = [2500.0, 5000.0, 10000.0, 25000.0, 50000.0, 100000.0]
     for col, cap_val in zip([q1, q2, q3, q4, q5, q6], cap_presets):
@@ -567,200 +516,383 @@ def main():
                     st.session_state["sb_initial_cash_input"] = cap_val
                 st.rerun()
 
-    # --- EXECUTIVE DESK OPERATIVO IMMEDIATO (DECISION MATRIX OGGI) ---
-    st.markdown("""
-    <div class="desk-container">
-        <div class="desk-header">
-            <div>
-                <div class="desk-title">⚡ Desk Operativo Immediato (Decision Matrix Oggi)</div>
-                <div class="desk-subtitle">Quadro esecutivo istantaneo: ordini di acquisto a sconto calcolati sul capitale, rotazioni di cassa e custodia attiva.</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    desk_h1, desk_h2 = st.columns([3, 1])
-    with desk_h1:
-        st.markdown(f"💼 **Portafoglio Sotto Gestione**: `{initial_cash:,.2f} €` (Regola Lotti Interi Discreti · Cap 12% per Singolo Set)")
-    with desk_h2:
-        desk_snap_opts = {
-            "Dicembre 2024 (Ciclo Recente - 5 BUY Attivi)": "2024-12-01",
-            "Settembre 2026 (Rotazioni & Asset Maturo)": "2026-09-01",
-            "Maggio 2024 (Fase Scarlet & Violet 151)": "2024-05-01",
-            "Dicembre 2023 (Fase Paldea Evolved / OP-03)": "2023-12-01",
-            "Oggi (Data Attuale di Sistema)": "today"
-        }
-        chosen_desk_snap = st.selectbox("📅 Snapshot Operativo Desk", options=list(desk_snap_opts.keys()), index=0, key="desk_snap_sel")
-        desk_snap_val = desk_snap_opts[chosen_desk_snap]
-        if desk_snap_val == "today":
-            d_eval_dt = datetime.date.today()
-            d_eval_px = prices_df.iloc[-1].to_dict()
-        else:
-            d_eval_dt = pd.to_datetime(desk_snap_val).date()
-            d_eval_px = prices_df.loc[desk_snap_val].to_dict() if desk_snap_val in prices_df.index else prices_df.iloc[-1].to_dict()
-
-    d_scan = scan_signals(current_prices=d_eval_px, metadata=metadata, today_dt=d_eval_dt, allowed_tiers=["S", "A", "B"])
-    d_buys = d_scan.get("buy_signals", [])
-    d_sells = d_scan.get("sell_signals", [])
-
-    dc1, dc2, dc3 = st.columns(3)
-    with dc1:
-        st.markdown("##### 🟢 ORDINI BUY IMMEDIATI")
-        if d_buys:
-            b_budget = initial_cash * 0.12
-            for b in d_buys[:3]:
-                b_px = b["current_price"]
-                b_qty = max(1, int(b_budget // b_px)) if b_px <= initial_cash * 0.35 else int(b_budget // b_px)
-                b_tot = b_qty * b_px
-                b_pct = (b_tot / initial_cash) * 100 if initial_cash > 0 else 0
-                cm_url = get_cardmarket_url(b["name"], metadata.get(b.get("item_id"), {}).get("franchise", "pokemon"))
-                st.markdown(f"""
-                <div class="signal-card signal-card-buy" style="padding:12px; margin-bottom:8px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong style="color:#f8fafc; font-size:13.5px;">{b['name']}</strong>
-                        <span class="pill-tag pill-emerald">Tier {b['tier']}</span>
-                    </div>
-                    <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.4;">
-                        • Ordine Suggerito: <strong style="color:#10b981;">Compra {b_qty} Box</strong> ({b_tot:,.0f} € · {b_pct:.1f}% NAV)<br>
-                        • Prezzo Attuale: <strong>{b_px:.2f} €</strong> (Prezzo Max: <span style="color:#fbbf24;">{b['max_buy_price']:.2f} €</span>)<br>
-                        • Margine Sicurezza: <strong style="color:#38bdf8;">{b['margin_vs_max']:+.2f} €</strong> ({b['months_left_in_window']}m rimasti)
-                    </div>
-                    <div style="margin-top:8px; text-align:right;">
-                        <a href="{cm_url}" target="_blank" class="cm-btn">🛒 Compra su Cardmarket ↗</a>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            if len(d_buys) > 3:
-                st.caption(f"+ altri {len(d_buys)-3} set in finestra consultabili nel Tab Radar.")
-        else:
-            st.markdown("""
-            <div style="background:rgba(15,23,42,0.5); border:1px dashed rgba(255,255,255,0.1); border-radius:10px; padding:14px; font-size:12.5px; color:#94a3b8;">
-                🔒 <strong>Nessun set in finestra d'acquisto</strong><br>
-                Nessun set attualmente a sconto per questa data. Cassa preservata per i prossimi reprint.
-            </div>
-            """, unsafe_allow_html=True)
-
-    with dc2:
-        st.markdown("##### 🔄 ORDINI ROTAZIONE (Tranche 1)")
-        if d_sells:
-            for s in d_sells[:3]:
-                cm_url = get_cardmarket_url(s["name"], metadata.get(s.get("item_id"), {}).get("franchise", "pokemon"))
-                st.markdown(f"""
-                <div class="signal-card signal-card-rotate" style="padding:12px; margin-bottom:8px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong style="color:#fbbf24; font-size:13.5px;">{s['name']}</strong>
-                        <span class="pill-tag pill-amber">+{s['net_roi_pct']:.0f}% ROI</span>
-                    </div>
-                    <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.4;">
-                        • Azione: <strong>Vendi {s['quantity']} su {s.get('total_quantity', s['quantity'])} Box</strong><br>
-                        • Prezzo: <strong>{s['current_price']:.1f} €</strong> (Carico medio: {s['buy_price']:.1f} €)<br>
-                        • Incasso Netto Stimato: <strong style="color:#10b981;">{s['net_proceeds']:,.1f} €</strong>
-                    </div>
-                    <div style="margin-top:8px; text-align:right;">
-                        <a href="{cm_url}" target="_blank" class="cm-btn cm-btn-sell">🏷️ Vendi su Cardmarket ↗</a>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <div style="background:rgba(15,23,42,0.5); border:1px dashed rgba(255,255,255,0.1); border-radius:10px; padding:14px; font-size:12.5px; color:#94a3b8;">
-                ⏳ <strong>Maturazione in corso</strong><br>
-                Nessuna posizione ha ancora raggiunto il target del +70% ROI con 18 mesi di holding.
-            </div>
-            """, unsafe_allow_html=True)
-
-    with dc3:
-        st.markdown("##### 🔒 CUSTODIA ATTIVA (OOP Vault)")
-        st.markdown("""
-        <div class="signal-card" style="border-left-color:#38bdf8; padding:12px; margin-bottom:8px; border-top:1px solid rgba(56,189,248,0.2);">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <strong style="color:#38bdf8; font-size:13.5px;">Cassaforte Asset Out-of-Print</strong>
-                <span class="pill-tag pill-blue">Zero Reprint</span>
-            </div>
-            <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.4;">
-                • <strong>Regola Tassativa</strong>: Box con oltre 14 mesi di vita sono ufficialmente fuori produzione. Non riacquistare a mercato per evitare di pagare premi speculativi.<br>
-                • <strong>Strategia</strong>: Holding puro e monitoraggio del target di rotazione (+70%) o target finale (+150%).
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Sub-tools: Export Report & Order Slip
-    col_rep, col_slip = st.columns(2)
-    with col_rep:
-        with st.expander("📋 Copia Report Operativo Desk (Telegram / Note)", expanded=False):
-            st.caption("Testo formattato pronto da copiare per diario investimenti, chat Telegram o memo broker.")
-            rep_text = generate_executive_report(chosen_desk_snap, initial_cash, d_buys, d_sells, metadata)
-            st.code(rep_text, language="text")
-
-    with col_slip:
-        with st.expander("🎯 Simulatore d'Ordine Spicciolo (Order Slip Interattivo)", expanded=False):
-            slip_sealed = [k for k, v in metadata.items() if v.get("type") == "sealed" and v.get("product_type") in ["booster_box", "specialty_bundle"]]
-            slip_def_idx = 0
-            if d_buys:
-                top_id = d_buys[0]["item_id"]
-                if top_id in slip_sealed:
-                    slip_def_idx = slip_sealed.index(top_id)
-
-            sel_slip_box = st.selectbox(
-                "Seleziona Box",
-                options=slip_sealed,
-                index=slip_def_idx,
-                format_func=lambda x: f"{metadata[x].get('name', x)} (Tier {metadata[x].get('set_tier', 'B')})",
-                key="desk_slip_box"
-            )
-            s_meta = metadata[sel_slip_box]
-            s_name = s_meta.get("name", sel_slip_box)
-            s_msrp = float(s_meta.get("msrp", 140.0) or 140.0)
-            s_max_p = round(s_msrp * 1.15, 2)
-            s_cur_p = float(d_eval_px.get(sel_slip_box, s_msrp))
-
-            sc_c1, sc_c2 = st.columns(2)
-            with sc_c1:
-                b_suggest = max(1, int((initial_cash * 0.12) // s_cur_p)) if s_cur_p <= initial_cash * 0.35 else 1
-                s_qty = st.number_input("Quantità Box", min_value=1, max_value=100, value=min(b_suggest, 20), step=1, key="desk_slip_qty")
-            with sc_c2:
-                s_price = st.number_input("Prezzo Unitario (€)", min_value=10.0, max_value=5000.0, value=float(s_cur_p), step=1.0, key="desk_slip_px")
-
-            s_tot_cost = s_qty * s_price
-            s_pct_nav = (s_tot_cost / initial_cash) * 100 if initial_cash > 0 else 0
-            s_margin = round(s_max_p - s_price, 2)
-
-            t1_q = s_qty // 2 if s_qty >= 2 else s_qty
-            t1_net = (t1_q * s_price * 1.70 * 0.95) - 0.60
-            t1_prof = t1_net - (t1_q * s_price)
-
-            t2_net = (s_qty * s_price * 2.50 * 0.95) - 0.60
-            t2_prof = t2_net - s_tot_cost
-
-            st.markdown(f"""
-            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; font-size:12px; color:#cbd5e1; margin-top:6px;">
-                • <strong>Esborso Totale</strong>: <span style="color:#f8fafc; font-weight:700;">{s_tot_cost:,.2f} €</span> ({s_pct_nav:.1f}% NAV)<br>
-                • <strong>Margine vs Prezzo Max</strong>: <span style="color:{'#10b981' if s_margin>=0 else '#f43f5e'}; font-weight:700;">{s_margin:+.2f} €</span> (Max: {s_max_p:.1f} €)<br>
-                • <strong>Tranche 1 (+70%, 18m)</strong>: Vendi {t1_q} box · Netto: <strong style="color:#10b981;">{t1_net:,.1f} €</strong> (+{t1_prof:,.1f}€)<br>
-                • <strong>Target Finale (+150%, 36m)</strong>: Netto: <strong style="color:#10b981;">{t2_net:,.1f} €</strong> (+{t2_prof:,.1f}€)
-            </div>
-            """, unsafe_allow_html=True)
-
-            s_cm_url = get_cardmarket_url(s_name, s_meta.get("franchise", "pokemon"))
-            st.markdown(f'<div style="text-align:right; margin-top:8px;"><a href="{s_cm_url}" target="_blank" class="cm-btn">🛒 Compra su Cardmarket ↗</a></div>', unsafe_allow_html=True)
-
-    st.markdown("<hr style='border-color:rgba(255,255,255,0.08); margin-top:16px; margin-bottom:20px;'>", unsafe_allow_html=True)
-
-    # --- TABS PRINCIPALI ---
-    tab1, tab_radar, tab2, tab3, tab4 = st.tabs([
-        "📈 Backtest & Alpha",
-        "📡 Radar Segnali & Live Desk",
-        "⚖️ Arbitraggio Grading PSA",
-        "🔍 Catalogo & Quotazioni",
-        "🛡️ Audit & Falsificazione"
+    # --- TABS PRINCIPALI (5-TAB COCKPIT) ---
+    tab_cmd, tab_backtest, tab_psa, tab_audit, tab_catalog = st.tabs([
+        "⚡ Command Center",
+        "📈 Backtest & Performance",
+        "⚖️ Arbitraggio PSA",
+        "🛡️ Audit & Falsificazione",
+        "🔍 Catalogo Live"
     ])
 
     # =========================================================================
-    # TAB 1: BACKTEST STRATEGIE & ROTAZIONE CAPITALE
+    # TAB 1: ⚡ COMMAND CENTER (DESK OPERATIVO & RADAR SEGNALI)
     # =========================================================================
-    with tab1:
+    with tab_cmd:
+        st.markdown('<div class="section-title">⚡ Command Center & Desk Operativo</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc">Quadro decisionale real-time: ordini di acquisto basati sul capitale, rotazioni e scanner finestre di mercato.</div>', unsafe_allow_html=True)
+
+        cmd_h1, cmd_h2 = st.columns([3, 2])
+        with cmd_h1:
+            desk_snap_opts = {
+                "Dicembre 2024 (Ciclo Recente - 5 BUY Attivi)": "2024-12-01",
+                "Settembre 2026 (Rotazioni & Asset Maturo)": "2026-09-01",
+                "Maggio 2024 (Fase Scarlet & Violet 151)": "2024-05-01",
+                "Dicembre 2023 (Fase Paldea Evolved / OP-03)": "2023-12-01",
+                "Novembre 2022 (Fase Lost Origin / Silver Tempest)": "2022-11-01",
+                "Oggi (Data Attuale di Sistema)": "today"
+            }
+            chosen_desk_snap = st.selectbox("📅 Snapshot Temporale Desk", options=list(desk_snap_opts.keys()), index=0, key="cmd_desk_snap_sel")
+            desk_snap_val = desk_snap_opts[chosen_desk_snap]
+            if desk_snap_val == "today":
+                d_eval_dt = datetime.date.today()
+                d_eval_px = prices_df.iloc[-1].to_dict()
+            else:
+                d_eval_dt = pd.to_datetime(desk_snap_val).date()
+                d_eval_px = prices_df.loc[desk_snap_val].to_dict() if desk_snap_val in prices_df.index else prices_df.iloc[-1].to_dict()
+
+        with cmd_h2:
+            radar_tiers = st.multiselect("Tier Monitorati dal Desk", options=["S", "A", "B", "C"], default=["S", "A", "B"], key="cmd_tiers_sel")
+
+        # Scan dei segnali
+        d_scan = scan_signals(current_prices=d_eval_px, metadata=metadata, today_dt=d_eval_dt, allowed_tiers=radar_tiers)
+        d_buys = d_scan.get("buy_signals", [])
+        d_sells = d_scan.get("sell_signals", [])
+        watchlist = d_scan.get("watchlist", [])
+        all_evals = d_scan.get("all_evaluations", [])
+
+        # Micro-HUD Strip
+        top_disc_str = f"({d_buys[0]['margin_vs_max']:+.1f}€ vs Max)" if d_buys else "N/D"
+        st.markdown(f'''
+        <div class="hud-strip">
+            <div>💼 <strong>Capitale Gestito</strong>: <span style="color:#f8fafc; font-weight:700;">{initial_cash:,.2f} €</span> (Lotti Interi · Cap 12%/Set)</div>
+            <div>🟢 <strong>Opportunità BUY</strong>: <span style="color:#10b981; font-weight:700;">{len(d_buys)} in finestra</span> <span style="font-size:11px; color:#38bdf8;">{top_disc_str}</span></div>
+            <div>🔄 <strong>Rotazioni Pronte</strong>: <span style="color:#fbbf24; font-weight:700;">{len(d_sells)} Tranche 1</span></div>
+            <div>🔒 <strong>Asset OOP</strong>: <span style="color:#94a3b8; font-weight:600;">Regola 14 Mesi Attiva</span></div>
+        </div>
+        ''', unsafe_allow_html=True)
+
+        # 3 Action Cards Side-by-Side
+        dc1, dc2, dc3 = st.columns(3)
+        with dc1:
+            st.markdown("##### 🟢 ORDINI BUY IMMEDIATI")
+            if d_buys:
+                b_budget = initial_cash * 0.12
+                for b in d_buys[:3]:
+                    b_px = b["current_price"]
+                    b_qty = max(1, int(b_budget // b_px)) if b_px <= initial_cash * 0.35 else int(b_budget // b_px)
+                    b_tot = b_qty * b_px
+                    b_pct = (b_tot / initial_cash) * 100 if initial_cash > 0 else 0
+                    cm_url = get_cardmarket_url(b["name"], metadata.get(b.get("item_id"), {}).get("franchise", "pokemon"))
+                    st.markdown(f'''
+                    <div class="signal-card signal-card-buy">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="color:#f8fafc; font-size:13.5px;">{b['name']}</strong>
+                            <span class="pill-tag pill-emerald">Tier {b['tier']}</span>
+                        </div>
+                        <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.4;">
+                            • Ordine Suggerito: <strong style="color:#10b981;">Compra {b_qty} Box</strong> ({b_tot:,.0f} € · {b_pct:.1f}% NAV)<br>
+                            • Prezzo Attuale: <strong>{b_px:.2f} €</strong> (Prezzo Max: <span style="color:#fbbf24;">{b['max_buy_price']:.2f} €</span>)<br>
+                            • Margine Sicurezza: <strong style="color:#38bdf8;">{b['margin_vs_max']:+.2f} €</strong> ({b['months_left_in_window']}m rimasti)
+                        </div>
+                        <div style="margin-top:8px; text-align:right;">
+                            <a href="{cm_url}" target="_blank" class="cm-btn">🛒 Compra su Cardmarket ↗</a>
+                        </div>
+                    </div>
+                    ''', unsafe_allow_html=True)
+                if len(d_buys) > 3:
+                    st.caption(f"+ altri {len(d_buys)-3} set in finestra consultabili nella matrice sealed.")
+            else:
+                st.markdown('''
+                <div style="background:rgba(15,23,42,0.5); border:1px dashed rgba(255,255,255,0.1); border-radius:10px; padding:14px; font-size:12px; color:#94a3b8;">
+                    🔒 <strong>Nessun set in finestra d'acquisto</strong><br>
+                    Nessun set attualmente a sconto per questa data. Cassa preservata per i prossimi reprint.
+                </div>
+                ''', unsafe_allow_html=True)
+
+        with dc2:
+            st.markdown("##### 🔄 ORDINI ROTAZIONE (Tranche 1)")
+            if d_sells:
+                for s in d_sells[:3]:
+                    cm_url = get_cardmarket_url(s["name"], metadata.get(s.get("item_id"), {}).get("franchise", "pokemon"))
+                    st.markdown(f'''
+                    <div class="signal-card signal-card-rotate">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="color:#fbbf24; font-size:13.5px;">{s['name']}</strong>
+                            <span class="pill-tag pill-amber">+{s['net_roi_pct']:.0f}% ROI</span>
+                        </div>
+                        <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.4;">
+                            • Azione: <strong>Vendi {s['quantity']} su {s.get('total_quantity', s['quantity'])} Box</strong><br>
+                            • Prezzo: <strong>{s['current_price']:.1f} €</strong> (Carico: {s['buy_price']:.1f} €)<br>
+                            • Incasso Netto: <strong style="color:#10b981;">{s['net_proceeds']:,.1f} €</strong>
+                        </div>
+                        <div style="margin-top:8px; text-align:right;">
+                            <a href="{cm_url}" target="_blank" class="cm-btn cm-btn-sell">🏷️ Vendi su Cardmarket ↗</a>
+                        </div>
+                    </div>
+                    ''', unsafe_allow_html=True)
+                if len(d_sells) > 3:
+                    st.caption(f"+ altri {len(d_sells)-3} ordini rotazione attivi.")
+            else:
+                st.markdown('''
+                <div style="background:rgba(15,23,42,0.5); border:1px dashed rgba(255,255,255,0.1); border-radius:10px; padding:14px; font-size:12px; color:#94a3b8;">
+                    ⏳ <strong>Maturazione in corso</strong><br>
+                    Nessuna posizione ha ancora raggiunto il target del +70% ROI con 18 mesi di holding.
+                </div>
+                ''', unsafe_allow_html=True)
+
+        with dc3:
+            st.markdown("##### 🔒 CUSTODIA ATTIVA (OOP Vault)")
+            st.markdown('''
+            <div class="signal-card" style="border-left-color:#38bdf8; border-top:1px solid rgba(56,189,248,0.2);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="color:#38bdf8; font-size:13.5px;">Cassaforte Asset Out-of-Print</strong>
+                    <span class="pill-tag pill-blue">Zero Reprint</span>
+                </div>
+                <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.4;">
+                    • <strong>Regola Tassativa</strong>: Box oltre 14 mesi di vita sono ufficialmente fuori produzione. Non riacquistare a mercato per evitare premi speculativi.<br>
+                    • <strong>Strategia</strong>: Holding puro e monitoraggio del target di rotazione (+70%) o target finale (+150%).
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
+
+        # Sub-tools: Export Report & Order Slip
+        col_rep, col_slip = st.columns(2)
+        with col_rep:
+            with st.expander("📋 Copia Report Operativo Desk (Telegram / Note)", expanded=False):
+                st.caption("Testo formattato pronto da copiare per diario investimenti, chat Telegram o memo broker.")
+                rep_text = generate_executive_report(chosen_desk_snap, initial_cash, d_buys, d_sells, metadata)
+                st.code(rep_text, language="text")
+
+        with col_slip:
+            with st.expander("🎯 Simulatore d'Ordine Spicciolo (Order Slip Interattivo)", expanded=False):
+                slip_sealed = [k for k, v in metadata.items() if v.get("type") == "sealed" and v.get("product_type") in ["booster_box", "specialty_bundle"]]
+                slip_def_idx = 0
+                if d_buys:
+                    top_id = d_buys[0]["item_id"]
+                    if top_id in slip_sealed:
+                        slip_def_idx = slip_sealed.index(top_id)
+
+                sel_slip_box = st.selectbox(
+                    "Seleziona Box",
+                    options=slip_sealed,
+                    index=slip_def_idx,
+                    format_func=lambda x: f"{metadata[x].get('name', x)} (Tier {metadata[x].get('set_tier', 'B')})",
+                    key="cmd_slip_box"
+                )
+                s_meta = metadata[sel_slip_box]
+                s_name = s_meta.get("name", sel_slip_box)
+                s_msrp = float(s_meta.get("msrp", 140.0) or 140.0)
+                s_max_p = round(s_msrp * 1.15, 2)
+                s_cur_p = float(d_eval_px.get(sel_slip_box, s_msrp))
+
+                sc_c1, sc_c2 = st.columns(2)
+                with sc_c1:
+                    b_suggest = max(1, int((initial_cash * 0.12) // s_cur_p)) if s_cur_p <= initial_cash * 0.35 else 1
+                    s_qty = st.number_input("Quantità Box", min_value=1, max_value=100, value=min(b_suggest, 20), step=1, key="cmd_slip_qty")
+                with sc_c2:
+                    s_price = st.number_input("Prezzo Unitario (€)", min_value=10.0, max_value=5000.0, value=float(s_cur_p), step=1.0, key="cmd_slip_px")
+
+                s_tot_cost = s_qty * s_price
+                s_pct_nav = (s_tot_cost / initial_cash) * 100 if initial_cash > 0 else 0
+                s_margin = round(s_max_p - s_price, 2)
+
+                t1_q = s_qty // 2 if s_qty >= 2 else s_qty
+                t1_net = (t1_q * s_price * 1.70 * 0.95) - 0.60
+                t1_prof = t1_net - (t1_q * s_price)
+
+                t2_net = (s_qty * s_price * 2.50 * 0.95) - 0.60
+                t2_prof = t2_net - s_tot_cost
+
+                st.markdown(f'''
+                <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; font-size:12px; color:#cbd5e1; margin-top:6px;">
+                    • <strong>Esborso Totale</strong>: <span style="color:#f8fafc; font-weight:700;">{s_tot_cost:,.2f} €</span> ({s_pct_nav:.1f}% NAV)<br>
+                    • <strong>Margine vs Prezzo Max</strong>: <span style="color:{'#10b981' if s_margin>=0 else '#f43f5e'}; font-weight:700;">{s_margin:+.2f} €</span> (Max: {s_max_p:.1f} €)<br>
+                    • <strong>Tranche 1 (+70%, 18m)</strong>: Vendi {t1_q} box · Netto: <strong style="color:#10b981;">{t1_net:,.1f} €</strong> (+{t1_prof:,.1f}€)<br>
+                    • <strong>Target Finale (+150%, 36m)</strong>: Netto: <strong style="color:#10b981;">{t2_net:,.1f} €</strong> (+{t2_prof:,.1f}€)
+                </div>
+                ''', unsafe_allow_html=True)
+
+                s_cm_url = get_cardmarket_url(s_name, s_meta.get("franchise", "pokemon"))
+                st.markdown(f'<div style="text-align:right; margin-top:8px;"><a href="{s_cm_url}" target="_blank" class="cm-btn">🛒 Compra su Cardmarket ↗</a></div>', unsafe_allow_html=True)
+
+        # 39-Set Sealed Matrix
+        st.markdown('<div class="section-title" style="margin-top:16px;">⚡ Matrice Operativa di Tutti i Box Sealed (Finestre & Prezzi Max)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc">Quadro strategico unificato su tutti i set sealed: verifica immediata di quali box sono ancora acquistabili a sconto, in chiusura o già Out-of-Print.</div>', unsafe_allow_html=True)
+
+        if all_evals:
+            mat_filter = st.radio(
+                "Filtro Rapido Matrice",
+                ["Tutti i Box Sealed", "🟢 Solo in Finestra d'Acquisto", "⏳ Finestra in Chiusura (Pre-OOP)", "🟡 In Avvicinamento (Attendere)", "🔒 Finestra Chiusa (OOP)"],
+                horizontal=True,
+                key="cmd_mat_filter"
+            )
+            eval_rows = []
+            for ev in all_evals:
+                st_w = ev["window_status"]
+                if "Solo in Finestra" in mat_filter and "🟢" not in st_w and "⏳" not in st_w:
+                    continue
+                if "In Chiusura" in mat_filter and "⏳" not in st_w:
+                    continue
+                if "In Avvicinamento" in mat_filter and "🟡" not in st_w:
+                    continue
+                if "Finestra Chiusa" in mat_filter and "🔒" not in st_w and "⚠️" not in st_w:
+                    continue
+
+                ev_fran = metadata.get(ev.get("item_id"), {}).get("franchise", "pokemon")
+                cm_url = get_cardmarket_url(ev["name"], ev_fran)
+
+                eval_rows.append({
+                    "Set / Box": ev["name"],
+                    "Tier": ev["tier"],
+                    "Data Rilascio": ev["release_date"],
+                    "Età (Mesi)": f"{ev['age_months']}m",
+                    "Prezzo Attuale": f"{ev['current_price']:.2f} €",
+                    "MSRP Ufficiale": f"{ev['msrp']:.2f} €",
+                    "Prezzo Max Acquisto": f"{ev['max_buy_price']:.2f} €",
+                    "Margine vs Max": f"{ev['margin_vs_max']:+.2f} € ({ev['margin_vs_max_pct']:+.1f}%)",
+                    "Stato Finestra": ev["window_status"],
+                    "Mesi Residui": f"{ev['months_left']}m" if ev['months_left'] > 0 else "0m (OOP)",
+                    "Azione Operativa Immediata": ev["action"],
+                    "Cardmarket": cm_url
+                })
+            if eval_rows:
+                st.dataframe(
+                    pd.DataFrame(eval_rows).set_index("Set / Box"),
+                    column_config={
+                        "Cardmarket": st.column_config.LinkColumn("Cardmarket", display_text="🛒 Apri ↗")
+                    },
+                    use_container_width=True
+                )
+            else:
+                st.info("Nessun prodotto corrisponde al filtro selezionato.")
+
+        # Progressive Disclosure Expanders
+        with st.expander("💼 Gestione Posizioni Reali Possedute (portfolio_holdings.json)", expanded=False):
+            h_data = load_user_holdings()
+            if h_data:
+                h_rows = []
+                for h in h_data:
+                    iid = h.get("item_id")
+                    px = d_eval_px.get(iid, h.get("buy_price_unit", 0.0))
+                    b_px = h.get("buy_price_unit", 0.0)
+                    qty = h.get("quantity", 1)
+                    cost = b_px * qty
+                    cur_val = px * qty
+                    net_val = (px * 0.95 - 0.60) * qty
+                    pnl = net_val - cost
+                    roi = pnl / cost if cost > 0 else 0.0
+                    
+                    m_info = metadata.get(iid, {})
+                    msrp_val = float(m_info.get("msrp") or 140.0)
+                    max_p = round(msrp_val * 1.15, 2)
+                    
+                    rel_str = m_info.get("release_date")
+                    if rel_str:
+                        try:
+                            rel_d = pd.to_datetime(rel_str).date()
+                            age_m = (d_eval_dt.year - rel_d.year) * 12 + (d_eval_dt.month - rel_d.month)
+                        except Exception:
+                            age_m = 24
+                    else:
+                        age_m = 24
+
+                    is_reaccumulabile = (4 <= age_m <= 14) and (px <= max_p)
+                    w_status = f"🟢 IN FINESTRA ({max(0, 14 - age_m)}m rimasti)" if is_reaccumulabile else ("🔒 CHIUSA (OOP)" if age_m > 14 else "⚠️ SOPRA MAX")
+
+                    h_fran = m_info.get("franchise", "pokemon")
+                    cm_url = get_cardmarket_url(h.get("name", iid), h_fran)
+
+                    h_rows.append({
+                        "Prodotto": h.get("name", iid),
+                        "Quantità": qty,
+                        "Data Acquisto": h.get("buy_date"),
+                        "Prezzo Carico": f"{b_px:.1f} €",
+                        "Prezzo Attuale": f"{px:.1f} €",
+                        "Prezzo Max Acquisto": f"{max_p:.1f} €",
+                        "Stato Finestra": w_status,
+                        "Valore Netto": f"{net_val:.1f} €",
+                        "PnL Netto": f"{pnl:+,.1f} €",
+                        "ROI Netto %": f"{roi*100:+.1f}%",
+                        "Cardmarket": cm_url
+                    })
+                st.dataframe(
+                    pd.DataFrame(h_rows).set_index("Prodotto"),
+                    column_config={
+                        "Cardmarket": st.column_config.LinkColumn("Cardmarket", display_text="🛒 Apri ↗")
+                    },
+                    use_container_width=True
+                )
+            else:
+                st.info("Nessuna posizione registrata in portfolio_holdings.json.")
+
+            st.markdown("##### ➕ Registra Nuovo Acquisto Box nel Portafoglio")
+            with st.form("add_box_form"):
+                af1, af2 = st.columns(2)
+                with af1:
+                    avail = [k for k, v in metadata.items() if v.get("type") == "sealed"]
+                    sel_item = st.selectbox("Seleziona Prodotto", options=avail, format_func=lambda x: metadata[x].get("name", x))
+                    b_qty = st.number_input("Quantità (Box)", min_value=1, max_value=100, value=1)
+                with af2:
+                    def_px = metadata[sel_item].get("msrp", 140.0)
+                    b_px = st.number_input("Prezzo Unitario Acquisto (€)", min_value=10.0, max_value=5000.0, value=float(def_px))
+                    b_date = st.date_input("Data di Acquisto", value=datetime.date.today())
+                if st.form_submit_button("Salva Posizione"):
+                    h_file = Path(__file__).resolve().parent / "data_cache" / "portfolio_holdings.json"
+                    curr = load_user_holdings()
+                    curr.append({
+                        "item_id": sel_item,
+                        "name": metadata[sel_item].get("name", sel_item),
+                        "quantity": int(b_qty),
+                        "buy_date": b_date.strftime("%Y-%m-%d"),
+                        "buy_price_unit": float(b_px)
+                    })
+                    with open(h_file, "w", encoding="utf-8") as f:
+                        json.dump(curr, f, indent=2)
+                    st.success("Posizione salvata con successo!")
+                    st.rerun()
+
+        with st.expander("📜 Archivio Storico Segnali Radar (2021 - 2026)", expanded=False):
+            hist_radar = scan_historical_signals(prices_df=prices_df, metadata=metadata, allowed_tiers=radar_tiers)
+            if not hist_radar.empty:
+                hist_radar["Year"] = hist_radar["date"].str[:4]
+                y_sel = st.selectbox("Seleziona Anno", options=["Tutti gli Anni"] + sorted(hist_radar["Year"].unique().tolist()), key="cmd_hist_year")
+                df_hr = hist_radar if y_sel == "Tutti gli Anni" else hist_radar[hist_radar["Year"] == y_sel]
+                rows_r = []
+                for _, r in df_hr.iterrows():
+                    max_p_str = f"{r['max_buy_price']:.2f} €" if "max_buy_price" in r and r["max_buy_price"] > 0 else "-"
+                    rows_r.append({
+                        "Data": r["date"],
+                        "Azione": "🟢 BUY" if r["action"] == "BUY" else ("🔄 ROTAZIONE" if "Tranche 1" in r["reason"] else "🔴 SELL"),
+                        "Set": r["item_name"],
+                        "Quantità": r["quantity"],
+                        "Prezzo": f"{r['price']:.2f} €",
+                        "Prezzo Max Acquisto": max_p_str,
+                        "Valore": f"{r['total_value']:,.2f} €",
+                        "Trigger": r["reason"]
+                    })
+                st.dataframe(pd.DataFrame(rows_r), use_container_width=True, hide_index=True)
+
+        with st.expander("🤖 Notifiche Push Telegram Live", expanded=False):
+            st.caption("Notifiche automatiche ogni lunedì mattina via GitHub Actions (.github/workflows/poke_signals.yml) o on-demand.")
+            t_c1, t_c2 = st.columns([3, 1])
+            with t_c1:
+                st.code("python poke_quant/signal_scanner.py", language="bash")
+            with t_c2:
+                if st.button("🔔 Invia Test Telegram", key="cmd_tg_test"):
+                    msg = format_telegram_alert(d_scan)
+                    sent = send_telegram_message(msg)
+                    if sent:
+                        st.success("Notifica inviata con successo!")
+                    else:
+                        st.warning("Variabili TELEGRAM_TOKEN o TELEGRAM_CHAT_ID non configurate.")
+
+    # =========================================================================
+    # TAB 2: 📈 BACKTEST & PERFORMANCE
+    # =========================================================================
+    with tab_backtest:
         st.markdown('<div class="section-title">⚡ Simulatore Strategie con Rotazione Dinamica Scalare</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">Esecuzione su 68 mesi di prezzi di transazione reali (2021-2026), con sblocco periodico di liquidità e reinvestimento nei reprint moderni.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc">Esecuzione quantitativa su 68 mesi di prezzi reali (2021-2026), sblocco periodico di liquidità e reinvestimento nei reprint moderni.</div>', unsafe_allow_html=True)
 
         # PRESETS FRICTIONLESS (One-Click Setup)
         preset_col1, preset_col2 = st.columns([3, 1])
@@ -803,7 +935,7 @@ def main():
             target_roi = 1.50
             min_h = 30
             sel_tiers = ["S", "A", "B"]
-            dca_val = round(initial_cash * 0.025, 0)  # 2.5% del capitale di partenza al mese
+            dca_val = round(initial_cash * 0.025, 0)
         else:
             enable_rot = True
             t1_roi = 0.70
@@ -909,7 +1041,7 @@ def main():
         tot_inv_val = sum(p["current_value"] for p in res_optimal.open_positions) if res_optimal.open_positions else 0.0
         last_cash = float(res_optimal.nav_history["cash"].iloc[-1])
 
-        st.markdown(f"""
+        st.markdown(f'''
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-label">Capitale Finale Netto</div>
@@ -931,95 +1063,29 @@ def main():
                 <div class="kpi-value">{res_optimal.rotation_trades_count} Tranche 1</div>
                 <div class="kpi-sub kpi-sub-amber">🔄 {res_optimal.turnover_ratio*100:.1f}% Turnover NAV</div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-label">Composizione Attuale</div>
-                <div class="kpi-value">{len(res_optimal.open_positions)} Set Attivi</div>
-                <div class="kpi-sub kpi-sub-neutral">💼 {tot_inv_val:,.0f}€ Inv. | 💵 {last_cash:,.0f}€ Cassa</div>
         </div>
-        """, unsafe_allow_html=True)
+        ''', unsafe_allow_html=True)
 
-        # Ripartizione Proporzionale dei Box Indivisibili
+        # Sizing summary bar
         open_box_cnt = sum(p["quantity"] for p in res_optimal.open_positions) if res_optimal.open_positions else 0
         closed_box_cnt = int(res_optimal.trades_df["quantity"].sum()) if not res_optimal.trades_df.empty else 0
         total_boxes_managed = open_box_cnt + closed_box_cnt
         net_profit_abs = res_optimal.final_nav - initial_cash
 
-        st.markdown(f"""
-        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(30, 41, 59, 0.45); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 18px; margin-top:12px; margin-bottom:14px; font-size:13px; color:#cbd5e1;">
-            <div>💰 <strong>Capitale Iniziale Allocato</strong>: <span style="color:#f8fafc; font-weight:700;">{initial_cash:,.2f} €</span></div>
-            <div>📈 <strong>Profitto Netto Assoluto</strong>: <span style="color:#10b981; font-weight:700;">+{net_profit_abs:,.2f} €</span></div>
-            <div>📦 <strong>Box Fisici Gestiti</strong>: <span style="color:#38bdf8; font-weight:700;">{total_boxes_managed} Unità Intere</span> ({open_box_cnt} in custodia + {closed_box_cnt} ruotati)</div>
-            <div>⚡ <strong>Modello di Scalabilità</strong>: <span style="color:#fbbf24; font-weight:600;">Lotto Minimo Discreto (No Frazioni)</span></div>
+        st.markdown(f'''
+        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(30, 41, 59, 0.45); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 16px; margin-top:8px; margin-bottom:12px; font-size:12.5px; color:#cbd5e1; flex-wrap:wrap; gap:8px;">
+            <div>💰 <strong>Capitale Iniziale</strong>: <span style="color:#f8fafc; font-weight:700;">{initial_cash:,.2f} €</span></div>
+            <div>📈 <strong>Profitto Netto</strong>: <span style="color:#10b981; font-weight:700;">+{net_profit_abs:,.2f} €</span></div>
+            <div>📦 <strong>Box Fisici Gestiti</strong>: <span style="color:#38bdf8; font-weight:700;">{total_boxes_managed} Unità Intere</span> ({open_box_cnt} custodia + {closed_box_cnt} ruotati)</div>
+            <div>⚡ <strong>Sizing</strong>: <span style="color:#fbbf24; font-weight:600;">Lotto Minimo Discreto (No Frazioni)</span></div>
         </div>
-        """, unsafe_allow_html=True)
+        ''', unsafe_allow_html=True)
 
-        with st.expander("ℹ️ Come Scala la Strategia sui Box Indivisibili (Discrete Unit Lot Sizing)"):
-            st.markdown(r"""
-            **Principio Quantitativo dell'Indivisibilità degli Asset Reali:**
-            - **Nessuna Frazione Astratta**: Nei mercati azionari o crypto è possibile acquistare frazioni (es. 0.35 azioni). I Booster Box sono **beni fisici discreti e indivisibili** ($q \in \mathbb{N}_{\ge 1}$).
-            - **Scaling Proporzionale Matematico**: Variando il capitale (es. da 2.500 € a 100.000 €), l'algoritmo scala il budget per set ($NAV \times \text{Cap \%}$) e applica la divisione intera per il prezzo unitario reale ($\lfloor \text{Budget} / P_i \rfloor$).
-            - **Regola del Lotto Minimo per Piccoli Capitali (< 3.000 €)**: Se il budget teorico del 12% è inferiore al prezzo di 1 box (es. 120 € su 1.000 € di capitale con un box da 135 €), il sistema **autorizza comunque l'acquisto di 1 box intero** purché la cassa lo copra e non si superi il 35% del NAV totale. Questo evita che i conti piccoli restino a zero acquisti!
-            - **Resto Indivisibile (Cash Buffer)**: La frazione monetaria non sufficiente a comprare un ulteriore box intero rimane liquida in cassa, pronta per i reprint successivi o per assorbire prodotti più accessibili (es. Specialty Bundle da 30-35 €).
-            - **Rotazione Tranche 1 Discreta**: Se la posizione ha $\ge 2$ box, si vende il $50\%$ intero ($\lfloor q / 2 \rfloor$). Se la posizione è di $1$ solo box, il sigillo non viene violato: il box rimane intero fino al target finale (+150%).
-            """)
-
-        # Tabella di Comparazione Istituzionale
-        comp_rows = [
-            {
-                "Strategia": "Optimal Sealed Strategy (Rotazione Scalare)",
-                "Capitale Finale": f"{res_optimal.final_nav:,.2f} €",
-                "ROI Netto": f"{res_optimal.total_net_return*100:+.1f}%",
-                "CAGR": f"{res_optimal.cagr*100:+.2f}%",
-                "Alpha vs SPY": f"{res_optimal.alpha_annualized*100:+.2f}%",
-                "Sharpe": f"{res_optimal.sharpe:.2f}",
-                "MaxDD": f"{res_optimal.max_drawdown*100:.2f}%",
-                "Rotazioni (Tranche 1)": res_optimal.rotation_trades_count,
-                "Trades Chiusi": res_optimal.total_trades,
-                "Win Rate": f"{res_optimal.win_rate*100:.1f}%",
-                "Frizioni Pagate": f"{res_optimal.total_fees_paid:,.2f} €"
-            },
-            {
-                "Strategia": "Sealed Accumulator (Standard No Rotazione)",
-                "Capitale Finale": f"{res_sealed.final_nav:,.2f} €",
-                "ROI Netto": f"{res_sealed.total_net_return*100:+.1f}%",
-                "CAGR": f"{res_sealed.cagr*100:+.2f}%",
-                "Alpha vs SPY": f"{res_sealed.alpha_annualized*100:+.2f}%",
-                "Sharpe": f"{res_sealed.sharpe:.2f}",
-                "MaxDD": f"{res_sealed.max_drawdown*100:.2f}%",
-                "Rotazioni (Tranche 1)": res_sealed.rotation_trades_count,
-                "Trades Chiusi": res_sealed.total_trades,
-                "Win Rate": f"{res_sealed.win_rate*100:.1f}%",
-                "Frizioni Pagate": f"{res_sealed.total_fees_paid:,.2f} €"
-            },
-            {
-                "Strategia": "Chase Dip Buyer (Singole Hype-Cycle)",
-                "Capitale Finale": f"{res_chase.final_nav:,.2f} €",
-                "ROI Netto": f"{res_chase.total_net_return*100:+.1f}%",
-                "CAGR": f"{res_chase.cagr*100:+.2f}%",
-                "Alpha vs SPY": f"{res_chase.alpha_annualized*100:+.2f}%",
-                "Sharpe": f"{res_chase.sharpe:.2f}",
-                "MaxDD": f"{res_chase.max_drawdown*100:.2f}%",
-                "Rotazioni (Tranche 1)": res_chase.rotation_trades_count,
-                "Trades Chiusi": res_chase.total_trades,
-                "Win Rate": f"{res_chase.win_rate*100:.1f}%",
-                "Frizioni Pagate": f"{res_chase.total_fees_paid:,.2f} €"
-            }
-        ]
-        st.dataframe(pd.DataFrame(comp_rows).set_index("Strategia"), use_container_width=True)
-
-        # Regimi Macro Economici
-        with st.expander("🌐 Performance per Regime Macroeconomico (Optimal Sealed)"):
-            r_cols = st.columns(len(res_optimal.regime_performance))
-            for i, (regime, val) in enumerate(res_optimal.regime_performance.items()):
-                with r_cols[i]:
-                    st.metric(regime.split(" ")[0], f"{val*100:+.1f}%", help=regime)
-
-        # GRAFICO INTERATTIVO PLOTLY
+        # Plotly chart
         fig = make_subplots(
             rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.07, row_heights=[0.72, 0.28],
             subplot_titles=("Evoluzione del Valore Liquidativo (NAV) vs Benchmark", "Drawdown Subito (%)")
         )
-        # Benchmark
         bench_nav = res_optimal.benchmark_nav
         fig.add_trace(go.Scatter(
             x=bench_nav.index, y=bench_nav.values,
@@ -1027,28 +1093,24 @@ def main():
             line=dict(color='rgba(148, 163, 184, 0.7)', dash='dash', width=2)
         ), row=1, col=1)
 
-        # Strategia Ottimale
         fig.add_trace(go.Scatter(
             x=res_optimal.nav_history.index, y=res_optimal.nav_history["nav"],
             mode='lines', name="Optimal Sealed (Rotazione)",
             line=dict(color='#10b981', width=3)
         ), row=1, col=1)
 
-        # Standard Sealed
         fig.add_trace(go.Scatter(
             x=res_sealed.nav_history.index, y=res_sealed.nav_history["nav"],
             mode='lines', name="Sealed Standard",
             line=dict(color='#3b82f6', width=2)
         ), row=1, col=1)
 
-        # Singole
         fig.add_trace(go.Scatter(
             x=res_chase.nav_history.index, y=res_chase.nav_history["nav"],
             mode='lines', name="Chase Card (Singole)",
             line=dict(color='#f97316', width=1.5)
         ), row=1, col=1)
 
-        # Drawdown
         nav = res_optimal.nav_history["nav"]
         dd = (nav / nav.cummax() - 1.0) * 100.0
         fig.add_trace(go.Scatter(
@@ -1064,8 +1126,8 @@ def main():
             paper_bgcolor="rgba(15, 23, 42, 0.5)",
             plot_bgcolor="rgba(15, 23, 42, 0.5)",
             font=dict(family="Inter, sans-serif", color="#94a3b8"),
-            height=540,
-            margin=dict(l=20, r=20, t=40, b=20),
+            height=520,
+            margin=dict(l=20, r=20, t=35, b=20),
             hovermode="x unified",
             legend=dict(
                 orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
@@ -1077,9 +1139,9 @@ def main():
         fig.update_yaxes(showgrid=True, gridcolor="rgba(255, 255, 255, 0.05)", title_text="Drawdown %", row=2, col=1)
         st.plotly_chart(fig, use_container_width=True)
 
-        # SEZIONE 1: PORTAFOGLIO ATTIVO IN DETENZIONE (POSIZIONI APERTE)
-        st.markdown('<div class="section-title">💼 Portafoglio Attivo in Detenzione (Posizioni Aperte a Fine Backtest)</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">Box fisicamente custoditi a Settembre 2026: monitoraggio dello stato della finestra d\'acquisto e del Prezzo Massimo Consentito.</div>', unsafe_allow_html=True)
+        # Portafoglio Attivo (Posizioni Aperte)
+        st.markdown('<div class="section-title">💼 Portafoglio Attivo in Detenzione (Posizioni a Fine Backtest)</div>', unsafe_allow_html=True)
+        st.markdown("<div class='section-desc'>Box fisicamente custoditi a Settembre 2026: monitoraggio dello stato della finestra d'acquisto e del Prezzo Massimo Consentito.</div>", unsafe_allow_html=True)
 
         if res_optimal.open_positions:
             op_rows = []
@@ -1089,7 +1151,6 @@ def main():
                 is_win = p.get("is_in_buy_window", False)
                 w_status = p.get("window_status", "N/D")
                 
-                # Azione operativa istantanea
                 if is_win:
                     act_badge = "🟢 ACCUMULA (DCA)"
                 elif p["holding_months"] >= 18 and p["unrealized_roi"] >= 0.70:
@@ -1125,101 +1186,146 @@ def main():
                 use_container_width=True
             )
 
-            # GUIDA OPERATIVA LEAN & ACTION-ORIENTED
-            st.markdown("##### ⚡ Decisione Operativa Lean su Posizioni in Portafoglio (Riacquisto vs Custodia)")
+            # Guida Operativa Lean
             c_acc1, c_acc2 = st.columns(2)
             with c_acc1:
                 accumulabili = [p for p in res_optimal.open_positions if p.get("is_in_buy_window", False)]
                 acc_names = ", ".join([f"**{p['item_name']}** ({p['current_price']:.1f}€ vs Max {p['max_buy_price']:.1f}€)" for p in accumulabili]) if accumulabili else "Nessuna posizione attualmente in finestra (tutti i set posseduti sono Out-of-Print)."
-                st.markdown(f"""
-                <div style="background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.3); border-radius:10px; padding:14px; margin-bottom:12px;">
-                    <div style="font-weight:700; color:#10b981; font-size:13.5px; margin-bottom:6px;">
+                st.markdown(f'''
+                <div style="background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.3); border-radius:10px; padding:12px; margin-bottom:12px;">
+                    <div style="font-weight:700; color:#10b981; font-size:13px; margin-bottom:4px;">
                         🟢 POSIZIONI ANCORA IN FINESTRA BUONA D'ACQUISTO (ACCUMULABILI)
                     </div>
-                    <div style="font-size:12px; color:#cbd5e1; line-height:1.5;">
+                    <div style="font-size:12px; color:#cbd5e1; line-height:1.45;">
                         • <strong>Set Reperibili</strong>: {acc_names}<br>
                         • <strong>Azione Consentita</strong>: È possibile incrementare la posizione via PAC/DCA perché il prezzo è rigorosamente inferiore al Prezzo Massimo di Acquisto (+15% MSRP) e non sono ancora cessate le ristampe.<br>
                         • <strong>Limite di Rischio</strong>: Non superare il 12% di allocazione complessiva per singolo set.
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
+                ''', unsafe_allow_html=True)
             with c_acc2:
                 oop_pos = [p for p in res_optimal.open_positions if not p.get("is_in_buy_window", False)]
                 oop_names = ", ".join([f"**{p['item_name']}** (+{p['unrealized_roi']*100:.0f}%)" for p in oop_pos[:3]]) if oop_pos else "Nessuna posizione in stato Out-of-Print."
-                st.markdown(f"""
-                <div style="background:rgba(148, 163, 184, 0.08); border:1px solid rgba(148, 163, 184, 0.3); border-radius:10px; padding:14px; margin-bottom:12px;">
-                    <div style="font-weight:700; color:#cbd5e1; font-size:13.5px; margin-bottom:6px;">
+                st.markdown(f'''
+                <div style="background:rgba(148, 163, 184, 0.08); border:1px solid rgba(148, 163, 184, 0.3); border-radius:10px; padding:12px; margin-bottom:12px;">
+                    <div style="font-weight:700; color:#cbd5e1; font-size:13px; margin-bottom:4px;">
                         🔒 POSIZIONI A FINESTRA CHIUSA (SOLO CUSTODIA / OOP)
                     </div>
-                    <div style="font-size:12px; color:#94a3b8; line-height:1.5;">
+                    <div style="font-size:12px; color:#94a3b8; line-height:1.45;">
                         • <strong>Set in Cassaforte</strong>: {oop_names} {f'e altri {len(oop_pos)-3}' if len(oop_pos) > 3 else ''}<br>
                         • <strong>Azione Tassativa</strong>: <u>NON RIACQUISTARE A MERCATO</u>. L'offerta di ristampa è chiusa ed il prezzo è già cresciuto oltre il limite di sicurezza.<br>
                         • <strong>Target Operativo</strong>: Mantenere le unità sigillate fino al target di rotazione Tranche 1 (+70%) o uscita finale (+150%).
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
+                ''', unsafe_allow_html=True)
         else:
             st.info("Nessuna posizione aperta in inventario.")
 
-        # SEZIONE 2: CRONOLOGIA COMPLETA SEGNALI STORICI
-        st.markdown('<div class="section-title">📡 Cronologia Completa dei Segnali Storici Generati (2021 - 2026)</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">85 eventi operativi storici generati dal modello con indicazione del Prezzo Massimo di Acquisto e del trigger quantitativo.</div>', unsafe_allow_html=True)
+        # Progressive Disclosure Expanders
+        with st.expander("📊 Tabella Comparativa Istituzionale vs Strategie Alternative", expanded=False):
+            comp_rows = [
+                {
+                    "Strategia": "Optimal Sealed Strategy (Rotazione Scalare)",
+                    "Capitale Finale": f"{res_optimal.final_nav:,.2f} €",
+                    "ROI Netto": f"{res_optimal.total_net_return*100:+.1f}%",
+                    "CAGR": f"{res_optimal.cagr*100:+.2f}%",
+                    "Alpha vs SPY": f"{res_optimal.alpha_annualized*100:+.2f}%",
+                    "Sharpe": f"{res_optimal.sharpe:.2f}",
+                    "MaxDD": f"{res_optimal.max_drawdown*100:.2f}%",
+                    "Rotazioni (Tranche 1)": res_optimal.rotation_trades_count,
+                    "Trades Chiusi": res_optimal.total_trades,
+                    "Win Rate": f"{res_optimal.win_rate*100:.1f}%",
+                    "Frizioni Pagate": f"{res_optimal.total_fees_paid:,.2f} €"
+                },
+                {
+                    "Strategia": "Sealed Accumulator (Standard No Rotazione)",
+                    "Capitale Finale": f"{res_sealed.final_nav:,.2f} €",
+                    "ROI Netto": f"{res_sealed.total_net_return*100:+.1f}%",
+                    "CAGR": f"{res_sealed.cagr*100:+.2f}%",
+                    "Alpha vs SPY": f"{res_sealed.alpha_annualized*100:+.2f}%",
+                    "Sharpe": f"{res_sealed.sharpe:.2f}",
+                    "MaxDD": f"{res_sealed.max_drawdown*100:.2f}%",
+                    "Rotazioni (Tranche 1)": res_sealed.rotation_trades_count,
+                    "Trades Chiusi": res_sealed.total_trades,
+                    "Win Rate": f"{res_sealed.win_rate*100:.1f}%",
+                    "Frizioni Pagate": f"{res_sealed.total_fees_paid:,.2f} €"
+                },
+                {
+                    "Strategia": "Chase Dip Buyer (Singole Hype-Cycle)",
+                    "Capitale Finale": f"{res_chase.final_nav:,.2f} €",
+                    "ROI Netto": f"{res_chase.total_net_return*100:+.1f}%",
+                    "CAGR": f"{res_chase.cagr*100:+.2f}%",
+                    "Alpha vs SPY": f"{res_chase.alpha_annualized*100:+.2f}%",
+                    "Sharpe": f"{res_chase.sharpe:.2f}",
+                    "MaxDD": f"{res_chase.max_drawdown*100:.2f}%",
+                    "Rotazioni (Tranche 1)": res_chase.rotation_trades_count,
+                    "Trades Chiusi": res_chase.total_trades,
+                    "Win Rate": f"{res_chase.win_rate*100:.1f}%",
+                    "Frizioni Pagate": f"{res_chase.total_fees_paid:,.2f} €"
+                }
+            ]
+            st.dataframe(pd.DataFrame(comp_rows).set_index("Strategia"), use_container_width=True)
 
-        if res_optimal.signals_history:
-            sig_df = pd.DataFrame(res_optimal.signals_history)
-            sig_df["Year"] = sig_df["date"].str[:4]
+        with st.expander("🌐 Performance per Regime Macroeconomico (Optimal Sealed)", expanded=False):
+            r_cols = st.columns(len(res_optimal.regime_performance))
+            for i, (regime, val) in enumerate(res_optimal.regime_performance.items()):
+                with r_cols[i]:
+                    st.metric(regime.split(" ")[0], f"{val*100:+.1f}%", help=regime)
 
-            cs1, cs2, cs3 = st.columns([2, 2, 2])
-            with cs1:
-                year_f = st.selectbox("Filtra per Anno", options=["Tutti gli Anni (2021-2026)"] + sorted(sig_df["Year"].unique().tolist()))
-            with cs2:
-                action_f = st.selectbox("Filtra per Tipologia", options=["Tutti i Segnali", "Solo BUY (Acquisti)", "Solo SELL (Rotazioni & Uscite)"])
-            with cs3:
-                st.metric("Segnali Registrati", f"{len(sig_df)} Totali", help="Totale decisioni operative eseguite nel periodo")
+        with st.expander("📡 Cronologia Completa dei Segnali Storici Generati (2021 - 2026)", expanded=False):
+            if res_optimal.signals_history:
+                sig_df = pd.DataFrame(res_optimal.signals_history)
+                sig_df["Year"] = sig_df["date"].str[:4]
 
-            # Mini bar chart segnali per anno
-            y_counts = sig_df.groupby(["Year", "action"]).size().unstack(fill_value=0)
-            fig_bar = go.Figure()
-            if "BUY" in y_counts.columns:
-                fig_bar.add_trace(go.Bar(x=y_counts.index, y=y_counts["BUY"], name="BUY (Acquisto Dip)", marker_color="#10b981"))
-            if "SELL" in y_counts.columns:
-                fig_bar.add_trace(go.Bar(x=y_counts.index, y=y_counts["SELL"], name="SELL (Rotazione / Uscita)", marker_color="#f59e0b"))
-            fig_bar.update_layout(
-                template="plotly_dark",
-                paper_bgcolor="rgba(15, 23, 42, 0.4)",
-                plot_bgcolor="rgba(15, 23, 42, 0.4)",
-                barmode="group", height=240, margin=dict(l=20, r=20, t=30, b=20),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-            )
-            st.plotly_chart(fig_bar, use_container_width=True)
+                cs1, cs2, cs3 = st.columns([2, 2, 2])
+                with cs1:
+                    year_f = st.selectbox("Filtra per Anno", options=["Tutti gli Anni (2021-2026)"] + sorted(sig_df["Year"].unique().tolist()), key="bt_sig_year")
+                with cs2:
+                    action_f = st.selectbox("Filtra per Tipologia", options=["Tutti i Segnali", "Solo BUY (Acquisti)", "Solo SELL (Rotazioni & Uscite)"], key="bt_sig_action")
+                with cs3:
+                    st.metric("Segnali Registrati", f"{len(sig_df)} Totali", help="Totale decisioni operative eseguite nel periodo")
 
-            filtered_df = sig_df.copy()
-            if year_f != "Tutti gli Anni (2021-2026)":
-                filtered_df = filtered_df[filtered_df["Year"] == year_f]
-            if "BUY" in action_f:
-                filtered_df = filtered_df[filtered_df["action"] == "BUY"]
-            elif "SELL" in action_f:
-                filtered_df = filtered_df[filtered_df["action"] == "SELL"]
+                y_counts = sig_df.groupby(["Year", "action"]).size().unstack(fill_value=0)
+                fig_bar = go.Figure()
+                if "BUY" in y_counts.columns:
+                    fig_bar.add_trace(go.Bar(x=y_counts.index, y=y_counts["BUY"], name="BUY (Acquisto Dip)", marker_color="#10b981"))
+                if "SELL" in y_counts.columns:
+                    fig_bar.add_trace(go.Bar(x=y_counts.index, y=y_counts["SELL"], name="SELL (Rotazione / Uscita)", marker_color="#f59e0b"))
+                fig_bar.update_layout(
+                    template="plotly_dark",
+                    paper_bgcolor="rgba(15, 23, 42, 0.4)",
+                    plot_bgcolor="rgba(15, 23, 42, 0.4)",
+                    barmode="group", height=220, margin=dict(l=20, r=20, t=25, b=20),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
+                st.plotly_chart(fig_bar, use_container_width=True)
 
-            sig_rows = []
-            for _, s in filtered_df.iterrows():
-                badge = "🟢 BUY" if s["action"] == "BUY" else ("🔄 TRANCHE 1" if "Tranche 1" in s["reason"] else "🔴 SELL")
-                max_p_str = f"{s['max_buy_price']:.2f} €" if "max_buy_price" in s and s["max_buy_price"] > 0 else "-"
-                sig_rows.append({
-                    "Data": s["date"],
-                    "Azione": badge,
-                    "Prodotto": s["item_name"],
-                    "Quantità": s["quantity"],
-                    "Prezzo Unitario": f"{s['price']:.2f} €",
-                    "Prezzo Max Acquisto": max_p_str,
-                    "Controvalore": f"{s['total_value']:,.2f} €",
-                    "Cassa Residua Prima": f"{s['portfolio_cash_before']:,.2f} €",
-                    "Motivazione / Trigger": s["reason"]
-                })
-            st.dataframe(pd.DataFrame(sig_rows), use_container_width=True, hide_index=True)
+                filtered_df = sig_df.copy()
+                if year_f != "Tutti gli Anni (2021-2026)":
+                    filtered_df = filtered_df[filtered_df["Year"] == year_f]
+                if "BUY" in action_f:
+                    filtered_df = filtered_df[filtered_df["action"] == "BUY"]
+                elif "SELL" in action_f:
+                    filtered_df = filtered_df[filtered_df["action"] == "SELL"]
 
-        # SEZIONE 3: TRADES CONCLUSI
-        with st.expander(f"📜 Registro Operazioni Concluse ({len(res_optimal.trades_df)} Trades Chiusi)"):
+                sig_rows = []
+                for _, s in filtered_df.iterrows():
+                    badge = "🟢 BUY" if s["action"] == "BUY" else ("🔄 TRANCHE 1" if "Tranche 1" in s["reason"] else "🔴 SELL")
+                    max_p_str = f"{s['max_buy_price']:.2f} €" if "max_buy_price" in s and s["max_buy_price"] > 0 else "-"
+                    sig_rows.append({
+                        "Data": s["date"],
+                        "Azione": badge,
+                        "Prodotto": s["item_name"],
+                        "Quantità": s["quantity"],
+                        "Prezzo Unitario": f"{s['price']:.2f} €",
+                        "Prezzo Max Acquisto": max_p_str,
+                        "Controvalore": f"{s['total_value']:,.2f} €",
+                        "Cassa Residua Prima": f"{s['portfolio_cash_before']:,.2f} €",
+                        "Motivazione / Trigger": s["reason"]
+                    })
+                st.dataframe(pd.DataFrame(sig_rows), use_container_width=True, hide_index=True)
+
+        with st.expander(f"📜 Registro Operazioni Concluse ({len(res_optimal.trades_df)} Trades Chiusi)", expanded=False):
             if not res_optimal.trades_df.empty:
                 td_disp = res_optimal.trades_df.copy()
                 td_disp["Prezzo Acq."] = td_disp["buy_price_unit"].apply(lambda x: f"{x:.2f} €")
@@ -1231,306 +1337,19 @@ def main():
                 cols = ["item_name", "quantity", "buy_date", "sell_date", "holding_months", "Prezzo Acq.", "Prezzo Vend.", "Fee Pagate", "PnL Netto", "ROI Netto %"]
                 st.dataframe(td_disp[cols].rename(columns={"item_name": "Articolo", "quantity": "Q.tà", "buy_date": "Data Acq.", "sell_date": "Data Vend.", "holding_months": "Mesi"}), use_container_width=True)
 
+        with st.expander("ℹ️ Come Scala la Strategia sui Box Indivisibili (Discrete Unit Lot Sizing)", expanded=False):
+            st.markdown(r'''
+            **Principio Quantitativo dell'Indivisibilità degli Asset Reali:**
+            - **Nessuna Frazione Astratta**: Nei mercati azionari o crypto è possibile acquistare frazioni (es. 0.35 azioni). I Booster Box sono **beni fisici discreti e indivisibili** ($q \in \mathbb{N}_{\ge 1}$).
+            - **Scaling Proporzionale Matematico**: Variando il capitale (es. da 2.500 € a 100.000 €), l'algoritmo scala il budget per set ($NAV \times \text{Cap \%}$) e applica la divisione intera per il prezzo unitario reale ($\lfloor \text{Budget} / P_i \rfloor$).
+            - **Regola del Lotto Minimo per Piccoli Capitali (< 3.000 €)**: Se il budget teorico del 12% è inferiore al prezzo di 1 box (es. 120 € su 1.000 € di capitale con un box da 135 €), il sistema **autorizza comunque l'acquisto di 1 box intero** purché la cassa lo copra e non si superi il 35% del NAV totale. Questo evita che i conti piccoli restino a zero acquisti!
+            - **Resto Indivisibile (Cash Buffer)**: La frazione monetaria non sufficiente a comprare un ulteriore box intero rimane liquida in cassa, pronta per i reprint successivi o per assorbire prodotti più accessibili (es. Specialty Bundle da 30-35 €).
+            - **Rotazione Tranche 1 Discreta**: Se la posizione ha $\ge 2$ box, si vende il $50\%$ intero ($\lfloor q / 2 \rfloor$). Se la posizione è di $1$ solo box, il sigillo non viene violato: il box rimane intero fino al target finale (+150%).
+            ''')
     # =========================================================================
-    # TAB RADAR: SEGNALI LIVE & LIVE DESK
+    # TAB 3: ⚖️ ARBITRAGGIO GRADING PSA
     # =========================================================================
-    with tab_radar:
-        st.markdown('<div class="section-title">📡 Radar Segnali Operativi in Tempo Reale & Scanner delle Finestre d\'Acquisto</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">Monitoraggio automatico dei set in finestra di reprint a sconto (BUY), verifica del Prezzo Massimo di Acquisto e target di rotazione/uscita (SELL).</div>', unsafe_allow_html=True)
-
-        rc_snap, rc_tier = st.columns([2, 2])
-        with rc_snap:
-            snapshot_opts = {
-                "Ultima Rilevazione di Mercato (Settembre 2026)": "2026-09-01",
-                "Dicembre 2024 (Ciclo Twilight Masquerade / Temporal Forces / OP-06)": "2024-12-01",
-                "Maggio 2024 (Fase Scarlet & Violet 151 / Obsidian Flames)": "2024-05-01",
-                "Dicembre 2023 (Fase Paldea Evolved / OP-03 Pillars)": "2023-12-01",
-                "Novembre 2022 (Fase Lost Origin / Silver Tempest)": "2022-11-01",
-                "Data Attuale di Sistema (Oggi)": "today"
-            }
-            chosen_snap_lbl = st.selectbox("📅 Snapshot Temporale del Radar", options=list(snapshot_opts.keys()), index=0)
-            snap_val = snapshot_opts[chosen_snap_lbl]
-            if snap_val == "today":
-                eval_dt = datetime.date.today()
-                eval_px_map = prices_df.iloc[-1].to_dict()
-            else:
-                eval_dt = pd.to_datetime(snap_val).date()
-                eval_px_map = prices_df.loc[snap_val].to_dict() if snap_val in prices_df.index else prices_df.iloc[-1].to_dict()
-
-        with rc_tier:
-            radar_tiers = st.multiselect("Tier Monitorati dal Radar", options=["S", "A", "B", "C"], default=["S", "A", "B"])
-
-        scan_res = scan_signals(current_prices=eval_px_map, metadata=metadata, today_dt=eval_dt, allowed_tiers=radar_tiers)
-        buys = scan_res.get("buy_signals", [])
-        sells = scan_res.get("sell_signals", [])
-        watchlist = scan_res.get("watchlist", [])
-        all_evals = scan_res.get("all_evaluations", [])
-
-        # Live Signals Layout
-        l_col1, l_col2 = st.columns(2)
-        with l_col1:
-            st.markdown("#### 🟢 Opportunità di Acquisto sul Mercato (BUY)")
-            if buys:
-                for b in buys:
-                    badge_cls = "pill-emerald" if "COMPRA" in b.get("action_badge", "") else "pill-amber"
-                    b_fran = metadata.get(b.get("item_id"), {}).get("franchise", "pokemon")
-                    cm_url = get_cardmarket_url(b["name"], b_fran)
-                    st.markdown(f"""
-                    <div class="signal-card signal-card-buy">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong style="font-size:15.5px; color:#f8fafc;">{b['name']}</strong>
-                            <div>
-                                <span class="pill-tag {badge_cls}">{b.get('action_badge', '🟢 COMPRA SUBITO')}</span>
-                                <span class="pill-tag pill-slate">Tier {b['tier']}</span>
-                            </div>
-                        </div>
-                        <div style="margin-top:10px; display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; background:rgba(15,23,42,0.6); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
-                            <div><span style="color:#94a3b8; font-size:11px;">PREZZO ATTUALE:</span><br><strong style="font-size:16px; color:#10b981;">{b['current_price']:.2f} €</strong></div>
-                            <div><span style="color:#94a3b8; font-size:11px;">PREZZO MAX ACQUISTO:</span><br><strong style="font-size:16px; color:#fbbf24;">{b['max_buy_price']:.2f} €</strong></div>
-                            <div><span style="color:#94a3b8; font-size:11px;">RISPARMIO SOTTO MAX:</span><br><strong style="font-size:16px; color:#38bdf8;">{b['margin_vs_max']:+.2f} € ({b['margin_vs_max_pct']:+.1f}%)</strong></div>
-                            <div><span style="color:#94a3b8; font-size:11px;">FINESTRA D'ACQUISTO:</span><br><strong style="font-size:16px; color:#cbd5e1;">Mese {b['age_months']}/14 ({b['months_left_in_window']}m rimasti)</strong></div>
-                        </div>
-                        <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                            <div style="font-size:12.5px; color:#cbd5e1; line-height:1.45; flex-grow:1;">
-                                🎯 <strong>Azione Istituzionale Consigliata</strong>: Il set si trova nella finestra di massimo sconto post-reprint. Il prezzo è inferiore al tetto massimo di {b['max_buy_price']:.2f} € (+15% MSRP di {b['msrp']:.1f} €) di ben <strong>{b['margin_vs_max']:.2f} €</strong>. Allocare fino a un massimo del 10-12% del portafoglio (orizzonte 30-36 mesi).
-                            </div>
-                            <a href="{cm_url}" target="_blank" class="cm-btn">🛒 Compra su Cardmarket ↗</a>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-            else:
-                st.info(f"Nessun set attualmente all'interno della finestra di acquisto (Mesi 4-14 con prezzo <= Prezzo Max di Acquisto) per lo snapshot {eval_dt.strftime('%d/%m/%Y')}. Tutti i set monitorati rimangono in watchlist o sono già Out-of-Print.")
-
-        with l_col2:
-            st.markdown("#### 🔄 Uscite & Rotazioni di Portafoglio (SELL)")
-            if sells:
-                for s in sells:
-                    sig_t = s.get("signal_type", "SELL")
-                    s_fran = metadata.get(s.get("item_id"), {}).get("franchise", "pokemon")
-                    cm_url = get_cardmarket_url(s["name"], s_fran)
-                    if "TRANCHE 1" in sig_t:
-                        st.markdown(f"""
-                        <div class="signal-card signal-card-rotate">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <strong style="font-size:15px; color:#fbbf24;">🔄 {s['name']} — ROTAZIONE TRANCHE 1</strong>
-                                <span class="pill-tag pill-amber">+{s['net_roi_pct']:.1f}% ROI</span>
-                            </div>
-                            <div style="margin-top:8px; font-size:13px; color:#cbd5e1;">
-                                • <strong>Consiglio Operativo</strong>: Vendere <strong>{s['quantity']} su {s['total_quantity']} box</strong>.<br>
-                                • Prezzo di Vendita Stimato: <strong>{s['current_price']:.1f} €</strong> (Carico medio: {s['buy_price']:.1f} €)<br>
-                                • Incasso Netto Stimato: <strong>{s['net_proceeds']:.1f} €</strong> dopo {s['holding_months']} mesi (Out-of-Print confermato).<br>
-                                • <em>Sblocca cassa per reinvestire nei nuovi set in finestra d'acquisto a MSRP.</em>
-                            </div>
-                            <div style="margin-top:10px; text-align:right;">
-                                <a href="{cm_url}" target="_blank" class="cm-btn cm-btn-sell">🏷️ Metti in Vendita su Cardmarket ↗</a>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"""
-                        <div class="signal-card signal-card-sell">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <strong style="font-size:15px; color:#f43f5e;">🔴 {s['name']} — USCITA FINALE</strong>
-                                <span class="pill-tag pill-rose">+{s['net_roi_pct']:.1f}% ROI</span>
-                            </div>
-                            <div style="margin-top:8px; font-size:13px; color:#cbd5e1;">
-                                • Quantità da Vendere: <strong>{s['quantity']} box</strong><br>
-                                • Prezzo Stimato: <strong>{s['current_price']:.1f} €</strong> | Incasso Netto: <strong>{s['net_proceeds']:.1f} €</strong><br>
-                                • <em>Target profitto finale raggiunto (+150% netto o 48 mesi di time-stop).</em>
-                            </div>
-                            <div style="margin-top:10px; text-align:right;">
-                                <a href="{cm_url}" target="_blank" class="cm-btn cm-btn-sell">🏷️ Metti in Vendita su Cardmarket ↗</a>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-            else:
-                st.info("Nessuna posizione in portafoglio ha ancora raggiunto i target di rotazione o uscita per questa data.")
-
-        # SEZIONE: MATRICE COMPLETA DEL MERCATO SEALED (FINESTRE & PREZZI MASSIMI)
-        st.markdown("---")
-        st.markdown('<div class="section-title">⚡ Matrice Operativa Rapida di Tutti i Box Sealed (Finestre & Prezzi Max)</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">Quadro strategico unificato su tutti i set sealed: verifica immediata di quali box sono ancora acquistabili a sconto, in chiusura o già Out-of-Print.</div>', unsafe_allow_html=True)
-
-        if all_evals:
-            mat_filter = st.radio(
-                "Filtro Rapido Matrice",
-                ["Tutti i Box Sealed", "🟢 Solo in Finestra d'Acquisto", "⏳ Finestra in Chiusura (Pre-OOP)", "🟡 In Avvicinamento (Attendere)", "🔒 Finestra Chiusa (OOP)"],
-                horizontal=True
-            )
-            eval_rows = []
-            for ev in all_evals:
-                st_w = ev["window_status"]
-                if "Solo in Finestra" in mat_filter and "🟢" not in st_w and "⏳" not in st_w:
-                    continue
-                if "In Chiusura" in mat_filter and "⏳" not in st_w:
-                    continue
-                if "In Avvicinamento" in mat_filter and "🟡" not in st_w:
-                    continue
-                if "Finestra Chiusa" in mat_filter and "🔒" not in st_w and "⚠️" not in st_w:
-                    continue
-
-                ev_fran = metadata.get(ev.get("item_id"), {}).get("franchise", "pokemon")
-                cm_url = get_cardmarket_url(ev["name"], ev_fran)
-
-                eval_rows.append({
-                    "Set / Box": ev["name"],
-                    "Tier": ev["tier"],
-                    "Data Rilascio": ev["release_date"],
-                    "Età (Mesi)": f"{ev['age_months']}m",
-                    "Prezzo Attuale": f"{ev['current_price']:.2f} €",
-                    "MSRP Ufficiale": f"{ev['msrp']:.2f} €",
-                    "Prezzo Max Acquisto": f"{ev['max_buy_price']:.2f} €",
-                    "Margine vs Max": f"{ev['margin_vs_max']:+.2f} € ({ev['margin_vs_max_pct']:+.1f}%)",
-                    "Stato Finestra": ev["window_status"],
-                    "Mesi Residui": f"{ev['months_left']}m" if ev['months_left'] > 0 else "0m (OOP)",
-                    "Azione Operativa Immediata": ev["action"],
-                    "Cardmarket": cm_url
-                })
-            if eval_rows:
-                st.dataframe(
-                    pd.DataFrame(eval_rows).set_index("Set / Box"),
-                    column_config={
-                        "Cardmarket": st.column_config.LinkColumn("Cardmarket", display_text="🛒 Apri ↗")
-                    },
-                    use_container_width=True
-                )
-            else:
-                st.info("Nessun prodotto corrisponde al filtro selezionato.")
-
-        # Watchlist Prodotti Monitorati
-        if watchlist:
-            with st.expander(f"👀 Watchlist Set Fuori Finestra o in Avvicinamento ({len(watchlist)} Set)"):
-                st.dataframe(pd.DataFrame(watchlist)[["name", "tier", "age_months", "current_price", "msrp", "max_buy_price", "status"]].rename(columns={
-                    "name": "Set / Prodotto", "tier": "Tier", "age_months": "Età (Mesi)", "current_price": "Prezzo Attuale (€)", "msrp": "MSRP (€)", "max_buy_price": "Prezzo Max (€)", "status": "Stato Monitoraggio"
-                }), use_container_width=True)
-
-        # SEZIONE STORICO DEL RADAR
-        with st.expander("📜 Archivio Segnali Storici del Radar (2021 - 2026)"):
-            hist_radar = scan_historical_signals(prices_df=prices_df, metadata=metadata, allowed_tiers=radar_tiers)
-            if not hist_radar.empty:
-                hist_radar["Year"] = hist_radar["date"].str[:4]
-                y_sel = st.selectbox("Seleziona Anno", options=["Tutti gli Anni"] + sorted(hist_radar["Year"].unique().tolist()))
-                df_hr = hist_radar if y_sel == "Tutti gli Anni" else hist_radar[hist_radar["Year"] == y_sel]
-                rows_r = []
-                for _, r in df_hr.iterrows():
-                    max_p_str = f"{r['max_buy_price']:.2f} €" if "max_buy_price" in r and r["max_buy_price"] > 0 else "-"
-                    rows_r.append({
-                        "Data": r["date"],
-                        "Azione": "🟢 BUY" if r["action"] == "BUY" else ("🔄 ROTAZIONE" if "Tranche 1" in r["reason"] else "🔴 SELL"),
-                        "Set": r["item_name"],
-                        "Quantità": r["quantity"],
-                        "Prezzo": f"{r['price']:.2f} €",
-                        "Prezzo Max Acquisto": max_p_str,
-                        "Valore": f"{r['total_value']:,.2f} €",
-                        "Trigger": r["reason"]
-                    })
-                st.dataframe(pd.DataFrame(rows_r), use_container_width=True, hide_index=True)
-
-        # Gestione Posizioni Reali
-        st.markdown("---")
-        st.markdown('<div class="section-title">💼 Gestione Posizioni Reali Possedute (portfolio_holdings.json)</div>', unsafe_allow_html=True)
-        h_data = load_user_holdings()
-        if h_data:
-            h_rows = []
-            for h in h_data:
-                iid = h.get("item_id")
-                px = eval_px_map.get(iid, h.get("buy_price_unit", 0.0))
-                b_px = h.get("buy_price_unit", 0.0)
-                qty = h.get("quantity", 1)
-                cost = b_px * qty
-                cur_val = px * qty
-                net_val = (px * 0.95 - 0.60) * qty
-                pnl = net_val - cost
-                roi = pnl / cost if cost > 0 else 0.0
-                
-                m_info = metadata.get(iid, {})
-                msrp_val = float(m_info.get("msrp") or 140.0)
-                max_p = round(msrp_val * 1.15, 2)
-                
-                # Finestra di acquisto
-                rel_str = m_info.get("release_date")
-                if rel_str:
-                    try:
-                        rel_d = pd.to_datetime(rel_str).date()
-                        age_m = (eval_dt.year - rel_d.year) * 12 + (eval_dt.month - rel_d.month)
-                    except Exception:
-                        age_m = 24
-                else:
-                    age_m = 24
-
-                is_reaccumulabile = (4 <= age_m <= 14) and (px <= max_p)
-                w_status = f"🟢 IN FINESTRA ({max(0, 14 - age_m)}m rimasti)" if is_reaccumulabile else ("🔒 CHIUSA (OOP)" if age_m > 14 else "⚠️ SOPRA MAX")
-
-                h_fran = m_info.get("franchise", "pokemon")
-                cm_url = get_cardmarket_url(h.get("name", iid), h_fran)
-
-                h_rows.append({
-                    "Prodotto": h.get("name", iid),
-                    "Quantità": qty,
-                    "Data Acquisto": h.get("buy_date"),
-                    "Prezzo Carico": f"{b_px:.1f} €",
-                    "Prezzo Attuale": f"{px:.1f} €",
-                    "Prezzo Max Acquisto": f"{max_p:.1f} €",
-                    "Stato Finestra": w_status,
-                    "Valore Netto": f"{net_val:.1f} €",
-                    "PnL Netto": f"{pnl:+,.1f} €",
-                    "ROI Netto %": f"{roi*100:+.1f}%",
-                    "Cardmarket": cm_url
-                })
-            st.dataframe(
-                pd.DataFrame(h_rows).set_index("Prodotto"),
-                column_config={
-                    "Cardmarket": st.column_config.LinkColumn("Cardmarket", display_text="🛒 Apri ↗")
-                },
-                use_container_width=True
-            )
-
-        with st.expander("➕ Registra Nuovo Acquisto Box nel Portafoglio"):
-            with st.form("add_box_form"):
-                af1, af2 = st.columns(2)
-                with af1:
-                    avail = [k for k, v in metadata.items() if v.get("type") == "sealed"]
-                    sel_item = st.selectbox("Seleziona Prodotto", options=avail, format_func=lambda x: metadata[x].get("name", x))
-                    b_qty = st.number_input("Quantità (Box)", min_value=1, max_value=100, value=1)
-                with af2:
-                    def_px = metadata[sel_item].get("msrp", 140.0)
-                    b_px = st.number_input("Prezzo Unitario Acquisto (€)", min_value=10.0, max_value=5000.0, value=float(def_px))
-                    b_date = st.date_input("Data di Acquisto", value=datetime.date.today())
-                if st.form_submit_button("Salva Posizione"):
-                    h_file = Path(__file__).resolve().parent / "data_cache" / "portfolio_holdings.json"
-                    curr = load_user_holdings()
-                    curr.append({
-                        "item_id": sel_item,
-                        "name": metadata[sel_item].get("name", sel_item),
-                        "quantity": int(b_qty),
-                        "buy_date": b_date.strftime("%Y-%m-%d"),
-                        "buy_price_unit": float(b_px)
-                    })
-                    with open(h_file, "w", encoding="utf-8") as f:
-                        json.dump(curr, f, indent=2)
-                    st.success("Posizione salvata con successo!")
-                    st.rerun()
-
-        # Notifiche Push Telegram
-        st.markdown("---")
-        st.markdown('<div class="section-title">🤖 Notifiche Push Telegram Live</div>', unsafe_allow_html=True)
-        st.caption("Notifiche automatiche ogni lunedì mattina via GitHub Actions (.github/workflows/poke_signals.yml) o on-demand.")
-        t_c1, t_c2 = st.columns([3, 1])
-        with t_c1:
-            st.code("python poke_quant/signal_scanner.py", language="bash")
-        with t_c2:
-            if st.button("🔔 Test Invia Notifica Telegram"):
-                msg = format_telegram_alert(scan_res)
-                sent = send_telegram_message(msg)
-                if sent:
-                    st.success("Notifica inviata con successo!")
-                else:
-                    st.warning("Variabili TELEGRAM_TOKEN o TELEGRAM_CHAT_ID non configurate.")
-
-    # =========================================================================
-    # TAB 2: ARBITRAGGIO GRADING PSA
-    # =========================================================================
-    with tab2:
+    with tab_psa:
         st.markdown('<div class="section-title">⚖️ Calcolatore di Arbitraggio Statistico Grading PSA / BGS</div>', unsafe_allow_html=True)
         st.markdown('<div class="section-desc">Valutazione analitica del Valore Atteso Netto (EV) deducendo fee di servizio, spedizioni assicurate, fermo capitale e Gem Rate reale.</div>', unsafe_allow_html=True)
 
@@ -1611,59 +1430,9 @@ def main():
         st.dataframe(pd.DataFrame(sc_rows).set_index("Carta"), use_container_width=True)
 
     # =========================================================================
-    # TAB 3: CATALOGO & QUOTAZIONI LIVE
+    # TAB 4: 🛡️ AUDIT STATISTICO & FALSIFICAZIONE
     # =========================================================================
-    with tab3:
-        st.markdown('<div class="section-title">🔍 Catalogo Ufficiale & Quotazioni Live Cardmarket / TCGplayer</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">Interrogazione in tempo reale dell\'API pubblica di PokemonTCG.io con spread EUR/USD.</div>', unsafe_allow_html=True)
-
-        with st.spinner("Connessione all'anagrafica set..."):
-            sets_data = fetch_all_sets()
-
-        if sets_data:
-            set_dict = {s["name"]: s["id"] for s in sets_data[:50]}
-            sel_sname = st.selectbox("Seleziona Set", options=list(set_dict.keys()))
-            cur_s = next(s for s in sets_data if s["name"] == sel_sname)
-
-            s_col1, s_col2, s_col3, s_col4 = st.columns(4)
-            with s_col1:
-                st.metric("Serie", cur_s.get("series", "N/A"))
-            with s_col2:
-                st.metric("Data Rilascio", cur_s.get("releaseDate", "N/A"))
-            with s_col3:
-                st.metric("Totale Carte", cur_s.get("total", "N/A"))
-            with s_col4:
-                st.metric("ID Set", cur_s.get("id", "N/A"))
-
-            if st.button("Carica Prezzi Live delle Carte di Questo Set"):
-                with st.spinner("Scaricamento quotazioni live..."):
-                    cards = fetch_cards_by_set(cur_s["id"], page_size=50)
-                if cards:
-                    c_tab = []
-                    for c in cards:
-                        cm = c.get("cardmarket", {}).get("prices", {})
-                        tcg = c.get("tcgplayer", {}).get("prices", {})
-                        tcg_px = None
-                        for f_type in ["holofoil", "reverseHolofoil", "normal"]:
-                            if f_type in tcg and tcg[f_type].get("market"):
-                                tcg_px = tcg[f_type]["market"]
-                                break
-                        c_tab.append({
-                            "Numero": c.get("number"),
-                            "Nome": c.get("name"),
-                            "Rarità": c.get("rarity", "N/A"),
-                            "Cardmarket Trend (EUR)": f"{cm.get('trendPrice', 0.0):.2f} €" if cm.get('trendPrice') else "N/A",
-                            "Cardmarket Low (EUR)": f"{cm.get('lowPrice', 0.0):.2f} €" if cm.get('lowPrice') else "N/A",
-                            "TCGplayer Mkt (USD)": f"${tcg_px:.2f}" if tcg_px else "N/A"
-                        })
-                    st.dataframe(pd.DataFrame(c_tab).set_index("Numero"), use_container_width=True)
-        else:
-            st.warning("Servizio PokemonTCG.io temporaneamente non disponibile.")
-
-    # =========================================================================
-    # TAB 4: AUDIT STATISTICO & FALSIFICAZIONE
-    # =========================================================================
-    with tab4:
+    with tab_audit:
         st.markdown('<div class="section-title">🛡️ Audit Istituzionale Anti-Overfitting & Suite di Falsificazione Popperiana</div>', unsafe_allow_html=True)
         st.markdown('<div class="section-desc">Validazione rigorosa per eliminare il rischio di data-snooping (Bailey & López de Prado) e 8 stress-test popperiani.</div>', unsafe_allow_html=True)
 
@@ -1725,6 +1494,56 @@ def main():
                 "Esito Popperiano": status
             })
         st.dataframe(pd.DataFrame(f_rows).set_index("Test di Falsificazione"), use_container_width=True)
+
+    # =========================================================================
+    # TAB 5: 🔍 CATALOGO & QUOTAZIONI LIVE
+    # =========================================================================
+    with tab_catalog:
+        st.markdown('<div class="section-title">🔍 Catalogo Ufficiale & Quotazioni Live Cardmarket / TCGplayer</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc">Interrogazione in tempo reale dell\'API pubblica di PokemonTCG.io con spread EUR/USD.</div>', unsafe_allow_html=True)
+
+        with st.spinner("Connessione all'anagrafica set..."):
+            sets_data = fetch_all_sets()
+
+        if sets_data:
+            set_dict = {s["name"]: s["id"] for s in sets_data[:50]}
+            sel_sname = st.selectbox("Seleziona Set", options=list(set_dict.keys()))
+            cur_s = next(s for s in sets_data if s["name"] == sel_sname)
+
+            s_col1, s_col2, s_col3, s_col4 = st.columns(4)
+            with s_col1:
+                st.metric("Serie", cur_s.get("series", "N/A"))
+            with s_col2:
+                st.metric("Data Rilascio", cur_s.get("releaseDate", "N/A"))
+            with s_col3:
+                st.metric("Totale Carte", cur_s.get("total", "N/A"))
+            with s_col4:
+                st.metric("ID Set", cur_s.get("id", "N/A"))
+
+            if st.button("Carica Prezzi Live delle Carte di Questo Set"):
+                with st.spinner("Scaricamento quotazioni live..."):
+                    cards = fetch_cards_by_set(cur_s["id"], page_size=50)
+                if cards:
+                    c_tab = []
+                    for c in cards:
+                        cm = c.get("cardmarket", {}).get("prices", {})
+                        tcg = c.get("tcgplayer", {}).get("prices", {})
+                        tcg_px = None
+                        for f_type in ["holofoil", "reverseHolofoil", "normal"]:
+                            if f_type in tcg and tcg[f_type].get("market"):
+                                tcg_px = tcg[f_type]["market"]
+                                break
+                        c_tab.append({
+                            "Numero": c.get("number"),
+                            "Nome": c.get("name"),
+                            "Rarità": c.get("rarity", "N/A"),
+                            "Cardmarket Trend (EUR)": f"{cm.get('trendPrice', 0.0):.2f} €" if cm.get('trendPrice') else "N/A",
+                            "Cardmarket Low (EUR)": f"{cm.get('lowPrice', 0.0):.2f} €" if cm.get('lowPrice') else "N/A",
+                            "TCGplayer Mkt (USD)": f"${tcg_px:.2f}" if tcg_px else "N/A"
+                        })
+                    st.dataframe(pd.DataFrame(c_tab).set_index("Numero"), use_container_width=True)
+        else:
+            st.warning("Servizio PokemonTCG.io temporaneamente non disponibile.")
 
 
 if __name__ == "__main__":
