@@ -8,6 +8,7 @@ from __future__ import annotations
 import datetime
 import json
 from pathlib import Path
+import urllib.parse
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -263,9 +264,149 @@ html, body, [class*="css"] {
     padding: 14px 18px;
     margin-bottom: 18px;
 }
+
+/* Cardmarket 1-Click Action Buttons */
+.cm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #10b981 !important;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+.cm-btn:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: #10b981;
+    color: #34d399 !important;
+    transform: translateY(-1px);
+}
+.cm-btn-sell {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    color: #fbbf24 !important;
+}
+.cm-btn-sell:hover {
+    background: rgba(245, 158, 11, 0.25);
+    border-color: #fbbf24;
+    color: #fcd34d !important;
+    transform: translateY(-1px);
+}
+
+/* Executive Desk Operativo Container */
+.desk-container {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.75) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 16px;
+    padding: 18px 22px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+}
+.desk-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 12px;
+}
+.desk-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.desk-subtitle {
+    font-size: 12.5px;
+    color: #94a3b8;
+}
 </style>
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+
+# =============================================================================
+# 1.1 HELPER OPERATIVI & DEEP-LINKS CARDMARKET
+# =============================================================================
+def get_cardmarket_url(item_name: str, franchise: str = "pokemon") -> str:
+    """Costruisce deep-link di ricerca diretta sul marketplace Cardmarket europeo."""
+    clean_name = item_name.replace("[JP]", "").strip()
+    if franchise == "one_piece" or "OP-" in clean_name or "One Piece" in clean_name:
+        game = "OnePiece"
+    else:
+        game = "Pokemon"
+
+    if "box" not in clean_name.lower() and "bundle" not in clean_name.lower():
+        search_query = f"{clean_name} Booster Box"
+    else:
+        search_query = clean_name
+
+    encoded = urllib.parse.quote(search_query)
+    return f"https://www.cardmarket.com/en/{game}/Products/Search?searchString={encoded}"
+
+
+def generate_executive_report(
+    snapshot_label: str,
+    initial_cash: float,
+    buys: list[dict],
+    sells: list[dict],
+    metadata: dict
+) -> str:
+    """Genera report operativo formattato pronto da copiare per Telegram, chat o diario investimenti."""
+    lines = [
+        f"⚡ POKEQUANT EXECUTIVE DESK REPORT — {snapshot_label}",
+        "=" * 58,
+        f"💰 Capitale Allocato: {initial_cash:,.2f} €",
+        f"🛡️ Regola Prezzo Max: Cap 1.15x MSRP (Margine di Sicurezza)",
+        f"📦 Sizing Box: Discrete Integer Lots (No Frazioni)",
+        "",
+        "🟢 ORDINI BUY IMMEDIATI (Nuovi Ingressi in Finestra):",
+        "-" * 58
+    ]
+    budget_per_set = initial_cash * 0.12
+    if buys:
+        for b in buys:
+            px = b["current_price"]
+            qty = max(1, int(budget_per_set // px)) if px <= initial_cash * 0.35 else int(budget_per_set // px)
+            tot = qty * px
+            pct = (tot / initial_cash) * 100 if initial_cash > 0 else 0
+            cm_url = get_cardmarket_url(b["name"], metadata.get(b.get("item_id"), {}).get("franchise", "pokemon"))
+            lines.append(f"• {b['name']} (Tier {b['tier']})")
+            lines.append(f"  Azione: COMPRA {qty} BOX @ {px:.2f} € | Spesa: {tot:,.2f} € ({pct:.1f}% NAV)")
+            lines.append(f"  Prezzo Max: {b['max_buy_price']:.2f} € | Risparmio vs Max: {b['margin_vs_max']:+.2f} €/box")
+            lines.append(f"  Finestra: Mese {b['age_months']}/14 ({b['months_left_in_window']}m rimasti)")
+            lines.append(f"  Link: {cm_url}")
+            lines.append("")
+    else:
+        lines.append("• Nessun set attualmente in finestra di acquisto. 100% liquidità preservata.")
+        lines.append("")
+
+    lines.append("🔄 ORDINI ROTAZIONE LIQUIDITÀ (SELL Tranche 1 a +70%):")
+    lines.append("-" * 58)
+    if sells:
+        for s in sells:
+            cm_url = get_cardmarket_url(s["name"], metadata.get(s.get("item_id"), {}).get("franchise", "pokemon"))
+            lines.append(f"• {s['name']}")
+            lines.append(f"  Azione: VENDI {s['quantity']} su {s.get('total_quantity', s['quantity'])} BOX @ {s['current_price']:.2f} €")
+            lines.append(f"  Incasso Netto: {s['net_proceeds']:,.2f} € (ROI: +{s['net_roi_pct']:.1f}%)")
+            lines.append(f"  Link: {cm_url}")
+            lines.append("")
+    else:
+        lines.append("• Nessuna posizione pronta per la rotazione. Custodia attiva in corso.")
+        lines.append("")
+
+    lines.append("=" * 58)
+    lines.append("PokeQuant Terminal · ApexConvex Institutional Collectibles System")
+    return "\n".join(lines)
 
 
 # =============================================================================
@@ -306,6 +447,10 @@ def main():
     """, unsafe_allow_html=True)
 
     # --- SIDEBAR: PARAMETRI GLOBALI & AMBIENTE ---
+    if "current_capital" not in st.session_state:
+        st.session_state["current_capital"] = 10000.0
+
+    # --- SIDEBAR: PARAMETRI GLOBALI & AMBIENTE ---
     with st.sidebar:
         st.markdown("### ⚙️ Definizione Capitale & Allocazione")
         capital_mode = st.radio(
@@ -317,9 +462,13 @@ def main():
         if "Dedicato" in capital_mode:
             initial_cash = st.number_input(
                 "Capitale Allocato a PokeQuant (€)",
-                min_value=500.0, max_value=1000000.0, value=10000.0, step=500.0,
+                min_value=500.0, max_value=1000000.0,
+                value=float(st.session_state["current_capital"]),
+                step=500.0,
+                key="sb_initial_cash_input",
                 help="Ammontare monetario netto interamente dedicato alla strategia sui box sigillati."
             )
+            st.session_state["current_capital"] = initial_cash
             total_investable_wealth = initial_cash
             alloc_pct_val = 100.0
         else:
@@ -334,6 +483,7 @@ def main():
                 help="Percentuale del patrimonio totale allocata alla strategia PokeQuant (consigliata: 5% - 15%)."
             )
             initial_cash = round(total_investable_wealth * (alloc_pct_val / 100.0), 2)
+            st.session_state["current_capital"] = initial_cash
             core_capital = total_investable_wealth - initial_cash
             st.markdown(f"""
             <div style="background:rgba(56, 189, 248, 0.08); border:1px solid rgba(56, 189, 248, 0.25); border-radius:8px; padding:10px; font-size:12px; margin-bottom:10px;">
@@ -402,6 +552,199 @@ def main():
 
     active_cols = [c for c in full_prices_df.columns if c in metadata]
     prices_df = full_prices_df[active_cols]
+
+    # --- QUICK CAPITAL BAR (One-Click Allocation Switcher) ---
+    st.markdown('<div style="font-size:13px; font-weight:600; color:#94a3b8; margin-bottom:6px;">⚡ Selettore Rapido Capitale (One-Click Allocation):</div>', unsafe_allow_html=True)
+    q1, q2, q3, q4, q5, q6 = st.columns(6)
+    cap_presets = [2500.0, 5000.0, 10000.0, 25000.0, 50000.0, 100000.0]
+    for col, cap_val in zip([q1, q2, q3, q4, q5, q6], cap_presets):
+        with col:
+            is_active = (abs(initial_cash - cap_val) < 1.0)
+            btn_lbl = f"{int(cap_val/1000)}k €" if cap_val >= 1000 else f"{int(cap_val)} €"
+            if st.button(f"{'● ' if is_active else ''}{btn_lbl}", key=f"btn_cap_{int(cap_val)}", type="primary" if is_active else "secondary", use_container_width=True):
+                st.session_state["current_capital"] = cap_val
+                if "sb_initial_cash_input" in st.session_state:
+                    st.session_state["sb_initial_cash_input"] = cap_val
+                st.rerun()
+
+    # --- EXECUTIVE DESK OPERATIVO IMMEDIATO (DECISION MATRIX OGGI) ---
+    st.markdown("""
+    <div class="desk-container">
+        <div class="desk-header">
+            <div>
+                <div class="desk-title">⚡ Desk Operativo Immediato (Decision Matrix Oggi)</div>
+                <div class="desk-subtitle">Quadro esecutivo istantaneo: ordini di acquisto a sconto calcolati sul capitale, rotazioni di cassa e custodia attiva.</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    desk_h1, desk_h2 = st.columns([3, 1])
+    with desk_h1:
+        st.markdown(f"💼 **Portafoglio Sotto Gestione**: `{initial_cash:,.2f} €` (Regola Lotti Interi Discreti · Cap 12% per Singolo Set)")
+    with desk_h2:
+        desk_snap_opts = {
+            "Dicembre 2024 (Ciclo Recente - 5 BUY Attivi)": "2024-12-01",
+            "Settembre 2026 (Rotazioni & Asset Maturo)": "2026-09-01",
+            "Maggio 2024 (Fase Scarlet & Violet 151)": "2024-05-01",
+            "Dicembre 2023 (Fase Paldea Evolved / OP-03)": "2023-12-01",
+            "Oggi (Data Attuale di Sistema)": "today"
+        }
+        chosen_desk_snap = st.selectbox("📅 Snapshot Operativo Desk", options=list(desk_snap_opts.keys()), index=0, key="desk_snap_sel")
+        desk_snap_val = desk_snap_opts[chosen_desk_snap]
+        if desk_snap_val == "today":
+            d_eval_dt = datetime.date.today()
+            d_eval_px = prices_df.iloc[-1].to_dict()
+        else:
+            d_eval_dt = pd.to_datetime(desk_snap_val).date()
+            d_eval_px = prices_df.loc[desk_snap_val].to_dict() if desk_snap_val in prices_df.index else prices_df.iloc[-1].to_dict()
+
+    d_scan = scan_signals(current_prices=d_eval_px, metadata=metadata, today_dt=d_eval_dt, allowed_tiers=["S", "A", "B"])
+    d_buys = d_scan.get("buy_signals", [])
+    d_sells = d_scan.get("sell_signals", [])
+
+    dc1, dc2, dc3 = st.columns(3)
+    with dc1:
+        st.markdown("##### 🟢 ORDINI BUY IMMEDIATI")
+        if d_buys:
+            b_budget = initial_cash * 0.12
+            for b in d_buys[:3]:
+                b_px = b["current_price"]
+                b_qty = max(1, int(b_budget // b_px)) if b_px <= initial_cash * 0.35 else int(b_budget // b_px)
+                b_tot = b_qty * b_px
+                b_pct = (b_tot / initial_cash) * 100 if initial_cash > 0 else 0
+                cm_url = get_cardmarket_url(b["name"], metadata.get(b.get("item_id"), {}).get("franchise", "pokemon"))
+                st.markdown(f"""
+                <div class="signal-card signal-card-buy" style="padding:12px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="color:#f8fafc; font-size:13.5px;">{b['name']}</strong>
+                        <span class="pill-tag pill-emerald">Tier {b['tier']}</span>
+                    </div>
+                    <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.4;">
+                        • Ordine Suggerito: <strong style="color:#10b981;">Compra {b_qty} Box</strong> ({b_tot:,.0f} € · {b_pct:.1f}% NAV)<br>
+                        • Prezzo Attuale: <strong>{b_px:.2f} €</strong> (Prezzo Max: <span style="color:#fbbf24;">{b['max_buy_price']:.2f} €</span>)<br>
+                        • Margine Sicurezza: <strong style="color:#38bdf8;">{b['margin_vs_max']:+.2f} €</strong> ({b['months_left_in_window']}m rimasti)
+                    </div>
+                    <div style="margin-top:8px; text-align:right;">
+                        <a href="{cm_url}" target="_blank" class="cm-btn">🛒 Compra su Cardmarket ↗</a>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            if len(d_buys) > 3:
+                st.caption(f"+ altri {len(d_buys)-3} set in finestra consultabili nel Tab Radar.")
+        else:
+            st.markdown("""
+            <div style="background:rgba(15,23,42,0.5); border:1px dashed rgba(255,255,255,0.1); border-radius:10px; padding:14px; font-size:12.5px; color:#94a3b8;">
+                🔒 <strong>Nessun set in finestra d'acquisto</strong><br>
+                Nessun set attualmente a sconto per questa data. Cassa preservata per i prossimi reprint.
+            </div>
+            """, unsafe_allow_html=True)
+
+    with dc2:
+        st.markdown("##### 🔄 ORDINI ROTAZIONE (Tranche 1)")
+        if d_sells:
+            for s in d_sells[:3]:
+                cm_url = get_cardmarket_url(s["name"], metadata.get(s.get("item_id"), {}).get("franchise", "pokemon"))
+                st.markdown(f"""
+                <div class="signal-card signal-card-rotate" style="padding:12px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="color:#fbbf24; font-size:13.5px;">{s['name']}</strong>
+                        <span class="pill-tag pill-amber">+{s['net_roi_pct']:.0f}% ROI</span>
+                    </div>
+                    <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.4;">
+                        • Azione: <strong>Vendi {s['quantity']} su {s.get('total_quantity', s['quantity'])} Box</strong><br>
+                        • Prezzo: <strong>{s['current_price']:.1f} €</strong> (Carico medio: {s['buy_price']:.1f} €)<br>
+                        • Incasso Netto Stimato: <strong style="color:#10b981;">{s['net_proceeds']:,.1f} €</strong>
+                    </div>
+                    <div style="margin-top:8px; text-align:right;">
+                        <a href="{cm_url}" target="_blank" class="cm-btn cm-btn-sell">🏷️ Vendi su Cardmarket ↗</a>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style="background:rgba(15,23,42,0.5); border:1px dashed rgba(255,255,255,0.1); border-radius:10px; padding:14px; font-size:12.5px; color:#94a3b8;">
+                ⏳ <strong>Maturazione in corso</strong><br>
+                Nessuna posizione ha ancora raggiunto il target del +70% ROI con 18 mesi di holding.
+            </div>
+            """, unsafe_allow_html=True)
+
+    with dc3:
+        st.markdown("##### 🔒 CUSTODIA ATTIVA (OOP Vault)")
+        st.markdown("""
+        <div class="signal-card" style="border-left-color:#38bdf8; padding:12px; margin-bottom:8px; border-top:1px solid rgba(56,189,248,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="color:#38bdf8; font-size:13.5px;">Cassaforte Asset Out-of-Print</strong>
+                <span class="pill-tag pill-blue">Zero Reprint</span>
+            </div>
+            <div style="font-size:12px; color:#cbd5e1; margin-top:6px; line-height:1.4;">
+                • <strong>Regola Tassativa</strong>: Box con oltre 14 mesi di vita sono ufficialmente fuori produzione. Non riacquistare a mercato per evitare di pagare premi speculativi.<br>
+                • <strong>Strategia</strong>: Holding puro e monitoraggio del target di rotazione (+70%) o target finale (+150%).
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Sub-tools: Export Report & Order Slip
+    col_rep, col_slip = st.columns(2)
+    with col_rep:
+        with st.expander("📋 Copia Report Operativo Desk (Telegram / Note)", expanded=False):
+            st.caption("Testo formattato pronto da copiare per diario investimenti, chat Telegram o memo broker.")
+            rep_text = generate_executive_report(chosen_desk_snap, initial_cash, d_buys, d_sells, metadata)
+            st.code(rep_text, language="text")
+
+    with col_slip:
+        with st.expander("🎯 Simulatore d'Ordine Spicciolo (Order Slip Interattivo)", expanded=False):
+            slip_sealed = [k for k, v in metadata.items() if v.get("type") == "sealed" and v.get("product_type") in ["booster_box", "specialty_bundle"]]
+            slip_def_idx = 0
+            if d_buys:
+                top_id = d_buys[0]["item_id"]
+                if top_id in slip_sealed:
+                    slip_def_idx = slip_sealed.index(top_id)
+
+            sel_slip_box = st.selectbox(
+                "Seleziona Box",
+                options=slip_sealed,
+                index=slip_def_idx,
+                format_func=lambda x: f"{metadata[x].get('name', x)} (Tier {metadata[x].get('set_tier', 'B')})",
+                key="desk_slip_box"
+            )
+            s_meta = metadata[sel_slip_box]
+            s_name = s_meta.get("name", sel_slip_box)
+            s_msrp = float(s_meta.get("msrp", 140.0) or 140.0)
+            s_max_p = round(s_msrp * 1.15, 2)
+            s_cur_p = float(d_eval_px.get(sel_slip_box, s_msrp))
+
+            sc_c1, sc_c2 = st.columns(2)
+            with sc_c1:
+                b_suggest = max(1, int((initial_cash * 0.12) // s_cur_p)) if s_cur_p <= initial_cash * 0.35 else 1
+                s_qty = st.number_input("Quantità Box", min_value=1, max_value=100, value=min(b_suggest, 20), step=1, key="desk_slip_qty")
+            with sc_c2:
+                s_price = st.number_input("Prezzo Unitario (€)", min_value=10.0, max_value=5000.0, value=float(s_cur_p), step=1.0, key="desk_slip_px")
+
+            s_tot_cost = s_qty * s_price
+            s_pct_nav = (s_tot_cost / initial_cash) * 100 if initial_cash > 0 else 0
+            s_margin = round(s_max_p - s_price, 2)
+
+            t1_q = s_qty // 2 if s_qty >= 2 else s_qty
+            t1_net = (t1_q * s_price * 1.70 * 0.95) - 0.60
+            t1_prof = t1_net - (t1_q * s_price)
+
+            t2_net = (s_qty * s_price * 2.50 * 0.95) - 0.60
+            t2_prof = t2_net - s_tot_cost
+
+            st.markdown(f"""
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; font-size:12px; color:#cbd5e1; margin-top:6px;">
+                • <strong>Esborso Totale</strong>: <span style="color:#f8fafc; font-weight:700;">{s_tot_cost:,.2f} €</span> ({s_pct_nav:.1f}% NAV)<br>
+                • <strong>Margine vs Prezzo Max</strong>: <span style="color:{'#10b981' if s_margin>=0 else '#f43f5e'}; font-weight:700;">{s_margin:+.2f} €</span> (Max: {s_max_p:.1f} €)<br>
+                • <strong>Tranche 1 (+70%, 18m)</strong>: Vendi {t1_q} box · Netto: <strong style="color:#10b981;">{t1_net:,.1f} €</strong> (+{t1_prof:,.1f}€)<br>
+                • <strong>Target Finale (+150%, 36m)</strong>: Netto: <strong style="color:#10b981;">{t2_net:,.1f} €</strong> (+{t2_prof:,.1f}€)
+            </div>
+            """, unsafe_allow_html=True)
+
+            s_cm_url = get_cardmarket_url(s_name, s_meta.get("franchise", "pokemon"))
+            st.markdown(f'<div style="text-align:right; margin-top:8px;"><a href="{s_cm_url}" target="_blank" class="cm-btn">🛒 Compra su Cardmarket ↗</a></div>', unsafe_allow_html=True)
+
+    st.markdown("<hr style='border-color:rgba(255,255,255,0.08); margin-top:16px; margin-bottom:20px;'>", unsafe_allow_html=True)
 
     # --- TABS PRINCIPALI ---
     tab1, tab_radar, tab2, tab3, tab4 = st.tabs([
@@ -756,6 +1099,9 @@ def main():
                 else:
                     act_badge = "🔒 CUSTODIA (OOP)"
 
+                fran = metadata.get(p.get("item_id"), {}).get("franchise", "pokemon")
+                cm_url = get_cardmarket_url(p["item_name"], fran)
+
                 op_rows.append({
                     "Set / Articolo": p["item_name"],
                     "Q.tà": p["quantity"],
@@ -768,9 +1114,16 @@ def main():
                     "Azione Operativa": act_badge,
                     "Valore MTM": f"{p['current_value']:,.2f} €",
                     "PnL Non Realizzato": f"{p['unrealized_pnl']:+,.2f} €",
-                    "ROI Non Realizzato": f"{p['unrealized_roi']*100:+.1f}%"
+                    "ROI Non Realizzato": f"{p['unrealized_roi']*100:+.1f}%",
+                    "Cardmarket": cm_url
                 })
-            st.dataframe(pd.DataFrame(op_rows).set_index("Set / Articolo"), use_container_width=True)
+            st.dataframe(
+                pd.DataFrame(op_rows).set_index("Set / Articolo"),
+                column_config={
+                    "Cardmarket": st.column_config.LinkColumn("Cardmarket", display_text="🛒 Apri ↗")
+                },
+                use_container_width=True
+            )
 
             # GUIDA OPERATIVA LEAN & ACTION-ORIENTED
             st.markdown("##### ⚡ Decisione Operativa Lean su Posizioni in Portafoglio (Riacquisto vs Custodia)")
@@ -920,6 +1273,8 @@ def main():
             if buys:
                 for b in buys:
                     badge_cls = "pill-emerald" if "COMPRA" in b.get("action_badge", "") else "pill-amber"
+                    b_fran = metadata.get(b.get("item_id"), {}).get("franchise", "pokemon")
+                    cm_url = get_cardmarket_url(b["name"], b_fran)
                     st.markdown(f"""
                     <div class="signal-card signal-card-buy">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -935,8 +1290,11 @@ def main():
                             <div><span style="color:#94a3b8; font-size:11px;">RISPARMIO SOTTO MAX:</span><br><strong style="font-size:16px; color:#38bdf8;">{b['margin_vs_max']:+.2f} € ({b['margin_vs_max_pct']:+.1f}%)</strong></div>
                             <div><span style="color:#94a3b8; font-size:11px;">FINESTRA D'ACQUISTO:</span><br><strong style="font-size:16px; color:#cbd5e1;">Mese {b['age_months']}/14 ({b['months_left_in_window']}m rimasti)</strong></div>
                         </div>
-                        <div style="margin-top:10px; font-size:12.5px; color:#cbd5e1; line-height:1.45;">
-                            🎯 <strong>Azione Istituzionale Consigliata</strong>: Il set si trova nella finestra di massimo sconto post-reprint. Il prezzo è inferiore al tetto massimo di {b['max_buy_price']:.2f} € (+15% MSRP di {b['msrp']:.1f} €) di ben <strong>{b['margin_vs_max']:.2f} €</strong>. Allocare fino a un massimo del 10-12% del portafoglio (orizzonte 30-36 mesi).
+                        <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <div style="font-size:12.5px; color:#cbd5e1; line-height:1.45; flex-grow:1;">
+                                🎯 <strong>Azione Istituzionale Consigliata</strong>: Il set si trova nella finestra di massimo sconto post-reprint. Il prezzo è inferiore al tetto massimo di {b['max_buy_price']:.2f} € (+15% MSRP di {b['msrp']:.1f} €) di ben <strong>{b['margin_vs_max']:.2f} €</strong>. Allocare fino a un massimo del 10-12% del portafoglio (orizzonte 30-36 mesi).
+                            </div>
+                            <a href="{cm_url}" target="_blank" class="cm-btn">🛒 Compra su Cardmarket ↗</a>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -948,6 +1306,8 @@ def main():
             if sells:
                 for s in sells:
                     sig_t = s.get("signal_type", "SELL")
+                    s_fran = metadata.get(s.get("item_id"), {}).get("franchise", "pokemon")
+                    cm_url = get_cardmarket_url(s["name"], s_fran)
                     if "TRANCHE 1" in sig_t:
                         st.markdown(f"""
                         <div class="signal-card signal-card-rotate">
@@ -960,6 +1320,9 @@ def main():
                                 • Prezzo di Vendita Stimato: <strong>{s['current_price']:.1f} €</strong> (Carico medio: {s['buy_price']:.1f} €)<br>
                                 • Incasso Netto Stimato: <strong>{s['net_proceeds']:.1f} €</strong> dopo {s['holding_months']} mesi (Out-of-Print confermato).<br>
                                 • <em>Sblocca cassa per reinvestire nei nuovi set in finestra d'acquisto a MSRP.</em>
+                            </div>
+                            <div style="margin-top:10px; text-align:right;">
+                                <a href="{cm_url}" target="_blank" class="cm-btn cm-btn-sell">🏷️ Metti in Vendita su Cardmarket ↗</a>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -974,6 +1337,9 @@ def main():
                                 • Quantità da Vendere: <strong>{s['quantity']} box</strong><br>
                                 • Prezzo Stimato: <strong>{s['current_price']:.1f} €</strong> | Incasso Netto: <strong>{s['net_proceeds']:.1f} €</strong><br>
                                 • <em>Target profitto finale raggiunto (+150% netto o 48 mesi di time-stop).</em>
+                            </div>
+                            <div style="margin-top:10px; text-align:right;">
+                                <a href="{cm_url}" target="_blank" class="cm-btn cm-btn-sell">🏷️ Metti in Vendita su Cardmarket ↗</a>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -1003,6 +1369,9 @@ def main():
                 if "Finestra Chiusa" in mat_filter and "🔒" not in st_w and "⚠️" not in st_w:
                     continue
 
+                ev_fran = metadata.get(ev.get("item_id"), {}).get("franchise", "pokemon")
+                cm_url = get_cardmarket_url(ev["name"], ev_fran)
+
                 eval_rows.append({
                     "Set / Box": ev["name"],
                     "Tier": ev["tier"],
@@ -1014,10 +1383,17 @@ def main():
                     "Margine vs Max": f"{ev['margin_vs_max']:+.2f} € ({ev['margin_vs_max_pct']:+.1f}%)",
                     "Stato Finestra": ev["window_status"],
                     "Mesi Residui": f"{ev['months_left']}m" if ev['months_left'] > 0 else "0m (OOP)",
-                    "Azione Operativa Immediata": ev["action"]
+                    "Azione Operativa Immediata": ev["action"],
+                    "Cardmarket": cm_url
                 })
             if eval_rows:
-                st.dataframe(pd.DataFrame(eval_rows).set_index("Set / Box"), use_container_width=True)
+                st.dataframe(
+                    pd.DataFrame(eval_rows).set_index("Set / Box"),
+                    column_config={
+                        "Cardmarket": st.column_config.LinkColumn("Cardmarket", display_text="🛒 Apri ↗")
+                    },
+                    use_container_width=True
+                )
             else:
                 st.info("Nessun prodotto corrisponde al filtro selezionato.")
 
@@ -1085,6 +1461,9 @@ def main():
                 is_reaccumulabile = (4 <= age_m <= 14) and (px <= max_p)
                 w_status = f"🟢 IN FINESTRA ({max(0, 14 - age_m)}m rimasti)" if is_reaccumulabile else ("🔒 CHIUSA (OOP)" if age_m > 14 else "⚠️ SOPRA MAX")
 
+                h_fran = m_info.get("franchise", "pokemon")
+                cm_url = get_cardmarket_url(h.get("name", iid), h_fran)
+
                 h_rows.append({
                     "Prodotto": h.get("name", iid),
                     "Quantità": qty,
@@ -1095,9 +1474,16 @@ def main():
                     "Stato Finestra": w_status,
                     "Valore Netto": f"{net_val:.1f} €",
                     "PnL Netto": f"{pnl:+,.1f} €",
-                    "ROI Netto %": f"{roi*100:+.1f}%"
+                    "ROI Netto %": f"{roi*100:+.1f}%",
+                    "Cardmarket": cm_url
                 })
-            st.dataframe(pd.DataFrame(h_rows).set_index("Prodotto"), use_container_width=True)
+            st.dataframe(
+                pd.DataFrame(h_rows).set_index("Prodotto"),
+                column_config={
+                    "Cardmarket": st.column_config.LinkColumn("Cardmarket", display_text="🛒 Apri ↗")
+                },
+                use_container_width=True
+            )
 
         with st.expander("➕ Registra Nuovo Acquisto Box nel Portafoglio"):
             with st.form("add_box_form"):
