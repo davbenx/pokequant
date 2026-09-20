@@ -39,7 +39,11 @@ from poke_quant.slabs import (
     get_slab_universe,
     SlabBacktester,
     run_popperian_falsification_suite,
-    format_slabs_telegram_alert
+    format_slabs_telegram_alert,
+    calc_cross_grading_spread,
+    calc_manufacturing_cost_floor,
+    GradingCompany,
+    SlabGrade
 )
 
 # =============================================================================
