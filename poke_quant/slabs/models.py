@@ -62,6 +62,12 @@ class SignalAction(str, Enum):
     HOLD = "HOLD"
 
 
+class AvailabilityStatus(str, Enum):
+    VERIFIED_AVAILABLE = "VERIFIED_AVAILABLE"  # Inserzione attiva verificata al prezzo dichiarato
+    HISTORICAL_COMP = "HISTORICAL_COMP"        # Basato su comp d'asta (nessun ask attivo al target)
+    OUT_OF_STOCK = "OUT_OF_STOCK"              # Nessun pezzo disponibile sotto il prezzo target
+
+
 @dataclass
 class Subgrades:
     centering: float
@@ -125,8 +131,13 @@ class SlabSignal:
     fair_value_eur: float
     margin_of_safety_pct: float  # (Fair - Current) / Fair * 100
     primary_edge: EdgeType
-    confidence_score: float      # 0.0 to 1.0
-    reason: str
+    confidence_score: float = 0.80
+    reason: str = ""
+    availability_status: AvailabilityStatus = AvailabilityStatus.VERIFIED_AVAILABLE
+    active_listing_count: int = 1
+    lowest_active_ask_eur: float = 0.0
+    cardmarket_direct_url: Optional[str] = None
+    seller_country: str = "EU"
     metrics: Dict[str, Any] = field(default_factory=dict)
     timestamp: str = field(default_factory=lambda: datetime.date.today().isoformat())
 

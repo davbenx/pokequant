@@ -18,29 +18,45 @@ def format_slabs_telegram_alert(scan_results: Dict[str, Any]) -> str:
     buys: List[SlabSignal] = scan_results.get("buy_signals", [])
     sells: List[SlabSignal] = scan_results.get("sell_signals", [])
     rotations: List[RotationRecommendation] = scan_results.get("rotation_signals", [])
+    unverified: List[Dict[str, Any]] = scan_results.get("unverified_or_out_of_stock", [])
 
     lines = [f"*POKEQUANT · RADAR CARTE GRADATE (SLABS)* 💎\nData: *{date_str}*\n"]
 
-    if not buys and not sells and not rotations:
+    if not buys and not sells and not rotations and not unverified:
         lines.append("Nessun disallineamento operativo rilevato oggi.")
         lines.append("Tutti gli spread PSA/BGS/CGC e le Pop velocity rimangono nella fascia di equilibrio.")
         return "\n".join(lines)
 
-    # 1. SEGNALI BUY
+    # 1. SEGNALI BUY VERIFICATI
     if buys:
-        lines.append(f"🟢 *OPPORTUNITÀ D'ACQUISTO (BUY)* [{len(buys)}]")
+        lines.append(f"🟢 *OPPORTUNITÀ D'ACQUISTO VERIFICATE (BUY)* [{len(buys)}]")
         for b in buys:
             target_g = b.target_grade.value if hasattr(b.target_grade, "value") else str(b.target_grade)
+            avail_tag = f"✅ Inserzione Reale: {b.seller_country} ({b.active_listing_count} disp.)"
+            link_tag = f"[🛒 Acquista su Cardmarket]({b.cardmarket_direct_url})" if b.cardmarket_direct_url else ""
             lines.append(
                 f"• *{b.card_name}*\n"
                 f"  Target: *{target_g}*\n"
                 f"  Prezzo Attuale: *{b.current_price_eur:.1f} €* | Fair Value: *{b.fair_value_eur:.1f} €*\n"
                 f"  Margine di Sicurezza: *+{b.margin_of_safety_pct:.1f}%*\n"
+                f"  Disponibilità: _{avail_tag}_\n"
+                f"  {link_tag}\n"
                 f"  Edge: _{b.primary_edge.value}_\n"
                 f"  {b.reason}\n"
             )
 
-    # 2. SEGNALI SELL / TAKE-PROFIT
+    # 2. OPPORTUNITÀ TEORICHE FUORI MERCATO / OUT OF STOCK
+    if unverified:
+        lines.append(f"⚠️ *COMP TEORICI FUORI MERCATO / OOS* [{len(unverified)}]")
+        for u in unverified:
+            link_md = f"[Vedi su Cardmarket]({u['direct_url']})" if u.get('direct_url') else ""
+            lines.append(
+                f"• *{u['name']}* ({u['grade']})\n"
+                f"  Target: *{u['target_price']:,.0f} €* | Min Ask Reale: *{u['lowest_active_ask']:,.0f} €*\n"
+                f"  _Attualmente esaurita sul mercato secondario europeo al target._ {link_md}\n"
+            )
+
+    # 3. SEGNALI SELL / TAKE-PROFIT
     if sells:
         lines.append(f"🔴 *PRESE DI BENEFICIO / ALLERTE DILUIZIONE (SELL)* [{len(sells)}]")
         for s in sells:
@@ -52,7 +68,7 @@ def format_slabs_telegram_alert(scan_results: Dict[str, Any]) -> str:
                 f"  {s.reason}\n"
             )
 
-    # 3. RACCOMANDAZIONI DI ROTAZIONE
+    # 4. RACCOMANDAZIONI DI ROTAZIONE
     if rotations:
         lines.append(f"🔄 *ROTAZIONE OTTIMIZZATA DEL CAPITALE* [{len(rotations)}]")
         for r in rotations:
@@ -78,22 +94,37 @@ def print_slabs_cli_summary(scan_results: Dict[str, Any]):
     sells = scan_results.get("sell_signals", [])
     rotations = scan_results.get("rotation_signals", [])
     rejected = scan_results.get("rejected_controls", [])
+    unverified = scan_results.get("unverified_or_out_of_stock", [])
 
     print(f"📊 Universo Scansionato: {scan_results.get('total_universe_scanned', 0)} carte monitorate")
     print(f"🛡️  Asset Controllo Rigettati (Anti-Survivorship): {len(rejected)}")
-    print(f"🟢 Opportunità BUY Attive: {len(buys)}")
+    print(f"🟢 Opportunità BUY Eseguibili (Verificate): {len(buys)}")
+    print(f"⚠️  Opportunità Teoriche Fuori Mercato / OOS: {len(unverified)}")
     print(f"🔴 Prese di Beneficio SELL: {len(sells)}")
     print(f"🔄 Rotazioni Consigliate: {len(rotations)}")
     print("-" * 78)
 
     if buys:
-        print("\n🟢 SEGNALI BUY CON EDGE MATEMATICO:")
+        print("\n🟢 SEGNALI BUY CON EDGE MATEMATICO & INSERZIONE ATTIVA VERIFICATA:")
         for idx, b in enumerate(buys, 1):
             g_str = b.target_grade.value if hasattr(b.target_grade, "value") else str(b.target_grade)
             print(f"  [{idx}] {b.card_name} — {g_str}")
             print(f"      Prezzo: {b.current_price_eur:.2f} € | Fair Value: {b.fair_value_eur:.2f} € | Margine: +{b.margin_of_safety_pct:.1f}%")
+            print(f"      Disponibilità: ✅ REALE ({b.seller_country}, {b.active_listing_count} unità su Cardmarket)")
+            if b.cardmarket_direct_url:
+                print(f"      Link Diretto: {b.cardmarket_direct_url}")
             print(f"      Edge: {b.primary_edge.value}")
             print(f"      Motivazione: {b.reason}\n")
+
+    if unverified:
+        print("\n⚠️ OPPORTUNITÀ TEORICHE FUORI MERCATO / OUT-OF-STOCK (NON ACQUISTABILI AL TARGET):")
+        for idx, u in enumerate(unverified, 1):
+            print(f"  [{idx}] {u['name']} — {u['grade']}")
+            print(f"      Prezzo Target: {u['target_price']:,.0f} € vs Ask Minimo Reale su Cardmarket: {u['lowest_active_ask']:,.0f} €")
+            print(f"      Stato: {u['status']} — {u['reason']}")
+            if u.get('direct_url'):
+                print(f"      Link Cardmarket: {u['direct_url']}")
+            print()
 
     if sells:
         print("\n🔴 SEGNALI SELL / TAKE-PROFIT:")

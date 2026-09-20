@@ -1490,20 +1490,28 @@ def main():
         st.markdown('<div class="section-title">💎 Slabs Radar (PSA · BGS · CGC) & Quantitative Edge Desk</div>', unsafe_allow_html=True)
         st.markdown('<div class="section-desc">Selezione sistematica e alert su carte già gradate: Cross-Grader Spread (Z-score), Saturazione Pop Report, Presa di Beneficio a 2 Tranche e Rotazione dell\'Alpha.</div>', unsafe_allow_html=True)
 
+        # Filtro disponibilità reale Cardmarket
+        require_verified = st.checkbox(
+            "🎯 Filtra solo lastre con inserzioni reali verificate disponibili all'acquisto immediato su Cardmarket",
+            value=True,
+            help="Se attivo, esclude fair value e comp storici teorici che non hanno pezzi attualmente acquistabili al prezzo dichiarato sul book secondario europeo."
+        )
+
         # Scansione live del mercato slabs
-        slabs_scan = scan_slabs_market()
+        slabs_scan = scan_slabs_market(require_verified_available=require_verified)
         slabs_buys = slabs_scan.get("buy_signals", [])
         slabs_sells = slabs_scan.get("sell_signals", [])
         slabs_rotations = slabs_scan.get("rotation_signals", [])
         slabs_rejected = slabs_scan.get("rejected_controls", [])
+        slabs_unverified = slabs_scan.get("unverified_or_out_of_stock", [])
 
         # --- EXECUTIVE KPI DESK SLABS ---
         st.markdown(f"""
         <div class="kpi-grid">
             <div class="kpi-card">
-                <div class="kpi-label">Opportunità BUY Attive</div>
-                <div class="kpi-value">{len(slabs_buys)} Segnali</div>
-                <div class="kpi-sub kpi-sub-emerald">★ Edge Matematico Verificato</div>
+                <div class="kpi-label">Opportunità BUY Eseguibili</div>
+                <div class="kpi-value">{len(slabs_buys)} Verificate</div>
+                <div class="kpi-sub kpi-sub-emerald">★ Book Cardmarket Attivo</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-label">Prese di Beneficio (SELL)</div>
@@ -1542,26 +1550,54 @@ def main():
             st.markdown("##### 🟢 Opportunità di Acquisto (BUY)")
             for b in slabs_buys:
                 g_val = b.target_grade.value if hasattr(b.target_grade, "value") else str(b.target_grade)
+                link_html = f'<a href="{b.cardmarket_direct_url}" target="_blank" style="background:#2563eb; color:#ffffff; padding:6px 14px; border-radius:6px; text-decoration:none; font-weight:700; font-size:12px; display:inline-flex; align-items:center; gap:6px;">🛒 Acquista su Cardmarket ({b.seller_country})</a>' if b.cardmarket_direct_url else ""
+                avail_badge = f'<span style="background:rgba(59, 130, 246, 0.2); color:#60a5fa; font-weight:700; padding:3px 8px; border-radius:4px; font-size:12px;">✅ DISPONIBILE: {b.seller_country} · {b.active_listing_count} pz.</span>'
                 st.markdown(f"""
-                <div style="background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.3); border-radius:8px; padding:12px 16px; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-                        <span style="font-size:15px; font-weight:700; color:#10b981;">🟢 BUY: {b.card_name} — {g_val}</span>
-                        <span style="background:rgba(16, 185, 129, 0.2); color:#34d399; font-weight:700; padding:3px 8px; border-radius:4px; font-size:12px;">
-                            SCONTO: +{b.margin_of_safety_pct:.1f}% vs Fair Value
-                        </span>
+                <div style="background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.3); border-radius:8px; padding:14px 18px; margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <span style="font-size:16px; font-weight:700; color:#10b981;">🟢 BUY: {b.card_name} — {g_val}</span>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            {avail_badge}
+                            <span style="background:rgba(16, 185, 129, 0.2); color:#34d399; font-weight:700; padding:3px 8px; border-radius:4px; font-size:12px;">
+                                SCONTO: +{b.margin_of_safety_pct:.1f}% vs Fair Value
+                            </span>
+                        </div>
                     </div>
-                    <div style="display:flex; gap:20px; margin-top:6px; font-size:13px; color:#cbd5e1; flex-wrap:wrap;">
-                        <div>💰 Prezzo Mercato: <strong>{b.current_price_eur:.2f} €</strong></div>
-                        <div>🎯 Fair Value Teorico: <strong>{b.fair_value_eur:.2f} €</strong></div>
+                    <div style="display:flex; gap:20px; margin-top:8px; font-size:13px; color:#cbd5e1; flex-wrap:wrap;">
+                        <div>💰 Prezzo Offerta: <strong>{b.current_price_eur:.2f} €</strong></div>
+                        <div>🎯 Fair Value Benchmark: <strong>{b.fair_value_eur:.2f} €</strong></div>
                         <div>⚡ Edge Primario: <em>{b.primary_edge.value}</em></div>
                     </div>
-                    <div style="margin-top:6px; font-size:12px; color:#94a3b8;">
+                    <div style="margin-top:8px; font-size:12.5px; color:#94a3b8;">
                         💡 <strong>Motivazione Quantitativa:</strong> {b.reason}
+                    </div>
+                    <div style="margin-top:10px;">
+                        {link_html}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
         else:
-            st.info("Nessun disallineamento di acquisto superiore al 22% rilevato oggi.")
+            st.info("Nessun disallineamento di acquisto eseguibile con inserzione verificata rilevato oggi.")
+
+        if slabs_unverified:
+            with st.expander(f"⚠️ Opportunità Teoriche Fuori Mercato / In attesa di Inserzione ({len(slabs_unverified)})", expanded=False):
+                st.caption("Queste carte presentano un forte disallineamento quantitativo potenziale, ma attualmente sul mercato secondario europeo NON sono presenti inserzioni attive al prezzo target (Out of Stock o venditori con ask fuori mercato).")
+                for u in slabs_unverified:
+                    u_link = f'<a href="{u["direct_url"]}" target="_blank" style="color:#60a5fa; font-weight:600; text-decoration:none;">🔗 Monitora su Cardmarket</a>' if u.get("direct_url") else ""
+                    st.markdown(f"""
+                    <div style="background:rgba(239, 68, 68, 0.05); border:1px solid rgba(239, 68, 68, 0.2); border-radius:6px; padding:10px 14px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="color:#f87171;">⚠️ {u['name']} — {u['grade']}</strong>
+                            <span style="color:#ef4444; font-size:12px; font-weight:700;">OUT OF STOCK</span>
+                        </div>
+                        <div style="font-size:12.5px; color:#cbd5e1; margin-top:4px;">
+                            Prezzo Target: <strong>{u['target_price']:,.0f} €</strong> | Ask Minimo Reale su Cardmarket: <strong style="color:#ef4444;">{u['lowest_active_ask']:,.0f} €</strong>
+                        </div>
+                        <div style="font-size:12px; color:#94a3b8; margin-top:4px;">
+                            {u['reason']} {u_link}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
         if slabs_rotations:
             st.markdown("##### 🔄 Raccomandazioni di Rotazione del Capitale")

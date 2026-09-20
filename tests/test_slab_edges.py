@@ -11,7 +11,7 @@ Verifica:
 """
 
 import pytest
-from poke_quant.slabs.models import GradingCompany, SlabGrade, EdgeType, Subgrades
+from poke_quant.slabs.models import GradingCompany, SlabGrade, EdgeType, Subgrades, AvailabilityStatus
 from poke_quant.slabs.edge_calculator import (
     calc_cross_grading_spread,
     calc_pop_saturation_edge,
@@ -24,6 +24,8 @@ from poke_quant.slabs.edge_calculator import (
     calc_opportunity_cost_rotation,
     calc_era_cycle_rotation
 )
+from poke_quant.slabs.slab_scanner import scan_slabs_market
+from poke_quant.slabs.slab_universe import get_cardmarket_direct_link, SLAB_UNIVERSE
 
 
 def test_cross_grading_spread_edge_triggers_on_deep_discount():
@@ -178,3 +180,43 @@ def test_era_cycle_rotation():
     )
     assert res["should_rotate"] is True
     assert res["era_ratio"] == 1.67
+
+
+def test_verified_availability_filter_isolates_oos():
+    """
+    Verifica che il filtro di disponibilità reale scarti i comp teorici OOS
+    (come Charizard Base Set BGS 9.5 a 2200€ quando l'ask reale è 4800€)
+    e mantenga SOLO offerte eseguibili con pezzi reali in vendita.
+    """
+    # 1. Con filtro attivo: esclude OOS e popola unverified_or_out_of_stock
+    verified_res = scan_slabs_market(require_verified_available=True)
+    assert verified_res["require_verified_available"] is True
+    assert len(verified_res["unverified_or_out_of_stock"]) >= 1
+
+    oos_cards = [u["card_id"] for u in verified_res["unverified_or_out_of_stock"]]
+    assert "base_set_charizard_unlimited" in oos_cards
+
+    # Tutte le opportunità BUY rimanenti devono avere status VERIFIED_AVAILABLE e pezzi > 0
+    for b in verified_res["buy_signals"]:
+        assert b.availability_status == AvailabilityStatus.VERIFIED_AVAILABLE
+        assert b.active_listing_count >= 1
+        assert b.cardmarket_direct_url is not None
+        assert "isGraded=Y" in b.cardmarket_direct_url
+        assert b.seller_country != ""
+
+    # 2. Con filtro disattivato: accetta comp storici teorici
+    unfiltered_res = scan_slabs_market(require_verified_available=False)
+    assert unfiltered_res["require_verified_available"] is False
+    assert len(unfiltered_res["unverified_or_out_of_stock"]) == 0
+    unfiltered_buy_ids = [b.card_id for b in unfiltered_res["buy_signals"]]
+    assert "base_set_charizard_unlimited" in unfiltered_buy_ids
+
+
+def test_cardmarket_direct_link_generator():
+    """Verifica che il generatore di deep-link Cardmarket produca URL validi con filtri per lastre."""
+    card = SLAB_UNIVERSE["pikachu_van_gogh_085"]
+    url = get_cardmarket_direct_link(card, "BGS_9_5_GEM")
+    assert url.startswith("https://www.cardmarket.com/en/")
+    assert "Pikachu-with-Grey-Felt-Hat" in url
+    assert "isGraded=Y" in url
+
