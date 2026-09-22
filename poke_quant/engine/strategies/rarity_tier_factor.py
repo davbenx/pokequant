@@ -10,6 +10,16 @@ portano un premio di scarsita' strutturale indipendente dall'esito di prezzo.
 A ogni ribilanciamento, equal-weight su tutte le carte eleggibili di rarita' premium
 tra quelle correntemente prezzate (non un ranking - la rarita' e' binaria, nota,
 fissa nel tempo), fino a un tetto di posizioni per restare diversificati.
+
+ESITO VALIDAZIONE: NON VALIDATO, per un motivo diverso dagli altri candidati - non e'
+un problema statistico ma di composizione del campione. PREMIUM_RARITIES coincide con
+CHASE_RARITIES di discover_chase_cards.py: nell'universo attuale 270 delle 288 carte
+eleggibili (94%) vengono dal campione selezionato sul prezzo corrente, solo 18 (6%) dal
+campione di controllo casuale. Il risultato full-sample (Sharpe 1.11, DSR 0.864) e'
+quasi certamente una riscoperta del survivorship bias di discover_chase_cards.py sotto
+un'altra etichetta, non un fattore indipendente. Da ritestare solo dopo aver ampliato
+molto il campione di controllo casuale per queste rarita' specifiche (oggi troppo
+piccolo, n=18, per essere conclusivo da solo).
 """
 
 from __future__ import annotations

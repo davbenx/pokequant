@@ -26,6 +26,9 @@ from poke_quant.data.storage import load_metadata, load_price_matrix
 from poke_quant.engine.backtester import Backtester
 from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentumStrategy
 from poke_quant.engine.strategies.carry_scarcity_factor import CarryScarcityFactorStrategy
+from poke_quant.engine.strategies.cross_sectional_momentum import CrossSectionalMomentumStrategy
+from poke_quant.engine.strategies.dip_mean_reversion import DipMeanReversionStrategy
+from poke_quant.engine.strategies.rarity_tier_factor import RarityTierFactorStrategy
 from poke_quant.validation.statistical_validation import deflated_sharpe_ratio, pbo_cscv
 from poke_quant.validation.bootstrap import block_bootstrap_metrics, summarize_bootstrap
 
@@ -175,7 +178,108 @@ def section_survivorship_bias_check():
           "reale al netto della selezione sull'esito.")
 
 
+def section_singles_factor_search():
+    """
+    Carry/Scarsita' (fattore eta') NON supera la validazione su nessun sotto-universo
+    (vedi section_survivorship_bias_check): Sharpe -0.14/-0.04, DSR 0.10, bootstrap
+    P(Sharpe>0) 54-61% - indistinguibile dal rumore. Cerchiamo un segnale alternativo
+    invece di rinunciare alle singole, sullo stesso universo combinato (meno biased)
+    e con la stessa griglia di rigore.
+
+    ATTENZIONE su RarityTierFactorStrategy: la sua whitelist di rarita' premium
+    coincide con CHASE_RARITIES di discover_chase_cards.py. Nell'universo attuale,
+    270 delle 288 carte eleggibili per questo fattore vengono dal campione chase
+    (selezionato sul prezzo corrente), solo 18 dal campione di controllo casuale -
+    rapporto 15:1. Un risultato POSITIVO qui non sarebbe evidenza pulita (la
+    popolazione e' ancora in gran parte quella biased); solo un risultato NEGATIVO
+    (nessun edge nemmeno su questa popolazione favorevole) e' informativo cosi' com'e'.
+
+    DSR del vincitore usa n_trials = numero di candidati provati in QUESTA ricerca,
+    non solo la sua griglia interna - altrimenti si ricade nello stesso errore di
+    data-snooping che l'intera sessione ha cercato di correggere.
+    """
+    print("\n\n" + "=" * 100)
+    print("  4) RICERCA SISTEMATICA DI UN FATTORE ALTERNATIVO SULLE SINGOLE")
+    print("=" * 100)
+    metadata = load_metadata()
+    prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    singles_ids = [
+        k for k, v in metadata.items()
+        if v.get("type") == "single" and v.get("data_quality") != "thin_unreliable" and k in prices_full.columns
+    ]
+    meta_sub = {k: v for k, v in metadata.items() if k in singles_ids}
+    prices_sub = prices_full[singles_ids]
+    print(f"\nUniverso: {len(singles_ids)} singole (chase+controllo combinato)\n")
+
+    # Factory (non istanze dirette): serve per poter ricostruire ogni strategia su
+    # sottoinsiemi temporali H1/H2 per il walk-forward sotto, senza condividere stato.
+    candidate_factories = {
+        "TSMOM lb=6m": lambda p: TimeSeriesMomentumStrategy(p, lookback_months=6, item_type_filter="single"),
+        "TSMOM lb=9m": lambda p: TimeSeriesMomentumStrategy(p, lookback_months=9, item_type_filter="single"),
+        "TSMOM lb=12m": lambda p: TimeSeriesMomentumStrategy(p, lookback_months=12, item_type_filter="single"),
+        "XSMOM lb=6m q=0.30": lambda p: CrossSectionalMomentumStrategy(p, lookback_months=6, top_quantile=0.30, item_type_filter="single"),
+        "XSMOM lb=12m q=0.30": lambda p: CrossSectionalMomentumStrategy(p, lookback_months=12, top_quantile=0.30, item_type_filter="single"),
+        "Dip lb=12m q=0.20": lambda p: DipMeanReversionStrategy(p, lookback_months=12, bottom_quantile=0.20),
+        "Dip lb=15m q=0.20": lambda p: DipMeanReversionStrategy(p, lookback_months=15, bottom_quantile=0.20),
+        "Dip lb=18m q=0.15": lambda p: DipMeanReversionStrategy(p, lookback_months=18, bottom_quantile=0.15),
+        "RarityTier (94% biased)": lambda p: RarityTierFactorStrategy(),
+    }
+
+    results = {}
+    for name, factory in candidate_factories.items():
+        res = run_bt(factory(prices_sub), prices_sub, meta_sub)
+        results[name] = res
+        print(f"  {name:26s} | CAGR {res.cagr*100:+6.2f}% | Sharpe {res.sharpe:5.2f} | "
+              f"MaxDD {res.max_drawdown*100:6.2f}% | Trade {res.total_trades:3d}")
+
+    best_name = max(results, key=lambda k: results[k].sharpe)
+    best = results[best_name]
+    print(f"\nMiglior candidato per Sharpe (campione intero): '{best_name}' (Sharpe {best.sharpe:.2f})")
+
+    if len(best.monthly_returns) < 2:
+        print("Serie troppo corta per DSR/bootstrap/walk-forward sul vincitore.")
+        return
+
+    dsr = deflated_sharpe_ratio(
+        observed_sr=best.sharpe / np.sqrt(12), n_trials=len(candidate_factories), n_obs=len(best.monthly_returns)
+    )
+    print(f"DSR corretto per TUTTI e {len(candidate_factories)} i candidati di questa ricerca "
+          f"(non solo la griglia interna del vincitore): {dsr:.3f}")
+
+    sims = block_bootstrap_metrics(best.monthly_returns, n_sims=500, block_size=6)
+    print(f"\nBlock bootstrap (500 sim, blocchi 6m) sul vincitore (SOLO campione intero, "
+          f"non corretto per walk-forward - vedi sotto):")
+    print(summarize_bootstrap(sims))
+
+    # TEST DECISIVO: il bootstrap sopra ricampiona a blocchi la STESSA serie storica del
+    # vincitore - non dice se l'edge e' stabile nel tempo, solo quanto e' incerta la sua
+    # media. Lo split H1/H2 (prima vs seconda meta' del campione) e' l'unico modo per
+    # vedere se il vincitore regge in un regime di mercato diverso da quello su cui e'
+    # stato scelto - lo stesso principio che porto' a correggere la conclusione errata
+    # "Carry/Scarsita' batte TSMOM" in una sessione precedente.
+    print(f"\nWalk-forward H1/H2 sul vincitore '{best_name}' (split a meta' campione, "
+          "stessa configurazione, nessun nuovo fitting):")
+    mid = len(prices_sub) // 2
+    h1_dates, h2_dates = prices_sub.index[:mid], prices_sub.index[mid:]
+    factory = candidate_factories[best_name]
+    wf_results = {}
+    for label, dates in [("H1", h1_dates), ("H2", h2_dates)]:
+        sub_prices = prices_sub.loc[dates]
+        res = run_bt(factory(sub_prices), sub_prices, meta_sub)
+        wf_results[label] = res
+        print(f"  {label} ({dates[0].strftime('%Y-%m')} -> {dates[-1].strftime('%Y-%m')}) | "
+              f"CAGR {res.cagr*100:+6.2f}% | Sharpe {res.sharpe:5.2f} | MaxDD {res.max_drawdown*100:6.2f}%")
+    sharpe_flip = (wf_results["H1"].sharpe < 0) != (wf_results["H2"].sharpe < 0)
+    print(("\nATTENZIONE: lo Sharpe cambia segno tra H1 e H2 - l'edge del campione intero e' "
+           "guidato da un solo regime di mercato, non e' un fattore stabile nel tempo. NON "
+           "considerare questo candidato validato, anche con DSR/bootstrap favorevoli sul "
+           "campione intero." if sharpe_flip else
+           "\nLo Sharpe mantiene lo stesso segno in entrambe le meta' - non un flip completo, "
+           "ma verificare comunque l'ampiezza del divario prima di trattarlo come stabile."))
+
+
 if __name__ == "__main__":
     section_tsmom_sealed()
     section_carry_singles()
     section_survivorship_bias_check()
+    section_singles_factor_search()

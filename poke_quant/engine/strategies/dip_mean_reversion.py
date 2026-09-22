@@ -9,6 +9,18 @@ ribilanciamento, calcola lo z-score del prezzo corrente rispetto a media/std mob
 di lookback_months, e va lungo sul quantile con lo SCONTO PIU' PROFONDO (z minimo),
 equamente pesato. Nessuna selezione per rarita' o prezzo attuale - solo la deviazione
 statistica dalla propria media storica decide.
+
+ESITO VALIDAZIONE (scripts/optimize_and_falsify.py::section_singles_factor_search):
+NON VALIDATO. Sulla griglia lb in [6..18] x quantile in [0.10..0.30] mostra un plateau
+di Sharpe 0.75-1.05 su campione intero (miglior PBO tra i candidati singole testati),
+ma PBO=0.514 (coin-flip) e soprattutto lo split walk-forward H1/H2 mostra un'inversione
+di segno netta: Sharpe negativo (-0.23/-0.68) nella prima meta' del campione (2021-01 ->
+2023-10), positivo (+1.27/+1.32) nella seconda (2023-11 -> 2026-09). L'edge sul campione
+intero e' quasi certamente guidato dal rally di mercato di fine 2023+, non da un fattore
+stabile - probabilmente un effetto di ribilanciamento/diversificazione (CAGR comparabile
+a un semplice equal-weight buy&hold, +13% vs +12-19%) piu' che vera selezione di titoli.
+NON usare in produzione senza una seconda finestra temporale indipendente che confermi
+la stabilita' del segno.
 """
 
 from __future__ import annotations
