@@ -1,0 +1,35 @@
+name: Segnale Mensile PokeQuant
+
+on:
+  schedule:
+    - cron: '0 9 2 * *' # Il 2 di ogni mese alle 09:00 UTC (dopo che PriceCharting aggiorna i dati di fine mese)
+  workflow_dispatch: # Permette avvio manuale
+
+jobs:
+  monthly-signal:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Genera segnale e invia notifica
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/run_monthly_production_signal.py
+      - name: Esegui suite di test (sanity check post-refresh)
+        run: python -m pytest -q
+      - name: Commit e push dei dati aggiornati
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data_cache/historical_prices.csv data_cache/historical_prices_graded_singles_grade9.csv data_cache/historical_prices_graded_singles_raw.csv data_cache/items_metadata.json
+          git commit -m "Aggiornamento mensile automatico prezzi e segnali" || echo "Nessuna modifica da pushare"
+          git pull --rebase origin main || true
+          git push

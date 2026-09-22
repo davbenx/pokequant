@@ -20,6 +20,8 @@ Uso: python scripts/generate_carry_signal_singles.py
 import sys
 from pathlib import Path
 
+import pandas as pd
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, load_price_matrix
@@ -29,7 +31,8 @@ MIN_AGE_MONTHS = 6
 PLAUSIBILITY_CAP_EUR = 3000.0  # sopra, quasi certamente rumore da mercato sottile (verificato: solo 2/226 carte lo superano)
 
 
-def main():
+def compute_top_ranked():
+    """Ritorna (top, ranked, latest_date). Riutilizzabile da altri script/orchestratori."""
     metadata = load_metadata()
     prices_df = load_price_matrix("historical_prices_graded_singles_grade9.csv")
 
@@ -49,7 +52,6 @@ def main():
         rel_dt = metadata[item_id].get("release_date")
         age_m = None
         if rel_dt:
-            import pandas as pd
             rd = pd.to_datetime(rel_dt)
             age_m = (latest_date.year - rd.year) * 12 + (latest_date.month - rd.month)
         if age_m is None or age_m < MIN_AGE_MONTHS:
@@ -59,10 +61,15 @@ def main():
     ranked.sort(key=lambda x: -x[1])
     n_top = max(1, int(round(len(ranked) * TOP_QUANTILE)))
     top = ranked[:n_top]
+    return top, ranked, latest_date, metadata
+
+
+def main():
+    top, ranked, latest_date, metadata = compute_top_ranked()
 
     print("=" * 100)
     print(f"  SEGNALE CARRY/SCARSITÀ — singole gradate Grade 9 — {latest_date.strftime('%Y-%m')}")
-    print(f"  Universo eleggibile: {len(ranked)} carte | Quantile top {int(TOP_QUANTILE*100)}%: {n_top} carte")
+    print(f"  Universo eleggibile: {len(ranked)} carte | Quantile top {int(TOP_QUANTILE*100)}%: {len(top)} carte")
     print("  NON verifica disponibilità/prezzo eseguibile reale.")
     print("=" * 100 + "\n")
 

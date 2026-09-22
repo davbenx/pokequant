@@ -44,7 +44,8 @@ PLAUSIBILITY_CAP_PCT = 80.0
 MODERN_ERA_CUTOFF = "2019-01-01"
 
 
-def main():
+def compute_signal_rows():
+    """Ritorna (rows, latest_date). Riutilizzabile da altri script/orchestratori."""
     metadata = load_metadata()
     prices_df = load_price_matrix()
 
@@ -79,6 +80,11 @@ def main():
         })
 
     rows.sort(key=lambda r: -r["trailing_12m_return_pct"])
+    return rows, latest_date
+
+
+def main():
+    rows, latest_date = compute_signal_rows()
 
     print("=" * 100)
     print(f"  SEGNALE TS MOMENTUM (12m) — {latest_date.strftime('%Y-%m')} | Universo: {len(rows)} box sigillati")
