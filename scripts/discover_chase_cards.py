@@ -4,6 +4,20 @@ scripts/discover_chase_cards.py — Scopre carte "chase" (prezzo Cardmarket alto
 rarità da hype) nei set già rappresentati nell'universo sealed, usando pokemontcg.io
 (API ufficiale, gratuita, prezzi Cardmarket/TCGplayer correnti — non storici).
 
+ATTENZIONE — SURVIVORSHIP BIAS STRUTTURALE, non accidentale: il filtro `--min-price`
+(riga ~139, `if price >= args.min_price`) seleziona sul prezzo Cardmarket CORRENTE
+(oggi), non sul prezzo storico al momento dell'uscita. Ogni carta che entra in
+questo universo è quindi, per costruzione, una carta che SAPPIAMO con informazione
+2026 essersi rivelata "vincente". Nessuna carta oggi economica/flop può mai entrare,
+anche se storicamente disponibile su PriceCharting. Qualsiasi Sharpe/CAGR misurato
+da CarryScarcityFactorStrategy(item_type_filter="single") su questo universo è
+gonfiato rispetto a un investitore che comprava senza sapere in anticipo l'esito.
+Ogni item scritto qui riceve "selection_method": "chase_price_filter_survivorship_biased"
+in items_metadata.json per poter essere sempre isolato/escluso nei confronti.
+Il campione di controllo NON biased (stesse 98 set, carte scelte senza filtro di
+prezzo/rarità) è in scripts/discover_random_control_singles.py — va sempre eseguito
+insieme a questo prima di fidarsi di un backtest sulle singles.
+
 Per ciascuna carta trovata sopra la soglia di prezzo, costruisce e VERIFICA (fetch
 reale, non per assunzione) lo slug PriceCharting corrispondente, poi la aggiunge a
 items_metadata.json come "single" solo se il fetch storico riesce davvero.
@@ -174,6 +188,7 @@ def main():
             "rarity": c.get("rarity"), "franchise": "pokemon", "language": "en",
             "cardmarket_ref_price_eur": round(c["cm_price"], 2),
             "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+            "selection_method": "chase_price_filter_survivorship_biased",
         }
         added.append(item_id)
         existing_keys.add((game_slug, item_slug))
