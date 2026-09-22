@@ -229,6 +229,62 @@ def run_falsification_audit():
             print(f"• Correlazione con Bitcoin (BTC): {corr_btc:+.2f}")
             print(f"• Beta vs S&P 500:               {res_base.beta:.2f}")
             print(">> ESITO TEST 8: ASSET DECORRELATO (Bassa correlazione e basso beta con i mercati tradizionali).")
+
+    # -------------------------------------------------------------------------
+    # TEST 9: AUDIT LOOK-AHEAD BIAS SUI SET_TIER (Random Label Monte Carlo)
+    # -------------------------------------------------------------------------
+    print("\n" + "-" * 82)
+    print("TEST 9: TIER LOOK-AHEAD BIAS ATTRIBUTION (Random Label Monte Carlo)")
+    print("ATTENZIONE METODOLOGICA: i campi 'set_tier' in items_metadata.json sono stati scritti")
+    print("in un'unica sessione (commit git del 19/09/2026) con l'intero storico prezzi 2021-2026")
+    print("già disponibile nel repo. Non sono quindi verificabili come giudizio ex-ante indipendente")
+    print("dal prezzo realizzato. Questo test misura quanta parte del rendimento della strategia")
+    print("baseline è spiegata semplicemente dalla scelta di un sottoinsieme di questa dimensione,")
+    print("confrontata con un'etichettatura CASUALE della stessa cardinalità.")
+
+    sealed_ids = [k for k, v in metadata.items() if v.get("type") == "sealed"]
+    sa_ids = [k for k in sealed_ids if metadata[k].get("set_tier") in ("S", "A")]
+    n_sa = len(sa_ids)
+    print(f"• Universo sealed totale: {len(sealed_ids)} asset | Selezionati Tier S+A 'reali': {n_sa} asset")
+
+    n_sims_tier = 200
+    random_cagrs: list = []
+    rng = np.random.default_rng(7)
+    for _ in range(n_sims_tier):
+        chosen = set(rng.choice(sealed_ids, size=n_sa, replace=False))
+        meta_random = {}
+        for k, v in metadata.items():
+            v2 = dict(v)
+            if k in chosen:
+                v2["set_tier"] = "S"
+            elif v.get("type") == "sealed":
+                v2["set_tier"] = "C"  # esclusa dal filtro allowed_tiers=["S"] sotto
+            meta_random[k] = v2
+        strat_rand = OptimalSealedStrategy(allowed_tiers=["S"], min_buy_age_months=4, max_buy_age_months=14)
+        bt_rand = Backtester(strat_rand, prices_df, meta_random, initial_cash=10000.0, platform="cardmarket")
+        try:
+            r_rand = bt_rand.run()
+            random_cagrs.append(r_rand.cagr)
+        except Exception:
+            continue
+
+    if random_cagrs:
+        random_arr = np.array(random_cagrs)
+        pctl = float((random_arr < res_base.cagr).mean() * 100.0)
+        print(f"• CAGR strategia baseline (Tier S+A 'reali'):              {res_base.cagr*100:+.2f}%")
+        print(f"• CAGR mediano su {len(random_arr)} selezioni CASUALI di pari dimensione: {np.median(random_arr)*100:+.2f}%")
+        print(f"• Range 5°-95° percentile selezioni casuali:              [{np.percentile(random_arr,5)*100:+.2f}%, {np.percentile(random_arr,95)*100:+.2f}%]")
+        print(f"• Percentile della selezione S+A 'reale' nella distribuzione casuale: {pctl:.1f}°")
+        if pctl >= 90:
+            print(">> ESITO TEST 9: l'etichetta tier porta informazione (outlier vs selezione casuale) —")
+            print("   ma resta NON verificabile se tale informazione fosse disponibile ex-ante nel 2021-2023,")
+            print("   dato che le etichette sono state scritte a posteriori con i prezzi già noti.")
+        else:
+            print(">> ESITO TEST 9: FALSIFICATO — la selezione S+A 'reale' NON supera in modo netto una")
+            print("   selezione casuale di pari dimensione. Gran parte del rendimento headline è spiegata")
+            print("   dal rialzo generalizzato dell'asset class 2021-2026, non da vero stock-picking basato")
+            print("   sul tier. Trattare il +402% ROI come limite superiore, non come stima centrale.")
+
     print("=" * 82 + "\n")
 
 
