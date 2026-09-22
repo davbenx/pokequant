@@ -60,9 +60,19 @@ class CarryScarcityFactorStrategy:
         if not ranked:
             return signals
 
-        ranked.sort(key=lambda x: x[1], reverse=True)
+        ranked.sort(key=lambda x: (x[1], x[0]), reverse=True)
         n_top = max(1, int(round(len(ranked) * self.top_quantile)))
-        top_ids = {item_id for item_id, _ in ranked[:n_top]}
+        # NON usare un set per iterare: un set di stringhe itera in un ordine dipendente
+        # dall'hash-seed del processo (PYTHONHASHSEED, randomizzato per default da Python
+        # 3.3+). Trovato in questa sessione: con capitale limitato, l'ordine in cui le BUY
+        # vengono emesse/eseguite decide quale carta riceve budget prima che finisca la
+        # cassa - rendendo l'intero backtest NON riproducibile run-to-run (stesso codice,
+        # stesso input, CAGR/Sharpe diversi). top_ranked preserva l'ordine di rank (pareggi
+        # rotti per item_id, deterministico) sia per il test di appartenenza sia per
+        # l'iterazione di acquisto, cosi' che a corto di cassa vinca sempre il segnale piu'
+        # forte (piu' vecchio), non la fortuna dell'hash.
+        top_ranked = ranked[:n_top]
+        top_ids = {item_id for item_id, _ in top_ranked}
 
         for item_id, pos in list(portfolio.positions.items()):
             if item_id in market_snapshot and item_id not in top_ids:
@@ -76,7 +86,7 @@ class CarryScarcityFactorStrategy:
         total_nav = portfolio.get_total_nav({k: v["current_price"] for k, v in market_snapshot.items()})
         target_per_position = total_nav * min(self.max_allocation_pct, 1.0 / max(1, n_top))
 
-        for item_id in top_ids:
+        for item_id, age_m in top_ranked:
             if item_id in portfolio.positions:
                 continue
             info = market_snapshot[item_id]
@@ -87,7 +97,6 @@ class CarryScarcityFactorStrategy:
             if qty < 1 and available_cash >= cur_price and cur_price <= total_nav * 0.35:
                 qty = 1
             if qty >= 1:
-                age_m = dict(ranked)[item_id]
                 signals.append(Signal(
                     action="BUY", item_id=item_id, item_name=info.get("name", item_id),
                     item_type=self.item_type_filter, quantity=qty, target_price=cur_price,

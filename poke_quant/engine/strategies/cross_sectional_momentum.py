@@ -75,9 +75,15 @@ class CrossSectionalMomentumStrategy:
         if not ranked:
             return signals
 
-        ranked.sort(key=lambda x: x[1], reverse=True)
+        ranked.sort(key=lambda x: (x[1], x[0]), reverse=True)
         n_top = max(1, int(round(len(ranked) * self.top_quantile)))
-        top_ids = {item_id for item_id, _ in ranked[:n_top]}
+        # top_ranked (lista, non set) preserva l'ordine di rank per l'iterazione di
+        # acquisto sotto - un set di stringhe itera in ordine dipendente dall'hash-seed
+        # del processo (PYTHONHASHSEED), rendendo non riproducibile quale carta riceve
+        # budget prima che finisca la cassa. Stesso bug trovato e corretto in
+        # carry_scarcity_factor.py in questa sessione.
+        top_ranked = ranked[:n_top]
+        top_ids = {item_id for item_id, _ in top_ranked}
 
         # Uscita: chi non è più nel quantile top viene liquidato.
         for item_id, pos in list(portfolio.positions.items()):
@@ -93,7 +99,7 @@ class CrossSectionalMomentumStrategy:
         total_nav = portfolio.get_total_nav({k: v["current_price"] for k, v in market_snapshot.items()})
         target_per_position = total_nav * min(self.max_allocation_pct, 1.0 / max(1, n_top))
 
-        for item_id in top_ids:
+        for item_id, _ in top_ranked:
             if item_id in portfolio.positions:
                 continue
             info = market_snapshot[item_id]
