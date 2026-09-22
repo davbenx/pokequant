@@ -73,7 +73,10 @@ def main():
     prices_full = load_price_matrix()
     metadata_full = load_metadata()
 
-    sealed_ids = [k for k, v in metadata_full.items() if v.get("type") == "sealed"]
+    sealed_ids = [
+        k for k, v in metadata_full.items()
+        if v.get("type") == "sealed" and v.get("data_quality") != "thin_unreliable"
+    ]
     metadata_sealed = {k: v for k, v in metadata_full.items() if k in sealed_ids}
     prices_sealed = prices_full[[c for c in prices_full.columns if c in sealed_ids]]
 

@@ -31,6 +31,17 @@ def run_falsification_audit():
     metadata = load_metadata()
     macro_df = load_macro_matrix()
 
+    # Esclude gli asset flaggati "thin_unreliable" (scripts/flag_unreliable_assets.py):
+    # box vintage/singole ultra-rare con volumi di vendita così bassi che il prezzo
+    # guida PriceCharting è rumore, non un prezzo di mercato utilizzabile (es.
+    # neo_destiny_bb da ~13.000€ a 53,7€ in un mese). Non cancellati dai CSV, solo
+    # esclusi dall'universo investibile usato per validare le strategie.
+    unreliable_ids = {k for k, v in metadata.items() if v.get("data_quality") == "thin_unreliable"}
+    n_before = len(prices_df.columns)
+    prices_df = prices_df[[c for c in prices_df.columns if c not in unreliable_ids]]
+    print(f"Filtro attendibilità: esclusi {n_before - len(prices_df.columns)} asset "
+          f"thin_unreliable su {n_before} totali.")
+
     spy_series = macro_df["spy"] if macro_df is not None and "spy" in macro_df else None
     gold_series = macro_df["gold"] if macro_df is not None and "gold" in macro_df else None
     btc_series = macro_df["btc"] if macro_df is not None and "btc" in macro_df else None
@@ -242,7 +253,7 @@ def run_falsification_audit():
     print("baseline è spiegata semplicemente dalla scelta di un sottoinsieme di questa dimensione,")
     print("confrontata con un'etichettatura CASUALE della stessa cardinalità.")
 
-    sealed_ids = [k for k, v in metadata.items() if v.get("type") == "sealed"]
+    sealed_ids = [k for k, v in metadata.items() if v.get("type") == "sealed" and k in prices_df.columns]
     sa_ids = [k for k in sealed_ids if metadata[k].get("set_tier") in ("S", "A")]
     n_sa = len(sa_ids)
     print(f"• Universo sealed totale: {len(sealed_ids)} asset | Selezionati Tier S+A 'reali': {n_sa} asset")

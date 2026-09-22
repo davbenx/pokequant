@@ -14,7 +14,9 @@
     "slippage_pct": 0.01,
     "holding_cost_annual_pct": 0.005,
     "language": "en",
-    "franchise": "pokemon"
+    "franchise": "pokemon",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 17.9x (soglia 15.0x)"
   },
   "lost_origin_bb": {
     "name": "Lost Origin Booster Box",
@@ -31,7 +33,9 @@
     "slippage_pct": 0.02,
     "holding_cost_annual_pct": 0.005,
     "language": "en",
-    "franchise": "pokemon"
+    "franchise": "pokemon",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 303% (soglia 200%)"
   },
   "fusion_strike_bb": {
     "name": "Fusion Strike Booster Box",
@@ -48,7 +52,9 @@
     "slippage_pct": 0.02,
     "holding_cost_annual_pct": 0.005,
     "language": "en",
-    "franchise": "pokemon"
+    "franchise": "pokemon",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 331% (soglia 200%)"
   },
   "brilliant_stars_bb": {
     "name": "Brilliant Stars Booster Box",
@@ -235,7 +241,9 @@
     "slippage_pct": 0.01,
     "holding_cost_annual_pct": 0.005,
     "language": "en",
-    "franchise": "pokemon"
+    "franchise": "pokemon",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 595% (soglia 200%)"
   },
   "cosmic_eclipse_bb": {
     "name": "Cosmic Eclipse Booster Box",
@@ -252,7 +260,9 @@
     "slippage_pct": 0.01,
     "holding_cost_annual_pct": 0.005,
     "language": "en",
-    "franchise": "pokemon"
+    "franchise": "pokemon",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 3159% (soglia 200%)"
   },
   "unbroken_bonds_bb": {
     "name": "Unbroken Bonds Booster Box",
@@ -355,7 +365,9 @@
     "slippage_pct": 0.02,
     "holding_cost_annual_pct": 0.005,
     "language": "en",
-    "franchise": "pokemon"
+    "franchise": "pokemon",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 243% (soglia 200%)"
   },
   "shining_fates_etb": {
     "name": "Shining Fates Elite Trainer Box",
@@ -391,7 +403,9 @@
     "slippage_pct": 0.01,
     "holding_cost_annual_pct": 0.005,
     "language": "en",
-    "franchise": "pokemon"
+    "franchise": "pokemon",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 18.7x (soglia 15.0x)"
   },
   "scarlet_violet_151_etb": {
     "name": "Scarlet & Violet 151 Elite Trainer Box",
@@ -575,7 +589,9 @@
     "franchise": "pokemon",
     "liquidity_tier": "tier_2_weekly",
     "slippage_pct": 0.02,
-    "holding_cost_annual_pct": 0.005
+    "holding_cost_annual_pct": 0.005,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 328% (soglia 200%)"
   },
   "burning_shadows_bb": {
     "name": "Burning Shadows Booster Box",
@@ -796,7 +812,9 @@
     "franchise": "one_piece",
     "liquidity_tier": "tier_2_weekly",
     "slippage_pct": 0.02,
-    "holding_cost_annual_pct": 0.005
+    "holding_cost_annual_pct": 0.005,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 207% (soglia 200%)"
   },
   "op05_new_era_bb": {
     "name": "Awakening of the New Era Booster Box [OP-05]",
@@ -894,7 +912,9 @@
     "liquidity_tier": "tier_2_weekly",
     "slippage_pct": 0.02,
     "holding_cost_annual_pct": 0.001,
-    "last_psa_price": 1307.18
+    "last_psa_price": 1307.18,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 210% (soglia 200%)"
   },
   "stellar_crown_bb": {
     "name": "Stellar Crown Booster Box",
@@ -1023,7 +1043,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 140.08,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 300% (soglia 200%)"
   },
   "latias_ex_239": {
     "name": "Latias ex #239",
@@ -1075,7 +1097,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 115.86,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 892% (soglia 200%)"
   },
   "snorlax_224": {
     "name": "Snorlax #224",
@@ -1556,7 +1580,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 42.38,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 210% (soglia 200%)"
   },
   "mortys_conviction_211": {
     "name": "Morty's Conviction #211",
@@ -2206,7 +2232,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 406.29,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 17.3x (soglia 15.0x)"
   },
   "m_kangaskhan_ex_109": {
     "name": "M Kangaskhan-EX #109",
@@ -2232,7 +2260,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 42.56,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 17.6x (soglia 15.0x)"
   },
   "bosss_orders_189": {
     "name": "Boss's Orders #189",
@@ -2297,7 +2327,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 64.33,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 201% (soglia 200%)"
   },
   "rayquaza_ex_104": {
     "name": "Rayquaza-EX #104",
@@ -2375,7 +2407,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 203.82,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 23.1x (soglia 15.0x)"
   },
   "latias_latios_gx_113": {
     "name": "Latias & Latios-GX #113",
@@ -2401,7 +2435,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 733.16,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 16.0x (soglia 15.0x)"
   },
   "pikachu_zekrom_gx_162": {
     "name": "Pikachu & Zekrom-GX #162",
@@ -2440,7 +2476,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 807.34,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 31.1x (soglia 15.0x)"
   },
   "latias_latios_gx_169": {
     "name": "Latias & Latios-GX #169",
@@ -2700,7 +2738,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 41.7,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 24.2x (soglia 15.0x)"
   },
   "mewtwo_mew_gx_71": {
     "name": "Mewtwo & Mew-GX #71",
@@ -2726,7 +2766,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 79.01,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 23.9x (soglia 15.0x)"
   },
   "rowlet_alolan_exeggutor_gx_215": {
     "name": "Rowlet & Alolan Exeggutor-GX #215",
@@ -2765,7 +2807,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 151.36,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 17.7x (soglia 15.0x)"
   },
   "raichu_alolan_raichu_gx_221": {
     "name": "Raichu & Alolan Raichu-GX #221",
@@ -2804,7 +2848,9 @@
     "franchise": "pokemon",
     "language": "en",
     "cardmarket_ref_price_eur": 228.21,
-    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)"
+    "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 18.7x (soglia 15.0x)"
   },
   "garchomp_giratina_gx_228": {
     "name": "Garchomp & Giratina-GX #228",
@@ -2947,7 +2993,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 239% (soglia 200%)"
   },
   "team_rocket_bb": {
     "name": "Team Rocket Booster Box",
@@ -2973,7 +3021,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 237% (soglia 200%)"
   },
   "gym_challenge_bb": {
     "name": "Gym Challenge Booster Box",
@@ -2986,7 +3036,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 2549% (soglia 200%)"
   },
   "neo_genesis_bb": {
     "name": "Neo Genesis Booster Box",
@@ -2999,7 +3051,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 206% (soglia 200%)"
   },
   "neo_discovery_bb": {
     "name": "Neo Discovery Booster Box",
@@ -3012,7 +3066,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 261% (soglia 200%)"
   },
   "neo_revelation_bb": {
     "name": "Neo Revelation Booster Box",
@@ -3025,7 +3081,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 4412% (soglia 200%)"
   },
   "neo_destiny_bb": {
     "name": "Neo Destiny Booster Box",
@@ -3038,7 +3096,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 2375% (soglia 200%)"
   },
   "legendary_collection_bb": {
     "name": "Legendary Collection Booster Box",
@@ -3051,7 +3111,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 4832% (soglia 200%)"
   },
   "aquapolis_bb": {
     "name": "Aquapolis Booster Box",
@@ -3064,7 +3126,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 20250% (soglia 200%)"
   },
   "skyridge_bb": {
     "name": "Skyridge Booster Box",
@@ -3077,7 +3141,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 6062% (soglia 200%)"
   },
   "hidden_legends_bb": {
     "name": "Hidden Legends Booster Box",
@@ -3116,7 +3182,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 27546% (soglia 200%)"
   },
   "emerald_bb": {
     "name": "Emerald Booster Box",
@@ -3142,7 +3210,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 820% (soglia 200%)"
   },
   "delta_species_bb": {
     "name": "Delta Species Booster Box",
@@ -3155,7 +3225,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 39261% (soglia 200%)"
   },
   "legend_maker_bb": {
     "name": "Legend Maker Booster Box",
@@ -3168,7 +3240,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 25641% (soglia 200%)"
   },
   "holon_phantoms_bb": {
     "name": "Holon Phantoms Booster Box",
@@ -3194,7 +3268,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 30407% (soglia 200%)"
   },
   "dragon_frontiers_bb": {
     "name": "Dragon Frontiers Booster Box",
@@ -3207,7 +3283,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 40235% (soglia 200%)"
   },
   "power_keepers_bb": {
     "name": "Power Keepers Booster Box",
@@ -3233,7 +3311,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 339% (soglia 200%)"
   },
   "secret_wonders_bb": {
     "name": "Secret Wonders Booster Box",
@@ -3285,7 +3365,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 6156% (soglia 200%)"
   },
   "stormfront_bb": {
     "name": "Stormfront Booster Box",
@@ -3311,7 +3393,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 1563% (soglia 200%)"
   },
   "rising_rivals_bb": {
     "name": "Rising Rivals Booster Box",
@@ -3350,7 +3434,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 570% (soglia 200%)"
   },
   "call_of_legends_bb": {
     "name": "Call of Legends Booster Box",
@@ -3363,7 +3449,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 241% (soglia 200%)"
   },
   "emerging_powers_bb": {
     "name": "Emerging Powers Booster Box",
@@ -3415,7 +3503,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 4459% (soglia 200%)"
   },
   "dragons_exalted_bb": {
     "name": "Dragons Exalted Booster Box",
@@ -3532,7 +3622,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 15.8x (soglia 15.0x)"
   },
   "primal_clash_bb": {
     "name": "Primal Clash Booster Box",
@@ -3558,7 +3650,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 628% (soglia 200%)"
   },
   "breakpoint_bb": {
     "name": "BREAKpoint Booster Box",
@@ -3571,7 +3665,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 529% (soglia 200%)"
   },
   "fates_collide_bb": {
     "name": "Fates Collide Booster Box",
@@ -3727,7 +3823,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon",
     "language": "en",
-    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting"
+    "source_note": "Scoperta sistematica su tutti i 176 set pokemontcg.io, verificata via fetch reale PriceCharting",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (3 osservazioni)"
   },
   "base_set_bb": {
     "name": "Base Set Booster Box",
@@ -3824,7 +3922,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 1227.1,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 243% (soglia 200%)"
   },
   "op_romance-dawn_boa_hancock_sp_op01_078": {
     "name": "Boa Hancock [SP] OP01-078",
@@ -3836,7 +3936,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 1226.37,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 17.8x (soglia 15.0x)"
   },
   "op_romance-dawn_yamato_top_64_op01_121": {
     "name": "Yamato [Top 64] OP01-121",
@@ -3932,7 +4034,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 558.96,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 207% (soglia 200%)"
   },
   "op_romance-dawn_nami_alternate_art_errata_op01_016": {
     "name": "Nami [Alternate Art Errata] OP01-016",
@@ -3956,7 +4060,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 499.25,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 26.0x (soglia 15.0x)"
   },
   "op_awakening-of-the-new-era_zoro_juurou_sp_foil_op05_067": {
     "name": "Zoro-Juurou [SP Foil] OP05-067",
@@ -4040,7 +4146,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 401.59,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 23.7x (soglia 15.0x)"
   },
   "op_pillars-of-strength_haruta_pre_release_op03_009": {
     "name": "Haruta [Pre-Release] OP03-009",
@@ -4052,7 +4160,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 366.43,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 18399% (soglia 200%)"
   },
   "op_awakening-of-the-new-era_monkeydluffy_psa_promo_op05_060": {
     "name": "Monkey.D.Luffy [PSA Promo] OP05-060",
@@ -4160,7 +4270,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 241.99,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 300% (soglia 200%)"
   },
   "op_wings-of-the-captain_roronoa_zoro_pre_release_p_045": {
     "name": "Roronoa Zoro [Pre-Release] P-045",
@@ -4172,7 +4284,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 215.16,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 820% (soglia 200%)"
   },
   "op_romance-dawn_trafalgar_law_sp_op01_047": {
     "name": "Trafalgar Law [SP] OP01-047",
@@ -4208,7 +4322,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 203.73,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 17.6x (soglia 15.0x)"
   },
   "op_wings-of-the-captain_o_nami_beginners_deck_party_op06_101": {
     "name": "O-Nami [Beginners Deck Party] OP06-101",
@@ -4220,7 +4336,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 200.0,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 5328% (soglia 200%)"
   },
   "op_awakening-of-the-new-era_monkeydluffy_alternate_art_op05_": {
     "name": "Monkey.D.Luffy [Alternate Art] OP05-119",
@@ -4388,7 +4506,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 134.4,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 275% (soglia 200%)"
   },
   "op_romance-dawn_roronoa_zoro_25th_anniversary_op01_001": {
     "name": "Roronoa Zoro [25th Anniversary] OP01-001",
@@ -4436,7 +4556,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 127.64,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 252% (soglia 200%)"
   },
   "op_awakening-of-the-new-era_rebecca_sp_op05_091": {
     "name": "Rebecca [SP] OP05-091",
@@ -4484,7 +4606,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 122.86,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 33.6x (soglia 15.0x)"
   },
   "op_romance-dawn_yamato_alternate_art_op01_121": {
     "name": "Yamato [Alternate Art] OP01-121",
@@ -4532,7 +4656,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 102.5,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 308% (soglia 200%)"
   },
   "op_wings-of-the-captain_o_nami_event_op06_101": {
     "name": "O-Nami [Event] OP06-101",
@@ -4664,7 +4790,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 82.44,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 25.6x (soglia 15.0x)"
   },
   "op_paramount-war_smoker_alternate_art_op02_093": {
     "name": "Smoker [Alternate Art] OP02-093",
@@ -4688,7 +4816,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 80.0,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 1030% (soglia 200%)"
   },
   "op_wings-of-the-captain_perona_top_16_op06_093": {
     "name": "Perona [Top 16] OP06-093",
@@ -4700,7 +4830,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 80.0,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 1559% (soglia 200%)"
   },
   "op_awakening-of-the-new-era_booster_pack": {
     "name": "Booster Pack",
@@ -4712,7 +4844,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 79.96,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 273% (soglia 200%)"
   },
   "op_pillars-of-strength_charlotte_linlin_sp_op03_114": {
     "name": "Charlotte Linlin [SP] OP03-114",
@@ -4760,7 +4894,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 78.0,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 272% (soglia 200%)"
   },
   "op_awakening-of-the-new-era_monkeydluffy_2nd_anniversary_op0": {
     "name": "Monkey.D.Luffy [2nd Anniversary] OP05-119",
@@ -4832,7 +4968,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 72.24,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 250% (soglia 200%)"
   },
   "op_wings-of-the-captain_yamato_alternate_art_op06_022": {
     "name": "Yamato [Alternate Art] OP06-022",
@@ -5012,7 +5150,9 @@
     "franchise": "one_piece",
     "language": "en",
     "pricecharting_ref_price_usd": 55.52,
-    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale"
+    "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 248% (soglia 200%)"
   },
   "op_wings-of-the-captain_perona_alternate_art_op06_021": {
     "name": "Perona [Alternate Art] OP06-021",

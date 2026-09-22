@@ -37,6 +37,14 @@ def main():
     prices_df = load_price_matrix()  # historical_prices.csv reale, NON la serie europea sintetica
     metadata = load_metadata()
     macro_df = load_macro_matrix()
+
+    # Esclude asset "thin_unreliable" (scripts/flag_unreliable_assets.py): box vintage e
+    # singole ultra-rare con prezzo guida PriceCharting inutilizzabile per volumi troppo
+    # bassi (es. salti di migliaia di % in un mese). Vedi poke_quant/data/liquidity_filter.py.
+    unreliable_ids = {k for k, v in metadata.items() if v.get("data_quality") == "thin_unreliable"}
+    n_before = len(prices_df.columns)
+    prices_df = prices_df[[c for c in prices_df.columns if c not in unreliable_ids]]
+    print(f"Filtro attendibilità: esclusi {n_before - len(prices_df.columns)} asset thin_unreliable su {n_before}.")
     spy_series = macro_df["spy"] if macro_df is not None and "spy" in macro_df else None
 
     strategies = {

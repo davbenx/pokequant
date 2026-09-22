@@ -33,7 +33,11 @@ GRADE9_FILENAME = "historical_prices_graded_singles_grade9.csv"
 def main():
     grade9_df = load_price_matrix(GRADE9_FILENAME)
     metadata_full = load_metadata()
-    singles_meta = {k: v for k, v in metadata_full.items() if v.get("type") == "single" and k in grade9_df.columns}
+    singles_meta = {
+        k: v for k, v in metadata_full.items()
+        if v.get("type") == "single" and k in grade9_df.columns and v.get("data_quality") != "thin_unreliable"
+    }
+    grade9_df = grade9_df[[c for c in grade9_df.columns if c in singles_meta]]
 
     print("=" * 90)
     print("  FASE 2b — SINGOLE GIA' GRADATE (tier Grade 9, dato reale PriceCharting)")
