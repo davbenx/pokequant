@@ -39,7 +39,8 @@ def main():
     print("  FASE 2b — SINGOLE GIA' GRADATE (tier Grade 9, dato reale PriceCharting)")
     print(f"  Universo: {len(singles_meta)} carte | Storico: {len(grade9_df)} mesi "
           f"({grade9_df.index[0].strftime('%Y-%m')} -> {grade9_df.index[-1].strftime('%Y-%m')})")
-    print("  ATTENZIONE: n=9 asset, risultati preliminari, non statisticamente potenti.")
+    print(f"  ATTENZIONE: n={len(singles_meta)} asset — ancora un campione ridotto per DSR/PBO affidabili,")
+    print("  leggere questi risultati come esplorativi/direzionali, non come stima definitiva.")
     print("=" * 90)
 
     strategies = {
