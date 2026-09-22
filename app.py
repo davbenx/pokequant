@@ -32,6 +32,7 @@ from poke_quant.engine.strategies.sealed_accumulator import SealedAccumulatorStr
 from poke_quant.engine.strategies.chase_dip_buyer import ChaseDipBuyerStrategy
 from poke_quant.engine.strategies.optimal_sealed_strategy import OptimalSealedStrategy
 from poke_quant.engine.friction import evaluate_grading_arbitrage
+from scripts.generate_monthly_signal import compute_signal_rows
 from poke_quant.validation.statistical_validation import deflated_sharpe_ratio, pbo_cscv
 from poke_quant.signal_scanner import scan_signals, scan_historical_signals, load_user_holdings, format_telegram_alert, send_telegram_message
 from poke_quant.slabs import (
@@ -383,6 +384,19 @@ def generate_executive_report(
 # =============================================================================
 # 2. DATA CACHING & INITIALIZATION
 # =============================================================================
+@st.cache_data(show_spinner=False, ttl=1800)
+def get_cached_sets():
+    """Cache 30 min: pokemontcg.io e' intermittente (500/502 osservati ripetutamente
+    in questa sessione) - senza cache ogni refresh di pagina rischia di colpirlo di nuovo
+    subito dopo un errore transitorio già superato dal retry in catalog_fetcher.py."""
+    return fetch_all_sets()
+
+
+@st.cache_data(show_spinner=False, ttl=1800)
+def get_cached_cards_by_set(set_id: str, page_size: int = 50):
+    return fetch_cards_by_set(set_id, page_size=page_size)
+
+
 @st.cache_data(show_spinner=False)
 def get_cached_data(regime: str = "europe_cardmarket"):
     prices_df = get_market_price_matrix(regime)
@@ -402,9 +416,15 @@ def main():
     if "sb_capital_mode" not in st.session_state:
         st.session_state["sb_capital_mode"] = "💰 Capitale Dedicato a PokeQuant"
     if "sb_market_regime" not in st.session_state:
-        st.session_state["sb_market_regime"] = "🇪🇺 Europa (Cardmarket EUR · IVA · Fee 5%)"
+        # Default sui dati reali (PriceCharting, 1093 asset). Il regime "Europa" sotto
+        # applica moltiplicatori stimati sopra questi stessi dati - non è mai stato
+        # rigenerato dopo l'espansione dell'universo di questa sessione (era rimasto a
+        # 56 asset) ed è comunque una stima, non transazioni Cardmarket reali - non va
+        # usato come default né per validare strategie (vedi poke_quant/data/
+        # europe_market_calibrator.py).
+        st.session_state["sb_market_regime"] = "🇺🇸 Globale (PriceCharting USD · dati reali)"
 
-    current_regime_str = st.session_state.get("sb_market_regime", "🇪🇺 Europa (Cardmarket EUR · IVA · Fee 5%)")
+    current_regime_str = st.session_state.get("sb_market_regime", "🇺🇸 Globale (PriceCharting USD · dati reali)")
     current_market_regime = "europe_cardmarket" if "Europa" in current_regime_str else "us_global"
 
     with st.spinner(f"Inizializzazione feed ({current_market_regime})..."):
@@ -432,11 +452,14 @@ def main():
         market_regime_choice = st.selectbox(
             "Regime & Benchmark Dati",
             options=[
-                "🇪🇺 Europa (Cardmarket EUR · IVA · Fee 5%)",
-                "🇺🇸 Globale (PriceCharting USD · Floor USA)"
+                "🇺🇸 Globale (PriceCharting USD · dati reali)",
+                "🇪🇺 Europa (STIMA con moltiplicatori, non Cardmarket reale)"
             ],
             key="sb_market_regime",
-            help="Scegli se eseguire il backtest e i segnali sul mercato europeo Cardmarket (in Euro, con IVA inclusa, fee Cardmarket 5% e spread linguistico) o sui dati storici americani grezzi PriceCharting (in Dollari)."
+            help="'Globale' usa lo storico PriceCharting reale (1093 asset) - la base su cui le "
+                 "strategie sono validate. 'Europa' applica moltiplicatori stimati a mano (IVA, fee, "
+                 "spread linguistico) sopra questi stessi dati: NON sono transazioni Cardmarket "
+                 "osservate. Usalo solo per farsi un'idea, non per validare o confrontare strategie."
         )
 
         st.markdown("### ⚙️ Definizione Capitale & Allocazione")
@@ -577,6 +600,55 @@ def main():
     with tab_cmd:
         st.markdown('<div class="section-title">⚡ Command Center & Desk Operativo</div>', unsafe_allow_html=True)
         st.markdown('<div class="section-desc">Quadro decisionale real-time: ordini di acquisto basati sul capitale, rotazioni e scanner finestre di mercato.</div>', unsafe_allow_html=True)
+
+        # =====================================================================
+        # SEGNALE VALIDATO — TS Momentum, la strategia realmente in produzione
+        # (stessa funzione usata da scripts/run_monthly_production_signal.py e
+        # dalla GitHub Action mensile). Le sezioni sotto (Desk Tier, Slabs Radar,
+        # Backtest OptimalSealed/SealedAccumulator) sono aree sperimentali separate,
+        # non validate con DSR/PBO/bootstrap/walk-forward - vedi i badge "🧪".
+        # =====================================================================
+        st.success(
+            "✅ **STRATEGIA VALIDATA — TS Momentum (box sigillati, era 2019+)**  "
+            "DSR 0,913 · PBO 28,6% · Sharpe 1,10 · CAGR +23,54% · Bootstrap P(Sharpe>0)=100% · "
+            "nessuna inversione di segno nello split walk-forward H1/H2. "
+            "È l'unica strategia di questo progetto validata a livello istituzionale ed è quella "
+            "eseguita dalla GitHub Action mensile (`.github/workflows/monthly_signal.yml`)."
+        )
+        try:
+            _sig_rows, _sig_date = compute_signal_rows()
+            _n_buy = sum(1 for r in _sig_rows if r["signal"] == "BUY/HOLD")
+            _n_verify = sum(1 for r in _sig_rows if "VERIFICARE" in r["signal"])
+            _n_sell = len(_sig_rows) - _n_buy - _n_verify
+            vc1, vc2, vc3, vc4 = st.columns(4)
+            with vc1:
+                st.metric("Mese Segnale", _sig_date.strftime("%Y-%m"))
+            with vc2:
+                st.metric("BUY/HOLD", _n_buy)
+            with vc3:
+                st.metric("AVOID/SELL", _n_sell)
+            with vc4:
+                st.metric("Da verificare a mano", _n_verify)
+            with st.expander(f"📋 Elenco completo segnale TS Momentum ({len(_sig_rows)} box, era 2019+)", expanded=False):
+                st.dataframe(
+                    pd.DataFrame(_sig_rows)[["name", "signal", "trailing_12m_return_pct", "current_price_eur"]]
+                    .rename(columns={"name": "Box", "signal": "Segnale",
+                                      "trailing_12m_return_pct": "Rend. 12m %", "current_price_eur": "Prezzo €"})
+                    .set_index("Box"),
+                    use_container_width=True
+                )
+            st.caption("⚠️ Non verifica liquidità reale (nessuna inserzione attiva controllata) - controlla "
+                       "disponibilità/prezzo su Cardmarket prima di eseguire. Vedi OPERATIONS_ITALIA.md.")
+        except Exception as e:
+            st.error(f"Errore nel calcolo del segnale TS Momentum: {e}")
+
+        st.markdown("---")
+        st.markdown(
+            "#### 🧪 Desk Sperimentale a Tier (discrezionale, non validato con DSR/PBO)",
+            help="Le card sotto usano set_tier (S/A/B/C), finestra d'acquisto 4-14 mesi e regole di "
+                 "rotazione a tranche - un sistema più vecchio, non passato dalla stessa validazione "
+                 "statistica di TS Momentum sopra. Utile per esplorare, non per decidere capitale reale."
+        )
 
         cmd_h1, cmd_h2 = st.columns([3, 2])
         with cmd_h1:
@@ -1022,7 +1094,16 @@ def main():
     # =========================================================================
     with tab_backtest:
         st.markdown('<div class="section-title">⚡ Simulatore Strategie con Rotazione Dinamica Scalare</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">Esecuzione quantitativa su 68 mesi di prezzi reali (2021-2026), sblocco periodico di liquidità e reinvestimento nei reprint moderni.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc">Esecuzione quantitativa su prezzi reali, sblocco periodico di liquidità e reinvestimento nei reprint moderni.</div>', unsafe_allow_html=True)
+        st.warning(
+            "🧪 **AREA SPERIMENTALE.** OptimalSealedStrategy, SealedAccumulatorStrategy e "
+            "ChaseDipBuyerStrategy qui sotto sono strategie legacy (cap MSRP+15%, finestra 4-14 mesi, "
+            "rotazione a tranche) - non sono passate dallo stesso rigore di TS Momentum (validato: "
+            "DSR 0,913, PBO 28,6%, walk-forward H1/H2 senza inversione di segno - vedi tab Command "
+            "Center). Il DSR/PBO calcolati nel tab Audit su queste strategie usano un n_trials "
+            "impostabile a piacere e solo 2-4 split CSCV: utili per esplorare, non per decidere "
+            "capitale reale."
+        )
 
         regime_badge = (
             "🇪🇺 **Regime Calibrato: Mercato Europeo Cardmarket (EUR)** · IVA reale inclusa nei floor distributivi (125-135€) · Commissioni Cardmarket 5% + 0.60€ · Spread linguistico attivo"
@@ -1763,6 +1844,29 @@ def main():
         st.markdown('<div class="section-title">🛡️ Audit Istituzionale Anti-Overfitting & Suite di Falsificazione Popperiana</div>', unsafe_allow_html=True)
         st.markdown('<div class="section-desc">Validazione rigorosa per eliminare il rischio di data-snooping (Bailey & López de Prado) e 8 stress-test popperiani.</div>', unsafe_allow_html=True)
 
+        st.success(
+            "✅ **VALIDAZIONE REALE — TS Momentum (box sigillati, era 2019+)**\n\n"
+            "Numeri fissi da `scripts/optimize_and_falsify.py` (griglia lookback 6/9/12/15/18 mesi, "
+            "n_trials=5 = il numero VERO di configurazioni provate, non uno slider):\n"
+            "- **DSR = 0,913** (n_trials=5, n_obs=69 mesi)\n"
+            "- **PBO = 28,6%** (CSCV a 8 split, non 2-4)\n"
+            "- **Sharpe = 1,10** · **CAGR = +23,54%** · **MaxDD = -13,40%**\n"
+            "- Block bootstrap (500 sim, blocchi 6m): P(CAGR>0) = 100%, P(Sharpe>0) = 100%\n"
+            "- Walk-forward H1 (2020-12→2023-10) Sharpe -0,10 · H2 (2023-11→2026-09) Sharpe +1,29 - "
+            "nessuna inversione di segno\n\n"
+            "Ri-esegui `python scripts/optimize_and_falsify.py` per rigenerare questi numeri da zero."
+        )
+
+        st.markdown("---")
+        st.markdown(
+            "#### 🧪 Analisi Esplorativa (parametri liberi, illustrativa — non la validazione ufficiale sopra)",
+            help="Tutto quello che segue in questo tab usa OptimalSealedStrategy/SealedAccumulator/"
+                 "ChaseDipBuyer (non TS Momentum), un n_trials impostabile a piacere per il DSR, e "
+                 "solo 2-4 split CSCV per il PBO. La tabella 'Suite di Falsificazione (8 Test)' sotto "
+                 "mostra risultati testuali statici, non ricalcolati a ogni esecuzione. Utile per farsi "
+                 "un'idea, non da citare come prova di robustezza."
+        )
+
         n_trials_in = st.slider("Numero di configurazioni esplorate nella griglia (n_trials)", 1, 100, 10, 1)
         # res.sharpe è annualizzato (metrics.sharpe() moltiplica per sqrt(12)); deflated_sharpe_ratio()
         # richiede lo Sharpe PER-PERIODO coerente con n_obs (Bailey & Lopez de Prado 2014), altrimenti
@@ -1804,7 +1908,9 @@ def main():
                 st.warning(f"Calcolo CSCV non disponibile: {e}")
 
         st.markdown("---")
-        st.markdown("#### Risultati della Suite di Falsificazione (8 Test Popperiani)")
+        st.markdown("#### 🧪 Risultati della Suite di Falsificazione (8 Test Popperiani) — illustrativi, non ricalcolati")
+        st.caption("Valori statici scritti nel codice, non eseguiti a ogni caricamento pagina - riferiti a "
+                   "OptimalSealedStrategy, non a TS Momentum.")
         falsif_tests = [
             ("1. Anti-Outlier Test", "Esclusione di Evolving Skies & Team Up", "+22,86%", "Superato (Alpha indipendente da singoli unicorni)"),
             ("2. Bear Market Test", "Partenza durante il QT (Gennaio 2022)", "+35,45%", "Superato (MaxDD limitato a -5,17% durante crollo crypto/tech)"),
@@ -1833,7 +1939,7 @@ def main():
         st.markdown('<div class="section-desc">Interrogazione in tempo reale dell\'API pubblica di PokemonTCG.io con spread EUR/USD.</div>', unsafe_allow_html=True)
 
         with st.spinner("Connessione all'anagrafica set..."):
-            sets_data = fetch_all_sets()
+            sets_data = get_cached_sets()
 
         if sets_data:
             set_dict = {s["name"]: s["id"] for s in sets_data[:50]}
@@ -1852,7 +1958,7 @@ def main():
 
             if st.button("Carica Prezzi Live delle Carte di Questo Set"):
                 with st.spinner("Scaricamento quotazioni live..."):
-                    cards = fetch_cards_by_set(cur_s["id"], page_size=50)
+                    cards = get_cached_cards_by_set(cur_s["id"], page_size=50)
                 if cards:
                     c_tab = []
                     for c in cards:
