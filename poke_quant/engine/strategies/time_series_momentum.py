@@ -18,6 +18,22 @@ sulla coorte 2023+) rispetto a chi li esclude (Carry/Scarsità: -9.7%). Qui si
 testa se la stessa esclusione, applicata SOLO come filtro di ingresso a monte
 del segnale di momentum (non come strategia a sé), migliora il profilo di
 rischio senza perdere l'edge di TSMOM.
+
+Parametri di uscita (default = comportamento originale invariato, per non
+alterare silenziosamente la strategia già validata e deployata):
+  - exit_lookback_months (default None -> usa lookback_months): permette un
+    lookback di uscita diverso da quello di ingresso (es. uscita piu' rapida
+    su una finestra piu' corta).
+  - exit_threshold (default 0.0): soglia di rendimento trailing sotto cui
+    vendere. Con 0.0 e' la regola originale (mom<=0 vende). Negativo = più
+    tolerante al rumore, positivo = uscita anticipata.
+  - trailing_stop_pct (default None = disattivato): se impostato, vende anche
+    se il prezzo scende di questa percentuale dal massimo osservato da quando
+    la posizione e' stata aperta, indipendentemente dal segnale di momentum -
+    un controllo del rischio aggiuntivo, non dalla letteratura originale.
+Testati in scripts/optimize_and_falsify.py::section_sealed_exit_logic_search
+contro la regola base (DSR 0.913, PBO 28.6%) prima di essere adottati come
+default in produzione.
 """
 
 from __future__ import annotations
@@ -35,29 +51,46 @@ class TimeSeriesMomentumStrategy:
         max_allocation_pct: float = 0.12,
         item_type_filter: str = "sealed",
         min_age_months: int = 0,
+        exit_lookback_months: Optional[int] = None,
+        exit_threshold: float = 0.0,
+        trailing_stop_pct: Optional[float] = None,
     ):
         self.prices_df = prices_df.sort_index()
         self.lookback_months = lookback_months
         self.max_allocation_pct = max_allocation_pct
         self.item_type_filter = item_type_filter
         self.min_age_months = min_age_months
+        self.exit_lookback_months = exit_lookback_months or lookback_months
+        self.exit_threshold = exit_threshold
+        self.trailing_stop_pct = trailing_stop_pct
 
     def reset(self):
         pass
 
-    def _trailing_return(self, item_id: str, current_date: pd.Timestamp) -> Optional[float]:
+    def _trailing_return(self, item_id: str, current_date: pd.Timestamp, lookback: Optional[int] = None) -> Optional[float]:
+        lb = lookback or self.lookback_months
         if item_id not in self.prices_df.columns:
             return None
         series = self.prices_df[item_id]
         series = series[series.index <= current_date].dropna()
         series = series[series > 0]
-        if len(series) < self.lookback_months + 1:
+        if len(series) < lb + 1:
             return None
-        past = float(series.iloc[-(self.lookback_months + 1)])
+        past = float(series.iloc[-(lb + 1)])
         now = float(series.iloc[-1])
         if past <= 0:
             return None
         return (now - past) / past
+
+    def _peak_since(self, item_id: str, buy_date: str, current_date: pd.Timestamp) -> Optional[float]:
+        if item_id not in self.prices_df.columns:
+            return None
+        series = self.prices_df[item_id]
+        window = series[(series.index >= pd.to_datetime(buy_date)) & (series.index <= current_date)].dropna()
+        window = window[window > 0]
+        if window.empty:
+            return None
+        return float(window.max())
 
     def generate_signals(
         self,
@@ -70,17 +103,30 @@ class TimeSeriesMomentumStrategy:
         total_nav = portfolio.get_total_nav({k: v["current_price"] for k, v in market_snapshot.items()})
         max_item_budget = total_nav * self.max_allocation_pct
 
-        # Uscita: il segnale di momentum diventa negativo o nullo -> liquida tutto.
+        # Uscita: il segnale di momentum (sulla finestra di uscita) scende sotto la
+        # soglia -> liquida tutto. Con exit_lookback_months=lookback_months e
+        # exit_threshold=0.0 (default) e' esattamente la regola originale.
         for item_id, pos in list(portfolio.positions.items()):
             if item_id not in market_snapshot:
                 continue
-            mom = self._trailing_return(item_id, cur_dt)
-            if mom is not None and mom <= 0:
+            cur_price = market_snapshot[item_id]["current_price"]
+
+            if self.trailing_stop_pct is not None:
+                peak = self._peak_since(item_id, pos.buy_date, cur_dt)
+                if peak is not None and cur_price <= peak * (1.0 - self.trailing_stop_pct):
+                    signals.append(Signal(
+                        action="SELL", item_id=item_id, item_name=pos.item_name,
+                        item_type=pos.item_type, quantity=pos.quantity, target_price=cur_price,
+                        reason=f"TSMOM: trailing stop {self.trailing_stop_pct*100:.0f}% dal massimo ({peak:.2f}€)"
+                    ))
+                    continue
+
+            mom = self._trailing_return(item_id, cur_dt, lookback=self.exit_lookback_months)
+            if mom is not None and mom <= self.exit_threshold:
                 signals.append(Signal(
                     action="SELL", item_id=item_id, item_name=pos.item_name,
-                    item_type=pos.item_type, quantity=pos.quantity,
-                    target_price=market_snapshot[item_id]["current_price"],
-                    reason=f"TSMOM: rendimento trailing {self.lookback_months}m negativo ({mom*100:+.1f}%)"
+                    item_type=pos.item_type, quantity=pos.quantity, target_price=cur_price,
+                    reason=f"TSMOM: rendimento trailing {self.exit_lookback_months}m sotto soglia ({mom*100:+.1f}% <= {self.exit_threshold*100:.1f}%)"
                 ))
 
         # Ingresso: segnale positivo e posizione non già aperta.

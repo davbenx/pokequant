@@ -278,8 +278,98 @@ def section_singles_factor_search():
            "ma verificare comunque l'ampiezza del divario prima di trattarlo come stabile."))
 
 
+def section_sealed_exit_logic_search():
+    """
+    La regola di uscita in produzione (lookback=12m, exit_threshold=0.0,
+    trailing_stop=None) non era mai stata testata contro alternative - era
+    semplicemente "lo stesso lookback usato per entrare, simmetrico". Qui si
+    testano due assi economicamente motivati, tenendo fisso l'ingresso
+    (lookback=12m, il punto validato):
+      A) exit_lookback_months piu' corto dell'ingresso (uscita piu' reattiva)
+      B) trailing_stop_pct come rete di sicurezza indipendente dal momentum
+
+    Stesso standard di rigore usato per le singole: griglia per stabilita',
+    PBO, DSR corretto per TUTTI i candidati provati, bootstrap sul vincitore,
+    E walk-forward H1/H2 - un miglioramento che non regge lo split non conta.
+    """
+    print("\n\n" + "=" * 100)
+    print("  5) OTTIMIZZAZIONE LOGICA DI USCITA — TS MOMENTUM SEALED")
+    print("=" * 100)
+    metadata = load_metadata()
+    prices_full = load_price_matrix()
+    sealed_ids = [
+        k for k, v in metadata.items()
+        if v.get("type") == "sealed" and v.get("data_quality") != "thin_unreliable"
+        and k in prices_full.columns and v.get("release_date") and v["release_date"] >= MODERN_ERA_CUTOFF
+    ]
+    meta_sub = {k: v for k, v in metadata.items() if k in sealed_ids}
+    prices_sub = prices_full[sealed_ids]
+
+    baseline_factory = lambda p: TimeSeriesMomentumStrategy(p, lookback_months=12)
+    candidate_factories = {"BASELINE (lookback=12m simmetrico, in produzione)": baseline_factory}
+    for exit_lb in [3, 6, 9]:
+        candidate_factories[f"exit_lookback={exit_lb}m"] = (
+            lambda p, lb=exit_lb: TimeSeriesMomentumStrategy(p, lookback_months=12, exit_lookback_months=lb)
+        )
+    for stop_pct in [0.10, 0.15, 0.20, 0.25, 0.30]:
+        candidate_factories[f"trailing_stop={stop_pct*100:.0f}%"] = (
+            lambda p, sp=stop_pct: TimeSeriesMomentumStrategy(p, lookback_months=12, trailing_stop_pct=sp)
+        )
+
+    results = {}
+    print(f"\nEntrata fissa a lookback=12m (validata) - solo la regola di uscita varia:")
+    for name, factory in candidate_factories.items():
+        res = run_bt(factory(prices_sub), prices_sub, meta_sub)
+        results[name] = res
+        print(f"  {name:45s} | CAGR {res.cagr*100:+6.2f}% | Sharpe {res.sharpe:5.2f} | "
+              f"MaxDD {res.max_drawdown*100:6.2f}% | Trade {res.total_trades:3d}")
+
+    common_idx = None
+    for res in results.values():
+        common_idx = res.monthly_returns.index if common_idx is None else common_idx.intersection(res.monthly_returns.index)
+    perf_matrix = np.column_stack([results[k].monthly_returns.loc[common_idx].values for k in candidate_factories])
+    t_len = len(perf_matrix)
+    splits = 8 if t_len >= 32 else 4
+    rem = t_len % splits
+    pbo = pbo_cscv(perf_matrix[rem:, :] if rem else perf_matrix, n_splits=splits)
+    print(f"\nPBO sulla griglia completa ({len(candidate_factories)} candidati, {splits} split): {pbo:.3f} ({pbo*100:.1f}%)")
+
+    baseline_sharpe = results["BASELINE (lookback=12m simmetrico, in produzione)"].sharpe
+    best_name = max(results, key=lambda k: results[k].sharpe)
+    best = results[best_name]
+    print(f"\nBaseline Sharpe: {baseline_sharpe:.2f} | Migliore della griglia: '{best_name}' (Sharpe {best.sharpe:.2f})")
+
+    if best_name == "BASELINE (lookback=12m simmetrico, in produzione)":
+        print("La baseline resta la migliore - nessuna modifica alla logica di uscita in produzione.")
+        return
+
+    dsr = deflated_sharpe_ratio(
+        observed_sr=best.sharpe / np.sqrt(12), n_trials=len(candidate_factories), n_obs=len(best.monthly_returns)
+    )
+    print(f"DSR del vincitore corretto per TUTTI e {len(candidate_factories)} i candidati: {dsr:.3f} "
+          f"(baseline: {deflated_sharpe_ratio(observed_sr=baseline_sharpe/np.sqrt(12), n_trials=len(candidate_factories), n_obs=len(results[best_name].monthly_returns)):.3f})")
+
+    sims = block_bootstrap_metrics(best.monthly_returns, n_sims=500, block_size=6)
+    print(f"\nBlock bootstrap (500 sim, blocchi 6m) sul vincitore:")
+    print(summarize_bootstrap(sims))
+
+    print(f"\nWalk-forward H1/H2 sul vincitore '{best_name}' vs baseline:")
+    mid = len(prices_sub) // 2
+    h1_dates, h2_dates = prices_sub.index[:mid], prices_sub.index[mid:]
+    for label_strat, factory in [("BASELINE", baseline_factory), (best_name, candidate_factories[best_name])]:
+        for label, dates in [("H1", h1_dates), ("H2", h2_dates)]:
+            sub_prices = prices_sub.loc[dates]
+            res = run_bt(factory(sub_prices), sub_prices, meta_sub)
+            print(f"  {label_strat:45s} {label} ({dates[0].strftime('%Y-%m')}->{dates[-1].strftime('%Y-%m')}) | "
+                  f"Sharpe {res.sharpe:5.2f} | MaxDD {res.max_drawdown*100:6.2f}%")
+
+    print("\nAdottare il vincitore in produzione SOLO se: DSR >= baseline, nessun sign-flip H1/H2 "
+          "peggiore della baseline, e il miglioramento non e' concentrato in 1-2 trade isolati.")
+
+
 if __name__ == "__main__":
     section_tsmom_sealed()
     section_carry_singles()
     section_survivorship_bias_check()
     section_singles_factor_search()
+    section_sealed_exit_logic_search()
