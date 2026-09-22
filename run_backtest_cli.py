@@ -204,9 +204,13 @@ def main():
         res_chase.monthly_returns.loc[common_idx].values
     ])
 
-    dsr_opt = deflated_sharpe_ratio(observed_sr=res_opt.sharpe, n_trials=10, n_obs=len(res_opt.monthly_returns))
-    dsr_sealed = deflated_sharpe_ratio(observed_sr=res_sealed.sharpe, n_trials=10, n_obs=len(res_sealed.monthly_returns))
-    dsr_chase = deflated_sharpe_ratio(observed_sr=res_chase.sharpe, n_trials=10, n_obs=len(res_chase.monthly_returns))
+    # NOTA: res.sharpe è annualizzato (metrics.sharpe() moltiplica per sqrt(12)), ma
+    # deflated_sharpe_ratio() è parametrizzata su Sharpe PER-PERIODO coerente con n_obs
+    # (Bailey & Lopez de Prado 2014). Senza /sqrt(12) la formula satura vicino a 1.000
+    # per qualunque strategia, indipendentemente dalla sua reale qualità.
+    dsr_opt = deflated_sharpe_ratio(observed_sr=res_opt.sharpe / np.sqrt(12), n_trials=10, n_obs=len(res_opt.monthly_returns))
+    dsr_sealed = deflated_sharpe_ratio(observed_sr=res_sealed.sharpe / np.sqrt(12), n_trials=10, n_obs=len(res_sealed.monthly_returns))
+    dsr_chase = deflated_sharpe_ratio(observed_sr=res_chase.sharpe / np.sqrt(12), n_trials=10, n_obs=len(res_chase.monthly_returns))
 
     print(f"• Deflated Sharpe Ratio Optimal Sealed (su 10 varianti):   {dsr_opt:.4f} (Confidenza: {dsr_opt*100:.1f}%)")
     print(f"• Deflated Sharpe Ratio Sealed Accumulator (su 10 varianti): {dsr_sealed:.4f} (Confidenza: {dsr_sealed*100:.1f}%)")

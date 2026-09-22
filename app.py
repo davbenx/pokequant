@@ -1754,7 +1754,10 @@ def main():
         st.markdown('<div class="section-desc">Validazione rigorosa per eliminare il rischio di data-snooping (Bailey & López de Prado) e 8 stress-test popperiani.</div>', unsafe_allow_html=True)
 
         n_trials_in = st.slider("Numero di configurazioni esplorate nella griglia (n_trials)", 1, 100, 10, 1)
-        dsr_val = deflated_sharpe_ratio(observed_sr=res_optimal.sharpe, n_trials=n_trials_in, n_obs=len(res_optimal.monthly_returns))
+        # res.sharpe è annualizzato (metrics.sharpe() moltiplica per sqrt(12)); deflated_sharpe_ratio()
+        # richiede lo Sharpe PER-PERIODO coerente con n_obs (Bailey & Lopez de Prado 2014), altrimenti
+        # la formula satura vicino a 1.000 per qualunque strategia.
+        dsr_val = deflated_sharpe_ratio(observed_sr=res_optimal.sharpe / np.sqrt(12), n_trials=n_trials_in, n_obs=len(res_optimal.monthly_returns))
 
         aud1, aud2 = st.columns(2)
         with aud1:
