@@ -123,6 +123,59 @@ def section_carry_singles():
     print(summarize_bootstrap(sims))
 
 
+def section_survivorship_bias_check():
+    """
+    Quantifica l'inflazione da survivorship bias sulla Carry/Scarsita' singles:
+    discover_chase_cards.py seleziona sul prezzo Cardmarket CORRENTE (oggi), quindi
+    ogni carta in quell'universo e', per costruzione, una carta che sappiamo con
+    informazione 2026 essersi rivelata valida. discover_random_control_singles.py
+    aggiunge un campione casuale (nessun filtro di prezzo/rarita) sugli stessi 98 set.
+    Confrontiamo la stessa strategia, stessi parametri, sui due universi.
+    """
+    print("\n\n" + "=" * 100)
+    print("  3) QUANTO COSTA IL SURVIVORSHIP BIAS? Chase-only vs Chase+Controllo casuale")
+    print("=" * 100)
+    metadata = load_metadata()
+    prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+
+    def build_universe(selection_methods):
+        ids = [
+            k for k, v in metadata.items()
+            if v.get("type") == "single" and v.get("data_quality") != "thin_unreliable"
+            and k in prices_full.columns and v.get("selection_method") in selection_methods
+        ]
+        return {k: v for k, v in metadata.items() if k in ids}, prices_full[ids]
+
+    chase_meta, chase_prices = build_universe({"chase_price_filter_survivorship_biased"})
+    combined_meta, combined_prices = build_universe(
+        {"chase_price_filter_survivorship_biased", "random_control"}
+    )
+    control_meta, control_prices = build_universe({"random_control"})
+
+    print(f"\nUniverso chase-only: {len(chase_meta)} carte")
+    print(f"Universo solo controllo casuale: {len(control_meta)} carte")
+    print(f"Universo combinato: {len(combined_meta)} carte\n")
+
+    for label, meta_sub, prices_sub in [
+        ("CHASE-ONLY (biased)", chase_meta, chase_prices),
+        ("SOLO CONTROLLO (no bias di prezzo)", control_meta, control_prices),
+        ("CHASE+CONTROLLO (combinato)", combined_meta, combined_prices),
+    ]:
+        if prices_sub.empty or len(meta_sub) < 3:
+            print(f"  {label:36s} | universo troppo piccolo ({len(meta_sub)} carte), salto")
+            continue
+        strat = CarryScarcityFactorStrategy(top_quantile=0.30, item_type_filter="single")
+        res = run_bt(strat, prices_sub, meta_sub)
+        print(f"  {label:36s} | CAGR {res.cagr*100:+6.2f}% | Sharpe {res.sharpe:5.2f} | "
+              f"MaxDD {res.max_drawdown*100:6.2f}% | Trade {res.total_trades:3d}")
+
+    print("\nLettura: se CHASE-ONLY batte nettamente CHASE+CONTROLLO, la differenza e' la stima "
+          "dell'inflazione da survivorship bias. Se il factor Carry/Scarsita' regge anche sul "
+          "campione combinato (Sharpe comparabile), l'eta' come proxy di scarsita' ha un effetto "
+          "reale al netto della selezione sull'esito.")
+
+
 if __name__ == "__main__":
     section_tsmom_sealed()
     section_carry_singles()
+    section_survivorship_bias_check()
