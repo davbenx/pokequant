@@ -1,17 +1,30 @@
 # Runbook Operativo — Esecuzione dall'Italia
 
-Guida pratica per usare i segnali validati (`scripts/run_monthly_production_signal.py`)
+Guida pratica per usare il segnale validato (`scripts/run_monthly_production_signal.py`)
 nella vita reale, operando dall'Italia. Non è un consiglio finanziario o fiscale —
 è la traduzione dei risultati quantitativi in passi concreti, con i limiti espliciti.
+
+## 0. Solo box sigillati — le singole gradate sono sospese
+
+Questo runbook copre **solo TS Momentum su box sigillati** (DSR 0.913, validato).
+Le singole gradate sono state chiuse dopo una ricerca sistematica su 5 famiglie di
+fattori (età/carry, TS momentum, cross-sectional momentum, dip mean-reversion, rarità
+ex-ante) sull'universo reale e bias-auditato (928 carte): **nessuna supera la soglia
+istituzionale** (`scripts/optimize_and_falsify.py::section_singles_factor_search`).
+Il candidato migliore (dip mean-reversion) aveva PBO=0.514 e Sharpe di segno opposto
+tra prima e seconda metà del campione storico — non un fattore stabile, solo un
+regime di mercato specifico. `scripts/generate_carry_signal_singles.py` resta
+disponibile per ricerca, ma non genera più segnali operativi finché non emerge
+un fattore che passi DSR/PBO/bootstrap/walk-forward. Dettagli nello stato di
+validazione documentato in ciascun file sotto `poke_quant/engine/strategies/`.
 
 ## 1. Cosa fa il sistema automaticamente
 
 Il 2 di ogni mese (`.github/workflows/monthly_signal.yml`):
 1. Ricostruisce lo storico prezzi da PriceCharting con tasso EUR/USD reale del mese.
 2. Ri-applica il filtro di attendibilità (esclude serie con salti di prezzo implausibili).
-3. Genera due segnali indipendenti:
-   - **TS Momentum** su box sigillati era 2019+ (`scripts/generate_monthly_signal.py`)
-   - **Carry/Scarsità** su singole gradate Grade 9 (`scripts/generate_carry_signal_singles.py`)
+3. Genera il segnale **TS Momentum** su box sigillati era 2019+
+   (`scripts/generate_monthly_signal.py`) — unico segnale operativo, vedi punto 0.
 4. Invia un riepilogo su Telegram (se configurati `TELEGRAM_TOKEN`/`TELEGRAM_CHAT_ID`
    nei secret del repository GitHub — Settings → Secrets and variables → Actions).
 5. Pusha i dati aggiornati sul repo, con la suite di test come sanity check prima del push.
@@ -68,6 +81,11 @@ letture diverse, e non sono qualificato a stabilire quale si applica al tuo caso
 - Rilancia `scripts/optimize_and_falsify.py` almeno ogni 6 mesi: se il PBO sale sopra
   il 50% o il DSR scende sotto ~0.7, il segnale ha perso l'evidenza statistica che
   lo supportava oggi.
+- Per riattivare le singole: non basta ri-eseguire gli stessi 5 fattori già falliti.
+  Serve un fattore nuovo (es. dati pop report reali quando/se disponibili con storico
+  point-in-time, non lo snapshot corrente) che passi DSR ≥ ~0.90, PBO ≤ ~25-30% E
+  regga lo split walk-forward H1/H2 senza invertire segno — lo stesso standard usato
+  per TS Momentum sealed.
 - Se una singola posizione supera il cap di allocazione per apprezzamento, valuta un
   ribilanciamento (vendita parziale) — non è automatizzato, va deciso a mano.
 - Se PriceCharting cambia struttura di pagina (rischio reale: già successo per

@@ -1,5 +1,6 @@
 """
-tests/test_build_combined_portfolio.py — Smoke test per l'allocazione combinata.
+tests/test_build_combined_portfolio.py — Smoke test per l'allocazione di produzione
+(solo sealed: la sleeve singole e' sospesa, vedi docstring dello script).
 """
 
 import importlib.util
@@ -20,16 +21,16 @@ def module():
     return mod
 
 
-def test_sleeve_weights_sum_to_one_and_are_positive(module):
-    w_sealed, w_singles, vol_sealed, vol_singles = module.compute_sleeve_weights()
-    assert w_sealed > 0 and w_singles > 0
-    assert w_sealed + w_singles == pytest.approx(1.0)
-    assert vol_sealed > 0 and vol_singles > 0
+def test_allocation_uses_full_capital_across_buy_hold_positions(module):
+    allocation = module.build_sealed_allocation(10000.0)
+    if not allocation:
+        pytest.skip("nessuna posizione BUY/HOLD nel mese corrente")
+    total_alloc = sum(alloc for _, alloc in allocation)
+    assert total_alloc == pytest.approx(10000.0)
+    assert all(alloc > 0 for _, alloc in allocation)
 
 
-def test_higher_volatility_sleeve_gets_lower_weight(module):
-    w_sealed, w_singles, vol_sealed, vol_singles = module.compute_sleeve_weights()
-    if vol_sealed > vol_singles:
-        assert w_sealed < w_singles
-    else:
-        assert w_singles < w_sealed
+def test_allocation_has_no_singles_sleeve(module):
+    # La sleeve singole e' sospesa: il modulo non deve esporre piu' compute_sleeve_weights
+    # (pesatura inverse-vol tra due sleeve) - solo l'allocazione sealed singola.
+    assert not hasattr(module, "compute_sleeve_weights")
