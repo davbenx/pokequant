@@ -17,7 +17,17 @@ class GradingArbitrageStrategy:
     """
     Strategia di arbitraggio statistico: acquisto di carte grezze (Raw Near Mint)
     con sottomissione a grading PSA e vendita al voto ottenuto.
+
+    HUMAN_RISK_TIER = "HIGH" — richiede valutazione soggettiva delle condizioni
+    pre-invio, spedizione andata/ritorno (rischio danno, spesso intercontinentale
+    per chi opera dall'Italia), tempi di fermo capitale variabili nel grading.
+    Su richiesta esplicita dell'utente (basso rischio umano, focus su sealed box
+    e slab già certificate): screen_opportunities() resta SOLO SEGNALE. Non è
+    wired a generate_signals()/Backtester per esecuzione automatica, e non va
+    aggiunta senza una revisione esplicita di questa decisione.
     """
+
+    HUMAN_RISK_TIER = "HIGH"
 
     def __init__(
         self,

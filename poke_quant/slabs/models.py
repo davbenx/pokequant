@@ -2,6 +2,15 @@
 poke_quant/slabs/models.py — Modelli di dati per carte gradate (PSA, BGS, CGC).
 Definisce le aziende di gradazione, gradi standardizzati, quote di mercato,
 segnali quantitativi (BUY, SELL, ROTATE) e posizioni di portafoglio.
+
+HUMAN_RISK_TIER = "LOW/MEDIUM" per la maggioranza degli edge — operano su compravendita
+di slab GIA' certificate da terzi (PSA/BGS/CGC), nessuna valutazione soggettiva di
+condizione richiesta all'utente. Coerente con la preferenza esplicita per strategie a
+basso rischio operativo umano (sealed box + slab già gradate).
+Eccezione: Edge 4 (calc_manufacturing_cost_floor in edge_calculator.py) valuta la
+sottomissione di una carta RAW al grading — eredita lo stesso HUMAN_RISK_TIER="HIGH"
+di poke_quant/engine/strategies/grading_arbitrage.py e va trattato di conseguenza
+(solo segnale, non esecuzione automatica).
 """
 
 from __future__ import annotations
