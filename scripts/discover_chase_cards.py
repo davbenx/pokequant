@@ -54,6 +54,30 @@ SET_IDS = {
     # quindi non sono ricercabili con questo metodo. scarlet_violet_base è escluso: il
     # suo game_slug booster-box è già confermato rotto su PriceCharting (redirect a
     # ricerca generica) e non è chiaro se le singole userebbero uno slug diverso.
+
+    # Terza ondata: tutti i restanti set confermati come box sigillato reale su
+    # PriceCharting (scripts/discover_sealed_universe.py, 1999-2026), incluso il
+    # vintage. Il filtro di attendibilità (poke_quant/data/liquidity_filter.py) fa
+    # comunque da rete di sicurezza sulle serie troppo rumorose, quindi non c'è
+    # rischio ad ampliare qui: nel peggiore dei casi la carta viene flaggata ed
+    # esclusa dall'universo azionabile in automatico.
+    "base2": "jungle", "base3": "fossil", "base4": "base_set_2", "base5": "team_rocket",
+    "gym1": "gym_heroes", "gym2": "gym_challenge", "neo1": "neo_genesis", "neo2": "neo_discovery",
+    "neo3": "neo_revelation", "neo4": "neo_destiny", "base6": "legendary_collection",
+    "ecard2": "aquapolis", "ecard3": "skyridge", "ex5": "hidden_legends", "ex7": "team_rocket_returns",
+    "ex8": "deoxys", "ex9": "emerald", "ex10": "unseen_forces", "ex11": "delta_species",
+    "ex12": "legend_maker", "ex13": "holon_phantoms", "ex14": "crystal_guardians",
+    "ex15": "dragon_frontiers", "ex16": "power_keepers", "dp2": "mysterious_treasures",
+    "dp3": "secret_wonders", "dp4": "great_encounters", "dp5": "majestic_dawn",
+    "dp6": "legends_awakened", "dp7": "stormfront", "pl1": "platinum", "pl2": "rising_rivals",
+    "pl3": "supreme_victors", "pl4": "arceus", "col1": "call_of_legends", "bw2": "emerging_powers",
+    "bw3": "noble_victories", "bw4": "next_destinies", "bw5": "dark_explorers", "bw6": "dragons_exalted",
+    "bw7": "boundaries_crossed", "bw8": "plasma_storm", "bw9": "plasma_freeze", "bw10": "plasma_blast",
+    "bw11": "legendary_treasures", "xy1": "xy", "xy3": "furious_fists", "xy4": "phantom_forces",
+    "xy5": "primal_clash", "xy8": "breakthrough", "xy9": "breakpoint", "xy10": "fates_collide",
+    "xy11": "steam_siege", "sm2": "guardians_rising", "sm6": "forbidden_light", "sm7": "celestial_storm",
+    "sv9": "journey_together", "sv10": "destined_rivals", "me1": "mega_evolution",
+    "me2": "phantasmal_flames", "me3": "perfect_order", "me4": "chaos_rising", "me5": "pitch_black",
 }
 
 CHASE_RARITIES = {
