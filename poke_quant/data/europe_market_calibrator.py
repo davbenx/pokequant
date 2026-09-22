@@ -1,7 +1,16 @@
 """
 poke_quant/data/europe_market_calibrator.py — Calibratore del Mercato Europeo di Riferimento (Cardmarket EUR).
-Risolve il problema della dipendenza passiva dai dati PriceCharting/eBay USA.
-Converte e adatta le serie storiche al regime europeo:
+
+ATTENZIONE — NON è dato Cardmarket reale, nonostante il nome. calibrate_price_matrix_for_europe()
+prende la serie US PriceCharting e la moltiplica per fattori fissi hardcoded (1.06x Pokémon EN,
+1.08x One Piece, max(1.12x, 58€) JP, 1.02x singole) — nessuna transazione Cardmarket reale è
+mai stata osservata per costruire questi numeri. Il file che genera, data_cache/historical_prices_europe.csv,
+NON va usato per validare strategie (le strategie di questa sessione usano tutte historical_prices.csv,
+la serie US reale) — contraddice il claim "100% Dati Reali" del README del progetto. Trovato durante
+l'audit Fase 0, non ancora sostituito con dati Cardmarket reali (bloccato da Cloudflare / serve API MKM
+ufficiale, vedi discussione sessione). Tenerlo a mente se questo modulo viene ripreso in futuro.
+
+Converte e "adatta" (in realtà: gonfia con moltiplicatori inventati) le serie storiche:
   1. Inclusione IVA europea (19-22%) nei floor distributivi e MSRP
   2. Modello commissioni Cardmarket (5% lordo + 0.60€ trustee)
   3. Spread linguistico e premio di liquidità dei box in lingua inglese e giapponese in Europa

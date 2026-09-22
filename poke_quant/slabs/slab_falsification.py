@@ -222,8 +222,13 @@ def run_popperian_falsification_suite(
         sample_length_months=len(monthly_returns)
     )
 
-    # Matrice CSCV sintetica per PBO
-    # 8 split temporali x 6 configurazioni di parametri
+    # ATTENZIONE: NON è un vero CSCV. La griglia qui sotto è rumore gaussiano generato
+    # attorno al CAGR della singola strategia base (base_result.cagr_pct * (1 + N(0,0.04))),
+    # non 6 varianti di parametri realmente backtestate su 8 split temporali reali. Il
+    # PBO calcolato su questa matrice NON misura il rischio di overfitting reale della
+    # strategia — misura solo quanto è overfittato del rumore su se stesso. Va sostituito
+    # con una vera griglia di configurazioni (come fa scripts/optimize_and_falsify.py in
+    # poke_quant/) prima di potersi fidare di questo numero.
     np.random.seed(101)
     synthetic_grid = np.array([
         [base_result.cagr_pct * (1 + np.random.normal(0, 0.04)) for _ in range(6)]
@@ -253,10 +258,11 @@ def run_popperian_falsification_suite(
         "pbo": {
             "score": pbo_score,
             "threshold": 0.20,
-            "passed": pbo_score < 0.20,
+            "passed": None,  # non un vero pass/fail: vedi nota sotto
             "interpretation": (
-                f"PBO = {pbo_score:.4f} (< 0.2000): Probabilità di overfitting inferiore al 20%. "
-                "La strategia presenta robustezza generalizzabile Out-Of-Sample."
+                f"PBO = {pbo_score:.4f} — NON VALIDO come misura di overfitting reale: calcolato "
+                "su una griglia di rumore gaussiano attorno al CAGR, non su varianti di parametri "
+                "realmente backtestate. Non trattare questo numero come evidenza di robustezza."
             )
         },
         "anti_survivorship_bias": {

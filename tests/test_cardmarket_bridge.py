@@ -1,5 +1,6 @@
 import pytest
 import datetime
+import poke_quant.data.cardmarket_bridge as cardmarket_bridge
 from poke_quant.data.cardmarket_bridge import (
     load_cardmarket_quotes,
     save_cardmarket_quotes,
@@ -8,6 +9,15 @@ from poke_quant.data.cardmarket_bridge import (
     get_cardmarket_deep_link,
     evaluate_cardmarket_item
 )
+
+
+@pytest.fixture(autouse=True)
+def isolate_cardmarket_cache(tmp_path, monkeypatch):
+    """Evita che questi test scrivano sulla cache reale data_cache/cardmarket_live_quotes.json.
+    load_cardmarket_quotes() seeda automaticamente DEFAULT_CARDMARKET_SEED su un file
+    mancante, quindi puntare CACHE_FILE a un percorso vuoto in tmp_path basta."""
+    monkeypatch.setattr(cardmarket_bridge, "CACHE_FILE", tmp_path / "cardmarket_live_quotes.json")
+    yield
 
 
 def test_seed_and_load_quotes():

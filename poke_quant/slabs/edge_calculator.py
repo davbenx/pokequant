@@ -12,8 +12,13 @@ from typing import Dict, Any, Optional
 from poke_quant.slabs.models import GradingCompany, SlabGrade, EdgeType, Subgrades
 
 
-# Rapporti storici di equilibrio (Fair Value Ratios vs PSA 10)
-# Calibrati su dati storici 2021-2026 delle aste internazionali e Cardmarket
+# ATTENZIONE: NON CALIBRATI su dati reali, nonostante il commento originale dicesse
+# il contrario. Verificato durante l'audit Fase 0: non esiste in questo repo (né in
+# data_cache/) alcun dataset o script che calcoli questi numeri da aste/Cardmarket
+# reali. Sono priors plausibili scritti a mano, non misurati. Tutti gli Edge 1, 3 e 8
+# di questo modulo (che li usano) vanno trattati come SOLO SEGNALE ESPLORATIVO finché
+# non vengono ricalibrati su comp di vendita reali (population report PSA + prezzi
+# slab reali — bloccato oggi da Cloudflare su psacard.com, vedi discussione sessione).
 HISTORICAL_GRADE_RATIOS: Dict[str, Dict[str, float]] = {
     "BGS_9_5_GEM": {"mean": 0.78, "std": 0.07, "crossover_prob": 0.80},
     "BGS_10_PRISTINE": {"mean": 2.10, "std": 0.25, "crossover_prob": 1.00},
