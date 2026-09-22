@@ -2883,7 +2883,7 @@
     "cardmarket_ref_price_eur": 41.7,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 24.2x (soglia 15.0x)",
+    "data_quality_reason": "range max/min 25.4x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "mewtwo_mew_gx_71": {
@@ -5685,7 +5685,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 185.83,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 26.3x (soglia 15.0x)"
   },
   "solgaleo_lunala_gx_216": {
     "name": "Solgaleo & Lunala-GX #216",
@@ -5741,7 +5743,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 263.49,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 15.7x (soglia 15.0x)"
   },
   "naganadel_guzzlord_gx_224": {
     "name": "Naganadel & Guzzlord-GX #224",
@@ -5755,7 +5759,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 46.94,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 15.4x (soglia 15.0x)"
   },
   "mega_lopunny_jigglypuff_gx_226": {
     "name": "Mega Lopunny & Jigglypuff-GX #226",
@@ -5769,7 +5775,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 108.6,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 17.0x (soglia 15.0x)"
   },
   "silvally_gx_227": {
     "name": "Silvally-GX #227",
@@ -6063,7 +6071,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 128.61,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 18.9x (soglia 15.0x)"
   },
   "greninja_zoroark_gx_200": {
     "name": "Greninja & Zoroark-GX #200",
@@ -6091,7 +6101,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 232.86,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 18.9x (soglia 15.0x)"
   },
   "gardevoir_sylveon_gx_204": {
     "name": "Gardevoir & Sylveon-GX #204",
@@ -6217,7 +6229,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 182.07,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 388% (soglia 200%)"
   },
   "clefable_1": {
     "name": "Clefable #1",
@@ -6287,7 +6301,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 93.32,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 705% (soglia 200%)"
   },
   "aerodactyl_1": {
     "name": "Aerodactyl #1",
@@ -6539,7 +6555,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 60.36,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 213% (soglia 200%)"
   },
   "dark_slowbro_12": {
     "name": "Dark Slowbro #12",
@@ -6567,7 +6585,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 42.71,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 335% (soglia 200%)"
   },
   "here_comes_team_rocket_15": {
     "name": "Here Comes Team Rocket! #15",
@@ -7141,7 +7161,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 236.55,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 601% (soglia 200%)"
   },
   "dark_blastoise_4": {
     "name": "Dark Blastoise #4",
@@ -7225,7 +7247,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 56.93,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 1885% (soglia 200%)"
   },
   "full_heal_energy_100": {
     "name": "Full Heal Energy #100",
@@ -7239,7 +7263,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 44.83,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 16.0x (soglia 15.0x)"
   },
   "ampharos_H1": {
     "name": "Ampharos #H1",
@@ -7365,7 +7391,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 194.83,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 593% (soglia 200%)"
   },
   "exeggutor_H10": {
     "name": "Exeggutor #H10",
@@ -7505,7 +7533,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 188.04,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 255% (soglia 200%)"
   },
   "octillery_H20": {
     "name": "Octillery #H20",
@@ -7603,7 +7633,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 81.88,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 779% (soglia 200%)"
   },
   "tyranitar_H28": {
     "name": "Tyranitar #H28",
@@ -7729,7 +7761,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 1124.48,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 16.9x (soglia 15.0x)"
   },
   "nidoking_150": {
     "name": "Nidoking #150",
@@ -7799,7 +7833,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 282.4,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 740% (soglia 200%)"
   },
   "crobat_H5": {
     "name": "Crobat #H5",
@@ -7813,7 +7849,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 109.29,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 222% (soglia 200%)"
   },
   "dewgong_H6": {
     "name": "Dewgong #H6",
@@ -7911,7 +7949,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 400.63,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 711% (soglia 200%)"
   },
   "ledian_H14": {
     "name": "Ledian #H14",
@@ -7925,7 +7965,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 113.75,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 303% (soglia 200%)"
   },
   "machamp_H15": {
     "name": "Machamp #H15",
@@ -8485,7 +8527,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 82.28,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 18.4x (soglia 15.0x)"
   },
   "professor_birch_82": {
     "name": "Professor Birch #82",
@@ -8499,7 +8543,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 104.9,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 43.3x (soglia 15.0x)"
   },
   "altaria_ex_90": {
     "name": "Altaria ex #90",
@@ -8555,7 +8601,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 128.04,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 19.8x (soglia 15.0x)"
   },
   "dusclops_ex_94": {
     "name": "Dusclops ex #94",
@@ -8583,7 +8631,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 59.32,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 97.1x (soglia 15.0x)"
   },
   "milotic_ex_96": {
     "name": "Milotic ex #96",
@@ -8779,7 +8829,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 119.75,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 260% (soglia 200%)"
   },
   "tyranitar_ex_111": {
     "name": "Tyranitar ex #111",
@@ -8947,7 +8999,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 78.74,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 18.8x (soglia 15.0x)"
   },
   "umbreon_17": {
     "name": "Umbreon δ #17",
@@ -9073,7 +9127,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 47.33,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 21.9x (soglia 15.0x)"
   },
   "mew_10": {
     "name": "Mew #10",
@@ -9129,7 +9185,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 42.34,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 352% (soglia 200%)"
   },
   "flygon_ex_87": {
     "name": "Flygon ex #87",
@@ -9157,7 +9215,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 112.24,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 273% (soglia 200%)"
   },
   "regice_90": {
     "name": "Regice ★ #90",
@@ -9661,7 +9721,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 64.66,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 23.2x (soglia 15.0x)"
   },
   "mewtwo_lvx_144": {
     "name": "Mewtwo LV.X #144",
@@ -9675,7 +9737,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 52.17,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 291% (soglia 200%)"
   },
   "uxie_lvx_146": {
     "name": "Uxie LV.X #146",
@@ -9689,7 +9753,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 45.95,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 257% (soglia 200%)"
   },
   "raichu_lvx_99": {
     "name": "Raichu LV.X #99",
@@ -9773,7 +9839,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 41.26,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 954% (soglia 200%)"
   },
   "snorlax_lvx_111": {
     "name": "Snorlax LV.X #111",
@@ -9787,7 +9855,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 86.86,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 24.6x (soglia 15.0x)"
   },
   "pikachu_112": {
     "name": "Pikachu #112",
@@ -10039,7 +10109,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 88.72,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 16.6x (soglia 15.0x)"
   },
   "palkia_ex_100": {
     "name": "Palkia-EX #100",
@@ -10053,7 +10125,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 118.11,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 19.8x (soglia 15.0x)"
   },
   "iris_101": {
     "name": "Iris #101",
@@ -10165,7 +10239,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 50.57,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 15.3x (soglia 15.0x)"
   },
   "reshiram_RC22": {
     "name": "Reshiram #RC22",
@@ -10193,7 +10269,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 51.45,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 17.4x (soglia 15.0x)"
   },
   "mew_ex_RC24": {
     "name": "Mew-EX #RC24",
@@ -10277,7 +10355,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 219.64,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 19.3x (soglia 15.0x)"
   },
   "m_gengar_ex_121": {
     "name": "M Gengar-EX #121",
@@ -10291,7 +10371,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 384.77,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 19.9x (soglia 15.0x)"
   },
   "dialga_ex_122": {
     "name": "Dialga-EX #122",
@@ -11061,7 +11143,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 650% (soglia 200%)"
   },
   "carvanha_35": {
     "name": "Carvanha #35",
@@ -11075,7 +11159,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 409% (soglia 200%)"
   },
   "sylveon_vmax_211": {
     "name": "Sylveon VMAX #211",
@@ -11103,7 +11189,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 233% (soglia 200%)"
   },
   "eiscue_47": {
     "name": "Eiscue #47",
@@ -11117,7 +11205,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 20.8x (soglia 15.0x)"
   },
   "nuzleaf_96": {
     "name": "Nuzleaf #96",
@@ -11131,7 +11221,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 303.0x (soglia 15.0x)"
   },
   "claydol_145": {
     "name": "Claydol #145",
@@ -11145,7 +11237,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.09,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 450% (soglia 200%)"
   },
   "phantump_16": {
     "name": "Phantump #16",
@@ -11159,7 +11253,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 736% (soglia 200%)"
   },
   "farewell_bell_234": {
     "name": "Farewell Bell #234",
@@ -11173,7 +11269,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.02,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 42.7x (soglia 15.0x)"
   },
   "drakloak_129": {
     "name": "Drakloak #129",
@@ -11187,7 +11285,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.08,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 24.9x (soglia 15.0x)"
   },
   "staryu_52": {
     "name": "Staryu #52",
@@ -11201,7 +11301,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 26.4x (soglia 15.0x)"
   },
   "wormadam_10": {
     "name": "Wormadam #10",
@@ -11229,7 +11331,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 34.5x (soglia 15.0x)"
   },
   "haxorus_112": {
     "name": "Haxorus #112",
@@ -11243,7 +11347,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.1,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 336% (soglia 200%)"
   },
   "gabite_108": {
     "name": "Gabite #108",
@@ -11257,7 +11363,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 562% (soglia 200%)"
   },
   "charizard_vstar_18": {
     "name": "Charizard VSTAR #18",
@@ -11313,7 +11421,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 27.3x (soglia 15.0x)"
   },
   "shieldon_109": {
     "name": "Shieldon #109",
@@ -11327,7 +11437,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 273% (soglia 200%)"
   },
   "hisuian_lilligant_16": {
     "name": "Hisuian Lilligant #16",
@@ -11369,7 +11481,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 5900% (soglia 200%)"
   },
   "whiscash_109": {
     "name": "Whiscash #109",
@@ -11411,7 +11525,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 33.5x (soglia 15.0x)"
   },
   "exploud_150": {
     "name": "Exploud #150",
@@ -11453,7 +11569,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 289% (soglia 200%)"
   },
   "whismur_148": {
     "name": "Whismur #148",
@@ -11467,7 +11585,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 267% (soglia 200%)"
   },
   "hand_trimmer_150": {
     "name": "Hand Trimmer #150",
@@ -11481,7 +11601,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 229% (soglia 200%)"
   },
   "gastly_102": {
     "name": "Gastly #102",
@@ -11509,7 +11631,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 277% (soglia 200%)"
   },
   "zeraora_57": {
     "name": "Zeraora #57",
@@ -11523,7 +11647,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 320% (soglia 200%)"
   },
   "torterra_ex_12": {
     "name": "Torterra ex #12",
@@ -11551,7 +11677,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.09,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 271% (soglia 200%)"
   },
   "darmanitan_35": {
     "name": "Darmanitan #35",
@@ -11565,7 +11693,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 340% (soglia 200%)"
   },
   "wattrel_75": {
     "name": "Wattrel #75",
@@ -11593,7 +11723,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.02,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 30.7x (soglia 15.0x)"
   },
   "sandshrew_27": {
     "name": "Sandshrew #27",
@@ -11607,7 +11739,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 320% (soglia 200%)"
   },
   "starmie_121": {
     "name": "Starmie #121",
@@ -11635,7 +11769,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 25.6x (soglia 15.0x)"
   },
   "energy_recycler_72": {
     "name": "Energy Recycler #72",
@@ -11761,7 +11897,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.12,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 16.0x (soglia 15.0x)"
   },
   "bewear_182": {
     "name": "Bewear #182",
@@ -11789,7 +11927,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.2,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 300% (soglia 200%)"
   },
   "clefairy_144": {
     "name": "Clefairy #144",
@@ -11803,7 +11943,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.14,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 271% (soglia 200%)"
   },
   "sawsbuck_16": {
     "name": "Sawsbuck #16",
@@ -11831,7 +11973,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.09,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 26.1x (soglia 15.0x)"
   },
   "dracovish_53": {
     "name": "Dracovish #53",
@@ -11873,7 +12017,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 300% (soglia 200%)"
   },
   "diglett_55": {
     "name": "Diglett #55",
@@ -11943,7 +12089,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.36,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 391% (soglia 200%)"
   },
   "scrafty_59": {
     "name": "Scrafty #59",
@@ -11985,7 +12133,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.12,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 4400% (soglia 200%)"
   },
   "shinx_32": {
     "name": "Shinx #32",
@@ -12125,7 +12275,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.13,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 19.8x (soglia 15.0x)"
   },
   "clefairy_74": {
     "name": "Clefairy #74",
@@ -12181,7 +12333,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 600% (soglia 200%)"
   },
   "durant_132": {
     "name": "Durant #132",
@@ -12223,7 +12377,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 925% (soglia 200%)"
   },
   "crobat_v_44": {
     "name": "Crobat V #44",
@@ -12251,7 +12407,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 213% (soglia 200%)"
   },
   "team_yell_towel_63": {
     "name": "Team Yell Towel #63",
@@ -12265,7 +12423,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 33.7x (soglia 15.0x)"
   },
   "doublade_108": {
     "name": "Doublade #108",
@@ -12293,7 +12453,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.65,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 279% (soglia 200%)"
   },
   "litten_20": {
     "name": "Litten #20",
@@ -12363,7 +12525,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 2.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 418% (soglia 200%)"
   },
   "lickilicky_153": {
     "name": "Lickilicky #153",
@@ -12419,7 +12583,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 297.42,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 33.4x (soglia 15.0x)"
   },
   "lucario_117": {
     "name": "Lucario #117",
@@ -12503,7 +12669,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 20.1x (soglia 15.0x)"
   },
   "excadrill_122": {
     "name": "Excadrill #122",
@@ -12517,7 +12685,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 251.0x (soglia 15.0x)"
   },
   "allister_179": {
     "name": "Allister #179",
@@ -12559,7 +12729,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 23.0x (soglia 15.0x)"
   },
   "pidgeot_8": {
     "name": "Pidgeot #8",
@@ -12643,7 +12815,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.69,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 431% (soglia 200%)"
   },
   "slowbro_43": {
     "name": "Slowbro #43",
@@ -12713,7 +12887,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 6.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 220% (soglia 200%)"
   },
   "dark_dragonite_22": {
     "name": "Dark Dragonite #22",
@@ -12811,7 +12987,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.52,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 12800% (soglia 200%)"
   },
   "meganium_11": {
     "name": "Meganium #11",
@@ -13105,7 +13283,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 9.29,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 231% (soglia 200%)"
   },
   "dark_ampharos_2": {
     "name": "Dark Ampharos #2",
@@ -13259,7 +13439,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.31,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 387% (soglia 200%)"
   },
   "electrike_48": {
     "name": "Electrike #48",
@@ -13301,7 +13483,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.3,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 365% (soglia 200%)"
   },
   "tyrogue_33": {
     "name": "Tyrogue #33",
@@ -13315,7 +13499,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 3.77,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 15.5x (soglia 15.0x)"
   },
   "unown_O": {
     "name": "Unown #O",
@@ -13357,7 +13543,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.86,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 293% (soglia 200%)"
   },
   "zubat_88": {
     "name": "Zubat #88",
@@ -13413,7 +13601,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.17,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 207% (soglia 200%)"
   },
   "gastly_52": {
     "name": "Gastly #52",
@@ -13427,7 +13617,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 1.12,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 260% (soglia 200%)"
   },
   "wailord_14": {
     "name": "Wailord #14",
@@ -13511,7 +13703,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 2.35,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 229% (soglia 200%)"
   },
   "cacturne_15": {
     "name": "Cacturne δ #15",
@@ -13525,7 +13719,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 1.93,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 247% (soglia 200%)"
   },
   "aron_44": {
     "name": "Aron #44",
@@ -13791,7 +13987,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.16,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 211% (soglia 200%)"
   },
   "metapod_47": {
     "name": "Metapod #47",
@@ -13875,7 +14073,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.14,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 418% (soglia 200%)"
   },
   "gastly_62": {
     "name": "Gastly #62",
@@ -13945,7 +14145,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 5.69,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 369% (soglia 200%)"
   },
   "sandslash_42": {
     "name": "Sandslash #42",
@@ -13973,7 +14175,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.19,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 291% (soglia 200%)"
   },
   "magmortar_6": {
     "name": "Magmortar #6",
@@ -14001,7 +14205,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.27,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 867% (soglia 200%)"
   },
   "mime_jr_47": {
     "name": "Mime Jr. #47",
@@ -14071,7 +14277,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 48.33,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 289% (soglia 200%)"
   },
   "professor_juniper_98": {
     "name": "Professor Juniper #98",
@@ -14113,7 +14321,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.84,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 287% (soglia 200%)"
   },
   "eevee_83": {
     "name": "Eevee #83",
@@ -14127,7 +14337,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 1.96,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 563% (soglia 200%)"
   },
   "tepig_24": {
     "name": "Tepig #24",
@@ -14169,7 +14381,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.25,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 1400% (soglia 200%)"
   },
   "scizor_94": {
     "name": "Scizor #94",
@@ -14211,7 +14425,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.5,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 3100% (soglia 200%)"
   },
   "weezing_58": {
     "name": "Weezing #58",
@@ -14253,7 +14469,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.22,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 1104% (soglia 200%)"
   },
   "dragonair_82": {
     "name": "Dragonair #82",
@@ -14449,7 +14667,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.21,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 420% (soglia 200%)"
   },
   "muscle_band_121": {
     "name": "Muscle Band #121",
@@ -14547,7 +14767,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.27,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 6700% (soglia 200%)"
   },
   "diggersby_90": {
     "name": "Diggersby #90",
@@ -14645,7 +14867,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.18,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 230% (soglia 200%)"
   },
   "magnemite_51": {
     "name": "Magnemite #51",
@@ -14715,7 +14939,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.24,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 24.5x (soglia 15.0x)"
   },
   "splash_energy_113": {
     "name": "Splash Energy #113",
@@ -14743,7 +14969,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.07,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 162.0x (soglia 15.0x)"
   },
   "potion_106": {
     "name": "Potion #106",
@@ -14757,7 +14985,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.13,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 2833% (soglia 200%)"
   },
   "shuckle_1": {
     "name": "Shuckle #1",
@@ -14855,7 +15085,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.08,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 423% (soglia 200%)"
   },
   "hawlucha_97": {
     "name": "Hawlucha #97",
@@ -14869,7 +15101,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.08,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 250% (soglia 200%)"
   },
   "volcanion_ex_26": {
     "name": "Volcanion-EX #26",
@@ -14897,7 +15131,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.09,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 18.4x (soglia 15.0x)"
   },
   "heliolisk_44": {
     "name": "Heliolisk #44",
@@ -14911,7 +15147,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.23,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 207% (soglia 200%)"
   },
   "patrat_107": {
     "name": "Patrat #107",
@@ -14967,7 +15205,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.15,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 232% (soglia 200%)"
   },
   "ultra_space_115": {
     "name": "Ultra Space #115",
@@ -15023,7 +15263,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 15.49,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 1406% (soglia 200%)"
   },
   "wailord_40": {
     "name": "Wailord #40",
@@ -15065,7 +15307,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.21,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 258% (soglia 200%)"
   },
   "pelipper_39": {
     "name": "Pelipper #39",
@@ -15079,7 +15323,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 272% (soglia 200%)"
   },
   "dunsparce_120": {
     "name": "Dunsparce #120",
@@ -15093,7 +15339,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 278% (soglia 200%)"
   },
   "furret_168": {
     "name": "Furret #168",
@@ -15121,7 +15369,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 342% (soglia 200%)"
   },
   "swellow_157": {
     "name": "Swellow #157",
@@ -15135,7 +15385,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 245% (soglia 200%)"
   },
   "electivire_ex_212": {
     "name": "Electivire ex #212",
@@ -15163,7 +15415,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.07,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 16.4x (soglia 15.0x)"
   },
   "thievul_90": {
     "name": "Thievul #90",
@@ -15177,7 +15431,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 43.0x (soglia 15.0x)"
   },
   "sobble_39": {
     "name": "Sobble #39",
@@ -15191,7 +15447,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 300% (soglia 200%)"
   },
   "clawitzer_141": {
     "name": "Clawitzer #141",
@@ -15219,7 +15477,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 492% (soglia 200%)"
   },
   "tangela_6": {
     "name": "Tangela #6",
@@ -15233,7 +15493,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 750% (soglia 200%)"
   },
   "mega_heracross_ex_4": {
     "name": "Mega Heracross ex #4",
@@ -15261,7 +15523,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 243% (soglia 200%)"
   },
   "mismagius_ex_36": {
     "name": "Mismagius ex #36",
@@ -15317,7 +15581,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "roxies_performance_112": {
     "name": "Roxie's Performance #112",
@@ -15345,7 +15611,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "carnivine_4": {
     "name": "Carnivine #4",
@@ -15359,7 +15627,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "deoxys_33": {
     "name": "Deoxys #33",
@@ -15373,7 +15643,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "miraidon_28": {
     "name": "Miraidon #28",
@@ -15387,7 +15659,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (3 osservazioni)"
   },
   "mega_chandelure_ex_38": {
     "name": "Mega Chandelure ex #38",
@@ -15401,7 +15675,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (3 osservazioni)"
   },
   "mega_excadrill_ex_65": {
     "name": "Mega Excadrill ex #65",
@@ -15415,7 +15691,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (3 osservazioni)"
   },
   "mega_slowbro_ex_31": {
     "name": "Mega Slowbro ex #31",
@@ -15429,7 +15707,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (3 osservazioni)"
   },
   "mega_zeraora_ex_98": {
     "name": "Mega Zeraora ex #98",
@@ -15443,6 +15723,8 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (3 osservazioni)"
   }
 }
