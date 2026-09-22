@@ -9,6 +9,15 @@ flat altrimenti. Nessun filtro di tier, MSRP o finestra d'acquisto discrezionale
 Serve come benchmark "pre-registrato": una regola presa identica dalla letteratura
 accademica (la stessa logica di trend-following con cui ApexEngine tratta SPY/GLD/BTC),
 applicata senza alcun parametro scelto guardando i dati Pokémon/One Piece.
+
+min_age_months (opzionale, default 0 = nessun filtro): esclude dall'INGRESSO gli
+asset più giovani di N mesi da release. Motivazione empirica, non discrezionale:
+in Fase 2 (walk-forward per annata) la coorte di asset più recenti ha mostrato
+drawdown molto più ampi con strategie che non li escludono (Equal-Weight: -49%
+sulla coorte 2023+) rispetto a chi li esclude (Carry/Scarsità: -9.7%). Qui si
+testa se la stessa esclusione, applicata SOLO come filtro di ingresso a monte
+del segnale di momentum (non come strategia a sé), migliora il profilo di
+rischio senza perdere l'edge di TSMOM.
 """
 
 from __future__ import annotations
@@ -25,11 +34,13 @@ class TimeSeriesMomentumStrategy:
         lookback_months: int = 12,
         max_allocation_pct: float = 0.12,
         item_type_filter: str = "sealed",
+        min_age_months: int = 0,
     ):
         self.prices_df = prices_df.sort_index()
         self.lookback_months = lookback_months
         self.max_allocation_pct = max_allocation_pct
         self.item_type_filter = item_type_filter
+        self.min_age_months = min_age_months
 
     def reset(self):
         pass
@@ -79,6 +90,11 @@ class TimeSeriesMomentumStrategy:
             cur_price = info["current_price"]
             if cur_price <= 0:
                 continue
+            if self.min_age_months > 0 and info.get("release_date"):
+                rel_dt = pd.to_datetime(info["release_date"])
+                age_m = (cur_dt.year - rel_dt.year) * 12 + (cur_dt.month - rel_dt.month)
+                if age_m < self.min_age_months:
+                    continue
             mom = self._trailing_return(item_id, cur_dt)
             if mom is None or mom <= 0:
                 continue
