@@ -108,7 +108,9 @@ class SealedAccumulatorStrategy:
                 continue
 
             # 2. Prezzo non gonfiatosi eccessivamente sopra MSRP
-            msrp = info.get("msrp", 140.0)
+            # (or, non solo get(): alcuni set vintage hanno msrp=None esplicito perche'
+            # non nota, non 140.0 fittizio; .get() da solo non copre "chiave presente ma None")
+            msrp = info.get("msrp") or 140.0
             if current_price > msrp * self.msrp_max_multiplier:
                 continue
 

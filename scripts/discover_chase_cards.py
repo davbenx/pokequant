@@ -40,6 +40,20 @@ SET_IDS = {
     "swsh12": "silver_tempest", "sv2": "paldea_evolved", "sv3": "obsidian_flames",
     "sv4": "paradox_rift", "sv5": "temporal_forces", "sv6": "twilight_masquerade",
     "sv7": "stellar_crown", "sv8": "surging_sparks", "sv3pt5": "scarlet_violet_151",
+    # Seconda ondata (copertura di TUTTI gli era sealed già in items_metadata.json,
+    # non solo i 15 iniziali) — mappatura verificata su pokemontcg.io /v2/sets:
+    "xy7": "ancient_origins", "swsh5": "battle_styles", "sm3": "burning_shadows",
+    "cel25": "celebrations", "sm12": "cosmic_eclipse", "sm4": "crimson_invasion",
+    "swsh12pt5": "crown_zenith", "swsh3": "darkness_ablaze", "xy12": "evolutions",
+    "xy2": "flashfire", "sm115": "hidden_fates", "sm8": "lost_thunder",
+    "swsh2": "rebel_clash", "xy6": "roaring_skies", "swsh45": "shining_fates",
+    "sm9": "team_up", "sm5": "ultra_prism", "sm10": "unbroken_bonds",
+    "sm11": "unified_minds", "swsh4": "vivid_voltage",
+    # jp_* (VMAX Climax, VSTAR Universe, Shiny Star V, Tag All Stars, Shiny Treasure ex)
+    # sono set giapponesi esclusivi: pokemontcg.io copre la stampa inglese e non li ha,
+    # quindi non sono ricercabili con questo metodo. scarlet_violet_base è escluso: il
+    # suo game_slug booster-box è già confermato rotto su PriceCharting (redirect a
+    # ricerca generica) e non è chiaro se le singole userebbero uno slug diverso.
 }
 
 CHASE_RARITIES = {
