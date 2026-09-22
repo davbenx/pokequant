@@ -1536,7 +1536,7 @@ def main():
 
         col_sig1, col_sig2 = st.columns([3, 1])
         with col_sig1:
-            st.caption(f"Universo scansionato: {slabs_scan.get('total_universe_scanned', 16)} carte blue-chip | Asset controllo respinti: {len(slabs_rejected)} (Anti-Survivorship)")
+            st.caption(f"Universo scansionato: {slabs_scan.get('total_universe_scanned', 16)} carte curate a mano (non campione sistematico) | Asset controllo falliti presenti nei dati: {len(slabs_rejected)} (esclusi dal calcolo di CAGR/Sharpe, non solo 'respinti a schermo' - vedi warning nel backtest sotto)")
         with col_sig2:
             if st.button("📲 Invia Notifica su Telegram", key="btn_tg_slabs", use_container_width=True):
                 msg = format_slabs_telegram_alert(slabs_scan)
@@ -1645,9 +1645,19 @@ def main():
 
         # --- SEZIONE 3: 📈 BACKTEST STORICO E ROBUSTEZZA (2021-2026) ---
         with st.expander("📈 Backtest Storico Slabs (2021-2026) & Suite di Robustezza", expanded=True):
-            st.markdown('<div class="section-desc">Simulazione ad eventi mensili su lastre intere con frizioni reali Cardmarket (5% + 0.60€, 12€ spedizione, 2.5%-3.5% slippage).</div>', unsafe_allow_html=True)
+            st.warning(
+                "⚠️ **SPERIMENTALE — NON VALIDATO.** Questo modulo (Slabs Radar) è separato dalle due "
+                "strategie validate (TS Momentum sealed, Carry/Scarcity singles) e non ne condivide il "
+                "processo di falsificazione. L'universo è 22 'grail' scelti a mano (non un campione "
+                "sistematico) e, di queste, solo 8 hanno uno storico prezzi realmente osservato — le "
+                "altre sono escluse di default dal backtest sotto (erano storicamente generate con una "
+                "curva sintetica crescente per costruzione, non misurata). Trattare CAGR/Sharpe qui come "
+                "illustrativi, non come evidenza di un edge validato."
+            )
+            st.markdown('<div class="section-desc">Simulazione ad eventi mensili su lastre intere con frizioni reali Cardmarket (5% + 0.60€, 12€ spedizione, 2.5%-3.5% slippage). Solo le carte con storico prezzi realmente osservato.</div>', unsafe_allow_html=True)
 
-            # Esecuzione Backtest Slabs
+            # Esecuzione Backtest Slabs - include_synthetic_demo_data=False (default): esclude le
+            # carte senza storico reale invece di inventarne uno, vedi warning sopra.
             slab_bt = SlabBacktester(initial_capital=5000.0, max_card_allocation_pct=0.30)
             s_res = slab_bt.run()
 

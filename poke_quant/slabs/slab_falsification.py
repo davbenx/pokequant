@@ -93,6 +93,14 @@ def run_popperian_falsification_suite(
     Esegue la suite completa di falsificazione popperiana (4 stress test di rottura)
     e calcola DSR, PBO e validazione anti-survivorship bias.
     """
+    # NOTA (fix survivorship/fabricazione dati, vedi slab_backtester.py): run() ora esclude
+    # di default le carte senza storico prezzi reale (6 delle 22 grail curate avevano un
+    # ramp np.linspace inventato). base_result gira quindi solo sulle 8 carte con dato
+    # osservato. H1 sotto pesca sottoinsiemi casuali dalle 22 grail intere (non solo le 8
+    # reali): molte simulazioni random avranno ANCORA MENO dato reale del base_result,
+    # quindi un H1 "PASSATO" qui è confuso dalla stessa scarsita di dati sui due bracci,
+    # non necessariamente evidenza di un edge genuino. Da non citare come prova solida
+    # finche' l'universo non viene ricostruito su dati interamente reali.
     backtester = SlabBacktester()
     if base_result is None:
         base_result = backtester.run()

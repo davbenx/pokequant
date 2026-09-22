@@ -92,17 +92,26 @@ class SlabBacktester:
     def run(
         self,
         price_matrix: Optional[pd.DataFrame] = None,
-        universe: Optional[List[Dict[str, Any]]] = None
+        universe: Optional[List[Dict[str, Any]]] = None,
+        include_synthetic_demo_data: bool = False,
     ) -> SlabBacktestResult:
         """
         Esegue la simulazione cronologica mensile.
+
+        include_synthetic_demo_data=False (default): usa solo le carte con storico
+        prezzi realmente osservato (historical_prices.csv). Le carte senza dato reale
+        vengono escluse, non finte. Passare True SOLO per una demo UI esplicitamente
+        etichettata come tale - mai come evidenza di performance validata (vedi
+        warning in _load_or_build_historical_matrix).
         """
         if universe is None:
             universe = get_curated_grails()
 
         # Carica o costruisce la matrice storica dei prezzi delle lastre
         if price_matrix is None:
-            price_matrix = self._load_or_build_historical_matrix(universe)
+            price_matrix = self._load_or_build_historical_matrix(
+                universe, exclude_synthetic=not include_synthetic_demo_data
+            )
 
         dates = list(price_matrix.index)
         cash = self.initial_capital
@@ -386,11 +395,27 @@ class SlabBacktester:
                 current_duration = 0
         return max_duration
 
-    def _load_or_build_historical_matrix(self, universe: List[Dict[str, Any]]) -> pd.DataFrame:
+    def _load_or_build_historical_matrix(
+        self, universe: List[Dict[str, Any]], exclude_synthetic: bool = True
+    ) -> pd.DataFrame:
         """
         Costruisce la matrice storica dei prezzi delle lastre (mensile 2021-08 -> 2026-09).
-        Se alcune carte sono già in historical_prices.csv, le riutilizza, altrimenti
-        applica la curva di evoluzione storica dei blue-chip slab.
+
+        ATTENZIONE — DATO FABBRICATO, non solo survivorship bias: per qualsiasi carta
+        NON presente in historical_prices.csv (verificato: 6 delle 14 "curated grails"
+        attualmente backtestate, cioè il 43%), il ramo else sotto NON stima una
+        traiettoria plausibile da dati osservati — INVENTA una curva con np.linspace
+        che sale matematicamente da 0.45x a 1.0x del prezzo PSA-10 di OGGI. Il prezzo
+        sale per costruzione, non perché osservato: qualsiasi CAGR/Sharpe/drawdown
+        calcolato includendo queste carte misura la performance di una strategia che
+        compra dip e vende euforia su un percorso disegnato per salire. Non è
+        evidenza di un edge reale.
+
+        Con exclude_synthetic=True (default) queste carte vengono escluse dal
+        backtest: i risultati riportati da SlabBacktester.run() usano SOLO le 8
+        carte con storico realmente osservato in historical_prices.csv. Passare
+        exclude_synthetic=False per includerle comunque (solo a scopo dimostrativo/
+        UI, mai come evidenza di validazione).
         """
         from pathlib import Path
         csv_path = Path(__file__).resolve().parent.parent.parent / "data_cache" / "historical_prices.csv"
@@ -409,11 +434,14 @@ class SlabBacktester:
         matrix_data = {}
         for card in universe:
             cid = card["card_id"]
-            if df_raw is not None and cid in df_raw.columns:
+            has_real_data = df_raw is not None and cid in df_raw.columns
+            if not has_real_data and exclude_synthetic:
+                continue
+            if has_real_data:
                 # Usa la serie storica reale (convertita in EUR)
                 matrix_data[cid] = df_raw[cid].values / 1.08
             else:
-                # Sintetizza una traiettoria coerente basata su data di rilascio e prezzo attuale
+                # FABBRICATO (vedi warning sopra) - traiettoria inventata, non osservata
                 psa_10_target = card.get("psa_10_price_eur", 500.0)
                 rel_date = card.get("release_date", "2021-08-27")
                 
