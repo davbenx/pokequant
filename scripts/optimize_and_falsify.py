@@ -29,6 +29,10 @@ from poke_quant.engine.strategies.carry_scarcity_factor import CarryScarcityFact
 from poke_quant.engine.strategies.cross_sectional_momentum import CrossSectionalMomentumStrategy
 from poke_quant.engine.strategies.dip_mean_reversion import DipMeanReversionStrategy
 from poke_quant.engine.strategies.rarity_tier_factor import RarityTierFactorStrategy
+from poke_quant.engine.strategies.cross_sectional_factor import (
+    CrossSectionalFactorStrategy, momentum_factor, proximity_to_high_factor,
+    low_volatility_factor, zscore_factor
+)
 from poke_quant.validation.statistical_validation import deflated_sharpe_ratio, pbo_cscv
 from poke_quant.validation.bootstrap import block_bootstrap_metrics, summarize_bootstrap
 
@@ -367,9 +371,76 @@ def section_sealed_exit_logic_search():
           "peggiore della baseline, e il miglioramento non e' concentrato in 1-2 trade isolati.")
 
 
+def section_singles_technical_fundamental_search():
+    """
+    Seconda ricerca sulle singole, richiesta esplicitamente dopo la prima (5 fattori,
+    tutti falliti): fattori tecnici non ancora provati (momentum skip-month, prossimita'
+    al massimo 12m, bassa volatilita') + un fattore ibrido (momentum/z-score sul RAPPORTO
+    prezzo_singola/prezzo_box_dello_stesso_set - non provato prima).
+
+    ESITO: nessuno validato. Pattern identico su tutti e 3 i costrutti indipendenti:
+    ottimo full-sample (LOW-VOL: Sharpe 1.10, PBO 5.7%), ma inversione di segno netta
+    H1/H2 (Sharpe -1.09 -> +1.33 per LOW-VOL, -1.35 -> +2.63 per RATIO-MOM). Nota
+    metodologica: il PBO basso di LOW-VOL NON aveva segnalato il problema - solo lo
+    split walk-forward lo rivela. Tutti i fattori long-biased ereditano l'unico grande
+    ciclo di mercato del campione (boom 2021 -> bust 2022-23 -> recupero 2023+),
+    mascherando l'assenza di alpha idiosincratico. Vedi il docstring di
+    poke_quant/engine/strategies/cross_sectional_factor.py per il dettaglio completo.
+    """
+    print("\n\n" + "=" * 100)
+    print("  6) FATTORI TECNICI + IBRIDO RAPPORTO SINGOLA/BOX — SINGOLE GRADATE")
+    print("=" * 100)
+    metadata = load_metadata()
+    prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    singles_ids = [
+        k for k, v in metadata.items()
+        if v.get("type") == "single" and v.get("data_quality") != "thin_unreliable" and k in prices_full.columns
+    ]
+    meta_sub = {k: v for k, v in metadata.items() if k in singles_ids}
+    prices_sub = prices_full[singles_ids]
+
+    technical_candidates = {
+        "MOM skip1 lb=12 q=0.30": lambda p: CrossSectionalFactorStrategy(p, momentum_factor, lookback_months=12, skip_months=1, top_quantile=0.30, min_age_months=6),
+        "52w-HIGH lb=12 q=0.30": lambda p: CrossSectionalFactorStrategy(p, proximity_to_high_factor, lookback_months=12, top_quantile=0.30, min_age_months=6),
+        "LOW-VOL lb=12 q=0.30": lambda p: CrossSectionalFactorStrategy(p, low_volatility_factor, lookback_months=12, top_quantile=0.30, ascending=True, min_age_months=6),
+    }
+    results = {}
+    print("\nFattori tecnici (universo combinato):")
+    for name, factory in technical_candidates.items():
+        res = run_bt(factory(prices_sub), prices_sub, meta_sub)
+        results[name] = res
+        print(f"  {name:26s} | CAGR {res.cagr*100:+6.2f}% | Sharpe {res.sharpe:5.2f} | MaxDD {res.max_drawdown*100:6.2f}%")
+
+    try:
+        ratio_df = load_price_matrix("historical_ratio_single_to_box.csv")
+    except Exception:
+        ratio_df = None
+    if ratio_df is not None and not ratio_df.empty:
+        ratio_ids = [c for c in ratio_df.columns if c in prices_sub.columns]
+        ratio_sub, ratio_singles_sub = ratio_df[ratio_ids], prices_sub[ratio_ids]
+        ratio_meta = {k: v for k, v in meta_sub.items() if k in ratio_ids}
+        strat_ratio = CrossSectionalFactorStrategy(ratio_sub, momentum_factor, lookback_months=12, top_quantile=0.30, item_type_filter="single", min_age_months=6)
+        bt_ratio = Backtester(strat_ratio, ratio_singles_sub, ratio_meta, initial_cash=10000.0, platform="cardmarket", apply_liquidity_slippage=True, apply_holding_cost=True)
+        res_ratio = bt_ratio.run()
+        print(f"\nFattore ibrido (universo {len(ratio_ids)} carte con box abbinato):")
+        print(f"  RATIO-MOM lb=12 q=0.30    | CAGR {res_ratio.cagr*100:+6.2f}% | Sharpe {res_ratio.sharpe:5.2f} | MaxDD {res_ratio.max_drawdown*100:6.2f}%")
+        results["RATIO-MOM lb=12 q=0.30"] = res_ratio
+    else:
+        print("\nhistorical_ratio_single_to_box.csv non trovato - esegui scripts/build_ratio_matrix.py prima.")
+
+    best_name = max(results, key=lambda k: results[k].sharpe)
+    best = results[best_name]
+    dsr = deflated_sharpe_ratio(observed_sr=best.sharpe / np.sqrt(12), n_trials=len(results), n_obs=len(best.monthly_returns))
+    print(f"\nMigliore per Sharpe: '{best_name}' (Sharpe {best.sharpe:.2f}) | DSR (n_trials={len(results)}): {dsr:.3f}")
+    print("Risultato completo (griglie estese, PBO, bootstrap, walk-forward H1/H2) documentato in "
+          "poke_quant/engine/strategies/cross_sectional_factor.py - nessun candidato ha superato "
+          "lo split walk-forward.")
+
+
 if __name__ == "__main__":
     section_tsmom_sealed()
     section_carry_singles()
     section_survivorship_bias_check()
     section_singles_factor_search()
     section_sealed_exit_logic_search()
+    section_singles_technical_fundamental_search()
