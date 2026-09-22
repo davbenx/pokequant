@@ -16,6 +16,7 @@ from poke_quant.config import DEFAULT_EUR_USD
 from poke_quant.data.storage import (
     save_price_matrix, load_price_matrix, save_metadata, load_metadata
 )
+from poke_quant.data.fx_rates import rate_for_month
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -393,11 +394,19 @@ STANDARD_UNIVERSE = {
 }
 
 
-def fetch_pricecharting_series(game_slug: str, item_slug: str) -> Dict[str, pd.Series]:
+def fetch_pricecharting_series(
+    game_slug: str, item_slug: str, eur_usd_series: Optional[pd.Series] = None
+) -> Dict[str, pd.Series]:
     """
     Scarica la serie temporale mensile reale da PriceCharting.
     Restituisce un dict con la serie 'raw' (ungraded/box) ed eventualmente 'graded'.
-    I prezzi vengono convertiti in EUR usando il tasso medio.
+
+    Conversione EUR: se eur_usd_series è fornita (vedi poke_quant.data.fx_rates,
+    tasso storico reale Twelve Data), converte OGNI mese al proprio tasso reale
+    invece della costante fissa DEFAULT_EUR_USD. Il tasso è oscillato da 1.22 a
+    0.97 nel periodo 2021-2026: usare un default fisso introduce un errore
+    sistematico fino al 12% in singoli mesi. Se eur_usd_series è None, mantiene
+    il comportamento precedente (costante fissa) per compatibilità.
     """
     url = f"https://www.pricecharting.com/game/{game_slug}/{item_slug}"
     try:
@@ -427,9 +436,11 @@ def fetch_pricecharting_series(game_slug: str, item_slug: str) -> Dict[str, pd.S
         prices_eur = []
         for p in raw_points:
             if len(p) >= 2 and p[1] > 0:
-                dt = datetime.datetime.fromtimestamp(p[0] / 1000.0).strftime("%Y-%m-01")
+                dt_obj = datetime.datetime.fromtimestamp(p[0] / 1000.0)
+                dt = dt_obj.strftime("%Y-%m-01")
                 px_usd = p[1] / 100.0
-                px_eur = round(px_usd / DEFAULT_EUR_USD, 2)
+                rate = rate_for_month(eur_usd_series, pd.Timestamp(dt_obj), DEFAULT_EUR_USD) if eur_usd_series is not None else DEFAULT_EUR_USD
+                px_eur = round(px_usd / rate, 2)
                 dates.append(dt)
                 prices_eur.append(px_eur)
         if dates:
@@ -444,9 +455,11 @@ def fetch_pricecharting_series(game_slug: str, item_slug: str) -> Dict[str, pd.S
         prices_g = []
         for p in graded_points:
             if len(p) >= 2 and p[1] > 0:
-                dt = datetime.datetime.fromtimestamp(p[0] / 1000.0).strftime("%Y-%m-01")
+                dt_obj = datetime.datetime.fromtimestamp(p[0] / 1000.0)
+                dt = dt_obj.strftime("%Y-%m-01")
                 px_usd = p[1] / 100.0
-                px_eur = round(px_usd / DEFAULT_EUR_USD, 2)
+                rate = rate_for_month(eur_usd_series, pd.Timestamp(dt_obj), DEFAULT_EUR_USD) if eur_usd_series is not None else DEFAULT_EUR_USD
+                px_eur = round(px_usd / rate, 2)
                 dates_g.append(dt)
                 prices_g.append(px_eur)
         if dates_g:
