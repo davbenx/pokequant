@@ -46,9 +46,39 @@ ricerca. Riserva onesta: e' circa la nona/decima ipotesi indipendente provata
 su questa serie di singole in questa sessione - una correzione per multiple
 comparisons su TUTTA la sequenza (non solo sui 5 candidati di questa griglia)
 abbasserebbe ulteriormente la DSR effettiva, e non e' stata calcolata.
-Promettente, non ancora da produzione: servirebbe un altro ciclo di
-validazione dedicato (griglia piu' ampia, dati fuori campione quando
-disponibili) prima di qualsiasi considerazione di capitale reale.
+AGGIORNAMENTO - correzione per l'intera sessione di ricerca (richiesta
+esplicitamente dall'utente, "procedi" dopo aver elencato il piano):
+contando TUTTI i trial indipendenti tentati su questa serie di singole in
+questa sessione (non solo i 5 di questa griglia) - section_singles_factor_search
+(9), section_singles_technical_fundamental_search (4), griglia illustratore (4),
+griglia promo (3), chase-TSMOM (3), box-vs-paniere (2), questa griglia (5),
+grade-spread (8), grade-lead-lag (8) = 46 trial totali - il DSR del vincitore
+crolla da 0,895 a **0,581**. Ben sotto la soglia di comfort (0,90-0,95) usata
+per OGNI altro candidato in questa ricerca, inclusa la strategia sealed in
+produzione (DSR 0,913).
+
+Controlli aggiuntivi fatti per completezza:
+- Stabilita' per segmento: NON CONCLUSIVA per un problema di dati, non del
+  fattore - tutte le singole One Piece hanno release_date=None in metadata
+  (escluse dalla regressione per costruzione, zero trade) e non esistono
+  singole giapponesi nel pannello grade9. Il segmento "Pokemon EN" testato
+  e' di fatto quasi l'intero universo (784/864), non un check indipendente.
+- Robustezza della specifica: qualitativamente solida (Sharpe 1,05-1,78 su 4
+  varianti di regressione - eta lineare/log, con/senza controlli promo e
+  illustratore - H1 resta sempre positivo, nessun collasso). Rassicurante sul
+  fatto che non sia fragile a scelte arbitrarie, ma queste 4 varianti sono
+  ESSE STESSE altri trial nello stesso spazio di ricerca - non le uso per
+  "aggiornare" al numero migliore (sarebbe lo stesso errore di data-snooping
+  che questa correzione cerca di evitare).
+
+VERDETTO FINALE: per coerenza con lo standard applicato a ogni altro candidato
+di questa ricerca, con DSR 0,581 questo fattore NON PASSA la soglia usata in
+questa sessione. Resta il candidato qualitativamente piu' interessante (unico
+a non invertire segno nel walk-forward), ma non e' "il fattore che ha
+funzionato" - e' un'ipotesi che regge meglio delle altre sotto un occhio meno
+rigoroso e non regge sotto lo stesso rigore applicato al resto. Da riprendere
+solo con un'ipotesi pre-registrata su dati futuri (non derivata da questa
+stessa ricerca esplorativa), non con piu' tentativi su questo stesso campione.
 """
 
 from __future__ import annotations
