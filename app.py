@@ -87,6 +87,66 @@ def get_prices_full():
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
+def get_market_indices():
+    """Indici equal-weight buy&hold (nessuna strategia, nessun timing) sull'universo
+    sealed validato - la 'beta' del mercato, da confrontare con l'alfa della
+    strategia (curva NAV più sotto). Utili come contesto, non come segnale
+    d'ingresso: mostrano quale segmento è caldo/freddo, non quando comprare."""
+    metadata = load_metadata()
+    prices_full = load_price_matrix()
+    sealed_ids = [
+        k for k, v in metadata.items()
+        if v.get("type") == "sealed" and v.get("data_quality") != "thin_unreliable"
+        and k in prices_full.columns and v.get("release_date") and v["release_date"] >= MODERN_ERA_CUTOFF
+    ]
+
+    segments: dict[str, list[str]] = {"Pokémon EN": [], "Pokémon JP": [], "One Piece TCG": []}
+    for k in sealed_ids:
+        v = metadata[k]
+        if v.get("franchise") == "one_piece":
+            segments["One Piece TCG"].append(k)
+        elif v.get("language") == "jp":
+            segments["Pokémon JP"].append(k)
+        else:
+            segments["Pokémon EN"].append(k)
+
+    def build_index(ids: list[str]) -> pd.Series:
+        sub = prices_full[ids]
+        basket_ret = sub.pct_change().mean(axis=1, skipna=True).fillna(0.0)
+        idx = (1.0 + basket_ret).cumprod() * 100.0
+        idx.iloc[0] = 100.0
+        return idx
+
+    overall_index = build_index(sealed_ids)
+    segment_indices = {name: build_index(ids) for name, ids in segments.items() if len(ids) >= 3}
+    segment_counts = {name: len(ids) for name, ids in segments.items()}
+
+    # Ampiezza di mercato: % dell'universo con momentum trailing 12m positivo, mese per mese.
+    # Stessa regola della strategia in produzione, solo aggregata invece che tradata.
+    lookback = 12
+    breadth = {}
+    for i in range(lookback, len(prices_full.index)):
+        date = prices_full.index[i]
+        n_pos = n_tot = 0
+        for k in sealed_ids:
+            series = prices_full[k][prices_full.index <= date].dropna()
+            series = series[series > 0]
+            if len(series) < lookback + 1:
+                continue
+            past, now = float(series.iloc[-(lookback + 1)]), float(series.iloc[-1])
+            if past <= 0:
+                continue
+            n_tot += 1
+            if (now - past) / past > 0:
+                n_pos += 1
+        if n_tot > 0:
+            breadth[date] = n_pos / n_tot * 100.0
+    breadth_series = pd.Series(breadth)
+
+    return overall_index, segment_indices, segment_counts, breadth_series
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
 def get_backtest_results():
     metadata = load_metadata()
     prices_full = load_price_matrix()
@@ -213,6 +273,42 @@ def main():
         <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09, nessuna inversione di segno</div></div>
     </div>
     """, unsafe_allow_html=True)
+
+    # --- INDICI DI MERCATO (contesto, non segnale d'ingresso) ---
+    st.markdown('<div class="section-title">📉 Indici di mercato</div>', unsafe_allow_html=True)
+    st.caption("Indici equal-weight buy&hold (nessun timing, nessuna strategia) sull'universo sealed "
+               "validato — la 'beta' del mercato da confrontare con l'alfa della strategia. Segmenti JP "
+               "e One Piece hanno pochi titoli (5 e 4): direzionali, non statisticamente robusti da soli.")
+    overall_index, segment_indices, segment_counts, breadth_series = get_market_indices()
+
+    idx_fig = go.Figure()
+    idx_fig.add_trace(go.Scatter(x=overall_index.index, y=overall_index.values, mode="lines",
+                                  name=f"Sealed complessivo (n={sum(segment_counts.values())})",
+                                  line=dict(color="#f8fafc", width=2.5)))
+    seg_colors = {"Pokémon EN": "#38bdf8", "Pokémon JP": "#f43f5e", "One Piece TCG": "#fbbf24"}
+    for name, series in segment_indices.items():
+        idx_fig.add_trace(go.Scatter(x=series.index, y=series.values, mode="lines",
+                                      name=f"{name} (n={segment_counts[name]})",
+                                      line=dict(color=seg_colors.get(name, "#94a3b8"), width=1.5, dash="dot")))
+    idx_fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
+                           height=320, margin=dict(l=20, r=20, t=30, b=20),
+                           legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+                           yaxis_title="Indice (base 100)")
+    st.plotly_chart(idx_fig, use_container_width=True)
+
+    breadth_fig = go.Figure()
+    breadth_fig.add_trace(go.Scatter(x=breadth_series.index, y=breadth_series.values, mode="lines",
+                                      fill="tozeroy", line=dict(color="#10b981", width=1.8),
+                                      fillcolor="rgba(16,185,129,0.12)", name="Ampiezza"))
+    breadth_fig.add_hline(y=50, line_dash="dot", line_color="rgba(255,255,255,0.25)")
+    breadth_fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
+                               height=180, margin=dict(l=20, r=20, t=10, b=20), showlegend=False,
+                               yaxis=dict(range=[0, 100], title="% con momentum 12m positivo"))
+    st.plotly_chart(breadth_fig, use_container_width=True, config={"displayModeBar": False})
+    st.caption(f"Ampiezza di mercato: quota dell'universo con momentum trailing 12m positivo — stessa regola "
+               f"della strategia, aggregata. Oggi: {breadth_series.iloc[-1]:.0f}%. Un calo ampio e prolungato "
+               "sotto il 50% è un segnale di regime, non di un singolo box — utile come contesto per capire "
+               "se le uscite in corso sono isolate o parte di un raffreddamento generale.")
 
     # --- AZIONE: BUY/HOLD con allocazione e link Cardmarket ---
     st.markdown('<div class="section-title">🟢 Posizioni da aprire/mantenere</div>', unsafe_allow_html=True)
