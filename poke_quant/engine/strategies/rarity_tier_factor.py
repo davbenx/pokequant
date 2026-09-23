@@ -20,6 +20,25 @@ quasi certamente una riscoperta del survivorship bias di discover_chase_cards.py
 un'altra etichetta, non un fattore indipendente. Da ritestare solo dopo aver ampliato
 molto il campione di controllo casuale per queste rarita' specifiche (oggi troppo
 piccolo, n=18, per essere conclusivo da solo).
+
+ESITO VALIDAZIONE (field_name="artist", fattore illustratore): NON VALIDATO, per un
+motivo statistico stavolta, non di composizione campionaria. Su 783 singole (universo
+completo, illustratore noto per 820 carte via pokemontcg.io), il fattore "carta di un
+illustratore-star" (rebal=6, minage=6) rende Sharpe 0.11-0.12 full-sample con MaxDD
+-60% - già debole di per se'. La griglia (4 candidati) da' PBO 24.3% e DSR 0.221
+(sotto la soglia 0.90-0.95 usata in questa serie di test). Il walk-forward e' la prova
+decisiva: H1 (2021-01->2023-10) Sharpe -1.92, H2 (2023-11->2026-09) Sharpe +2.51 - lo
+stesso schema boom/bust visto in ogni altro fattore rotazionale testato su questo
+universo, non un premio strutturale legato all'illustratore.
+
+ESITO VALIDAZIONE (field_name="is_promo_str", fattore promo/SVP): NON TESTABILE al
+momento con questi dati - non un fallimento statistico ma un buco nei pannelli prezzo.
+86 singole promo sono state scoperte e verificate (discover_promo_singles.py), ma
+historical_prices_graded_singles_grade9.csv (il pannello che il backtester legge) non
+le conteneva ancora: un primo test ha mostrato "783 singole nell'universo, 0 promo tra
+queste" - falso negativo da dati mancanti, non un verdetto sul fattore. Ritestare dopo
+che scripts/rebuild_prices_with_real_fx.py ha ricostruito i pannelli includendo le
+nuove voci promo.
 """
 
 from __future__ import annotations
@@ -35,6 +54,9 @@ PREMIUM_RARITIES: FrozenSet[str] = frozenset({
 
 
 class RarityTierFactorStrategy:
+    """Nonostante il nome (storico), l'eleggibilita' e' generica su qualsiasi campo
+    categorico dei metadata - vedi field_name. Usata anche per il fattore illustratore
+    (field_name="artist") con la stessa identica logica di esecuzione."""
     def __init__(
         self,
         rebalance_every_months: int = 6,
@@ -43,6 +65,7 @@ class RarityTierFactorStrategy:
         min_age_months: int = 6,
         item_type_filter: str = "single",
         premium_rarities: FrozenSet[str] = PREMIUM_RARITIES,
+        field_name: str = "rarity",
     ):
         self.rebalance_every_months = rebalance_every_months
         self.max_positions = max_positions
@@ -50,6 +73,7 @@ class RarityTierFactorStrategy:
         self.min_age_months = min_age_months
         self.item_type_filter = item_type_filter
         self.premium_rarities = premium_rarities
+        self.field_name = field_name
         self._call_count = 0
 
     def reset(self):
@@ -74,7 +98,7 @@ class RarityTierFactorStrategy:
         for item_id, info in sorted(market_snapshot.items()):
             if info.get("type") != self.item_type_filter or info.get("current_price", 0) <= 0:
                 continue
-            if info.get("rarity") not in self.premium_rarities:
+            if info.get(self.field_name) not in self.premium_rarities:
                 continue
             if self.min_age_months > 0 and info.get("release_date"):
                 rel_dt = pd.to_datetime(info["release_date"])
@@ -114,6 +138,6 @@ class RarityTierFactorStrategy:
                 signals.append(Signal(
                     action="BUY", item_id=item_id, item_name=info.get("name", item_id),
                     item_type=self.item_type_filter, quantity=qty, target_price=cur_price,
-                    reason=f"Rarita' Ex-Ante: {info.get('rarity')} (premium tipografica)"
+                    reason=f"{self.field_name}={info.get(self.field_name)} (categoria eleggibile)"
                 ))
         return signals
