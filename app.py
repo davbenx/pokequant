@@ -87,7 +87,7 @@ def get_prices_full():
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
-def get_backtest_equity_curve():
+def get_backtest_results():
     metadata = load_metadata()
     prices_full = load_price_matrix()
     sealed_ids = [
@@ -101,7 +101,7 @@ def get_backtest_equity_curve():
     bt = Backtester(strat, prices_sub, meta_sub, initial_cash=10000.0, platform="cardmarket",
                      apply_liquidity_slippage=True, apply_holding_cost=True)
     res = bt.run()
-    return res.nav_history, len(sealed_ids)
+    return res, len(sealed_ids)
 
 
 def build_price_chart(item_id: str, name: str, prices_full: pd.DataFrame, months: int = 24):
@@ -270,7 +270,8 @@ def main():
 
     # --- EQUITY CURVE ---
     st.markdown('<div class="section-title">📈 Backtest 2020-2026</div>', unsafe_allow_html=True)
-    nav_df, n_universe = get_backtest_equity_curve()
+    res, n_universe = get_backtest_results()
+    nav_df = res.nav_history
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, row_heights=[0.7, 0.3],
                          subplot_titles=("NAV (€)", "Drawdown (%)"))
     fig.add_trace(go.Scatter(x=nav_df.index, y=nav_df["nav"], mode="lines", name="TS Momentum",
@@ -284,6 +285,40 @@ def main():
     st.plotly_chart(fig, use_container_width=True)
     st.caption(f"Universo: {n_universe} box/ETB era 2019+. Capitale iniziale 10.000€, frizioni reali incluse "
                "(Cardmarket 5%+0,60€, spedizione, slippage, costo di custodia).")
+
+    # --- GIORNALE DEI TRADE CHIUSI ---
+    st.markdown('<div class="section-title">📜 Giornale dei trade chiusi (backtest)</div>', unsafe_allow_html=True)
+    trades_df = res.trades_df
+    win_rate = res.win_rate * 100.0
+    avg_holding = trades_df["holding_months"].mean() if not trades_df.empty else 0.0
+    st.markdown(f"""
+    <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Trade chiusi</div><div class="kpi-value">{res.total_trades}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value">{win_rate:.0f}%</div><div class="kpi-sub kpi-sub-amber">Pochi vincenti, grandi — tipico trend-following</div></div>
+        <div class="kpi-card"><div class="kpi-label">Profit Factor</div><div class="kpi-value">{res.profit_factor:.2f}</div><div class="kpi-sub kpi-sub-emerald">Utile lordo / perdita lorda</div></div>
+        <div class="kpi-card"><div class="kpi-label">Holding medio</div><div class="kpi-value">{avg_holding:.1f}m</div><div class="kpi-sub kpi-sub-amber">Mediana {trades_df['holding_months'].median():.0f}m, max {trades_df['holding_months'].max():.0f}m</div></div>
+    </div>
+    """, unsafe_allow_html=True)
+    if trades_df.empty:
+        st.info("Nessun trade chiuso nel backtest.")
+    else:
+        display_df = trades_df.sort_values("sell_date", ascending=False).copy()
+        display_df["net_roi_pct"] = display_df["net_roi"] * 100.0
+        display_df = display_df[["item_name", "buy_date", "sell_date", "holding_months",
+                                  "buy_price_unit", "sell_price_unit", "net_roi_pct", "net_pnl"]]
+        display_df.columns = ["Prodotto", "Acquisto", "Vendita", "Holding (m)",
+                               "Prezzo acquisto (€)", "Prezzo vendita (€)", "ROI netto (%)", "P&L netto (€)"]
+        st.dataframe(
+            display_df, use_container_width=True, hide_index=True,
+            column_config={
+                "Prezzo acquisto (€)": st.column_config.NumberColumn(format="%.2f €"),
+                "Prezzo vendita (€)": st.column_config.NumberColumn(format="%.2f €"),
+                "ROI netto (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                "P&L netto (€)": st.column_config.NumberColumn(format="%+.2f €"),
+            },
+        )
+        st.caption("P&L e ROI sono netti di commissioni Cardmarket (5%+0,60€), spedizione e costo di custodia — "
+                   "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
 
     st.markdown("---")
     st.caption("PokeQuant · Solo strategie validate a livello istituzionale · "
