@@ -42,6 +42,16 @@ default in produzione.
     scripts/sealed_age_window_search.py: comprare solo box "di mezza eta'"
     (né appena uscito né molto vecchio) potrebbe migliorare Sharpe/MaxDD
     rispetto alla regola senza tetto. ESITO: vedi docstring di quel file.
+
+  - max_holding_months (opzionale, default None = nessun time stop): forza la
+    vendita se la posizione e' aperta da almeno N mesi, indipendentemente dal
+    segnale di momentum - un limite temporale puro, non un filtro sul
+    rendimento. Ipotesi testata in scripts/sealed_time_stop_search.py: la
+    distribuzione dei tempi di possesso in produzione e' molto asimmetrica
+    (mediana 4 mesi, ma alcuni trade durano 29-45 mesi) - un time stop
+    tronca la coda destra, cioe' proprio i trade che nel trend-following
+    tipicamente generano la maggior parte del rendimento. ESITO: vedi
+    docstring di quel file.
 """
 
 from __future__ import annotations
@@ -63,6 +73,7 @@ class TimeSeriesMomentumStrategy:
         exit_lookback_months: Optional[int] = None,
         exit_threshold: float = 0.0,
         trailing_stop_pct: Optional[float] = None,
+        max_holding_months: Optional[int] = None,
     ):
         self.prices_df = prices_df.sort_index()
         self.lookback_months = lookback_months
@@ -73,6 +84,7 @@ class TimeSeriesMomentumStrategy:
         self.exit_lookback_months = exit_lookback_months or lookback_months
         self.exit_threshold = exit_threshold
         self.trailing_stop_pct = trailing_stop_pct
+        self.max_holding_months = max_holding_months
 
     def reset(self):
         pass
@@ -128,6 +140,17 @@ class TimeSeriesMomentumStrategy:
                         action="SELL", item_id=item_id, item_name=pos.item_name,
                         item_type=pos.item_type, quantity=pos.quantity, target_price=cur_price,
                         reason=f"TSMOM: trailing stop {self.trailing_stop_pct*100:.0f}% dal massimo ({peak:.2f}€)"
+                    ))
+                    continue
+
+            if self.max_holding_months is not None:
+                d_buy = pd.to_datetime(pos.buy_date)
+                held_m = (cur_dt.year - d_buy.year) * 12 + (cur_dt.month - d_buy.month)
+                if held_m >= self.max_holding_months:
+                    signals.append(Signal(
+                        action="SELL", item_id=item_id, item_name=pos.item_name,
+                        item_type=pos.item_type, quantity=pos.quantity, target_price=cur_price,
+                        reason=f"TSMOM: time stop a {self.max_holding_months} mesi di possesso"
                     ))
                     continue
 
