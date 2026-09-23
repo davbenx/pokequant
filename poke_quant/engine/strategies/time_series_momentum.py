@@ -34,6 +34,14 @@ alterare silenziosamente la strategia già validata e deployata):
 Testati in scripts/optimize_and_falsify.py::section_sealed_exit_logic_search
 contro la regola base (DSR 0.913, PBO 28.6%) prima di essere adottati come
 default in produzione.
+
+  - max_age_months (opzionale, default None = nessun tetto): esclude
+    dall'INGRESSO gli asset più vecchi di N mesi da release, a complemento di
+    min_age_months - insieme definiscono una finestra d'eta' [min, max) in cui
+    il segnale di momentum può aprire una posizione. Ipotesi testata in
+    scripts/sealed_age_window_search.py: comprare solo box "di mezza eta'"
+    (né appena uscito né molto vecchio) potrebbe migliorare Sharpe/MaxDD
+    rispetto alla regola senza tetto. ESITO: vedi docstring di quel file.
 """
 
 from __future__ import annotations
@@ -51,6 +59,7 @@ class TimeSeriesMomentumStrategy:
         max_allocation_pct: float = 0.12,
         item_type_filter: str = "sealed",
         min_age_months: int = 0,
+        max_age_months: Optional[int] = None,
         exit_lookback_months: Optional[int] = None,
         exit_threshold: float = 0.0,
         trailing_stop_pct: Optional[float] = None,
@@ -60,6 +69,7 @@ class TimeSeriesMomentumStrategy:
         self.max_allocation_pct = max_allocation_pct
         self.item_type_filter = item_type_filter
         self.min_age_months = min_age_months
+        self.max_age_months = max_age_months
         self.exit_lookback_months = exit_lookback_months or lookback_months
         self.exit_threshold = exit_threshold
         self.trailing_stop_pct = trailing_stop_pct
@@ -136,10 +146,12 @@ class TimeSeriesMomentumStrategy:
             cur_price = info["current_price"]
             if cur_price <= 0:
                 continue
-            if self.min_age_months > 0 and info.get("release_date"):
+            if (self.min_age_months > 0 or self.max_age_months is not None) and info.get("release_date"):
                 rel_dt = pd.to_datetime(info["release_date"])
                 age_m = (cur_dt.year - rel_dt.year) * 12 + (cur_dt.month - rel_dt.month)
                 if age_m < self.min_age_months:
+                    continue
+                if self.max_age_months is not None and age_m > self.max_age_months:
                     continue
             mom = self._trailing_return(item_id, cur_dt)
             if mom is None or mom <= 0:
