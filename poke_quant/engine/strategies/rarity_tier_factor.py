@@ -31,14 +31,25 @@ decisiva: H1 (2021-01->2023-10) Sharpe -1.92, H2 (2023-11->2026-09) Sharpe +2.51
 stesso schema boom/bust visto in ogni altro fattore rotazionale testato su questo
 universo, non un premio strutturale legato all'illustratore.
 
-ESITO VALIDAZIONE (field_name="is_promo_str", fattore promo/SVP): NON TESTABILE al
-momento con questi dati - non un fallimento statistico ma un buco nei pannelli prezzo.
-86 singole promo sono state scoperte e verificate (discover_promo_singles.py), ma
-historical_prices_graded_singles_grade9.csv (il pannello che il backtester legge) non
-le conteneva ancora: un primo test ha mostrato "783 singole nell'universo, 0 promo tra
-queste" - falso negativo da dati mancanti, non un verdetto sul fattore. Ritestare dopo
-che scripts/rebuild_prices_with_real_fx.py ha ricostruito i pannelli includendo le
-nuove voci promo.
+ESITO VALIDAZIONE (field_name="is_promo_str", fattore promo/SVP): NON VALIDATO, e
+questo è il caso più insidioso di tutta la ricerca perché i numeri aggregati sono i
+MIGLIORI visti in assoluto - migliori anche della strategia sealed in produzione.
+Ritestato dopo aver corretto il buco nei pannelli prezzo (864 singole, 80 promo tra
+queste, vedi scripts/rebuild_prices_with_real_fx.py): 'PROMO rebal=6 minage=12' rende
+Sharpe 1.27, CAGR +31.0%, PBO 0.000 (3 candidati, 8 split), DSR 0.980, bootstrap
+P(Sharpe>0)=96%. Su qualsiasi soglia usata altrove in questa ricerca, questo passerebbe
+a pieni voti. MA il walk-forward - il test che in questa stessa ricerca ha già smontato
+LOW-VOL (PBO 5.7% eppure fallito) e ILLUSTRATOR - mostra lo stesso identico schema:
+H1 (2021-01->2023-10) Sharpe -0.95, CAGR -7.74%; H2 (2023-11->2026-09) Sharpe +1.93,
+CAGR +71.56%. Le carte promo (SVP in particolare) sono un sottomercato piccolo e meno
+liquido che ha vissuto una mania di prezzo particolarmente estrema nel 2024-2025 (nuovi
+set Illustration Rare/SVP) - lo stesso super-ciclo boom/bust/recupero visto ovunque in
+questo universo, solo più amplificato qui per la ridotta liquidità. Un PBO=0.000 e un
+DSR=0.980 spettacolari NON bastano quando il segno si inverte tra le due metà del
+campione: per coerenza con lo standard usato su ogni altro candidato di questa ricerca,
+questo fattore resta NON VALIDATO. Non testabile in modo conclusivo con solo ~5.7 anni
+di storico e un unico ciclo macro - andrebbe riprovato quando il campione includerà
+più di un ciclo boom/bust indipendente.
 """
 
 from __future__ import annotations
