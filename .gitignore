@@ -17,3 +17,7 @@ htmlcov/
 # Log e file temporanei
 *.log
 .DS_Store
+
+# Credenziali - mai committare
+.env
+.env.*
