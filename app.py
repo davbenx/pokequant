@@ -82,6 +82,11 @@ def get_signal():
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
+def get_prices_full():
+    return load_price_matrix()
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
 def get_backtest_equity_curve():
     metadata = load_metadata()
     prices_full = load_price_matrix()
@@ -97,6 +102,24 @@ def get_backtest_equity_curve():
                      apply_liquidity_slippage=True, apply_holding_cost=True)
     res = bt.run()
     return res.nav_history, len(sealed_ids)
+
+
+def build_price_chart(item_id: str, name: str, prices_full: pd.DataFrame, months: int = 24):
+    if item_id not in prices_full.columns:
+        return None
+    series = prices_full[item_id].dropna()
+    series = series[series > 0].tail(months)
+    if len(series) < 2:
+        return None
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=series.index, y=series.values, mode="lines+markers",
+                              line=dict(color="#38bdf8", width=1.8), marker=dict(size=3),
+                              hovertemplate="%{x|%b %Y}: %{y:.0f}€<extra></extra>"))
+    fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                       height=140, margin=dict(l=0, r=0, t=4, b=0), showlegend=False,
+                       xaxis=dict(showgrid=False, tickfont=dict(size=9)),
+                       yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)", tickfont=dict(size=9)))
+    return fig
 
 
 def build_allocation(buy_rows: list, capital: float, metadata: dict, latest_date: str):
@@ -115,6 +138,7 @@ def build_allocation(buy_rows: list, capital: float, metadata: dict, latest_date
 
 def main():
     metadata = load_metadata()
+    prices_full = get_prices_full()
     sig_rows, latest_date = get_signal()
     n_buy = sum(1 for r in sig_rows if r["signal"] == "BUY/HOLD")
     n_sell = sum(1 for r in sig_rows if r["signal"] == "AVOID/SELL")
@@ -165,6 +189,10 @@ def main():
 
     # --- AZIONE: BUY/HOLD con allocazione e link Cardmarket ---
     st.markdown('<div class="section-title">🟢 Posizioni da aprire/mantenere</div>', unsafe_allow_html=True)
+    st.caption("⚠️ Il prezzo mostrato viene da PriceCharting (mercato USA), convertito in EUR al tasso "
+               "reale del mese — è il dato su cui il modello calcola il segnale, NON una quota Cardmarket. "
+               "Il mercato europeo ha domanda/offerta propria: può differire, anche di molto. Il grafico "
+               "mostra lo storico usato dal modello — confronta sempre col prezzo reale dietro al bottone.")
     buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
     allocation = build_allocation(buy_rows, capital, metadata, latest_date)
 
@@ -177,11 +205,15 @@ def main():
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
             <strong>{r['name']}</strong> &nbsp; <span style="color:#10b981;">+{r['trailing_12m_return_pct']:.0f}% (12m)</span>
-            &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ &nbsp;·&nbsp; peso età {w:.2f}
+            &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting) &nbsp;·&nbsp; peso età {w:.2f}
             <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
         </div>
         """, unsafe_allow_html=True)
+        chart = build_price_chart(r["item_id"], r["name"], prices_full)
+        if chart is not None:
+            st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
+                             key=f"chart_buy_{r['item_id']}")
 
     # --- ROTAZIONE: AVOID/SELL ---
     sell_rows = [r for r in sig_rows if r["signal"] == "AVOID/SELL"]
@@ -191,15 +223,23 @@ def main():
             st.markdown(f"""
             <div class="signal-card signal-card-sell">
                 <strong>{r['name']}</strong> &nbsp; <span style="color:#f43f5e;">{r['trailing_12m_return_pct']:.0f}% (12m)</span>
-                &nbsp;·&nbsp; {r['current_price_eur']:.0f}€
+                &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting)
             </div>
             """, unsafe_allow_html=True)
+            chart = build_price_chart(r["item_id"], r["name"], prices_full)
+            if chart is not None:
+                st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
+                                 key=f"chart_sell_{r['item_id']}")
 
     if n_verify:
         with st.expander(f"⚠️ Da verificare a mano ({n_verify}) — rendimento implausibile, mercato troppo sottile"):
             for r in sig_rows:
                 if "VERIFICARE" in r["signal"]:
-                    st.markdown(f"- **{r['name']}** — {r['trailing_12m_return_pct']:+.0f}% (12m), {r['current_price_eur']:.0f}€")
+                    st.markdown(f"- **{r['name']}** — {r['trailing_12m_return_pct']:+.0f}% (12m), {r['current_price_eur']:.0f}€ (PriceCharting)")
+                    chart = build_price_chart(r["item_id"], r["name"], prices_full)
+                    if chart is not None:
+                        st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
+                                         key=f"chart_verify_{r['item_id']}")
 
     # --- EQUITY CURVE ---
     st.markdown('<div class="section-title">📈 Backtest 2020-2026</div>', unsafe_allow_html=True)
