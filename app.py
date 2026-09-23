@@ -122,7 +122,13 @@ def build_price_chart(item_id: str, name: str, prices_full: pd.DataFrame, months
     return fig
 
 
-def build_allocation(buy_rows: list, capital: float, metadata: dict, latest_date: str):
+def build_allocation(buy_rows: list, capital: float, metadata: dict, latest_date: str,
+                      max_allocation_pct: float = 0.12):
+    """Ripartisce il capitale per peso-età, poi applica il tetto per posizione
+    dichiarato in sidebar (12% del capitale) con un waterfall: chi sfora il tetto
+    viene fissato al tetto e l'eccedenza si ridistribuisce sui restanti, finche'
+    nessuno sfora piu' - prima questa funzione calcolava solo la proporzione per
+    peso senza applicare alcun tetto, contraddicendo il testo in sidebar."""
     latest_dt = pd.to_datetime(latest_date)
     weighted = []
     for r in buy_rows:
@@ -132,8 +138,29 @@ def build_allocation(buy_rows: list, capital: float, metadata: dict, latest_date
             rd = pd.to_datetime(rel_dt)
             age_m = (latest_dt.year - rd.year) * 12 + (latest_dt.month - rd.month)
         weighted.append((r, age_weight(age_m)))
-    total_w = sum(w for _, w in weighted) or 1.0
-    return [(r, capital * (w / total_w), w) for r, w in sorted(weighted, key=lambda x: -x[1])]
+    weighted.sort(key=lambda x: -x[1])
+
+    cap = capital * max_allocation_pct
+    alloc_by_idx = {}
+    remaining_capital = capital
+    free_idx = set(range(len(weighted)))
+    while free_idx:
+        total_w = sum(weighted[i][1] for i in free_idx) or 1.0
+        over_cap = []
+        for i in free_idx:
+            share = remaining_capital * (weighted[i][1] / total_w)
+            if share > cap:
+                over_cap.append(i)
+        if not over_cap:
+            for i in free_idx:
+                alloc_by_idx[i] = remaining_capital * (weighted[i][1] / total_w)
+            break
+        for i in over_cap:
+            alloc_by_idx[i] = cap
+            remaining_capital -= cap
+            free_idx.remove(i)
+
+    return [(weighted[i][0], alloc_by_idx[i], weighted[i][1]) for i in range(len(weighted))]
 
 
 def main():
