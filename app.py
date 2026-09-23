@@ -2,12 +2,22 @@
 app.py — PokeQuant: Dashboard della strategia validata (TS Momentum, box sigillati).
 
 Mostra SOLO cio' che ha superato la validazione istituzionale di questa sessione
-(DSR 0,913, PBO 28,6%, bootstrap, walk-forward H1/H2 senza inversione di segno - vedi
-scripts/optimize_and_falsify.py). Tutto il resto (Slabs Radar, desk discrezionale a
-tier, OptimalSealedStrategy/SealedAccumulatorStrategy/ChaseDipBuyerStrategy, l'audit
-a slider) e' stato rimosso per direttiva esplicita - "tieni solo quello che abbiamo
-validato" - non e' sparito: resta nel codice/git history per ricerca futura, solo non
-piu' mostrato come se fosse pronto per capitale reale.
+(bootstrap, walk-forward H1/H2 senza inversione di segno - vedi scripts/optimize_and_falsify.py).
+Tutto il resto (Slabs Radar, desk discrezionale a tier, OptimalSealedStrategy/
+SealedAccumulatorStrategy/ChaseDipBuyerStrategy, l'audit a slider) e' stato rimosso
+per direttiva esplicita - "tieni solo quello che abbiamo validato" - non e' sparito:
+resta nel codice/git history per ricerca futura, solo non piu' mostrato come se
+fosse pronto per capitale reale.
+
+DSR: il numero originale (0,913) era corretto solo per la griglia di lookback con cui
+la strategia fu scelta (n_trials=5). Un audit successivo (richiesto esplicitamente
+dopo aver scoperto lo stesso problema sul fattore di valore relativo delle singole)
+ha ricontato TUTTI i trial tentati sul lato sealed in questa sessione - lookback (5),
+logica di uscita (9), finestra d'eta' (7), time stop (7), teoria EV del box (4) = 32
+- e il DSR corretto scende a 0,675. Resta il piu' alto di qualsiasi candidato testato
+in questa sessione (valore relativo singole 0,581, teoria EV box 0,616), ma non supera
+piu' la soglia di comfort 0,90-0,95 usata ovunque in questa ricerca. Mostrati ENTRAMBI
+i numeri in dashboard, non solo il piu' favorevole - vedi scripts/dsr_session_audit.py.
 
 Azionabilita' per l'Italia: link diretti a Cardmarket (mercato primario per chi opera
 dall'Italia, vedi OPERATIONS_ITALIA.md) su ogni posizione BUY/HOLD.
@@ -37,7 +47,8 @@ from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTO
 # ogni 6 mesi (vedi OPERATIONS_ITALIA.md), non ogni refresh del browser.
 # =============================================================================
 VALIDATED = {
-    "dsr": 0.913, "pbo": 0.286, "sharpe": 1.10, "cagr": 23.54, "max_dd": -13.40,
+    "dsr_own_grid": 0.913, "dsr_full_session": 0.675, "n_trials_full_session": 32,
+    "pbo": 0.286, "sharpe": 1.10, "cagr": 23.54, "max_dd": -13.40,
     "bootstrap_cagr_p_pos": 100, "bootstrap_sharpe_p_pos": 100,
     "h1_sharpe": -0.10, "h2_sharpe": 1.29,
 }
@@ -238,7 +249,7 @@ def main():
             <span style="color:#64748b; font-size:12px; margin-left:8px;">TS Momentum · Box Sigillati Era Moderna (2019+)</span>
         </div>
         <div>
-            <span class="pill-tag pill-emerald">✅ Validato (DSR {VALIDATED['dsr']:.3f})</span>
+            <span class="pill-tag pill-blue">DSR {VALIDATED['dsr_full_session']:.3f} (audit sessione intera)</span>
             <span class="pill-tag pill-blue">Segnale {latest_date[:7]}</span>
         </div>
     </div>
@@ -263,9 +274,17 @@ def main():
     # --- METRICHE VALIDATE ---
     st.markdown('<div class="section-title">📊 Metriche di Validazione</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-desc">Numeri fissi da scripts/optimize_and_falsify.py — non ricalcolati a ogni refresh. Rivalidare ogni 6 mesi.</div>', unsafe_allow_html=True)
+    st.warning(
+        f"**DSR corretto per l'intera sessione: {VALIDATED['dsr_full_session']:.3f}** (non {VALIDATED['dsr_own_grid']:.3f}). "
+        f"Il numero originale era corretto solo per la griglia con cui la strategia fu scelta (5 candidati). "
+        f"Un audit ha ricontato tutti i {VALIDATED['n_trials_full_session']} trial tentati sul lato sealed in questa sessione "
+        f"(lookback, logica di uscita, finestra d'età, time stop, teoria EV del box) — sotto la soglia di comfort 0,90-0,95 "
+        f"usata ovunque in questa ricerca, anche se resta il DSR più alto tra tutti i candidati testati. "
+        f"Vedi `scripts/dsr_session_audit.py`."
+    )
     st.markdown(f"""
     <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">DSR</div><div class="kpi-value">{VALIDATED['dsr']:.3f}</div><div class="kpi-sub kpi-sub-emerald">Soglia istituzionale 0,95</div></div>
+        <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">Sotto soglia 0,90-0,95 · griglia propria: {VALIDATED['dsr_own_grid']:.3f}</div></div>
         <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED['cagr']:.1f}%</div></div>
         <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-amber">Sopra fascia comfort (&lt;20-25%)</div></div>
         <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Bootstrap P(&gt;0)={VALIDATED['bootstrap_cagr_p_pos']}%</div></div>
@@ -417,7 +436,8 @@ def main():
                    "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
 
     st.markdown("---")
-    st.caption("PokeQuant · Solo strategie validate a livello istituzionale · "
+    st.caption("PokeQuant · Il candidato più solido di tutta la ricerca, sotto la soglia istituzionale dopo "
+                "l'audit sull'intera sessione (vedi avviso in alto) · "
                 "[Runbook Italia](https://github.com/davbenx/pokequant/blob/main/OPERATIONS_ITALIA.md) · "
                 "Rivalidare con `scripts/optimize_and_falsify.py` ogni 6 mesi.")
 
