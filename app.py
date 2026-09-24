@@ -342,6 +342,16 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
+    st.markdown("""
+    <div style="background: rgba(15,23,42,0.5); border-radius: 8px; padding: 8px 14px; margin-bottom: 14px;
+                font-size: 12px; color: #94a3b8; display: flex; gap: 18px; flex-wrap: wrap; align-items: center;">
+        <strong style="color:#f1f5f9;">Come leggere i segnali:</strong>
+        <span>🟢 <strong style="color:#10b981;">Verde</strong> = comprare/tenere (segnale validato)</span>
+        <span>🔴 <strong style="color:#f43f5e;">Rosso</strong> = box: momentum invertito, non comprare/valuta vendita se lo possiedi ·
+              singole: sopravvalutata vs pari (informativo, non una strategia di vendita testata a sé)</span>
+    </div>
+    """, unsafe_allow_html=True)
+
     # --- SIDEBAR: capitale ---
     with st.sidebar:
         st.markdown("### 💰 Capitale")
