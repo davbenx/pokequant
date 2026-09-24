@@ -499,7 +499,9 @@ def main():
                    "pannello USA (PriceCharting) su cui è calibrato il modello: se non trovi nulla sotto il prezzo "
                    "massimo mostrato, NON è un errore del modello, è il gate di liquidità che funziona. Registra "
                    "l'osservazione (anche se non compri) con `python scripts/log_execution_price.py <item_id> "
-                   "--ask <prezzo_reale>` — calibra empiricamente lo scarto invece di lasciarlo una stima flat.")
+                   "--ask <prezzo_reale>` — calibra empiricamente lo scarto invece di lasciarlo una stima flat. "
+                   "Il lato vendita nessun backtest può simularlo (se/quando/a che prezzo un'inserzione trova un "
+                   "compratore): registralo con `scripts/log_sell_outcome.py` (list/sold/withdrawn/--report).")
 
     capital = effective_capital
 

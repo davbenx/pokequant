@@ -72,6 +72,19 @@ Prima di comprare qualunque cosa in lista:
    Non usare servizi terzi che scrappano Cardmarket (vedi discussione precedente sul
    perché) né bypassare protezioni anti-bot.
 
+**Il lato vendita è altrettanto critico, e nessun backtest lo può simulare**
+(osservazione diretta dell'utente: "l'unico modo per fare un test è comprare
+e vendere davvero"). Quando metti in vendita qualcosa, registralo:
+- `python scripts/log_sell_outcome.py list <item_id> --price <prezzo_listino>`
+- Quando vende: `python scripts/log_sell_outcome.py sold <item_id> --price <prezzo_realizzato> --list-date <data_listing>`
+- Se la ritiri senza venderla (dato utile quanto una vendita riuscita — è
+  informazione, non un fallimento da nascondere):
+  `python scripts/log_sell_outcome.py withdrawn <item_id> --list-date <data_listing>`
+- `python scripts/log_sell_outcome.py --report` mostra tasso di successo,
+  giorni mediani sul mercato e sconto realizzato vs. listino — sotto 8
+  osservazioni chiuse resta "indicativo", non affidabile (stesso principio
+  del punto 2 sopra).
+
 ## 3. Sourcing — priorità dei canali
 
 1. **Cardmarket** — priorità assoluta per singole gradate e box EU-native. Fee 5%,
