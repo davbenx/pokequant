@@ -328,22 +328,6 @@ WOTC_FIRST_EDITION_SETS = {
 }
 
 
-def _set_name_from_slug(game_slug: str) -> Optional[str]:
-    """'pokemon-evolving-skies' -> 'Evolving Skies', 'one-piece-romance-dawn' ->
-    'Romance Dawn' - stesso game_slug/item_slug di PriceCharting gia' in
-    metadata (data_cache/items_metadata.json), nessun nuovo dato inventato."""
-    if not game_slug:
-        return None
-    parts = game_slug.split("-")
-    if parts and parts[0] in ("pokemon", "one"):
-        parts = parts[1:]
-    if parts and parts[0] == "piece":
-        parts = parts[1:]
-    if not parts:
-        return None
-    return " ".join(p.capitalize() for p in parts)
-
-
 def get_cardmarket_deep_link(
     item_name: str,
     franchise: str = "pokemon",
@@ -353,33 +337,27 @@ def get_cardmarket_deep_link(
     game_slug: Optional[str] = None,
 ) -> str:
     """
-    Costruisce l'URL diretto e preciso su Cardmarket con filtri lingua (idLanguage)
-    e parametri di ricerca ottimali.
+    Costruisce l'URL diretto su Cardmarket con filtro lingua (idLanguage) e una
+    ricerca testuale per nome.
 
     item_type="sealed" (default, comportamento storico) -> aggiunge "Booster Box"
-    al nome se non gia' presente. item_type="single" -> NON lo aggiunge (era un bug:
-    per una singola carta il link finiva a cercare il box, non la carta).
+    al nome se non gia' presente (quasi certamente nel titolo prodotto reale).
+    item_type="single" -> la ricerca resta SOLO il nome carta pulito, senza
+    numero di raccolta (#203 ecc., indice PriceCharting non nel titolo
+    Cardmarket) e senza alcun testo aggiunto (set, grado, edizione).
 
-    game_slug (opzionale, es. "pokemon-evolving-skies" da metadata) -> aggiunge il
-    NOME DEL SET alla ricerca. Trovato verificando manualmente i link generati
-    (richiesto esplicitamente dall'utente): senza il set, una ricerca per un nome
-    carta comune ("Raichu", "Magikarp"...) e' ambigua fra decine di espansioni
-    diverse in cui quel Pokemon e' apparso - il set e' il disambiguante reale,
-    non il numero di raccolta interno (#203 ecc., rimosso dalla stringa di
-    ricerca qui sotto: e' un indice PriceCharting, non fa parte del titolo
-    prodotto su Cardmarket). Rimosso anche il suggerimento testuale "PSA 9"
-    (versione precedente): Cardmarket non indicizza il grado nel titolo del
-    prodotto raw, un testo letterale "PSA 9" nella ricerca rischiava di
-    azzerare i risultati invece di filtrarli. Nessun filtro Cardmarket reale
-    per grado esiste in questo URL: resta una ricerca testuale approssimata,
-    l'utente deve comunque controllare a mano il grado dell'inserzione.
-
-    Per i set WOTC 1999-2000 (WOTC_FIRST_EDITION_SETS) aggiunge "Unlimited"
-    alla ricerca: esistono SIA una stampa "1st Edition" (spesso 2-4x+ piu'
-    cara) SIA "Unlimited" per la stessa carta, e il nostro metadata traccia
-    sempre la Unlimited - senza specificarlo, la ricerca trova quasi solo
-    inserzioni 1st Edition (la variante piu' nota) e sembra un prezzo enorme
-    rispetto al dashboard, quando in realta' sono due prodotti diversi.
+    STORIA (per non ripetere lo stesso errore): versioni precedenti
+    aggiungevano "PSA 9", poi nome set + "Unlimited" alla ricerca per
+    disambiguare grado/espansione/edizione - segnalato dall'utente che il
+    link portava a una pagina Cardmarket vuota. Cardmarket blocca ogni
+    accesso automatico (verificato con curl/Playwright/WebFetch), quindi non
+    c'e' modo di controllare cosa indicizza davvero nel titolo prodotto -
+    ogni testo aggiunto oltre al nome e' un rischio concreto di azzerare i
+    risultati, non solo un'ipotesi. Il game_slug/set/edizione (1st Edition vs
+    Unlimited per i set WOTC 1999-2000, vedi WOTC_FIRST_EDITION_SETS) restano
+    disponibili come informazione nella UI (nome carta con "(Unlimited)",
+    caption) - l'utente li applica come FILTRO sulla pagina risultati
+    Cardmarket stessa, non forzati nella query.
     """
     game = "OnePiece" if franchise == "one_piece" or "One Piece" in item_name or "OP-" in item_name or "OP0" in item_name else "Pokemon"
     lang_id = LANGUAGE_CODES.get(language.lower(), {}).get("id", 1)
@@ -390,17 +368,23 @@ def get_cardmarket_deep_link(
     clean_name = item_name.replace("[JP]", "").replace("[OP-01]", "").replace("[OP-02]", "").replace("[OP-03]", "").replace("[OP-05]", "").replace("[OP-06]", "").replace("[OP-07]", "").replace("[OP-08]", "").strip()
     clean_name = re.sub(r"\s*#\d+\s*", " ", clean_name).strip()
     # Rimuove un'annotazione "(Unlimited)" gia' presente nel nome (aggiunta a
-    # scopo di visualizzazione da generate_singles_signal.py) prima di
-    # aggiungerla di nuovo sotto - altrimenti finirebbe duplicata nella ricerca.
+    # scopo di visualizzazione da generate_singles_signal.py) - NON va nella
+    # ricerca (vedi sotto).
     clean_name = re.sub(r"\s*\(unlimited\)\s*", " ", clean_name, flags=re.IGNORECASE).strip()
 
-    set_name = _set_name_from_slug(game_slug)
-    if item_type == "single":
-        if set_name:
-            clean_name += f" {set_name}"
-        if game_slug in WOTC_FIRST_EDITION_SETS:
-            clean_name += " Unlimited"
-    elif "box" not in clean_name.lower() and "bundle" not in clean_name.lower():
+    # AGGIORNAMENTO (segnalato dall'utente: il link porta a una pagina
+    # Cardmarket vuota): aggiungere nome set (_set_name_from_slug) e/o
+    # "Unlimited"/"PSA 9" alla stringa di ricerca e' un rischio concreto di
+    # azzerare i risultati, non solo un'ipotesi - nessun modo verificato di
+    # controllare cosa Cardmarket indicizza davvero nel titolo prodotto
+    # (Cardmarket blocca ogni accesso automatico, verificato con curl/
+    # Playwright/WebFetch). Per le singole la ricerca resta quindi SOLO il
+    # nome carta pulito - il piu' probabile a restituire risultati non vuoti -
+    # e set/lingua/edizione (1st Edition vs Unlimited) si filtrano a mano con
+    # i filtri della pagina risultati Cardmarket stessa, non forzandoli nella
+    # query. Per i box il nome set NON serve a disambiguare (gia' univoco) e
+    # "Booster Box" e' quasi certamente nel titolo prodotto reale.
+    if item_type != "single" and "box" not in clean_name.lower() and "bundle" not in clean_name.lower():
         clean_name += " Booster Box"
 
     encoded = urllib.parse.quote(clean_name)

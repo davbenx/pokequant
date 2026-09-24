@@ -69,49 +69,39 @@ def test_deep_link_generation():
     assert "idLanguage=1" in url_op
 
 
-def test_deep_link_single_uses_set_name_not_card_number_or_grade_text():
-    """Trovato verificando i link: senza il set, una ricerca per un nome carta
-    comune e' ambigua fra decine di espansioni - il game_slug (da metadata,
-    stesso identificatore PriceCharting) e' il vero disambiguante. "#203"
-    (indice interno PriceCharting) e "PSA 9" (testo letterale che Cardmarket
-    non indicizza nel titolo prodotto raw) vanno rimossi dalla ricerca, non
-    aggiunti."""
+def test_deep_link_single_strips_card_number_and_grade_text():
+    """Trovato verificando i link (segnalato dall'utente: la ricerca portava
+    a una pagina Cardmarket vuota): aggiungere testo alla query oltre al nome
+    pulito della carta (nome set, "Unlimited", "PSA 9"...) e' un rischio
+    concreto di azzerare i risultati - nessun modo verificato di controllare
+    cosa Cardmarket indicizza davvero nel titolo prodotto (blocca ogni
+    accesso automatico). La ricerca per le singole resta quindi SOLO il nome
+    carta pulito: "#203" (indice interno PriceCharting, non nel titolo
+    Cardmarket) va rimosso, nessun testo va aggiunto. Set/lingua/edizione si
+    filtrano a mano con i filtri della pagina risultati Cardmarket."""
     url = get_cardmarket_deep_link(
         "Magikarp #203 Illustration Rare", franchise="pokemon", language="en",
         item_type="single", game_slug="pokemon-paldea-evolved",
     )
-    assert "Paldea" in url and "Evolved" in url
     assert "%23203" not in url and "#203" not in url
+    assert "Paldea" not in url and "PSA" not in url and "Unlimited" not in url
+    assert "searchString=Magikarp" in url or "searchString=Magikarp%20" in url
 
 
-def test_deep_link_wotc_single_disambiguates_unlimited_vs_1st_edition():
-    """Trovato verificando un prezzo reale (Raichu #14 Fossil: 107,60€ Unlimited
-    mostrati vs 250€ reali trovati dall'utente, quasi esattamente il prezzo
-    della variante 1st Edition $409.70 verificata su PriceCharting) - senza
-    disambiguare, la ricerca trova quasi solo inserzioni 1st Edition (2-4x+
-    piu' care) per lo stesso nome carta."""
+def test_deep_link_wotc_single_annotation_stripped_from_search():
+    """Il nome mostrato in dashboard per le carte WOTC 1999-2000 (Base Set,
+    Jungle, Fossil, Team Rocket, Gym, Base Set 2) include "(Unlimited)" per
+    disambiguare dalla stampa "1st Edition" separata e piu' cara (vedi
+    generate_singles_signal.py::_display_name) - ma quel testo va tolto dalla
+    query di ricerca, non aggiunto: "Unlimited" non e' verificato apparire
+    nel titolo prodotto Cardmarket, e forzarlo rischia di azzerare i risultati
+    esattamente come "PSA 9" nella versione precedente di questo link."""
     url = get_cardmarket_deep_link(
-        "Raichu #14", franchise="pokemon", language="en",
-        item_type="single", game_slug="pokemon-fossil",
-    )
-    assert "Unlimited" in url
-
-    # Con "(Unlimited)" gia' nel nome (come lo mostra la dashboard) non deve
-    # duplicarsi nella ricerca.
-    url_already_annotated = get_cardmarket_deep_link(
         "Raichu #14 (Unlimited)", franchise="pokemon", language="en",
         item_type="single", game_slug="pokemon-fossil",
     )
-    assert url_already_annotated.count("Unlimited") == 1
-
-
-def test_deep_link_modern_single_not_annotated_unlimited():
-    url = get_cardmarket_deep_link(
-        "Skyla #122", franchise="pokemon", language="en",
-        item_type="single", game_slug="pokemon-breakpoint",
-    )
     assert "Unlimited" not in url
-    assert "PSA" not in url
+    assert "searchString=Raichu" in url
 
 
 def test_deep_link_sealed_still_appends_booster_box():
