@@ -473,9 +473,13 @@ def main():
     st.caption("⚠️ Da comprare: la carta GIÀ GRADATA Grade 9 (uno slab, non la carta raw, non PSA10) — il "
                "fattore lavora solo su questa serie di PriceCharting, non confronta mai tra gradi diversi. "
                "Confronta sempre col prezzo reale su Cardmarket e verifica il grado dell'inserzione a mano: "
-               "il link di ricerca è testuale, non un filtro reale per grado. Il 'residuo' è quanto la carta "
-               "costa meno di quanto la sua rarità/età/set implicherebbero rispetto alle sue pari — più "
-               "negativo, più sottovalutata secondo il modello. Prime 15 con grafico, le altre in tabella sotto.")
+               "il link di ricerca è testuale, non un filtro reale per grado. \"Sconto vs. pari\" è quanto la "
+               "carta costa in meno (%) rispetto a quanto la sua rarità/età/set implicherebbero rispetto alle "
+               "sue pari — più negativo, più sottovalutata secondo il modello. \"Segnale da\" è da quanti mesi "
+               "consecutivi la carta è nel quantile BUY: solo le carte entrate negli ultimi 3 mesi (la cadenza "
+               "di ribilanciamento validata nel backtest) sono mostrate — oltre, comprarla oggi non è ciò che "
+               "è stato testato, è un possibile *value trap* (sconto persistente che il mercato non corregge). "
+               "Prime 15 con grafico, le altre in tabella sotto.")
     singles_rows, singles_latest_date = get_singles_signal()
     singles_prices_full = get_singles_prices_full()
     singles_allocation = build_equal_allocation(singles_rows, capital * 0.5)
@@ -485,10 +489,13 @@ def main():
     for r, alloc in singles_allocation[:15]:
         meta = {"franchise": r.get("franchise", "pokemon"), "language": r.get("language", "en")}
         link = get_cardmarket_deep_link(r["name"], franchise=meta["franchise"], language=meta["language"], item_type="single")
+        start = r["signal_start_date"]
+        start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
             <strong>{r['name']}</strong> &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
-            &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting) &nbsp;·&nbsp; residuo {r['residual']:+.2f}
+            &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting) &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%
+            &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r['months_in_signal']}m)</span>
             <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
         </div>
@@ -502,13 +509,15 @@ def main():
         with st.expander(f"Altre {len(singles_allocation) - 15} carte nel quantile BUY"):
             rest_df = pd.DataFrame([
                 {"Carta": r["name"], "Rarità": r["rarity"], "Grado": "Grade 9",
-                 "Prezzo (€)": r["current_price_eur"], "Residuo": r["residual"], "Allocazione (€)": alloc}
+                 "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
+                 "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
+                 "Allocazione (€)": alloc}
                 for r, alloc in singles_allocation[15:]
             ])
             st.dataframe(rest_df, use_container_width=True, hide_index=True,
                          column_config={
                              "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
-                             "Residuo": st.column_config.NumberColumn(format="%+.2f"),
+                             "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
                              "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
                          })
 
