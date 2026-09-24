@@ -928,8 +928,6 @@
     "slippage_pct": 0.02,
     "holding_cost_annual_pct": 0.001,
     "last_psa_price": 1307.18,
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 210% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "stellar_crown_bb": {
@@ -1069,8 +1067,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 140.08,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 300% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "GIDORA"
   },
@@ -1129,8 +1125,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 115.86,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 892% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Yuu Nishida"
   },
@@ -1282,7 +1276,9 @@
     "cardmarket_ref_price_eur": 74.97,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Uta"
+    "artist": "Uta",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 1015% (soglia 200%)"
   },
   "ice_rider_calyrex_vmax_203": {
     "name": "Ice Rider Calyrex VMAX #203",
@@ -1549,7 +1545,9 @@
     "cardmarket_ref_price_eur": 47.69,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "rika"
+    "artist": "rika",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 403% (soglia 200%)"
   },
   "iron_crown_ex_206": {
     "name": "Iron Crown ex #206",
@@ -1681,8 +1679,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 42.38,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 210% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "mortys_conviction_211": {
@@ -2312,7 +2308,9 @@
     "cardmarket_ref_price_eur": 110.28,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Mitsuhiro Arita"
+    "artist": "Mitsuhiro Arita",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 754% (soglia 200%)"
   },
   "m_charizard_ex_101": {
     "name": "M Charizard-EX #101",
@@ -2431,8 +2429,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 406.29,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 17.3x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics"
   },
@@ -2463,8 +2459,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 42.56,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 17.6x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Megumi Mizutani"
   },
@@ -2526,7 +2520,9 @@
     "cardmarket_ref_price_eur": 314.73,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "TOKIYA"
+    "artist": "TOKIYA",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 360% (soglia 200%)"
   },
   "m_latios_ex_102": {
     "name": "M Latios-EX #102",
@@ -2541,7 +2537,7 @@
     "cardmarket_ref_price_eur": 64.33,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 201% (soglia 200%)",
+    "data_quality_reason": "salto mensile 272% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics"
   },
@@ -2558,7 +2554,9 @@
     "cardmarket_ref_price_eur": 61.63,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ryo Ueda"
+    "artist": "Ryo Ueda",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 15.4x (soglia 15.0x)"
   },
   "m_rayquaza_ex_105": {
     "name": "M Rayquaza-EX #105",
@@ -2573,7 +2571,9 @@
     "cardmarket_ref_price_eur": 189.88,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "5ban Graphics"
+    "artist": "5ban Graphics",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 26.6x (soglia 15.0x)"
   },
   "winona_108": {
     "name": "Winona #108",
@@ -2603,7 +2603,9 @@
     "cardmarket_ref_price_eur": 43.84,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Mitsuhiro Arita"
+    "artist": "Mitsuhiro Arita",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 572% (soglia 200%)"
   },
   "pikachu_zekrom_gx_33": {
     "name": "Pikachu & Zekrom-GX #33",
@@ -2632,8 +2634,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 203.82,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 23.1x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita"
   },
@@ -2664,8 +2664,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 733.16,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 16.0x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "OOYAMA"
   },
@@ -2712,7 +2710,7 @@
     "cardmarket_ref_price_eur": 807.34,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 31.1x (soglia 15.0x)",
+    "data_quality_reason": "range max/min 47.6x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Midori Harada"
   },
@@ -3013,8 +3011,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 41.7,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 25.4x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita"
   },
@@ -3045,8 +3041,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 79.01,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 23.9x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita"
   },
@@ -3092,8 +3086,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 151.36,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 17.7x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Miki Tanaka"
   },
@@ -3139,8 +3131,6 @@
     "language": "en",
     "cardmarket_ref_price_eur": 228.21,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 18.7x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "chibi"
   },
@@ -4185,7 +4175,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 1812.93,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 212% (soglia 200%)"
   },
   "op_awakening-of-the-new-era_trafalgar_law_alternate_art_mang": {
     "name": "Trafalgar Law [Alternate Art Manga] OP05-069",
@@ -4238,7 +4230,7 @@
     "pricecharting_ref_price_usd": 1227.1,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 243% (soglia 200%)",
+    "data_quality_reason": "salto mensile 231% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_romance-dawn_boa_hancock_sp_op01_078": {
@@ -4253,7 +4245,7 @@
     "pricecharting_ref_price_usd": 1226.37,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 17.8x (soglia 15.0x)",
+    "data_quality_reason": "salto mensile 403% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_romance-dawn_yamato_top_64_op01_121": {
@@ -4345,7 +4337,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 612.43,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (4 osservazioni)"
   },
   "op_paramount-war_koby_treasure_cup_op02_098": {
     "name": "Koby [Treasure Cup] OP02-098",
@@ -4358,8 +4352,6 @@
     "language": "en",
     "pricecharting_ref_price_usd": 558.96,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 207% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_romance-dawn_nami_alternate_art_errata_op01_016": {
@@ -4386,8 +4378,6 @@
     "language": "en",
     "pricecharting_ref_price_usd": 499.25,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 26.0x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_awakening-of-the-new-era_zoro_juurou_sp_foil_op05_067": {
@@ -4440,7 +4430,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 461.77,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 234% (soglia 200%)"
   },
   "op_wings-of-the-captain_o_nami_sp_op06_101": {
     "name": "O-Nami [SP] OP06-101",
@@ -4480,7 +4472,7 @@
     "pricecharting_ref_price_usd": 401.59,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 23.7x (soglia 15.0x)",
+    "data_quality_reason": "salto mensile 568% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_pillars-of-strength_haruta_pre_release_op03_009": {
@@ -4495,7 +4487,7 @@
     "pricecharting_ref_price_usd": 366.43,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 18399% (soglia 200%)",
+    "data_quality_reason": "salto mensile 207% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_awakening-of-the-new-era_monkeydluffy_psa_promo_op05_060": {
@@ -4522,7 +4514,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 359.39,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 251% (soglia 200%)"
   },
   "op_pillars-of-strength_nami_alternate_art_op03_040": {
     "name": "Nami [Alternate Art] OP03-040",
@@ -4613,8 +4607,6 @@
     "language": "en",
     "pricecharting_ref_price_usd": 241.99,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 300% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_wings-of-the-captain_roronoa_zoro_pre_release_p_045": {
@@ -4629,7 +4621,7 @@
     "pricecharting_ref_price_usd": 215.16,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 820% (soglia 200%)",
+    "data_quality_reason": "salto mensile 400% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_romance-dawn_trafalgar_law_sp_op01_047": {
@@ -4656,7 +4648,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 210.32,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 293% (soglia 200%)"
   },
   "op_romance-dawn_sanji_1st_anniversary_op01_013": {
     "name": "Sanji [1st Anniversary] OP01-013",
@@ -4670,7 +4664,7 @@
     "pricecharting_ref_price_usd": 203.73,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 17.6x (soglia 15.0x)",
+    "data_quality_reason": "salto mensile 471% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_wings-of-the-captain_o_nami_beginners_deck_party_op06_101": {
@@ -4712,7 +4706,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 190.75,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "op_pillars-of-strength_sanji_offline_regional_finalist_op03_": {
     "name": "Sanji [Offline Regional Finalist] OP03-102",
@@ -4738,7 +4734,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 179.31,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 231% (soglia 200%)"
   },
   "op_romance-dawn_tony_tonychopper_offline_regionals_op01_015": {
     "name": "Tony Tony.Chopper [Offline Regionals] OP01-015",
@@ -4842,7 +4840,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 135.0,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "op_romance-dawn_sleeved_booster_pack": {
     "name": "Sleeved Booster Pack",
@@ -4868,8 +4868,6 @@
     "language": "en",
     "pricecharting_ref_price_usd": 134.4,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 275% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_romance-dawn_roronoa_zoro_25th_anniversary_op01_001": {
@@ -4896,7 +4894,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 132.5,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 365% (soglia 200%)"
   },
   "op_wings-of-the-captain_roronoa_zoro_alternate_art_op06_118": {
     "name": "Roronoa Zoro [Alternate Art] OP06-118",
@@ -4909,7 +4909,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 129.34,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 306% (soglia 200%)"
   },
   "op_romance-dawn_crocodile_alternate_art_op01_062": {
     "name": "Crocodile [Alternate Art] OP01-062",
@@ -4922,8 +4924,6 @@
     "language": "en",
     "pricecharting_ref_price_usd": 127.64,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 252% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_awakening-of-the-new-era_rebecca_sp_op05_091": {
@@ -4937,7 +4937,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 127.5,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "op_romance-dawn_kaido_alternate_art_errata_op01_061": {
     "name": "Kaido [Alternate Art Errata] OP01-061",
@@ -4963,7 +4965,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 124.88,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "op_romance-dawn_usopp_1st_anniversary_op01_004": {
     "name": "Usopp [1st Anniversary] OP01-004",
@@ -4977,7 +4981,7 @@
     "pricecharting_ref_price_usd": 122.86,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 33.6x (soglia 15.0x)",
+    "data_quality_reason": "salto mensile 231% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_romance-dawn_yamato_alternate_art_op01_121": {
@@ -5045,7 +5049,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 100.99,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 442% (soglia 200%)"
   },
   "op_awakening-of-the-new-era_enel_sp_op05_100": {
     "name": "Enel [SP] OP05-100",
@@ -5175,8 +5181,6 @@
     "language": "en",
     "pricecharting_ref_price_usd": 82.44,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 25.6x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_paramount-war_smoker_alternate_art_op02_093": {
@@ -5204,7 +5208,7 @@
     "pricecharting_ref_price_usd": 80.0,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1030% (soglia 200%)",
+    "data_quality_reason": "range max/min 84.0x (soglia 15.0x)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_wings-of-the-captain_perona_top_16_op06_093": {
@@ -5233,8 +5237,6 @@
     "language": "en",
     "pricecharting_ref_price_usd": 79.96,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 273% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_pillars-of-strength_charlotte_linlin_sp_op03_114": {
@@ -5287,8 +5289,6 @@
     "language": "en",
     "pricecharting_ref_price_usd": 78.0,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 272% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_awakening-of-the-new-era_monkeydluffy_2nd_anniversary_op0": {
@@ -5368,7 +5368,7 @@
     "pricecharting_ref_price_usd": 72.24,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 250% (soglia 200%)",
+    "data_quality_reason": "salto mensile 232% (soglia 200%)",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_wings-of-the-captain_yamato_alternate_art_op06_022": {
@@ -5499,7 +5499,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 62.44,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 314% (soglia 200%)"
   },
   "op_pillars-of-strength_kuroobi_online_finalist_op03_026": {
     "name": "Kuroobi [Online Finalist] OP03-026",
@@ -5592,7 +5594,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 54.14,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 998% (soglia 200%)"
   },
   "op_romance-dawn_eustasscaptainkid_alternate_art_errata_op01_": {
     "name": "EustassCaptainKid [Alternate Art Errata] OP01-051",
@@ -5840,8 +5844,6 @@
     "cardmarket_ref_price_eur": 185.83,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 26.3x (soglia 15.0x)",
     "artist": "Akira Komayama"
   },
   "solgaleo_lunala_gx_216": {
@@ -5902,8 +5904,6 @@
     "cardmarket_ref_price_eur": 263.49,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 15.7x (soglia 15.0x)",
     "artist": "Naoki Saito"
   },
   "naganadel_guzzlord_gx_224": {
@@ -5919,8 +5919,6 @@
     "cardmarket_ref_price_eur": 46.94,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 15.4x (soglia 15.0x)",
     "artist": "Aya Kusube"
   },
   "mega_lopunny_jigglypuff_gx_226": {
@@ -5936,8 +5934,6 @@
     "cardmarket_ref_price_eur": 108.6,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 17.0x (soglia 15.0x)",
     "artist": "Shibuzoh."
   },
   "silvally_gx_227": {
@@ -6253,8 +6249,6 @@
     "cardmarket_ref_price_eur": 128.61,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 18.9x (soglia 15.0x)",
     "artist": "You Iribi"
   },
   "greninja_zoroark_gx_200": {
@@ -6285,8 +6279,6 @@
     "cardmarket_ref_price_eur": 232.86,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 18.9x (soglia 15.0x)",
     "artist": "kodama"
   },
   "gardevoir_sylveon_gx_204": {
@@ -6422,8 +6414,6 @@
     "cardmarket_ref_price_eur": 182.07,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 388% (soglia 200%)",
     "artist": "aky CG Works"
   },
   "clefable_1": {
@@ -6500,7 +6490,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 705% (soglia 200%)",
+    "data_quality_reason": "salto mensile 227% (soglia 200%)",
     "artist": "Mitsuhiro Arita"
   },
   "aerodactyl_1": {
@@ -6771,8 +6761,6 @@
     "cardmarket_ref_price_eur": 60.36,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 213% (soglia 200%)",
     "artist": "Mitsuhiro Arita"
   },
   "dark_slowbro_12": {
@@ -6803,8 +6791,6 @@
     "cardmarket_ref_price_eur": 42.71,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 335% (soglia 200%)",
     "artist": "Kagemaru Himeno"
   },
   "here_comes_team_rocket_15": {
@@ -7421,7 +7407,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 601% (soglia 200%)",
+    "data_quality_reason": "range max/min 17.9x (soglia 15.0x)",
     "artist": "Mitsuhiro Arita"
   },
   "dark_blastoise_4": {
@@ -7437,7 +7423,9 @@
     "cardmarket_ref_price_eur": 52.18,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Mitsuhiro Arita"
+    "artist": "Mitsuhiro Arita",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 21.5x (soglia 15.0x)"
   },
   "dark_dragonite_5_legendary_collection": {
     "name": "Dark Dragonite #5",
@@ -7513,7 +7501,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1885% (soglia 200%)",
+    "data_quality_reason": "salto mensile 209% (soglia 200%)",
     "artist": "Kagemaru Himeno"
   },
   "full_heal_energy_100": {
@@ -7530,7 +7518,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 16.0x (soglia 15.0x)",
+    "data_quality_reason": "salto mensile 256% (soglia 200%)",
     "artist": "Keiji Kinebuchi"
   },
   "ampharos_H1": {
@@ -7666,8 +7654,6 @@
     "cardmarket_ref_price_eur": 194.83,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 593% (soglia 200%)",
     "artist": "Kyoko Umemoto"
   },
   "exeggutor_H10": {
@@ -7818,8 +7804,6 @@
     "cardmarket_ref_price_eur": 188.04,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 255% (soglia 200%)",
     "artist": "Kagemaru Himeno"
   },
   "octillery_H20": {
@@ -7925,8 +7909,6 @@
     "cardmarket_ref_price_eur": 81.88,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 779% (soglia 200%)",
     "artist": "Kagemaru Himeno"
   },
   "tyranitar_H28": {
@@ -8062,8 +8044,6 @@
     "cardmarket_ref_price_eur": 1124.48,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 16.9x (soglia 15.0x)",
     "artist": "Naoyo Kimura"
   },
   "nidoking_150": {
@@ -8135,9 +8115,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 282.4,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 740% (soglia 200%)"
+    "selection_method": "chase_price_filter_survivorship_biased"
   },
   "crobat_H5": {
     "name": "Crobat #H5",
@@ -8151,9 +8129,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 109.29,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 222% (soglia 200%)"
+    "selection_method": "chase_price_filter_survivorship_biased"
   },
   "dewgong_H6": {
     "name": "Dewgong #H6",
@@ -8251,9 +8227,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 400.63,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 711% (soglia 200%)"
+    "selection_method": "chase_price_filter_survivorship_biased"
   },
   "ledian_H14": {
     "name": "Ledian #H14",
@@ -8267,9 +8241,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 113.75,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 303% (soglia 200%)"
+    "selection_method": "chase_price_filter_survivorship_biased"
   },
   "machamp_H15": {
     "name": "Machamp #H15",
@@ -8591,7 +8563,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 4675.0,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 15.3x (soglia 15.0x)"
   },
   "charizard_146": {
     "name": "Charizard #146",
@@ -8841,8 +8815,6 @@
     "cardmarket_ref_price_eur": 82.28,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 18.4x (soglia 15.0x)",
     "artist": "Kouki Saitou"
   },
   "professor_birch_82": {
@@ -8858,8 +8830,6 @@
     "cardmarket_ref_price_eur": 104.9,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 43.3x (soglia 15.0x)",
     "artist": "Ken Sugimori"
   },
   "altaria_ex_90": {
@@ -8920,8 +8890,6 @@
     "cardmarket_ref_price_eur": 128.04,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 19.8x (soglia 15.0x)",
     "artist": "Mitsuhiro Arita"
   },
   "dusclops_ex_94": {
@@ -8952,8 +8920,6 @@
     "cardmarket_ref_price_eur": 59.32,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 97.1x (soglia 15.0x)",
     "artist": "Hikaru Koike"
   },
   "milotic_ex_96": {
@@ -9164,8 +9130,6 @@
     "cardmarket_ref_price_eur": 119.75,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 260% (soglia 200%)",
     "artist": "Ryo Ueda"
   },
   "tyranitar_ex_111": {
@@ -9346,8 +9310,6 @@
     "cardmarket_ref_price_eur": 78.74,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 18.8x (soglia 15.0x)",
     "artist": "Ryo Ueda"
   },
   "umbreon_17": {
@@ -9483,8 +9445,6 @@
     "cardmarket_ref_price_eur": 47.33,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 21.9x (soglia 15.0x)",
     "artist": "Kouki Saitou"
   },
   "mew_10": {
@@ -9545,8 +9505,6 @@
     "cardmarket_ref_price_eur": 42.34,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 352% (soglia 200%)",
     "artist": "Mitsuhiro Arita"
   },
   "flygon_ex_87": {
@@ -9578,7 +9536,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 273% (soglia 200%)",
+    "data_quality_reason": "range max/min 19.8x (soglia 15.0x)",
     "artist": "Ryo Ueda"
   },
   "regice_90": {
@@ -10118,9 +10076,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 64.66,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 23.2x (soglia 15.0x)"
+    "selection_method": "chase_price_filter_survivorship_biased"
   },
   "mewtwo_lvx_144": {
     "name": "Mewtwo LV.X #144",
@@ -10134,9 +10090,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 52.17,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 291% (soglia 200%)"
+    "selection_method": "chase_price_filter_survivorship_biased"
   },
   "uxie_lvx_146": {
     "name": "Uxie LV.X #146",
@@ -10150,9 +10104,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 45.95,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 257% (soglia 200%)"
+    "selection_method": "chase_price_filter_survivorship_biased"
   },
   "raichu_lvx_99": {
     "name": "Raichu LV.X #99",
@@ -10239,8 +10191,6 @@
     "cardmarket_ref_price_eur": 41.26,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 954% (soglia 200%)",
     "artist": "Mitsuhiro Arita"
   },
   "snorlax_lvx_111": {
@@ -10256,8 +10206,6 @@
     "cardmarket_ref_price_eur": 86.86,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 24.6x (soglia 15.0x)",
     "artist": "Shizurow"
   },
   "pikachu_112": {
@@ -10273,7 +10221,9 @@
     "cardmarket_ref_price_eur": 81.44,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Mitsuhiro Arita"
+    "artist": "Mitsuhiro Arita",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 230% (soglia 200%)"
   },
   "flying_pikachu_113": {
     "name": "Flying Pikachu #113",
@@ -10402,7 +10352,9 @@
     "cardmarket_ref_price_eur": 50.86,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ryo Ueda"
+    "artist": "Ryo Ueda",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 29.3x (soglia 15.0x)"
   },
   "articuno_ex_132": {
     "name": "Articuno-EX #132",
@@ -10432,7 +10384,9 @@
     "cardmarket_ref_price_eur": 148.21,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Toyste Beach"
+    "artist": "Toyste Beach",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 15.4x (soglia 15.0x)"
   },
   "colress_135": {
     "name": "Colress #135",
@@ -10492,7 +10446,9 @@
     "cardmarket_ref_price_eur": 40.9,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "5ban Graphics"
+    "artist": "5ban Graphics",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 15.4x (soglia 15.0x)"
   },
   "jirachi_ex_98": {
     "name": "Jirachi-EX #98",
@@ -10522,8 +10478,6 @@
     "cardmarket_ref_price_eur": 88.72,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 16.6x (soglia 15.0x)",
     "artist": "5ban Graphics"
   },
   "palkia_ex_100": {
@@ -10539,8 +10493,6 @@
     "cardmarket_ref_price_eur": 118.11,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 19.8x (soglia 15.0x)",
     "artist": "5ban Graphics"
   },
   "iris_101": {
@@ -10661,8 +10613,6 @@
     "cardmarket_ref_price_eur": 50.57,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 15.3x (soglia 15.0x)",
     "artist": "Kanako Eo"
   },
   "reshiram_RC22": {
@@ -10678,7 +10628,9 @@
     "cardmarket_ref_price_eur": 85.97,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Kagemaru Himeno"
+    "artist": "Kagemaru Himeno",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 17.8x (soglia 15.0x)"
   },
   "emolga_RC23": {
     "name": "Emolga #RC23",
@@ -10694,7 +10646,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 17.4x (soglia 15.0x)",
+    "data_quality_reason": "salto mensile 217% (soglia 200%)",
     "artist": "Atsuko Nishida"
   },
   "mew_ex_RC24": {
@@ -10784,7 +10736,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 19.3x (soglia 15.0x)",
+    "data_quality_reason": "range max/min 20.5x (soglia 15.0x)",
     "artist": "Ryo Ueda"
   },
   "m_gengar_ex_121": {
@@ -10801,7 +10753,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 19.9x (soglia 15.0x)",
+    "data_quality_reason": "range max/min 22.6x (soglia 15.0x)",
     "artist": "5ban Graphics"
   },
   "dialga_ex_122": {
@@ -10845,7 +10797,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 189.66,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 19.9x (soglia 15.0x)"
   },
   "groudon_ex_150": {
     "name": "Groudon-EX #150",
@@ -10901,7 +10855,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 58.92,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 364% (soglia 200%)"
   },
   "m_houndoom_ex_154": {
     "name": "M Houndoom-EX #154",
@@ -11611,8 +11567,6 @@
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 650% (soglia 200%)",
     "artist": "MAHOU"
   },
   "carvanha_35": {
@@ -11628,8 +11582,6 @@
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 409% (soglia 200%)",
     "artist": "Kyoko Umemoto"
   },
   "sylveon_vmax_211": {
@@ -11660,8 +11612,6 @@
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 233% (soglia 200%)",
     "artist": "Yuya Oka"
   },
   "eiscue_47": {
@@ -11677,8 +11627,6 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 20.8x (soglia 15.0x)",
     "artist": "Mizue"
   },
   "nuzleaf_96": {
@@ -11694,8 +11642,6 @@
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 303.0x (soglia 15.0x)",
     "artist": "Atsuko Nishida"
   },
   "claydol_145": {
@@ -11711,8 +11657,6 @@
     "cardmarket_ref_price_eur": 0.09,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 450% (soglia 200%)",
     "artist": "Akira Komayama"
   },
   "phantump_16": {
@@ -11728,8 +11672,6 @@
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 736% (soglia 200%)",
     "artist": "OKACHEKE"
   },
   "farewell_bell_234": {
@@ -11745,8 +11687,6 @@
     "cardmarket_ref_price_eur": 0.02,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 42.7x (soglia 15.0x)",
     "artist": "AYUMI ODASHIMA"
   },
   "drakloak_129": {
@@ -11762,8 +11702,6 @@
     "cardmarket_ref_price_eur": 0.08,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 24.9x (soglia 15.0x)",
     "artist": "HYOGONOSUKE"
   },
   "staryu_52": {
@@ -11779,8 +11717,6 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 26.4x (soglia 15.0x)",
     "artist": "tetsuya koizumi"
   },
   "wormadam_10": {
@@ -11811,8 +11747,6 @@
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 34.5x (soglia 15.0x)",
     "artist": "Kagemaru Himeno"
   },
   "haxorus_112": {
@@ -11828,8 +11762,6 @@
     "cardmarket_ref_price_eur": 0.1,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 336% (soglia 200%)",
     "artist": "Uta"
   },
   "gabite_108": {
@@ -11845,8 +11777,6 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 562% (soglia 200%)",
     "artist": "hatachu"
   },
   "charizard_vstar_18": {
@@ -11907,8 +11837,6 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 27.3x (soglia 15.0x)",
     "artist": "Oswaldo KATO"
   },
   "shieldon_109": {
@@ -11924,8 +11852,6 @@
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 273% (soglia 200%)",
     "artist": "Yuka Morii"
   },
   "hisuian_lilligant_16": {
@@ -11971,8 +11897,6 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 5900% (soglia 200%)",
     "artist": "Shin Nagasawa"
   },
   "whiscash_109": {
@@ -12018,8 +11942,6 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 33.5x (soglia 15.0x)",
     "artist": "AYUMI ODASHIMA"
   },
   "exploud_150": {
@@ -12065,8 +11987,6 @@
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 289% (soglia 200%)",
     "artist": "Souichirou Gunjima"
   },
   "whismur_148": {
@@ -12082,8 +12002,6 @@
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 267% (soglia 200%)",
     "artist": "sui"
   },
   "hand_trimmer_150": {
@@ -12099,8 +12017,6 @@
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 229% (soglia 200%)",
     "artist": "Ayaka Yoshida"
   },
   "gastly_102": {
@@ -12116,7 +12032,9 @@
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Fujimoto Gold"
+    "artist": "Fujimoto Gold",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 4659% (soglia 200%)"
   },
   "shaymin_13": {
     "name": "Shaymin #13",
@@ -12131,8 +12049,6 @@
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 277% (soglia 200%)",
     "artist": "Atsushi Furusawa"
   },
   "zeraora_57": {
@@ -12148,8 +12064,6 @@
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 320% (soglia 200%)",
     "artist": "kantaro"
   },
   "torterra_ex_12": {
@@ -12180,8 +12094,6 @@
     "cardmarket_ref_price_eur": 0.09,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 271% (soglia 200%)",
     "artist": "AYUMI ODASHIMA"
   },
   "darmanitan_35": {
@@ -12197,8 +12109,6 @@
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 340% (soglia 200%)",
     "artist": "OKUBO"
   },
   "wattrel_75": {
@@ -12229,8 +12139,6 @@
     "cardmarket_ref_price_eur": 0.02,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 30.7x (soglia 15.0x)",
     "artist": "Miki Tanaka"
   },
   "sandshrew_27": {
@@ -12246,8 +12154,6 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 320% (soglia 200%)",
     "artist": "kodama"
   },
   "starmie_121": {
@@ -12279,7 +12185,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 25.6x (soglia 15.0x)",
+    "data_quality_reason": "salto mensile 537% (soglia 200%)",
     "artist": "Tika Matsuno"
   },
   "energy_recycler_72": {
@@ -12370,7 +12276,9 @@
     "cardmarket_ref_price_eur": 5.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "aky CG Works"
+    "artist": "aky CG Works",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 550% (soglia 200%)"
   },
   "groudon_17": {
     "name": "Groudon #17",
@@ -12385,7 +12293,9 @@
     "cardmarket_ref_price_eur": 0.25,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Ryuta Fuse"
+    "artist": "Ryuta Fuse",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 257% (soglia 200%)"
   },
   "flying_pikachu_vmax_7": {
     "name": "Flying Pikachu VMAX #7",
@@ -12415,8 +12325,6 @@
     "cardmarket_ref_price_eur": 0.12,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 16.0x (soglia 15.0x)",
     "artist": "Masakazu Fukuda"
   },
   "bewear_182": {
@@ -12447,8 +12355,6 @@
     "cardmarket_ref_price_eur": 0.2,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 300% (soglia 200%)",
     "artist": "Yuka Morii"
   },
   "clefairy_144": {
@@ -12465,7 +12371,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 271% (soglia 200%)",
+    "data_quality_reason": "salto mensile 371% (soglia 200%)",
     "artist": "Mina Nakai"
   },
   "sawsbuck_16": {
@@ -12496,8 +12402,6 @@
     "cardmarket_ref_price_eur": 0.09,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 26.1x (soglia 15.0x)",
     "artist": "Hideki Ishikawa"
   },
   "dracovish_53": {
@@ -12513,7 +12417,9 @@
     "cardmarket_ref_price_eur": 1.99,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Hitoshi Ariga"
+    "artist": "Hitoshi Ariga",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 312% (soglia 200%)"
   },
   "galarian_stunfisk_v_128": {
     "name": "Galarian Stunfisk V #128",
@@ -12543,8 +12449,6 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 300% (soglia 200%)",
     "artist": "Kazuma Koda"
   },
   "diglett_55": {
@@ -12620,8 +12524,6 @@
     "cardmarket_ref_price_eur": 0.36,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 391% (soglia 200%)",
     "artist": "5ban Graphics"
   },
   "scrafty_59": {
@@ -12667,8 +12569,6 @@
     "cardmarket_ref_price_eur": 0.12,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 4400% (soglia 200%)",
     "artist": "MAHOU"
   },
   "shinx_32": {
@@ -12744,7 +12644,9 @@
     "cardmarket_ref_price_eur": 0.13,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "nagimiso"
+    "artist": "nagimiso",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 204% (soglia 200%)"
   },
   "clefairy_39": {
     "name": "Clefairy #39",
@@ -12819,8 +12721,6 @@
     "cardmarket_ref_price_eur": 0.13,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 19.8x (soglia 15.0x)",
     "artist": "SATOSHI NAKAI"
   },
   "clefairy_74": {
@@ -12881,8 +12781,6 @@
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 600% (soglia 200%)",
     "artist": "Sekio"
   },
   "durant_132": {
@@ -12928,8 +12826,6 @@
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 925% (soglia 200%)",
     "artist": "ryoma uratsuka"
   },
   "crobat_v_44": {
@@ -12960,8 +12856,6 @@
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 213% (soglia 200%)",
     "artist": "Taira Akitsu"
   },
   "team_yell_towel_63": {
@@ -12977,8 +12871,6 @@
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 33.7x (soglia 15.0x)",
     "artist": "Studio Bora Inc."
   },
   "doublade_108": {
@@ -13009,8 +12901,6 @@
     "cardmarket_ref_price_eur": 0.65,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 279% (soglia 200%)",
     "artist": "Naoyo Kimura"
   },
   "litten_20": {
@@ -13087,7 +12977,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 418% (soglia 200%)",
+    "data_quality_reason": "salto mensile 262% (soglia 200%)",
     "artist": "tetsuya koizumi"
   },
   "lickilicky_153": {
@@ -13149,7 +13039,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 33.4x (soglia 15.0x)",
+    "data_quality_reason": "range max/min 20.1x (soglia 15.0x)",
     "artist": "Atsuko Nishida"
   },
   "lucario_117": {
@@ -13240,8 +13130,6 @@
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 20.1x (soglia 15.0x)",
     "artist": "Kazuma Koda"
   },
   "excadrill_122": {
@@ -13257,8 +13145,6 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 251.0x (soglia 15.0x)",
     "artist": "Anesaki Dynamic"
   },
   "allister_179": {
@@ -13304,8 +13190,6 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 23.0x (soglia 15.0x)",
     "artist": "Saya Tsuruta"
   },
   "pidgeot_8": {
@@ -13396,8 +13280,6 @@
     "cardmarket_ref_price_eur": 0.69,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 431% (soglia 200%)",
     "artist": "Kagemaru Himeno"
   },
   "slowbro_43": {
@@ -13473,8 +13355,6 @@
     "cardmarket_ref_price_eur": 6.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 220% (soglia 200%)",
     "artist": "Kagemaru Himeno"
   },
   "dark_dragonite_22": {
@@ -13580,8 +13460,6 @@
     "cardmarket_ref_price_eur": 0.52,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 12800% (soglia 200%)",
     "artist": "Ken Sugimori"
   },
   "meganium_11": {
@@ -13802,7 +13680,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 13.97,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 403% (soglia 200%)"
   },
   "masquerain_20": {
     "name": "Masquerain #20",
@@ -13887,8 +13767,6 @@
     "cardmarket_ref_price_eur": 9.29,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 231% (soglia 200%)",
     "artist": "Kyoko Koizumi"
   },
   "dark_ampharos_2": {
@@ -13919,7 +13797,9 @@
     "cardmarket_ref_price_eur": 1.22,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Midori Harada"
+    "artist": "Midori Harada",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 268% (soglia 200%)"
   },
   "mudkip_107": {
     "name": "Mudkip ★ #107",
@@ -13949,7 +13829,9 @@
     "cardmarket_ref_price_eur": 4.48,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Atsuko Nishida"
+    "artist": "Atsuko Nishida",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 442% (soglia 200%)"
   },
   "seaking_24": {
     "name": "Seaking #24",
@@ -14039,7 +13921,9 @@
     "cardmarket_ref_price_eur": 0.21,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Kouki Saitou"
+    "artist": "Kouki Saitou",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 592% (soglia 200%)"
   },
   "torchic_69": {
     "name": "Torchic #69",
@@ -14055,7 +13939,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 387% (soglia 200%)",
+    "data_quality_reason": "salto mensile 294% (soglia 200%)",
     "artist": "Midori Harada"
   },
   "electrike_48": {
@@ -14101,8 +13985,6 @@
     "cardmarket_ref_price_eur": 0.3,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 365% (soglia 200%)",
     "artist": "Keiji Kinebuchi"
   },
   "tyrogue_33": {
@@ -14118,8 +14000,6 @@
     "cardmarket_ref_price_eur": 3.77,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 15.5x (soglia 15.0x)",
     "artist": "Yuka Morii"
   },
   "unown_O": {
@@ -14165,8 +14045,6 @@
     "cardmarket_ref_price_eur": 0.86,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 293% (soglia 200%)",
     "artist": "Keiji Kinebuchi"
   },
   "zubat_88": {
@@ -14227,8 +14105,6 @@
     "cardmarket_ref_price_eur": 0.17,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 207% (soglia 200%)",
     "artist": "Sachiko Adachi"
   },
   "gastly_52": {
@@ -14336,8 +14212,6 @@
     "cardmarket_ref_price_eur": 2.35,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 229% (soglia 200%)",
     "artist": "Miki Tanaka"
   },
   "cacturne_15": {
@@ -14353,8 +14227,6 @@
     "cardmarket_ref_price_eur": 1.93,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 247% (soglia 200%)",
     "artist": "Kouki Saitou"
   },
   "aron_44": {
@@ -14535,7 +14407,9 @@
     "cardmarket_ref_price_eur": 13.18,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Atsuko Nishida"
+    "artist": "Atsuko Nishida",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 402% (soglia 200%)"
   },
   "suicune_19": {
     "name": "Suicune #19",
@@ -14550,7 +14424,9 @@
     "cardmarket_ref_price_eur": 7.79,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Ryo Ueda"
+    "artist": "Ryo Ueda",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 249% (soglia 200%)"
   },
   "lombre_54": {
     "name": "Lombre #54",
@@ -14640,8 +14516,6 @@
     "cardmarket_ref_price_eur": 0.16,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 211% (soglia 200%)",
     "artist": "Atsuko Nishida"
   },
   "metapod_47": {
@@ -14702,7 +14576,9 @@
     "cardmarket_ref_price_eur": 2.9,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Kouki Saitou"
+    "artist": "Kouki Saitou",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 253% (soglia 200%)"
   },
   "eevee_63": {
     "name": "Eevee #63",
@@ -14732,8 +14608,6 @@
     "cardmarket_ref_price_eur": 0.14,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 418% (soglia 200%)",
     "artist": "Kent Kanetsuna"
   },
   "gastly_62": {
@@ -14806,7 +14680,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 369% (soglia 200%)",
+    "data_quality_reason": "salto mensile 1743% (soglia 200%)",
     "artist": "Masakazu Fukuda"
   },
   "sandslash_42": {
@@ -14835,9 +14709,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.19,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 291% (soglia 200%)"
+    "selection_method": "random_control"
   },
   "magmortar_6": {
     "name": "Magmortar #6",
@@ -14851,7 +14723,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 3.34,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 228% (soglia 200%)"
   },
   "carnivine_53": {
     "name": "Carnivine #53",
@@ -14865,9 +14739,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.27,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 867% (soglia 200%)"
+    "selection_method": "random_control"
   },
   "mime_jr_47": {
     "name": "Mime Jr. #47",
@@ -14895,7 +14767,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 11.65,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 342% (soglia 200%)"
   },
   "fire_energy_89": {
     "name": "Fire Energy #89",
@@ -14939,7 +14813,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 289% (soglia 200%)"
+    "data_quality_reason": "salto mensile 225% (soglia 200%)"
   },
   "professor_juniper_98": {
     "name": "Professor Juniper #98",
@@ -14984,8 +14858,6 @@
     "cardmarket_ref_price_eur": 0.84,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 287% (soglia 200%)",
     "artist": "Naoki Saito"
   },
   "eevee_83": {
@@ -15001,8 +14873,6 @@
     "cardmarket_ref_price_eur": 1.96,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 563% (soglia 200%)",
     "artist": "MAHOU"
   },
   "tepig_24": {
@@ -15095,8 +14965,6 @@
     "cardmarket_ref_price_eur": 0.5,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 3100% (soglia 200%)",
     "artist": "5ban Graphics"
   },
   "weezing_58": {
@@ -15142,8 +15010,6 @@
     "cardmarket_ref_price_eur": 0.22,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1104% (soglia 200%)",
     "artist": "Kouki Saitou"
   },
   "dragonair_82": {
@@ -15309,7 +15175,9 @@
     "cardmarket_ref_price_eur": 1.12,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Akira Komayama"
+    "artist": "Akira Komayama",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 421% (soglia 200%)"
   },
   "spritzee_92": {
     "name": "Spritzee #92",
@@ -15351,9 +15219,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.21,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 420% (soglia 200%)"
+    "selection_method": "random_control"
   },
   "muscle_band_121": {
     "name": "Muscle Band #121",
@@ -15456,8 +15322,6 @@
     "cardmarket_ref_price_eur": 0.27,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 6700% (soglia 200%)",
     "artist": "TOKIYA"
   },
   "diggersby_90": {
@@ -15558,8 +15422,6 @@
     "cardmarket_ref_price_eur": 0.18,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 230% (soglia 200%)",
     "artist": "sui"
   },
   "magnemite_51": {
@@ -15635,8 +15497,6 @@
     "cardmarket_ref_price_eur": 0.24,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 24.5x (soglia 15.0x)",
     "artist": "Kagemaru Himeno"
   },
   "splash_energy_113": {
@@ -15668,7 +15528,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 162.0x (soglia 15.0x)",
+    "data_quality_reason": "salto mensile 860% (soglia 200%)",
     "artist": "Satoshi Shirai"
   },
   "potion_106": {
@@ -15684,8 +15544,6 @@
     "cardmarket_ref_price_eur": 0.13,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 2833% (soglia 200%)",
     "artist": "5ban Graphics"
   },
   "shuckle_1": {
@@ -15791,8 +15649,6 @@
     "cardmarket_ref_price_eur": 0.08,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 423% (soglia 200%)",
     "artist": "Mitsuhiro Arita"
   },
   "hawlucha_97": {
@@ -15808,8 +15664,6 @@
     "cardmarket_ref_price_eur": 0.08,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 250% (soglia 200%)",
     "artist": "miki kudo"
   },
   "volcanion_ex_26": {
@@ -15840,8 +15694,6 @@
     "cardmarket_ref_price_eur": 0.09,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 18.4x (soglia 15.0x)",
     "artist": "5ban Graphics"
   },
   "heliolisk_44": {
@@ -15857,8 +15709,6 @@
     "cardmarket_ref_price_eur": 0.23,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 207% (soglia 200%)",
     "artist": "Shin Nagasawa"
   },
   "patrat_107": {
@@ -15919,8 +15769,6 @@
     "cardmarket_ref_price_eur": 0.15,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 232% (soglia 200%)",
     "artist": "Aya Kusube"
   },
   "ultra_space_115": {
@@ -15981,8 +15829,6 @@
     "cardmarket_ref_price_eur": 15.49,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1406% (soglia 200%)",
     "artist": "Eske Yoshinob"
   },
   "wailord_40": {
@@ -16029,7 +15875,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 258% (soglia 200%)",
+    "data_quality_reason": "salto mensile 2269% (soglia 200%)",
     "artist": "tetsuya koizumi"
   },
   "pelipper_39": {
@@ -16045,8 +15891,6 @@
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 272% (soglia 200%)",
     "artist": "Nelnal"
   },
   "dunsparce_120": {
@@ -16062,8 +15906,6 @@
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 278% (soglia 200%)",
     "artist": "Asako Ito"
   },
   "furret_168": {
@@ -16094,8 +15936,6 @@
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 342% (soglia 200%)",
     "artist": "Mékayu"
   },
   "swellow_157": {
@@ -16110,9 +15950,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 245% (soglia 200%)"
+    "selection_method": "random_control"
   },
   "electivire_ex_212": {
     "name": "Electivire ex #212",
@@ -16140,9 +15978,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.07,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 16.4x (soglia 15.0x)"
+    "selection_method": "random_control"
   },
   "thievul_90": {
     "name": "Thievul #90",
@@ -16156,9 +15992,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 43.0x (soglia 15.0x)"
+    "selection_method": "random_control"
   },
   "sobble_39": {
     "name": "Sobble #39",
@@ -16172,9 +16006,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 300% (soglia 200%)"
+    "selection_method": "random_control"
   },
   "clawitzer_141": {
     "name": "Clawitzer #141",
@@ -16202,9 +16034,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 492% (soglia 200%)"
+    "selection_method": "random_control"
   },
   "tangela_6": {
     "name": "Tangela #6",
@@ -16218,9 +16048,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 750% (soglia 200%)"
+    "selection_method": "random_control"
   },
   "mega_heracross_ex_4": {
     "name": "Mega Heracross ex #4",
@@ -16250,8 +16078,6 @@
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 243% (soglia 200%)",
     "artist": "Hideki Ishikawa"
   },
   "mismagius_ex_36": {
@@ -16327,7 +16153,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "flaaffy_28": {
     "name": "Flaaffy #28",
@@ -16764,7 +16592,9 @@
     "cardmarket_ref_price_eur": 72.19,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 18.1x (soglia 15.0x)"
   },
   "groudon_ex_2_promo": {
     "name": "Groudon ex #2 (Promo)",
@@ -16924,7 +16754,9 @@
     "cardmarket_ref_price_eur": 150.0,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 940% (soglia 200%)"
   },
   "tropical_wind_26_promo": {
     "name": "Tropical Wind #26 (Promo)",
@@ -17036,7 +16868,9 @@
     "cardmarket_ref_price_eur": 151.34,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 401% (soglia 200%)"
   },
   "zorua_BW12_promo": {
     "name": "Zorua #BW12 (Promo)",
@@ -17084,7 +16918,9 @@
     "cardmarket_ref_price_eur": 208.06,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 1504% (soglia 200%)"
   },
   "victory_cup_BW29_promo": {
     "name": "Victory Cup #BW29 (Promo)",
@@ -17132,7 +16968,9 @@
     "cardmarket_ref_price_eur": 67.3,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 852% (soglia 200%)"
   },
   "lucario_BW85_promo": {
     "name": "Lucario #BW85 (Promo)",
@@ -17212,7 +17050,9 @@
     "cardmarket_ref_price_eur": 65.71,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 209% (soglia 200%)"
   },
   "gyarados_XY60_promo": {
     "name": "Gyarados #XY60 (Promo)",
@@ -17260,7 +17100,9 @@
     "cardmarket_ref_price_eur": 58.25,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 16.1x (soglia 15.0x)"
   },
   "latias_XY78_promo": {
     "name": "Latias #XY78 (Promo)",
@@ -17276,7 +17118,9 @@
     "cardmarket_ref_price_eur": 43.33,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 279% (soglia 200%)"
   },
   "latios_XY79_promo": {
     "name": "Latios #XY79 (Promo)",
@@ -17292,7 +17136,9 @@
     "cardmarket_ref_price_eur": 47.05,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 254% (soglia 200%)"
   },
   "arceus_XY83_promo": {
     "name": "Arceus #XY83 (Promo)",
@@ -17388,7 +17234,9 @@
     "cardmarket_ref_price_eur": 135.91,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 24.4x (soglia 15.0x)"
   },
   "mewtwo_ex_XY125_promo": {
     "name": "Mewtwo-EX #XY125 (Promo)",
@@ -17420,7 +17268,9 @@
     "cardmarket_ref_price_eur": 73.31,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 458% (soglia 200%)"
   },
   "shaymin_ex_XY148_promo": {
     "name": "Shaymin-EX #XY148 (Promo)",
@@ -17484,7 +17334,9 @@
     "cardmarket_ref_price_eur": 40.0,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 250% (soglia 200%)"
   },
   "m_camerupt_ex_XY198a_promo": {
     "name": "M Camerupt-EX #XY198a (Promo)",
@@ -17644,7 +17496,9 @@
     "cardmarket_ref_price_eur": 115.3,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 18.6x (soglia 15.0x)"
   },
   "buizel_DP13_promo": {
     "name": "Buizel #DP13 (Promo)",
@@ -17676,7 +17530,9 @@
     "cardmarket_ref_price_eur": 0,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "random_control",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 344% (soglia 200%)"
   },
   "heatran_lvx_DP31_promo": {
     "name": "Heatran LV.X #DP31 (Promo)",
@@ -17708,7 +17564,9 @@
     "cardmarket_ref_price_eur": 3.15,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "random_control",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 22.1x (soglia 15.0x)"
   },
   "lugia_XY156_promo": {
     "name": "Lugia #XY156 (Promo)",

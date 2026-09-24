@@ -76,15 +76,18 @@ VALIDATED_BOX = {
     "h1_sharpe": 0.68, "h2_sharpe": 1.28,
 }
 VALIDATED_SINGLES = {
-    # Specifica rifinita (eta' log + rango ordinale + controlli extra, ora i
-    # default della classe - vedi scarcity_value_factor.py). pbo qui e' quello
-    # della griglia di 6 varianti di specifica (8 split), non del grid rebal/quantile:
-    # e' il numero corretto per come n_trials_full_session e' stato conteggiato.
-    "dsr_own_grid": 0.999, "dsr_full_session": 0.980, "n_trials_full_session": 62,
-    "pbo": 0.000, "sharpe": 2.02, "cagr": 32.64, "max_dd": -8.54,
-    "h1_sharpe": 0.95, "h2_sharpe": 3.44,
+    # Universo corretto a 935 carte (era 864): il filtro di attendibilita' su
+    # historical_prices.csv valutava una serie DIVERSA da quella che il
+    # fattore usa davvero (historical_prices_graded_singles_grade9.csv) - vedi
+    # scripts/flag_unreliable_assets.py. Fix: 62 carte inaffidabili sul grade9
+    # reale che passavano il vecchio filtro sono state escluse, 133 escluse a
+    # torto sono state recuperate. Sharpe scende leggermente (2,02->1,83) -
+    # onesto: parte del rendimento precedente veniva da carte poco affidabili.
+    "dsr_own_grid": 0.999, "dsr_full_session": 0.954, "n_trials_full_session": 63,
+    "pbo": 0.000, "sharpe": 1.83, "cagr": 29.28, "max_dd": -8.96,
+    "h1_sharpe": 0.99, "h2_sharpe": 3.29,
 }
-VALIDATED_BLEND = {"sharpe": 2.27, "cagr": 28.75, "max_dd": -5.45}
+VALIDATED_BLEND = {"sharpe": 2.14, "cagr": 27.09, "max_dd": -5.20}
 
 st.set_page_config(page_title="PokeQuant — TS Momentum", page_icon="⚡", layout="wide")
 
@@ -385,9 +388,17 @@ def main():
         capital = st.number_input("Capitale dedicato (€)", min_value=100.0, max_value=1_000_000.0,
                                    value=10000.0, step=500.0)
         st.caption("50% box sigillati, 50% singole (fattore scarsità) — le due strategie hanno "
-                   "correlazione bassa (0,34): il blend porta Sharpe 1,53→2,27 e MaxDD -10,6%→-5,45% "
+                   "correlazione bassa (0,37): il blend porta Sharpe 1,53→2,14 e MaxDD -10,6%→-5,20% "
                    "rispetto al solo box. Cap 12% del capitale per singola posizione dentro ciascuna metà, "
                    "box pesato per età (0,4x sotto i 18 mesi, 1,0x dopo).")
+        st.markdown("---")
+        st.markdown("### 💳 Budget massimo per carta")
+        max_card_price = st.number_input(
+            "Prezzo massimo per singola carta (€, 0 = nessun limite)", min_value=0.0, max_value=100_000.0,
+            value=0.0, step=50.0,
+            help="Filtra le carte in acquisto sopra questa soglia - indipendentemente da quanto il modello le "
+                 "ritenga sottovalutate. Utile per restare su acquisti pratici/gestibili, non è un giudizio di "
+                 "convenienza: una carta esclusa qui può comunque essere un'ottima occasione, solo fuori budget.")
         st.markdown("---")
         st.markdown("### 🇪🇺 Conformità DAC7")
         dac7_mode = st.checkbox("Resta sotto 2.000€ / 30 vendite annue", value=True,
@@ -479,7 +490,7 @@ def main():
         <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_SINGLES['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,34 tra le due strategie</strong></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,37 tra le due strategie</strong></div>', unsafe_allow_html=True)
     st.markdown(f"""
     <div class="kpi-grid">
         <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,53 box da solo (stesso periodo)</div></div>
@@ -531,6 +542,8 @@ def main():
                "Il mercato europeo ha domanda/offerta propria: può differire, anche di molto. Il grafico "
                "mostra lo storico usato dal modello — confronta sempre col prezzo reale dietro al bottone.")
     buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
+    if max_card_price > 0:
+        buy_rows = [r for r in buy_rows if r["current_price_eur"] <= max_card_price]
     allocation = build_allocation(buy_rows, capital * 0.5, metadata, latest_date)
 
     if not allocation:
@@ -603,6 +616,8 @@ def main():
                "Prime 15 con grafico, le altre in tabella sotto.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
+    if max_card_price > 0:
+        singles_rows = [r for r in singles_rows if r["current_price_eur"] <= max_card_price]
     singles_allocation = build_equal_allocation(singles_rows, capital * 0.5)
 
     if not singles_allocation:
@@ -712,8 +727,9 @@ def main():
     st.plotly_chart(fig, use_container_width=True)
     st.caption(f"Universo: {n_universe} box/ETB era 2019+, {n_universe_singles} singole. Ogni metà simulata con "
                "10.000€ propri, poi combinata come media dei rendimenti mensili (equivalente a un ribilanciamento "
-               "50/50 mensile) — frizioni reali incluse in entrambe (Cardmarket 5%+0,60€, spedizione, slippage, "
-               "costo di custodia).")
+               "50/50 mensile) — frizioni reali incluse in entrambe (Cardmarket 5%, imballaggio 0,60€, slippage, "
+               "costo di custodia). Spedizione NON dedotta dal venditore: assunta a carico del compratore, come "
+               "da convenzione Cardmarket (tariffa di spedizione separata dal prezzo dell'oggetto).")
     if singles_mode == "dac7":
         st.caption(f"⚠️ Grafico e metriche sopra riflettono la **modalità conforme DAC7** (singole: ribilanciamento "
                    f"12m, max 20 posizioni) — Sharpe singole {res_singles.sharpe:.2f} (vs {VALIDATED_SINGLES['sharpe']:.2f} "
@@ -751,7 +767,7 @@ def main():
                 "P&L netto (€)": st.column_config.NumberColumn(format="%+.2f €"),
             },
         )
-        st.caption("P&L e ROI sono netti di commissioni Cardmarket (5%+0,60€), spedizione e costo di custodia — "
+        st.caption("P&L e ROI sono netti di commissione Cardmarket (5%), imballaggio (0,60€) e costo di custodia — spedizione NON dedotta (a carico del compratore) — "
                    "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
 
     # --- GIORNALE DEI TRADE CHIUSI (SINGOLE) ---
@@ -786,11 +802,11 @@ def main():
         if len(display_df_s) > 20:
             with st.expander(f"Altri {len(display_df_s) - 20} trade chiusi"):
                 st.dataframe(display_df_s.iloc[20:], use_container_width=True, hide_index=True, column_config=col_config_s)
-        st.caption("P&L e ROI sono netti di commissioni Cardmarket (5%+0,60€), spedizione e costo di custodia — "
+        st.caption("P&L e ROI sono netti di commissione Cardmarket (5%), imballaggio (0,60€) e costo di custodia — spedizione NON dedotta (a carico del compratore) — "
                    "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
 
     st.markdown("---")
-    st.caption("PokeQuant · Blend box+singole scelto per correlazione bassa (0,34), non per rendimento massimo · "
+    st.caption("PokeQuant · Blend box+singole scelto per correlazione bassa (0,37), non per rendimento massimo · "
                 "box sotto soglia istituzionale dopo l'audit sull'intera sessione, singole sopra (vedi avviso in alto) · "
                 "[Runbook Italia](https://github.com/davbenx/pokequant/blob/main/OPERATIONS_ITALIA.md) · "
                 "Rivalidare con `scripts/optimize_and_falsify.py` e `scripts/scarcity_value_singles_test.py` ogni 6 mesi.")
