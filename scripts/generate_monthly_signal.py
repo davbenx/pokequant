@@ -24,8 +24,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, load_price_matrix
-from poke_quant.data.liquidity_filter import liquid_sealed_ids
+from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSRP_RATIO
 from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentumStrategy
+from poke_quant.config import SHIPPING_COSTS
 
 LOOKBACK_MONTHS = 12
 # Sopra questa soglia il rendimento a 12m è più probabile rumore da mercato sottile
@@ -69,8 +70,24 @@ def compute_signal_rows():
             continue
         cur_price = prices_sealed[item_id].dropna().iloc[-1]
         ret_pct = mom * 100.0
+        msrp = metadata[item_id].get("msrp")
+        max_price_eur = msrp * MAX_PRICE_TO_MSRP_RATIO if msrp else None
+        # Versione "tutto compreso" per la dashboard (richiesto esplicitamente:
+        # il prezzo massimo mostrato deve essere il prezzo finito, spedizione
+        # inclusa) - il tetto stesso resta calcolato sul prezzo grezzo (stesso
+        # numero validato in scripts/box_max_price_ratio_test.py), qui solo
+        # nettato del costo di spedizione reale per il numero da MOSTRARE.
+        max_price_allin_eur = (max_price_eur - SHIPPING_COSTS["sealed_box"]) if max_price_eur is not None else None
         if abs(ret_pct) > PLAUSIBILITY_CAP_PCT:
             signal = "VERIFICARE A MANO (rendimento implausibile)"
+        elif mom > 0 and max_price_eur is not None and cur_price > max_price_eur:
+            # "impedire di comprare sopra un prezzo che rompe l'edge" (richiesto
+            # esplicitamente): stesso rapporto prezzo/MSRP gia' usato per
+            # ammettere un box vintage nell'universo (poke_quant/data/
+            # liquidity_filter.py::MAX_PRICE_TO_MSRP_RATIO, 21,6x), qui applicato
+            # anche a un box gia' dentro l'universo - il momentum dice compra, ma
+            # il prezzo e' gia' oltre il confine di plausibilita' del modello.
+            signal = "PREZZO ECCESSIVO (oltre tetto MSRP)"
         else:
             signal = "BUY/HOLD" if mom > 0 else "AVOID/SELL"
         rows.append({
@@ -78,6 +95,8 @@ def compute_signal_rows():
             "name": metadata[item_id].get("name", item_id),
             "current_price_eur": cur_price,
             "trailing_12m_return_pct": ret_pct,
+            "max_price_eur": max_price_eur,
+            "max_price_allin_eur": max_price_allin_eur,
             "signal": signal,
         })
 
@@ -94,8 +113,9 @@ def main():
     print("=" * 100)
     n_buy = sum(1 for r in rows if r["signal"] == "BUY/HOLD")
     n_verify = sum(1 for r in rows if "VERIFICARE" in r["signal"])
-    n_sell = len(rows) - n_buy - n_verify
-    print(f"\nBUY/HOLD: {n_buy} | AVOID/SELL: {n_sell} | DA VERIFICARE A MANO: {n_verify}\n")
+    n_excessive = sum(1 for r in rows if "PREZZO ECCESSIVO" in r["signal"])
+    n_sell = len(rows) - n_buy - n_verify - n_excessive
+    print(f"\nBUY/HOLD: {n_buy} | AVOID/SELL: {n_sell} | PREZZO ECCESSIVO: {n_excessive} | DA VERIFICARE A MANO: {n_verify}\n")
 
     print(f"{'Segnale':32s} {'Rend.12m':>9s}  {'Prezzo':>10s}  Nome")
     print("-" * 100)

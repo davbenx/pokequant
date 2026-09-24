@@ -65,6 +65,18 @@ default in produzione.
     mesi consecutivi il momentum e' stato positivo) che ha motivato questo
     parametro, e per l'esito della ricerca della soglia che massimizza il
     rendimento per trade.
+
+  - max_price_msrp_ratio (opzionale, default None = nessun tetto, comportamento
+    originale invariato): blocca l'INGRESSO su un box il cui prezzo corrente
+    supera max_price_msrp_ratio * MSRP - stesso numero e stessa motivazione di
+    poke_quant.data.liquidity_filter.MAX_PRICE_TO_MSRP_RATIO (21.6x, calibrato
+    UNA VOLTA sull'universo moderno prima di guardare l'effetto, gia' usato per
+    decidere quali box vintage entrano nell'universo). Qui e' lo stesso confine
+    applicato non solo all'ammissione nell'universo ma ad OGNI ingresso live,
+    per rispondere alla richiesta di un "prezzo massimo che non rompa l'edge"
+    anche per i box - vedi scripts/box_max_price_ratio_test.py per l'esito
+    empirico prima di adottarlo in produzione. Box senza MSRP noto in metadata
+    non sono soggetti a questo tetto (nessun dato fabbricato).
 """
 
 from __future__ import annotations
@@ -88,6 +100,7 @@ class TimeSeriesMomentumStrategy:
         trailing_stop_pct: Optional[float] = None,
         max_holding_months: Optional[int] = None,
         min_confirm_months: int = 1,
+        max_price_msrp_ratio: Optional[float] = None,
     ):
         self.prices_df = prices_df.sort_index()
         self.lookback_months = lookback_months
@@ -100,6 +113,7 @@ class TimeSeriesMomentumStrategy:
         self.trailing_stop_pct = trailing_stop_pct
         self.max_holding_months = max_holding_months
         self.min_confirm_months = max(1, min_confirm_months)
+        self.max_price_msrp_ratio = max_price_msrp_ratio
 
     def reset(self):
         pass
@@ -212,6 +226,10 @@ class TimeSeriesMomentumStrategy:
                 continue
             if self.min_confirm_months > 1 and not self._confirmed_positive(item_id, cur_dt, self.min_confirm_months):
                 continue
+            if self.max_price_msrp_ratio is not None:
+                msrp = info.get("msrp")
+                if msrp and cur_price / msrp > self.max_price_msrp_ratio:
+                    continue
 
             available_cash = portfolio.cash
             budget = min(available_cash, max_item_budget)

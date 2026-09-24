@@ -33,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, load_price_matrix
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
+from poke_quant.config import SHIPPING_COSTS
 
 PRODUCTION_PARAMS = dict(rebalance_every_months=3, top_quantile=0.20, min_age_months=6, max_positions=60, min_cross_section=20)
 
@@ -64,13 +65,18 @@ def _snapshot_for_date(prices_full: pd.DataFrame, metadata: dict, date) -> dict:
 
 
 def _quantile_membership(strat: ScarcityValueFactorStrategy, cur_dt: pd.Timestamp, snap: dict):
-    """Ritorna (set carte nel quantile BUY, dict residui) per un singolo mese."""
+    """Ritorna (set carte nel quantile BUY, dict residui, residuo di confine
+    del quantile) per un singolo mese. Il residuo di confine e' quello della
+    carta piu' marginale ancora dentro al quantile BUY - serve a calcolare
+    quanto puo' salire il prezzo di una carta prima che esca dal quantile
+    (vedi max_edge_price in compute_singles_signal_rows)."""
     residuals = strat._fit_residuals(cur_dt, snap)
     if not residuals:
-        return set(), {}
+        return set(), {}, None
     n_buy = max(1, int(len(residuals) * strat.top_quantile))
     ranked = sorted(residuals.items(), key=lambda x: x[1])[:n_buy][: strat.max_positions]
-    return {item_id for item_id, _ in ranked}, residuals
+    cutoff_residual = ranked[-1][1] if ranked else None
+    return {item_id for item_id, _ in ranked}, residuals, cutoff_residual
 
 
 def _signal_streak(item_id: str, membership_by_month: dict, check_dates: list):
@@ -106,15 +112,17 @@ def compute_singles_signal_rows(params: dict = None):
     latest_date = check_dates[-1]
 
     strat = ScarcityValueFactorStrategy(**params)
-    membership_by_month, residuals_by_month = {}, {}
+    membership_by_month, residuals_by_month, cutoff_by_month = {}, {}, {}
     for d in check_dates:
         snap = _snapshot_for_date(prices_full, metadata, d)
-        elig, residuals = _quantile_membership(strat, pd.to_datetime(d), snap)
+        elig, residuals, cutoff = _quantile_membership(strat, pd.to_datetime(d), snap)
         membership_by_month[d] = elig
         residuals_by_month[d] = residuals
+        cutoff_by_month[d] = cutoff
 
     latest_snap = _snapshot_for_date(prices_full, metadata, latest_date)
     latest_eligible = membership_by_month[latest_date]
+    latest_cutoff = cutoff_by_month[latest_date]
 
     rows = []
     for item_id in latest_eligible:
@@ -124,12 +132,32 @@ def compute_singles_signal_rows(params: dict = None):
 
         info = metadata[item_id]
         residual = residuals_by_month[latest_date][item_id]
+        current_price = latest_snap[item_id]["current_price"]
+        # Prezzo massimo che preserva l'edge: quanto puo' salire il prezzo di
+        # QUESTA carta (a parita' di rarita'/eta'/franchise, che non cambiano)
+        # prima che il suo residuo risalga al confine del quantile BUY e la
+        # carta ne esca - non e' un'ipotesi nuova, e' il confine gia' validato
+        # del fattore, solo espresso in euro invece che in residuo di regressione.
+        # Netto della spedizione stimata (SHIPPING_COSTS['single_tracked']) perche'
+        # il numero mostrato in dashboard va confrontato col prezzo TUTTO COMPRESO
+        # (oggetto + spedizione), non solo il prezzo dell'oggetto.
+        max_edge_price_raw = current_price * np.exp(latest_cutoff - residual) if latest_cutoff is not None else None
+        max_edge_price_allin = (max_edge_price_raw - SHIPPING_COSTS["single_tracked"]) if max_edge_price_raw is not None else None
+        # "impedire di comprare sopra un prezzo che rompe l'edge" (richiesto
+        # esplicitamente): se il prezzo attuale supera GIA' il massimo tutto
+        # compreso, l'edge di QUESTA carta e' gia' azzerato dalla sola
+        # spedizione - non e' un'occasione azionabile oggi, anche se il
+        # modello la classifica ancora nel quantile BUY (il quantile guarda
+        # solo il prezzo dell'oggetto, non il costo tutto compreso).
+        edge_intact = max_edge_price_allin is None or current_price <= max_edge_price_allin
         rows.append({
             "item_id": item_id,
             "name": info.get("name", item_id),
-            "current_price_eur": latest_snap[item_id]["current_price"],
+            "current_price_eur": current_price,
             "residual": residual,
             "discount_pct": (np.exp(residual) - 1.0) * 100.0,
+            "max_edge_price_eur": max_edge_price_allin,
+            "edge_intact": edge_intact,
             "signal_start_date": start_date,
             "months_in_signal": streak,
             "rarity": info.get("rarity"),

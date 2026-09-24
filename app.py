@@ -46,7 +46,7 @@ from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentum
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
 from poke_quant.engine.position_sizing import age_weight
 from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTOFF
-from poke_quant.data.liquidity_filter import liquid_sealed_ids
+from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSRP_RATIO
 from poke_quant.data.price_fetcher import fetch_pricecharting_cover_image_url
 from scripts.generate_singles_signal import (
     compute_singles_signal_rows, compute_singles_avoid_rows,
@@ -70,24 +70,42 @@ VALIDATED_BOX = {
     # piu' vecchi con rapporto prezzo/MSRP reale dentro il range gia' osservato
     # nell'universo moderno - vedi scripts/sealed_universe_expansion_test.py e
     # poke_quant/data/liquidity_filter.py::liquid_sealed_ids.
-    "dsr_own_grid": 0.913, "dsr_full_session": 0.778, "n_trials_full_session": 47,
-    "pbo": 0.286, "sharpe": 1.31, "cagr": 23.82, "max_dd": -10.62,
+    # AGGIORNAMENTO: include ora la spedizione REALE a carico del compratore
+    # all'acquisto (10€/box, poke_quant.config.SHIPPING_COSTS) - Portfolio.buy()
+    # non l'aveva mai applicata (vedi scripts/buy_side_shipping_test.py). Sharpe
+    # scende 1,31->1,18, onesto: nessun acquisto e' mai stato gratis nella realta'.
+    # AGGIORNAMENTO 2: aggiunto un tetto prezzo/MSRP all'INGRESSO (non solo
+    # all'ammissione nell'universo) - stesso 21,6x gia' calibrato in
+    # liquidity_filter.py, non una nuova griglia - vedi
+    # scripts/box_max_price_ratio_test.py. Impatto storico ZERO (nessun trade
+    # passato lo violava: Sharpe/CAGR/MaxDD/Trade identici), ma protegge da
+    # oggi in avanti - 1 box su 34 con MSRP noto e' oggi sopra soglia e viene
+    # escluso da un nuovo acquisto. Un trial in piu' nel conteggio onesto
+    # (48->49) anche se non ha cambiato nessun numero.
+    "dsr_own_grid": 0.913, "dsr_full_session": 0.681, "n_trials_full_session": 49,
+    "pbo": 0.286, "sharpe": 1.18, "cagr": 22.80, "max_dd": -11.12,
     "bootstrap_cagr_p_pos": 100, "bootstrap_sharpe_p_pos": 100,
-    "h1_sharpe": 0.68, "h2_sharpe": 1.28,
+    "h1_sharpe": 0.36, "h2_sharpe": 1.82,
 }
 VALIDATED_SINGLES = {
     # Universo corretto a 935 carte (era 864): il filtro di attendibilita' su
     # historical_prices.csv valutava una serie DIVERSA da quella che il
     # fattore usa davvero (historical_prices_graded_singles_grade9.csv) - vedi
-    # scripts/flag_unreliable_assets.py. Fix: 62 carte inaffidabili sul grade9
-    # reale che passavano il vecchio filtro sono state escluse, 133 escluse a
-    # torto sono state recuperate. Sharpe scende leggermente (2,02->1,83) -
-    # onesto: parte del rendimento precedente veniva da carte poco affidabili.
-    "dsr_own_grid": 0.999, "dsr_full_session": 0.954, "n_trials_full_session": 63,
-    "pbo": 0.000, "sharpe": 1.83, "cagr": 29.28, "max_dd": -8.96,
-    "h1_sharpe": 0.99, "h2_sharpe": 3.29,
+    # scripts/flag_unreliable_assets.py.
+    # AGGIORNAMENTO: include ora la spedizione REALE a carico del compratore
+    # all'acquisto (7€/carta) - vedi scripts/buy_side_shipping_test.py. Impatto
+    # molto piu' grande che sui box: un trade tipico da 50-300€ regge molto
+    # meno bene una spedizione fissa di un box da centinaia di euro. DSR scende
+    # 0,954->0,836 - SOTTO la soglia di comfort 0,90-0,95 per la prima volta da
+    # quando questo fattore l'ha superata. Non e' piu' "il primo candidato a
+    # superarla" con questo conto piu' onesto - resta comunque il migliore di
+    # tutta la ricerca sulle singole, walk-forward ancora positivo in entrambe
+    # le meta' (nessuna inversione).
+    "dsr_own_grid": 0.999, "dsr_full_session": 0.836, "n_trials_full_session": 64,
+    "pbo": 0.000, "sharpe": 1.48, "cagr": 25.28, "max_dd": -14.06,
+    "h1_sharpe": 0.50, "h2_sharpe": 3.05,
 }
-VALIDATED_BLEND = {"sharpe": 2.14, "cagr": 27.09, "max_dd": -5.20}
+VALIDATED_BLEND = {"sharpe": 1.87, "cagr": 24.65, "max_dd": -7.10}
 
 st.set_page_config(page_title="PokeQuant — TS Momentum", page_icon="⚡", layout="wide")
 
@@ -198,9 +216,9 @@ def get_backtest_results():
     sealed_ids = liquid_sealed_ids(metadata, prices_full)
     meta_sub = {k: v for k, v in metadata.items() if k in sealed_ids}
     prices_sub = prices_full[sealed_ids]
-    strat = TimeSeriesMomentumStrategy(prices_sub, lookback_months=12)
+    strat = TimeSeriesMomentumStrategy(prices_sub, lookback_months=12, max_price_msrp_ratio=MAX_PRICE_TO_MSRP_RATIO)
     bt = Backtester(strat, prices_sub, meta_sub, initial_cash=10000.0, platform="cardmarket",
-                     apply_liquidity_slippage=True, apply_holding_cost=True)
+                     apply_liquidity_slippage=True, apply_holding_cost=True, apply_buy_side_shipping=True)
     res = bt.run()
     return res, len(sealed_ids)
 
@@ -251,7 +269,7 @@ def get_singles_backtest_results(mode: str = "production"):
     prices_sub = prices_full[singles_ids]
     strat = ScarcityValueFactorStrategy(**params)
     bt = Backtester(strat, prices_sub, meta_sub, initial_cash=10000.0, platform="cardmarket",
-                     apply_liquidity_slippage=True, apply_holding_cost=True)
+                     apply_liquidity_slippage=True, apply_holding_cost=True, apply_buy_side_shipping=True)
     res = bt.run()
     return res, len(singles_ids)
 
@@ -357,7 +375,8 @@ def main():
     sig_rows, latest_date = get_signal()
     n_buy = sum(1 for r in sig_rows if r["signal"] == "BUY/HOLD")
     n_sell = sum(1 for r in sig_rows if r["signal"] == "AVOID/SELL")
-    n_verify = len(sig_rows) - n_buy - n_sell
+    n_excessive = sum(1 for r in sig_rows if "PREZZO ECCESSIVO" in r["signal"])
+    n_verify = len(sig_rows) - n_buy - n_sell - n_excessive
 
     st.markdown(f"""
     <div class="nav-header">
@@ -388,9 +407,9 @@ def main():
         capital = st.number_input("Capitale dedicato (€)", min_value=100.0, max_value=1_000_000.0,
                                    value=10000.0, step=500.0)
         st.caption("50% box sigillati, 50% singole (fattore scarsità) — le due strategie hanno "
-                   "correlazione bassa (0,37): il blend porta Sharpe 1,53→2,14 e MaxDD -10,6%→-5,20% "
-                   "rispetto al solo box. Cap 12% del capitale per singola posizione dentro ciascuna metà, "
-                   "box pesato per età (0,4x sotto i 18 mesi, 1,0x dopo).")
+                   "correlazione bassa (0,34): il blend porta Sharpe 1,38→1,87 e MaxDD -11,1%→-7,10% "
+                   "rispetto al solo box (stesso periodo comune, frizioni incluse). Cap 12% del capitale per "
+                   "singola posizione dentro ciascuna metà, box pesato per età (0,4x sotto i 18 mesi, 1,0x dopo).")
         st.markdown("---")
         st.markdown("### 💳 Budget massimo per carta")
         max_card_price = st.number_input(
@@ -465,7 +484,9 @@ def main():
         f"**DSR corretto per l'intera sessione**: box {VALIDATED_BOX['dsr_full_session']:.3f} (era {VALIDATED_BOX['dsr_own_grid']:.3f} "
         f"sulla sola griglia originale, {VALIDATED_BOX['n_trials_full_session']} trial totali) — sotto soglia 0,90-0,95. "
         f"Singole (fattore scarsità) {VALIDATED_SINGLES['dsr_full_session']:.3f} ({VALIDATED_SINGLES['n_trials_full_session']} trial totali) — "
-        f"**sopra** la soglia, il primo candidato di tutta la ricerca a superarla. Vedi `scripts/dsr_session_audit.py` e "
+        f"anch'essa **sotto** soglia da quando include la spedizione reale all'acquisto (era 0,954, sopra soglia, prima "
+        f"di questa correzione — vedi `scripts/buy_side_shipping_test.py`): resta comunque il miglior risultato di "
+        f"tutta la ricerca sulle singole, walk-forward ancora positivo in entrambe le metà. Vedi `scripts/dsr_session_audit.py` e "
         f"`scripts/scarcity_value_singles_test.py`."
     )
     st.markdown('<div class="section-desc"><strong>📦 Box sigillati — TS Momentum</strong></div>', unsafe_allow_html=True)
@@ -482,7 +503,7 @@ def main():
     st.markdown('<div class="section-desc"><strong>🃏 Singole — Fattore Scarsità (log-prezzo ~ scarsità continua + controlli)</strong></div>', unsafe_allow_html=True)
     st.markdown(f"""
     <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_SINGLES['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-emerald">Sopra soglia · griglia propria: {VALIDATED_SINGLES['dsr_own_grid']:.3f}</div></div>
+        <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_SINGLES['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">Sotto soglia · griglia propria: {VALIDATED_SINGLES['dsr_own_grid']:.3f}</div></div>
         <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED_SINGLES['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED_SINGLES['cagr']:.1f}%</div></div>
         <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED_SINGLES['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Molto stabile</div></div>
         <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED_SINGLES['max_dd']:.1f}%</div></div>
@@ -490,12 +511,12 @@ def main():
         <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_SINGLES['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,37 tra le due strategie</strong></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,34 tra le due strategie</strong></div>', unsafe_allow_html=True)
     st.markdown(f"""
     <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,53 box da solo (stesso periodo)</div></div>
+        <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,38 box da solo (stesso periodo)</div></div>
         <div class="kpi-card"><div class="kpi-label">CAGR blend</div><div class="kpi-value">+{VALIDATED_BLEND['cagr']:.1f}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">Max Drawdown blend</div><div class="kpi-value">{VALIDATED_BLEND['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">vs -10,6% solo box</div></div>
+        <div class="kpi-card"><div class="kpi-label">Max Drawdown blend</div><div class="kpi-value">{VALIDATED_BLEND['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">vs -11,1% solo box</div></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -540,7 +561,10 @@ def main():
     st.caption("⚠️ Il prezzo mostrato viene da PriceCharting (mercato USA), convertito in EUR al tasso "
                "reale del mese — è il dato su cui il modello calcola il segnale, NON una quota Cardmarket. "
                "Il mercato europeo ha domanda/offerta propria: può differire, anche di molto. Il grafico "
-               "mostra lo storico usato dal modello — confronta sempre col prezzo reale dietro al bottone.")
+               "mostra lo storico usato dal modello — confronta sempre col prezzo reale dietro al bottone. "
+               "\"Massimo (spedito incluso)\", dove mostrato, è il tetto oltre il quale il modello considera il box "
+               "già fuori dal range di prezzo/MSRP validato (21,6x, netto della spedizione stimata) — è il prezzo "
+               "tutto compreso da non superare, non un obiettivo di sconto.")
     buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
     if max_card_price > 0:
         buy_rows = [r for r in buy_rows if r["current_price_eur"] <= max_card_price]
@@ -554,12 +578,14 @@ def main():
                                          language=meta.get("language", "en"))
         img_url = get_product_image(meta.get("game_slug"), meta.get("item_slug"))
         img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
+        max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (spedito incluso) '
+                           f'{r["max_price_allin_eur"]:.0f}€</span>') if r.get("max_price_allin_eur") is not None else ""
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
             {img_tag}
             <div class="signal-card-body">
             <strong>{r['name']}</strong> &nbsp; <span style="color:#10b981;">+{r['trailing_12m_return_pct']:.0f}% (12m)</span>
-            &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting) &nbsp;·&nbsp; peso età {w:.2f}
+            &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting) &nbsp;·&nbsp; peso età {w:.2f}{max_price_html}
             <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
             </div>
@@ -592,6 +618,18 @@ def main():
                 st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
                                  key=f"chart_sell_{r['item_id']}")
 
+    if n_excessive:
+        excessive_rows = [r for r in sig_rows if "PREZZO ECCESSIVO" in r["signal"]]
+        with st.expander(f"🚫 Prezzo eccessivo — momentum positivo ma bloccato ({n_excessive})"):
+            st.caption("Il modello direbbe di comprare (momentum 12m positivo), ma il prezzo attuale supera già il "
+                       "tetto che preserva l'edge: stesso rapporto prezzo/MSRP già usato per ammettere un box vintage "
+                       "nell'universo (21,6x, vedi `poke_quant/data/liquidity_filter.py`), qui applicato anche a un "
+                       "nuovo acquisto. Non è impossibile che salga ancora, ma comprare oltre questo confine non è "
+                       "ciò che è stato validato — impedisce di comprare a un prezzo che romperebbe l'edge misurato.")
+            for r in excessive_rows:
+                st.markdown(f"- **{r['name']}** — {r['current_price_eur']:.0f}€ attuale vs **{r['max_price_allin_eur']:.0f}€ massimo "
+                            f"(spedito incluso)** (+{r['trailing_12m_return_pct']:.0f}% 12m)")
+
     if n_verify:
         with st.expander(f"⚠️ Da verificare a mano ({n_verify}) — rendimento implausibile, mercato troppo sottile"):
             for r in sig_rows:
@@ -613,12 +651,21 @@ def main():
                "consecutivi la carta è nel quantile BUY: solo le carte entrate negli ultimi 3 mesi (la cadenza "
                "di ribilanciamento validata nel backtest) sono mostrate — oltre, comprarla oggi non è ciò che "
                "è stato testato, è un possibile *value trap* (sconto persistente che il mercato non corregge). "
-               "Prime 15 con grafico, le altre in tabella sotto.")
+               "\"Massimo (spedito incluso)\" è il prezzo tutto compreso oltre il quale QUESTA carta esce dal confine "
+               "del quantile BUY già validato — impedisce di comprare a un prezzo che romperebbe l'edge del fattore, "
+               "non solo un'indicazione di sconto. Prime 15 con grafico, le altre in tabella sotto.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:
         singles_rows = [r for r in singles_rows if r["current_price_eur"] <= max_card_price]
-    singles_allocation = build_equal_allocation(singles_rows, capital * 0.5)
+    # "impedire di comprare sopra un prezzo che rompe l'edge" (richiesto
+    # esplicitamente): le carte il cui prezzo attuale supera già il massimo
+    # tutto compreso (edge_intact=False, vedi generate_singles_signal.py) non
+    # entrano nell'allocazione di capitale - sono ancora nel quantile BUY del
+    # modello, ma comprarle oggi a questo prezzo non preserva l'edge misurato.
+    singles_rows_ok = [r for r in singles_rows if r.get("edge_intact", True)]
+    singles_rows_broken = [r for r in singles_rows if not r.get("edge_intact", True)]
+    singles_allocation = build_equal_allocation(singles_rows_ok, capital * 0.5)
 
     if not singles_allocation:
         st.info("Nessuna carta nel quantile BUY questo mese.")
@@ -630,13 +677,15 @@ def main():
         full_meta = metadata.get(r["item_id"], {})
         img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
         img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
+        max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (spedito incluso) '
+                           f'{r["max_edge_price_eur"]:.2f}€</span>') if r.get("max_edge_price_eur") is not None else ""
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
             {img_tag}
             <div class="signal-card-body">
             <strong>{r['name']}</strong> &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
             &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting) &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%
-            &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r['months_in_signal']}m)</span>
+            &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r['months_in_signal']}m)</span>{max_price_html}
             <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
             </div>
@@ -652,6 +701,7 @@ def main():
             rest_df = pd.DataFrame([
                 {"Carta": r["name"], "Rarità": r["rarity"], "Grado": "Grade 9",
                  "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
+                 "Massimo spedito incluso (€)": r.get("max_edge_price_eur"),
                  "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
                  "Allocazione (€)": alloc}
                 for r, alloc in singles_allocation[15:]
@@ -660,7 +710,28 @@ def main():
                          column_config={
                              "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
                              "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                             "Massimo spedito incluso (€)": st.column_config.NumberColumn(format="%.2f €"),
                              "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
+                         })
+
+    if singles_rows_broken:
+        with st.expander(f"🚫 Prezzo eccessivo — nel quantile BUY ma edge già rotto dalla spedizione ({len(singles_rows_broken)})"):
+            st.caption("Il modello classifica ancora queste carte come sottovalutate vs. pari, ma il loro prezzo "
+                       "attuale supera già il massimo tutto compreso (spedizione inclusa) che preserva l'edge — "
+                       "comprarle oggi a questo prezzo non è ciò che è stato validato nel backtest. Su un trade "
+                       "piccolo (carta singola) una spedizione fissa di 7€ pesa proporzionalmente molto più che su "
+                       "un box: non sono un errore del modello, è il costo reale di eseguire il trade.")
+            broken_df = pd.DataFrame([
+                {"Carta": r["name"], "Rarità": r["rarity"], "Prezzo attuale (€)": r["current_price_eur"],
+                 "Massimo spedito incluso (€)": r["max_edge_price_eur"],
+                 "Margine (€)": r["max_edge_price_eur"] - r["current_price_eur"]}
+                for r in sorted(singles_rows_broken, key=lambda r: r["max_edge_price_eur"] - r["current_price_eur"])
+            ])
+            st.dataframe(broken_df, use_container_width=True, hide_index=True,
+                         column_config={
+                             "Prezzo attuale (€)": st.column_config.NumberColumn(format="%.2f €"),
+                             "Massimo spedito incluso (€)": st.column_config.NumberColumn(format="%.2f €"),
+                             "Margine (€)": st.column_config.NumberColumn(format="%+.2f €"),
                          })
 
     # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---
@@ -727,9 +798,9 @@ def main():
     st.plotly_chart(fig, use_container_width=True)
     st.caption(f"Universo: {n_universe} box/ETB era 2019+, {n_universe_singles} singole. Ogni metà simulata con "
                "10.000€ propri, poi combinata come media dei rendimenti mensili (equivalente a un ribilanciamento "
-               "50/50 mensile) — frizioni reali incluse in entrambe (Cardmarket 5%, imballaggio 0,60€, slippage, "
-               "costo di custodia). Spedizione NON dedotta dal venditore: assunta a carico del compratore, come "
-               "da convenzione Cardmarket (tariffa di spedizione separata dal prezzo dell'oggetto).")
+               "50/50 mensile) — frizioni reali incluse in entrambe: alla vendita Cardmarket 5%, imballaggio 0,60€, "
+               "slippage, costo di custodia; all'acquisto la spedizione reale a carico del compratore (10€/box, "
+               "7€/carta — poke_quant.config.SHIPPING_COSTS), aggiunta al prezzo pagato, mai gratis nella realtà.")
     if singles_mode == "dac7":
         st.caption(f"⚠️ Grafico e metriche sopra riflettono la **modalità conforme DAC7** (singole: ribilanciamento "
                    f"12m, max 20 posizioni) — Sharpe singole {res_singles.sharpe:.2f} (vs {VALIDATED_SINGLES['sharpe']:.2f} "
@@ -767,7 +838,8 @@ def main():
                 "P&L netto (€)": st.column_config.NumberColumn(format="%+.2f €"),
             },
         )
-        st.caption("P&L e ROI sono netti di commissione Cardmarket (5%), imballaggio (0,60€) e costo di custodia — spedizione NON dedotta (a carico del compratore) — "
+        st.caption("P&L e ROI sono netti di commissione Cardmarket (5%), imballaggio (0,60€), costo di custodia e "
+                   "spedizione all'acquisto (a carico del compratore, inclusa nel prezzo d'acquisto) — "
                    "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
 
     # --- GIORNALE DEI TRADE CHIUSI (SINGOLE) ---
@@ -802,11 +874,12 @@ def main():
         if len(display_df_s) > 20:
             with st.expander(f"Altri {len(display_df_s) - 20} trade chiusi"):
                 st.dataframe(display_df_s.iloc[20:], use_container_width=True, hide_index=True, column_config=col_config_s)
-        st.caption("P&L e ROI sono netti di commissione Cardmarket (5%), imballaggio (0,60€) e costo di custodia — spedizione NON dedotta (a carico del compratore) — "
+        st.caption("P&L e ROI sono netti di commissione Cardmarket (5%), imballaggio (0,60€), costo di custodia e "
+                   "spedizione all'acquisto (a carico del compratore, inclusa nel prezzo d'acquisto) — "
                    "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
 
     st.markdown("---")
-    st.caption("PokeQuant · Blend box+singole scelto per correlazione bassa (0,37), non per rendimento massimo · "
+    st.caption("PokeQuant · Blend box+singole scelto per correlazione bassa (0,34), non per rendimento massimo · "
                 "box sotto soglia istituzionale dopo l'audit sull'intera sessione, singole sopra (vedi avviso in alto) · "
                 "[Runbook Italia](https://github.com/davbenx/pokequant/blob/main/OPERATIONS_ITALIA.md) · "
                 "Rivalidare con `scripts/optimize_and_falsify.py` e `scripts/scarcity_value_singles_test.py` ogni 6 mesi.")

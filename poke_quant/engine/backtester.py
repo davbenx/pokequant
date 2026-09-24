@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 from poke_quant.engine.portfolio import Portfolio
+from poke_quant.config import SHIPPING_COSTS
 from poke_quant.validation.metrics import (
     cagr, sharpe, max_drawdown, calmar, sortino_ratio, ulcer_index, compute_trade_metrics
 )
@@ -64,7 +65,8 @@ class Backtester:
         benchmark_series: Optional[pd.Series] = None,  # Serie reale S&P 500 / Gold / BTC
         apply_liquidity_slippage: bool = False,
         apply_holding_cost: bool = False,
-        monthly_cash_injection: float = 0.0
+        monthly_cash_injection: float = 0.0,
+        apply_buy_side_shipping: bool = False
     ):
         self.strategy = strategy
         self.historical_prices = historical_prices_df.sort_index()
@@ -77,6 +79,13 @@ class Backtester:
         self.apply_liquidity_slippage = apply_liquidity_slippage
         self.apply_holding_cost = apply_holding_cost
         self.monthly_cash_injection = monthly_cash_injection
+        # Default invariato (False): tutte le metriche validate finora assumono
+        # un acquisto a costo zero di frizione (nessuna spedizione a carico del
+        # compratore modellata) - un'ipotesi ottimistica, non verificata finora.
+        # Se True, aggiunge la spedizione reale (poke_quant.config.SHIPPING_COSTS)
+        # al costo di ogni acquisto, una volta a transazione (non per unita') -
+        # vedi scripts/buy_side_shipping_test.py per l'impatto misurato.
+        self.apply_buy_side_shipping = apply_buy_side_shipping
 
     def run(self) -> BacktestResult:
         if hasattr(self.strategy, "reset"):
@@ -164,12 +173,16 @@ class Backtester:
             # 3. Esegue poi gli ACQUISTI
             for sig in signals:
                 if sig.action == "BUY":
+                    unit_price = sig.target_price
+                    if self.apply_buy_side_shipping:
+                        shipping_key = "sealed_box" if sig.item_type == "sealed" else "single_tracked"
+                        unit_price += SHIPPING_COSTS[shipping_key] / max(1, sig.quantity)
                     portfolio.buy(
                         item_id=sig.item_id,
                         item_name=sig.item_name,
                         item_type=sig.item_type,
                         quantity=sig.quantity,
-                        unit_price=sig.target_price,
+                        unit_price=unit_price,
                         date=date_str
                     )
 
