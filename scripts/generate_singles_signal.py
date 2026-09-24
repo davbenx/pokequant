@@ -33,6 +33,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, load_price_matrix
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
+from poke_quant.data.cardmarket_bridge import WOTC_FIRST_EDITION_SETS
+
+
+def _display_name(item_id: str, info: dict) -> str:
+    """Nome da mostrare in dashboard. Per i set WOTC 1999-2000 (Base Set,
+    Jungle, Fossil, Team Rocket, Gym, Base Set 2) aggiunge "(Unlimited)":
+    esiste anche una stampa "1st Edition" della stessa carta, spesso 2-4x+
+    piu' cara, e il nostro pannello grade9 traccia sempre la Unlimited -
+    trovato indagando uno scarto di prezzo reale (Raichu #14 Fossil: 107,60€
+    Unlimited mostrati vs 250€ trovati dall'utente, quasi esattamente il
+    prezzo reale della variante 1st Edition, non un errore nel dato)."""
+    name = info.get("name", item_id)
+    if info.get("game_slug") in WOTC_FIRST_EDITION_SETS:
+        return f"{name} (Unlimited)"
+    return name
 
 PRODUCTION_PARAMS = dict(rebalance_every_months=3, top_quantile=0.20, min_age_months=6, max_positions=60, min_cross_section=20)
 
@@ -146,7 +161,7 @@ def compute_singles_signal_rows(params: dict = None):
         max_edge_price_eur = current_price * np.exp(latest_cutoff - residual) if latest_cutoff is not None else None
         rows.append({
             "item_id": item_id,
-            "name": info.get("name", item_id),
+            "name": _display_name(item_id, info),
             "current_price_eur": current_price,
             "residual": residual,
             "discount_pct": (np.exp(residual) - 1.0) * 100.0,
@@ -188,7 +203,7 @@ def compute_singles_avoid_rows(params: dict = None):
         info = metadata[item_id]
         rows.append({
             "item_id": item_id,
-            "name": info.get("name", item_id),
+            "name": _display_name(item_id, info),
             "current_price_eur": snap[item_id]["current_price"],
             "residual": residual,
             "discount_pct": (np.exp(residual) - 1.0) * 100.0,

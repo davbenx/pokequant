@@ -82,6 +82,35 @@ def test_deep_link_single_uses_set_name_not_card_number_or_grade_text():
     )
     assert "Paldea" in url and "Evolved" in url
     assert "%23203" not in url and "#203" not in url
+
+
+def test_deep_link_wotc_single_disambiguates_unlimited_vs_1st_edition():
+    """Trovato verificando un prezzo reale (Raichu #14 Fossil: 107,60€ Unlimited
+    mostrati vs 250€ reali trovati dall'utente, quasi esattamente il prezzo
+    della variante 1st Edition $409.70 verificata su PriceCharting) - senza
+    disambiguare, la ricerca trova quasi solo inserzioni 1st Edition (2-4x+
+    piu' care) per lo stesso nome carta."""
+    url = get_cardmarket_deep_link(
+        "Raichu #14", franchise="pokemon", language="en",
+        item_type="single", game_slug="pokemon-fossil",
+    )
+    assert "Unlimited" in url
+
+    # Con "(Unlimited)" gia' nel nome (come lo mostra la dashboard) non deve
+    # duplicarsi nella ricerca.
+    url_already_annotated = get_cardmarket_deep_link(
+        "Raichu #14 (Unlimited)", franchise="pokemon", language="en",
+        item_type="single", game_slug="pokemon-fossil",
+    )
+    assert url_already_annotated.count("Unlimited") == 1
+
+
+def test_deep_link_modern_single_not_annotated_unlimited():
+    url = get_cardmarket_deep_link(
+        "Skyla #122", franchise="pokemon", language="en",
+        item_type="single", game_slug="pokemon-breakpoint",
+    )
+    assert "Unlimited" not in url
     assert "PSA" not in url
 
 

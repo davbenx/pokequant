@@ -16,7 +16,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scripts.generate_singles_signal import _signal_streak, PRODUCTION_PARAMS, compute_singles_avoid_rows
+from scripts.generate_singles_signal import _signal_streak, PRODUCTION_PARAMS, compute_singles_avoid_rows, _display_name
 
 SIGNAL_FRESHNESS_MONTHS = PRODUCTION_PARAMS["rebalance_every_months"]  # 3, la cadenza di produzione
 
@@ -88,3 +88,17 @@ def test_avoid_rows_puts_the_most_overpriced_card_first():
     assert rows[0]["item_id"] == "card_0"
     assert rows[0]["residual"] > 0
     assert latest_date == dates[-1]
+
+
+def test_display_name_flags_wotc_unlimited_print():
+    """Trovato verificando un prezzo reale (Raichu #14 Fossil): esiste anche
+    una stampa "1st Edition" della stessa carta, spesso 2-4x+ piu' cara - il
+    nostro pannello grade9 traccia sempre la Unlimited, e senza dirlo in
+    dashboard l'utente confronta involontariamente col prodotto sbagliato."""
+    info = {"name": "Raichu #14", "game_slug": "pokemon-fossil"}
+    assert _display_name("raichu_14", info) == "Raichu #14 (Unlimited)"
+
+
+def test_display_name_unchanged_for_modern_set():
+    info = {"name": "Skyla #122", "game_slug": "pokemon-breakpoint"}
+    assert _display_name("skyla_122", info) == "Skyla #122"

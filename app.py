@@ -669,12 +669,14 @@ def main():
                "è stato testato, è un possibile *value trap* (sconto persistente che il mercato non corregge). "
                "\"Massimo\" è la spesa TOTALE (oggetto + spedizione) oltre la quale QUESTA carta esce dal confine "
                "del quantile BUY già validato — non sottraiamo qui una stima di spedizione: verifica tu il costo "
-               "totale reale (oggetto + spedizione dell'inserzione) contro questo numero. ⚠️ Sulle carte vintage "
-               "poco liquide, il pannello Grade 9 di PriceCharting può restare sottostimato rispetto al prezzo reale "
-               "anche dopo il filtro di attendibilità (carte con storico PSA9 troppo sottile per un prezzo affidabile, "
-               "ma non abbastanza estreme da essere escluse) — se non trovi nulla sotto il \"massimo\" su nessun "
-               "canale, registralo con `log_execution_price.py` invece di ignorare il segnale. Prime 15 con grafico, "
-               "le altre in tabella sotto.")
+               "totale reale (oggetto + spedizione dell'inserzione) contro questo numero. ⚠️ **(Unlimited)** sulle "
+               "carte dei set 1999-2000 (Base Set, Jungle, Fossil, Team Rocket, Gym, Base Set 2): esiste anche una "
+               "stampa \"1st Edition\" della stessa carta, spesso 2-4x+ più cara — è un prodotto diverso, non un "
+               "prezzo dashboard sbagliato, e la ricerca Cardmarket qui sotto lo specifica già. Sulle carte vintage "
+               "poco liquide in generale, il pannello Grade 9 di PriceCharting può restare sottostimato rispetto al "
+               "prezzo reale anche dopo il filtro di attendibilità — se non trovi nulla sotto il \"massimo\" su "
+               "nessun canale, registralo con `log_execution_price.py` invece di ignorare il segnale. Prime 15 con "
+               "grafico, le altre in tabella sotto.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:

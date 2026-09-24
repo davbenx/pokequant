@@ -310,6 +310,24 @@ def get_cardmarket_live_prices(
     return res
 
 
+# Set WOTC (1999-2000) che esistono SIA in stampa "1st Edition" (rara, spesso
+# 2-4x+ piu' cara) SIA "Unlimited" - il nostro metadata traccia SEMPRE la
+# stampa Unlimited (nessuna carta ha item_slug con "1st-edition"), ma senza
+# disambiguare la ricerca un utente/venditore trova quasi solo inserzioni
+# 1st Edition (la variante piu' famosa/discussa) e crede che il prezzo sia
+# quello. Trovato verificando Raichu #14 (Fossil): PriceCharting Grade 9
+# Unlimited $125 (il nostro dato, corretto), 1st Edition Grade 9 $409.70 -
+# lo scarto di +114% che l'utente ha trovato sul mercato reale e' quasi
+# interamente spiegato da questo, non da un dato PriceCharting sbagliato o
+# da un mercato EU troppo sottile. 47 carte del nostro universo sono in
+# questi set (Base Set 2 incluso per completezza, anche se non ha mai avuto
+# una stampa 1st Edition - "Unlimited" resta comunque corretto, solo ridondante).
+WOTC_FIRST_EDITION_SETS = {
+    "pokemon-base-set", "pokemon-jungle", "pokemon-fossil", "pokemon-team-rocket",
+    "pokemon-gym-heroes", "pokemon-gym-challenge", "pokemon-base-set-2",
+}
+
+
 def _set_name_from_slug(game_slug: str) -> Optional[str]:
     """'pokemon-evolving-skies' -> 'Evolving Skies', 'one-piece-romance-dawn' ->
     'Romance Dawn' - stesso game_slug/item_slug di PriceCharting gia' in
@@ -355,6 +373,13 @@ def get_cardmarket_deep_link(
     azzerare i risultati invece di filtrarli. Nessun filtro Cardmarket reale
     per grado esiste in questo URL: resta una ricerca testuale approssimata,
     l'utente deve comunque controllare a mano il grado dell'inserzione.
+
+    Per i set WOTC 1999-2000 (WOTC_FIRST_EDITION_SETS) aggiunge "Unlimited"
+    alla ricerca: esistono SIA una stampa "1st Edition" (spesso 2-4x+ piu'
+    cara) SIA "Unlimited" per la stessa carta, e il nostro metadata traccia
+    sempre la Unlimited - senza specificarlo, la ricerca trova quasi solo
+    inserzioni 1st Edition (la variante piu' nota) e sembra un prezzo enorme
+    rispetto al dashboard, quando in realta' sono due prodotti diversi.
     """
     game = "OnePiece" if franchise == "one_piece" or "One Piece" in item_name or "OP-" in item_name or "OP0" in item_name else "Pokemon"
     lang_id = LANGUAGE_CODES.get(language.lower(), {}).get("id", 1)
@@ -364,11 +389,17 @@ def get_cardmarket_deep_link(
 
     clean_name = item_name.replace("[JP]", "").replace("[OP-01]", "").replace("[OP-02]", "").replace("[OP-03]", "").replace("[OP-05]", "").replace("[OP-06]", "").replace("[OP-07]", "").replace("[OP-08]", "").strip()
     clean_name = re.sub(r"\s*#\d+\s*", " ", clean_name).strip()
+    # Rimuove un'annotazione "(Unlimited)" gia' presente nel nome (aggiunta a
+    # scopo di visualizzazione da generate_singles_signal.py) prima di
+    # aggiungerla di nuovo sotto - altrimenti finirebbe duplicata nella ricerca.
+    clean_name = re.sub(r"\s*\(unlimited\)\s*", " ", clean_name, flags=re.IGNORECASE).strip()
 
     set_name = _set_name_from_slug(game_slug)
     if item_type == "single":
         if set_name:
             clean_name += f" {set_name}"
+        if game_slug in WOTC_FIRST_EDITION_SETS:
+            clean_name += " Unlimited"
     elif "box" not in clean_name.lower() and "bundle" not in clean_name.lower():
         clean_name += " Booster Box"
 
