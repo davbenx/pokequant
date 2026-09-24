@@ -56,3 +56,50 @@ def get_reliable_columns(prices_df: pd.DataFrame, **kwargs) -> List[str]:
 def filter_reliable(prices_df: pd.DataFrame, **kwargs) -> pd.DataFrame:
     """Ritorna prices_df con solo le colonne che passano il filtro di attendibilità."""
     return prices_df[get_reliable_columns(prices_df, **kwargs)]
+
+
+# Rapporto prezzo attuale / MSRP piu' alto osservato nell'universo sealed "era
+# moderna" (2019+) gia' in produzione - calcolato UNA VOLTA sui 30 box moderni
+# con MSRP noto, PRIMA di guardare l'effetto sul backtest (altrimenti sarebbe
+# overfitting della definizione stessa di universo, non delle sue regole).
+# Vedi scripts/sealed_universe_expansion_test.py per il calcolo e l'esito.
+MAX_PRICE_TO_MSRP_RATIO = 21.6
+
+
+def is_liquid_sealed(item_id: str, meta: dict, prices_df: pd.DataFrame,
+                      modern_era_cutoff: str = "2019-01-01",
+                      max_price_msrp_ratio: float = MAX_PRICE_TO_MSRP_RATIO) -> bool:
+    """Criterio di liquidita' per un box sealed, PIU' AMPIO del taglio per anno
+    usato finora (MODERN_ERA_CUTOFF da solo): un box e' incluso se e' di era
+    moderna (2019+, come prima), OPPURE se e' piu' vecchio ma il suo rapporto
+    prezzo/MSRP resta DENTRO il range gia' osservato nell'universo moderno
+    validato - cioe' si e' apprezzato in modo comparabile a un box "normale",
+    non come un pezzo da museo a volume di scambio quasi nullo (es. Team Rocket
+    Returns a 485x il MSRP). Se il box vintage non ha un MSRP reale in metadata,
+    resta escluso - NON si fabbrica un numero storico che non conosciamo (stessa
+    regola di scripts/discover_sealed_universe.py)."""
+    if meta.get("data_quality") == "thin_unreliable":
+        return False
+    if item_id not in prices_df.columns:
+        return False
+    release = meta.get("release_date")
+    if not release:
+        return False
+    if release >= modern_era_cutoff:
+        return True
+    msrp = meta.get("msrp")
+    if not msrp:
+        return False
+    s = prices_df[item_id].dropna()
+    s = s[s > 0]
+    if s.empty:
+        return False
+    ratio = float(s.iloc[-1]) / float(msrp)
+    return ratio <= max_price_msrp_ratio
+
+
+def liquid_sealed_ids(metadata: dict, prices_df: pd.DataFrame, **kwargs) -> List[str]:
+    return [
+        k for k, v in metadata.items()
+        if v.get("type") == "sealed" and is_liquid_sealed(k, v, prices_df, **kwargs)
+    ]

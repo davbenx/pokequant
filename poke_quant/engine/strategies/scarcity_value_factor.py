@@ -63,6 +63,13 @@ Non ancora in produzione a piena scala: un fattore che passa ogni controllo
 disponibile oggi merita comunque cautela pratica (allocazione iniziale
 piccola, monitoraggio, non un salto immediato a pari livello del sealed)
 prima di qualsiasi capitale reale.
+
+ISTERESI (exit_quantile) - TESTATA, NON ADOTTATA: vedi scripts/singles_hysteresis_search.py.
+Tenere una posizione finche' non esce da un quantile piu' largo di quello di
+ingresso (invece del quantile stretto singolo) NON migliora la strategia -
+PBO 0,0% sulla griglia, la baseline (exit_quantile=None) vince su ogni
+candidato per Sharpe. Il parametro resta disponibile (default None = nessun
+cambiamento) perche' testato e documentato, non perche' consigliato.
 """
 
 from __future__ import annotations
@@ -109,6 +116,7 @@ class ScarcityValueFactorStrategy:
         use_log_age: bool = True,
         use_rank: bool = True,
         extra_controls: bool = True,
+        exit_quantile: Optional[float] = None,
     ):
         self.rebalance_every_months = rebalance_every_months
         self.top_quantile = top_quantile
@@ -120,6 +128,14 @@ class ScarcityValueFactorStrategy:
         self.use_log_age = use_log_age
         self.use_rank = use_rank
         self.extra_controls = extra_controls
+        # Banda di isteresi (default None = nessuna, comportamento originale
+        # invariato: entrata e uscita sullo STESSO quantile). Se impostato
+        # (deve essere >= top_quantile), una posizione aperta resta in
+        # portafoglio finche' non esce da questo quantile PIU' LARGO, non
+        # appena esce dal quantile stretto di ingresso - riduce il turnover
+        # da residui che oscillano attorno al taglio esatto senza un vero
+        # cambio di tesi. Vedi scripts/singles_hysteresis_search.py per l'esito.
+        self.exit_quantile = exit_quantile
         self._call_count = 0
 
     def reset(self):
@@ -183,13 +199,20 @@ class ScarcityValueFactorStrategy:
         if not residuals:
             return signals
 
+        ranked = sorted(residuals.items(), key=lambda x: x[1])
         n_buy = max(1, int(len(residuals) * self.top_quantile))
-        eligible = [item_id for item_id, _ in sorted(residuals.items(), key=lambda x: x[1])[:n_buy]]
+        eligible = [item_id for item_id, _ in ranked[:n_buy]]
         eligible = eligible[: self.max_positions]
         eligible_set = set(eligible)
 
+        if self.exit_quantile is not None:
+            n_hold = max(n_buy, int(len(residuals) * self.exit_quantile))
+            hold_set = {item_id for item_id, _ in ranked[:n_hold]}
+        else:
+            hold_set = eligible_set
+
         for item_id, pos in list(portfolio.positions.items()):
-            if item_id in market_snapshot and item_id not in eligible_set:
+            if item_id in market_snapshot and item_id not in hold_set:
                 signals.append(Signal(
                     action="SELL", item_id=item_id, item_name=pos.item_name,
                     item_type=pos.item_type, quantity=pos.quantity,

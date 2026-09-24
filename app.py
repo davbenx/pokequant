@@ -13,11 +13,15 @@ DSR: il numero originale (0,913) era corretto solo per la griglia di lookback co
 la strategia fu scelta (n_trials=5). Un audit successivo (richiesto esplicitamente
 dopo aver scoperto lo stesso problema sul fattore di valore relativo delle singole)
 ha ricontato TUTTI i trial tentati sul lato sealed in questa sessione - lookback (5),
-logica di uscita (9), finestra d'eta' (7), time stop (7), teoria EV del box (4) = 32
-- e il DSR corretto scende a 0,675. Resta il piu' alto di qualsiasi candidato testato
-in questa sessione (valore relativo singole 0,581, teoria EV box 0,616), ma non supera
-piu' la soglia di comfort 0,90-0,95 usata ovunque in questa ricerca. Mostrati ENTRAMBI
-i numeri in dashboard, non solo il piu' favorevole - vedi scripts/dsr_session_audit.py.
+logica di uscita (9), finestra d'eta' (7), time stop (7), teoria EV del box (4) = 32,
+poi + conferma momentum (7, respinta) + isteresi (7, respinta) + espansione universo
+via rapporto prezzo/MSRP (1, adottata) = 47 - il DSR corretto e' 0,778 sull'universo
+allargato (era 0,675 sui 32 trial originali e sull'universo a 36 box). Sopra la soglia
+0,90-0,95 usata ovunque in questa ricerca ancora non ci arriva, ma l'espansione
+dell'universo (36->40 box, vedi scripts/sealed_universe_expansion_test.py) e' un
+miglioramento reale, non solo una correzione al ribasso come le altre volte. Mostrati
+ENTRAMBI i numeri in dashboard, non solo il piu' favorevole - vedi
+scripts/dsr_session_audit.py.
 
 Azionabilita' per l'Italia: link diretti a Cardmarket (mercato primario per chi opera
 dall'Italia, vedi OPERATIONS_ITALIA.md) su ogni posizione BUY/HOLD.
@@ -41,6 +45,7 @@ from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentum
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
 from poke_quant.engine.position_sizing import age_weight
 from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTOFF
+from poke_quant.data.liquidity_filter import liquid_sealed_ids
 from scripts.generate_singles_signal import compute_singles_signal_rows, PRODUCTION_PARAMS as SINGLES_PARAMS
 
 # =============================================================================
@@ -49,10 +54,14 @@ from scripts.generate_singles_signal import compute_singles_signal_rows, PRODUCT
 # refresh del browser.
 # =============================================================================
 VALIDATED_BOX = {
-    "dsr_own_grid": 0.913, "dsr_full_session": 0.675, "n_trials_full_session": 32,
-    "pbo": 0.286, "sharpe": 1.10, "cagr": 23.54, "max_dd": -13.40,
+    # Universo allargato a 40 box (era 36): oltre al cutoff 2019, include box
+    # piu' vecchi con rapporto prezzo/MSRP reale dentro il range gia' osservato
+    # nell'universo moderno - vedi scripts/sealed_universe_expansion_test.py e
+    # poke_quant/data/liquidity_filter.py::liquid_sealed_ids.
+    "dsr_own_grid": 0.913, "dsr_full_session": 0.778, "n_trials_full_session": 47,
+    "pbo": 0.286, "sharpe": 1.31, "cagr": 23.82, "max_dd": -10.62,
     "bootstrap_cagr_p_pos": 100, "bootstrap_sharpe_p_pos": 100,
-    "h1_sharpe": -0.10, "h2_sharpe": 1.29,
+    "h1_sharpe": 0.68, "h2_sharpe": 1.28,
 }
 VALIDATED_SINGLES = {
     # Specifica rifinita (eta' log + rango ordinale + controlli extra, ora i
@@ -63,7 +72,7 @@ VALIDATED_SINGLES = {
     "pbo": 0.000, "sharpe": 2.02, "cagr": 32.64, "max_dd": -8.54,
     "h1_sharpe": 0.95, "h2_sharpe": 3.44,
 }
-VALIDATED_BLEND = {"sharpe": 2.08, "cagr": 28.74, "max_dd": -5.65}
+VALIDATED_BLEND = {"sharpe": 2.27, "cagr": 28.75, "max_dd": -5.45}
 
 st.set_page_config(page_title="PokeQuant — TS Momentum", page_icon="⚡", layout="wide")
 
@@ -117,11 +126,7 @@ def get_market_indices():
     d'ingresso: mostrano quale segmento è caldo/freddo, non quando comprare."""
     metadata = load_metadata()
     prices_full = load_price_matrix()
-    sealed_ids = [
-        k for k, v in metadata.items()
-        if v.get("type") == "sealed" and v.get("data_quality") != "thin_unreliable"
-        and k in prices_full.columns and v.get("release_date") and v["release_date"] >= MODERN_ERA_CUTOFF
-    ]
+    sealed_ids = liquid_sealed_ids(metadata, prices_full)
 
     segments: dict[str, list[str]] = {"Pokémon EN": [], "Pokémon JP": [], "One Piece TCG": []}
     for k in sealed_ids:
@@ -173,11 +178,7 @@ def get_market_indices():
 def get_backtest_results():
     metadata = load_metadata()
     prices_full = load_price_matrix()
-    sealed_ids = [
-        k for k, v in metadata.items()
-        if v.get("type") == "sealed" and v.get("data_quality") != "thin_unreliable"
-        and k in prices_full.columns and v.get("release_date") and v["release_date"] >= MODERN_ERA_CUTOFF
-    ]
+    sealed_ids = liquid_sealed_ids(metadata, prices_full)
     meta_sub = {k: v for k, v in metadata.items() if k in sealed_ids}
     prices_sub = prices_full[sealed_ids]
     strat = TimeSeriesMomentumStrategy(prices_sub, lookback_months=12)
@@ -325,7 +326,7 @@ def main():
         capital = st.number_input("Capitale dedicato (€)", min_value=100.0, max_value=1_000_000.0,
                                    value=10000.0, step=500.0)
         st.caption("50% box sigillati, 50% singole (fattore scarsità) — le due strategie hanno "
-                   "correlazione bassa (0,19): il blend porta Sharpe 1,28→2,08 e MaxDD -13,4%→-5,65% "
+                   "correlazione bassa (0,34): il blend porta Sharpe 1,53→2,27 e MaxDD -10,6%→-5,45% "
                    "rispetto al solo box. Cap 12% del capitale per singola posizione dentro ciascuna metà, "
                    "box pesato per età (0,4x sotto i 18 mesi, 1,0x dopo).")
         st.markdown("---")
@@ -369,12 +370,12 @@ def main():
         <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_SINGLES['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,19 tra le due strategie</strong></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,34 tra le due strategie</strong></div>', unsafe_allow_html=True)
     st.markdown(f"""
     <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,28 box da solo (stesso periodo)</div></div>
+        <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,53 box da solo (stesso periodo)</div></div>
         <div class="kpi-card"><div class="kpi-label">CAGR blend</div><div class="kpi-value">+{VALIDATED_BLEND['cagr']:.1f}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">Max Drawdown blend</div><div class="kpi-value">{VALIDATED_BLEND['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">vs -13,4% solo box</div></div>
+        <div class="kpi-card"><div class="kpi-label">Max Drawdown blend</div><div class="kpi-value">{VALIDATED_BLEND['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">vs -10,6% solo box</div></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -621,7 +622,7 @@ def main():
                    "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
 
     st.markdown("---")
-    st.caption("PokeQuant · Blend box+singole scelto per correlazione bassa (0,19), non per rendimento massimo · "
+    st.caption("PokeQuant · Blend box+singole scelto per correlazione bassa (0,34), non per rendimento massimo · "
                 "box sotto soglia istituzionale dopo l'audit sull'intera sessione, singole sopra (vedi avviso in alto) · "
                 "[Runbook Italia](https://github.com/davbenx/pokequant/blob/main/OPERATIONS_ITALIA.md) · "
                 "Rivalidare con `scripts/optimize_and_falsify.py` e `scripts/scarcity_value_singles_test.py` ogni 6 mesi.")

@@ -24,6 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, load_price_matrix
+from poke_quant.data.liquidity_filter import liquid_sealed_ids
 from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentumStrategy
 
 LOOKBACK_MONTHS = 12
@@ -38,9 +39,15 @@ PLAUSIBILITY_CAP_PCT = 80.0
 # assurdi in assoluto (es. Team Rocket Returns a 58.235€, Power Keepers a 17.472€ -
 # set di media fama, non pezzi da museo): il problema non e' il rendimento, e' che
 # il volume di vendita reale e' troppo basso per qualsiasi prezzo mensile attendibile,
-# indipendentemente dal filtro statistico. Per un segnale AZIONABILE (non per la
-# ricerca statistica, che tollera piu' rumore su tanti campioni) ci si restringe
-# all'era moderna, dove il mercato secondario sigillato e' davvero liquido.
+# indipendentemente dal filtro statistico. MODERN_ERA_CUTOFF resta il taglio di
+# base, ma liquid_sealed_ids() (poke_quant/data/liquidity_filter.py) recupera anche
+# i box PIU' VECCHI il cui rapporto prezzo/MSRP reale resta dentro il range gia'
+# osservato nell'universo moderno (1,5x-21,6x) - si sono apprezzati come un box
+# "normale", non come un pezzo da museo. Validato in
+# scripts/sealed_universe_expansion_test.py: 36->40 box, Sharpe 1,10->1,31,
+# MaxDD -13,4%->-10,6%, DSR full-session 0,675->0,778 su 47 trial cumulativi (grazie a H1,
+# il periodo debole, che passa da Sharpe -0,10 a +0,68). Nessun MSRP viene
+# inventato per i box senza questo dato: restano esclusi se piu' vecchi del 2019.
 MODERN_ERA_CUTOFF = "2019-01-01"
 
 
@@ -49,12 +56,7 @@ def compute_signal_rows():
     metadata = load_metadata()
     prices_df = load_price_matrix()
 
-    sealed_ids = [
-        k for k, v in metadata.items()
-        if v.get("type") == "sealed" and v.get("data_quality") != "thin_unreliable"
-        and k in prices_df.columns
-        and v.get("release_date") and v["release_date"] >= MODERN_ERA_CUTOFF
-    ]
+    sealed_ids = liquid_sealed_ids(metadata, prices_df, modern_era_cutoff=MODERN_ERA_CUTOFF)
     prices_sealed = prices_df[sealed_ids]
     latest_date = prices_sealed.index[-1]
 

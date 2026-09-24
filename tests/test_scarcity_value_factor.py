@@ -13,7 +13,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from poke_quant.engine.portfolio import Portfolio
+from poke_quant.engine.portfolio import Portfolio, Position
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
 
 
@@ -102,6 +102,49 @@ def test_legacy_continuous_scarcity_mode_still_works():
     signals = strat.generate_signals("2024-01-01", portfolio, _snapshot(prices, meta))
     buys = [s for s in signals if s.action == "BUY"]
     assert any(s.item_id == "card_5" for s in buys)
+
+
+def test_exit_quantile_keeps_a_position_outside_the_tight_entry_band():
+    """Con exit_quantile piu' largo del top_quantile di ingresso, una carta che
+    esce dal quantile stretto ma resta dentro quello largo NON deve generare
+    un segnale SELL - la banda di isteresi deve trattenere la posizione."""
+    portfolio = Portfolio(initial_cash=10000.0)
+    meta = _make_meta(20)
+    prices = {f"card_{i}": 100.0 for i in range(20)}
+    prices["card_5"] = 92.0  # leggermente sottovalutata - dentro al 30% largo, non al 10% stretto
+    prices["card_0"] = 40.0  # la piu' sottovalutata di tutte
+
+    strat = ScarcityValueFactorStrategy(rebalance_every_months=1, top_quantile=0.10, min_age_months=0,
+                                         min_cross_section=10, exit_quantile=0.30)
+    snap = _snapshot(prices, meta)
+    portfolio.positions = {
+        "card_5": Position(item_id="card_5", item_name="card_5", item_type="single",
+                            quantity=1, buy_date="2023-01-01", buy_price_unit=92.0, total_cost=92.0),
+    }
+    signals = strat.generate_signals("2024-01-01", portfolio, snap)
+    assert not any(s.action == "SELL" and s.item_id == "card_5" for s in signals), (
+        "card_5 e' fuori dal quantile stretto (10%) ma dentro quello largo (30%) - "
+        "con isteresi non deve essere venduta"
+    )
+
+
+def test_exit_quantile_still_sells_once_outside_the_wide_band():
+    portfolio = Portfolio(initial_cash=10000.0)
+    meta = _make_meta(20)
+    prices = {f"card_{i}": 100.0 for i in range(20)}
+    prices["card_0"] = 40.0  # la sola carta davvero sottovalutata
+
+    strat = ScarcityValueFactorStrategy(rebalance_every_months=1, top_quantile=0.10, min_age_months=0,
+                                         min_cross_section=10, exit_quantile=0.30)
+    snap = _snapshot(prices, meta)
+    portfolio.positions = {
+        "card_15": Position(item_id="card_15", item_name="card_15", item_type="single",
+                             quantity=1, buy_date="2023-01-01", buy_price_unit=100.0, total_cost=100.0),
+    }
+    signals = strat.generate_signals("2024-01-01", portfolio, snap)
+    assert any(s.action == "SELL" and s.item_id == "card_15" for s in signals), (
+        "card_15 e' scambiata come tutte le altre non-anomale - deve uscire anche dal quantile largo"
+    )
 
 
 def test_promo_and_unknown_rarity_excluded_from_regression():
