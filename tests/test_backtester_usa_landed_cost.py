@@ -128,3 +128,22 @@ def test_sell_side_eu_premium_scales_the_realized_sale_price():
     assert res_premium.trades_df.iloc[0]["sell_price_unit"] == pytest.approx(
         res_base.trades_df.iloc[0]["sell_price_unit"] * 1.5, rel=1e-6
     )
+
+
+def test_sell_at_usa_landed_cost_equivalent_uses_the_landed_cost_formula():
+    """Osservazione dell'utente: "comprare in Europa ha prezzi simili a
+    comprare dall'estero e sdoganare" - diverso da un moltiplicatore costante
+    (sell_side_eu_premium): la formula del costo sdoganato ha una parte
+    fissa (IVA+dazio+corriere) che non scala linearmente col prezzo - va
+    applicata con la STESSA funzione usata in acquisto, non un fattore a
+    caso."""
+    prices, metadata = _prices_and_meta("card_d", "single", price=100.0)
+    strat = _BuyThenSellStrategy("card_d", "single")
+    bt = Backtester(strat, prices, metadata, initial_cash=10_000.0,
+                     buy_at_usa_landed_cost=True, sell_at_usa_landed_cost_equivalent=True)
+    res = bt.run()
+
+    expected_price = estimate_usa_import_landed_cost(100.0, item_type="single")
+    assert not res.trades_df.empty
+    assert res.trades_df.iloc[0]["sell_price_unit"] == pytest.approx(expected_price, abs=1e-2)
+    assert res.trades_df.iloc[0]["buy_price_unit"] == pytest.approx(expected_price, abs=1e-2)

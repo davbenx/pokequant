@@ -68,7 +68,8 @@ class Backtester:
         monthly_cash_injection: float = 0.0,
         apply_buy_side_shipping: bool = False,
         buy_at_usa_landed_cost: bool = False,
-        sell_side_eu_premium: float = 1.0
+        sell_side_eu_premium: float = 1.0,
+        sell_at_usa_landed_cost_equivalent: bool = False
     ):
         self.strategy = strategy
         self.historical_prices = historical_prices_df.sort_index()
@@ -110,6 +111,17 @@ class Backtester:
         # strategia torna in pareggio" - vedi scripts/eu_resale_premium_breakeven_test.py.
         # Default 1.0 = nessun premio, comportamento storico invariato.
         self.sell_side_eu_premium = sell_side_eu_premium
+        # Osservazione diretta dell'utente: "comprare in Europa ha prezzi
+        # simili a comprare dall'estero e sdoganare" - cioe' il prezzo EU non
+        # e' un multiplo costante di PriceCharting (sell_side_eu_premium),
+        # converge al livello del costo sdoganato stesso (i venditori EU
+        # prezzano sapendo che l'alternativa del compratore e' importare).
+        # Se True, ANCHE la vendita usa estimate_usa_import_landed_cost
+        # invece di sell_side_eu_premium - importante perche' quella funzione
+        # NON e' un moltiplicatore uniforme: ha una parte fissa (IVA+dazio+
+        # corriere) enorme in proporzione su una carta economica, piccola su
+        # un box costoso - vedi scripts/eu_landed_cost_equivalent_test.py.
+        self.sell_at_usa_landed_cost_equivalent = sell_at_usa_landed_cost_equivalent
 
     def run(self) -> BacktestResult:
         if hasattr(self.strategy, "reset"):
@@ -183,10 +195,14 @@ class Backtester:
                         annual_carry = meta.get("holding_cost_annual_pct", 0.005)
                         carry = (pos.buy_price_unit * sig.quantity) * (annual_carry / 12.0) * m_held
 
+                    if self.sell_at_usa_landed_cost_equivalent:
+                        sell_unit_price = estimate_usa_import_landed_cost(sig.target_price, item_type=sig.item_type)
+                    else:
+                        sell_unit_price = sig.target_price * self.sell_side_eu_premium
                     portfolio.sell(
                         item_id=sig.item_id,
                         quantity=sig.quantity,
-                        unit_gross_price=sig.target_price * self.sell_side_eu_premium,
+                        unit_gross_price=sell_unit_price,
                         date=date_str,
                         platform=self.platform,
                         seller_absorbs_shipping=self.seller_absorbs_shipping,
