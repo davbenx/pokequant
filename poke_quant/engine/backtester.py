@@ -67,7 +67,8 @@ class Backtester:
         apply_holding_cost: bool = False,
         monthly_cash_injection: float = 0.0,
         apply_buy_side_shipping: bool = False,
-        buy_at_usa_landed_cost: bool = False
+        buy_at_usa_landed_cost: bool = False,
+        sell_side_eu_premium: float = 1.0
     ):
         self.strategy = strategy
         self.historical_prices = historical_prices_df.sort_index()
@@ -96,6 +97,19 @@ class Backtester:
         # l'uno o l'altro modello di frizione all'acquisto, non entrambi
         # sommati - vedi scripts/usa_landed_cost_edge_test.py per l'esito.
         self.buy_at_usa_landed_cost = buy_at_usa_landed_cost
+        # Trovato indagando una critica metodologica corretta dell'utente: se
+        # si compra importando da USA/JP (buy_at_usa_landed_cost) ma si RIVENDE
+        # sempre in EU, il prezzo di vendita nel backtest resta ancorato alla
+        # serie storica USA/PriceCharting grezza - corretto SOLO se in EU non
+        # c'e' nessun premio persistente alla rivendita rispetto al tracciato
+        # USA. Non abbiamo dati sufficienti per saperlo con certezza (1 sola
+        # osservazione reale finora, spiegata da un artefatto di prodotto -
+        # 1st Edition vs Unlimited - non da un premio generale). Questo
+        # parametro moltiplica il prezzo di vendita per un fattore costante,
+        # per trasformare l'incognita in un numero: "a che premio EU la
+        # strategia torna in pareggio" - vedi scripts/eu_resale_premium_breakeven_test.py.
+        # Default 1.0 = nessun premio, comportamento storico invariato.
+        self.sell_side_eu_premium = sell_side_eu_premium
 
     def run(self) -> BacktestResult:
         if hasattr(self.strategy, "reset"):
@@ -172,7 +186,7 @@ class Backtester:
                     portfolio.sell(
                         item_id=sig.item_id,
                         quantity=sig.quantity,
-                        unit_gross_price=sig.target_price,
+                        unit_gross_price=sig.target_price * self.sell_side_eu_premium,
                         date=date_str,
                         platform=self.platform,
                         seller_absorbs_shipping=self.seller_absorbs_shipping,
