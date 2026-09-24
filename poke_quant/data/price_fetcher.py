@@ -24,6 +24,29 @@ HEADERS = {
 
 logger = logging.getLogger(__name__)
 
+
+def fetch_pricecharting_cover_image_url(game_slug: str, item_slug: str) -> Optional[str]:
+    """Scarica l'URL dell'immagine di copertina reale del prodotto da PriceCharting
+    (non un placeholder generico). Il marcatore stabile e' <div id="product_details">
+    seguito da <div class="cover"><img src=...> - le altre immagini nella pagina
+    (tabelle di prodotti simili/ricerca) compaiono PRIMA di questo blocco, quindi
+    cercare solo dopo id="product_details" evita di prendere la copertina di un
+    prodotto diverso. Ritorna None se la pagina non ha questo blocco (slug rotto)."""
+    url = f"https://www.pricecharting.com/game/{game_slug}/{item_slug}"
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=15)
+        resp.raise_for_status()
+    except Exception as e:
+        logger.warning(f"Impossibile scaricare {url} per l'immagine: {e}")
+        return None
+    text = resp.text
+    marker = text.find('id="product_details"')
+    if marker < 0:
+        return None
+    m = re.search(r"storage\.googleapis\.com/images\.pricecharting\.com/[^\"'\s]+\.(?:jpg|jpeg|png|webp)",
+                  text[marker:marker + 2000])
+    return f"https://{m.group(0)}" if m else None
+
 # Catalogo di riferimento istituzionale per backtest (Box sigillati e Singole iconiche)
 STANDARD_UNIVERSE = {
     # --- BOOSTER BOX SIGILLATI: SWORD & SHIELD (ERA MODERNA COMPLETA) ---

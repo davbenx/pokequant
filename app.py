@@ -30,6 +30,7 @@ dall'Italia, vedi OPERATIONS_ITALIA.md) su ogni posizione BUY/HOLD.
 from __future__ import annotations
 import sys
 from pathlib import Path
+from typing import Optional
 
 import streamlit as st
 import pandas as pd
@@ -46,6 +47,7 @@ from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFact
 from poke_quant.engine.position_sizing import age_weight
 from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTOFF
 from poke_quant.data.liquidity_filter import liquid_sealed_ids
+from poke_quant.data.price_fetcher import fetch_pricecharting_cover_image_url
 from scripts.generate_singles_signal import compute_singles_signal_rows, PRODUCTION_PARAMS as SINGLES_PARAMS
 
 # =============================================================================
@@ -95,9 +97,11 @@ html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystem
 .kpi-sub { font-size: 11px; font-weight: 500; margin-top: 2px; }
 .kpi-sub-emerald { color: #10b981; }
 .kpi-sub-amber { color: #fbbf24; }
-.signal-card { background: rgba(15,23,42,0.65); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; border-left: 3px solid; border-top: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); }
+.signal-card { background: rgba(15,23,42,0.65); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; border-left: 3px solid; border-top: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; }
 .signal-card-buy { border-left-color: #10b981; }
 .signal-card-sell { border-left-color: #f43f5e; }
+.signal-card-thumb { width: 56px; height: 56px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.04); flex-shrink: 0; }
+.signal-card-body { flex: 1; min-width: 0; }
 .section-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; color: #f1f5f9; margin-top: 10px; margin-bottom: 2px; }
 .section-desc { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
 .cm-btn { display: inline-flex; align-items: center; gap: 5px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); color: #10b981 !important; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; text-decoration: none !important; }
@@ -214,6 +218,18 @@ def get_singles_backtest_results():
                      apply_liquidity_slippage=True, apply_holding_cost=True)
     res = bt.run()
     return res, len(singles_ids)
+
+
+@st.cache_data(show_spinner=False, ttl=7 * 24 * 3600)
+def get_product_image(game_slug: str, item_slug: str) -> Optional[str]:
+    """Immagine di copertina reale da PriceCharting, cache 7gg (l'immagine di un
+    prodotto non cambia) - evita di rifare il fetch di rete a ogni refresh pagina."""
+    if not game_slug or not item_slug:
+        return None
+    try:
+        return fetch_pricecharting_cover_image_url(game_slug, item_slug)
+    except Exception:
+        return None
 
 
 def build_price_chart(item_id: str, name: str, prices_full: pd.DataFrame, months: int = 24):
@@ -430,12 +446,17 @@ def main():
         meta = metadata.get(r["item_id"], {})
         link = get_cardmarket_deep_link(r["name"], franchise=meta.get("franchise", "pokemon"),
                                          language=meta.get("language", "en"))
+        img_url = get_product_image(meta.get("game_slug"), meta.get("item_slug"))
+        img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
+            {img_tag}
+            <div class="signal-card-body">
             <strong>{r['name']}</strong> &nbsp; <span style="color:#10b981;">+{r['trailing_12m_return_pct']:.0f}% (12m)</span>
             &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting) &nbsp;·&nbsp; peso età {w:.2f}
             <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         chart = build_price_chart(r["item_id"], r["name"], prices_full)
@@ -448,10 +469,16 @@ def main():
     if sell_rows:
         st.markdown('<div class="section-title">🔴 Uscite (momentum invertito)</div>', unsafe_allow_html=True)
         for r in sell_rows:
+            meta_sell = metadata.get(r["item_id"], {})
+            img_url = get_product_image(meta_sell.get("game_slug"), meta_sell.get("item_slug"))
+            img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
             st.markdown(f"""
             <div class="signal-card signal-card-sell">
+                {img_tag}
+                <div class="signal-card-body">
                 <strong>{r['name']}</strong> &nbsp; <span style="color:#f43f5e;">{r['trailing_12m_return_pct']:.0f}% (12m)</span>
                 &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting)
+                </div>
             </div>
             """, unsafe_allow_html=True)
             chart = build_price_chart(r["item_id"], r["name"], prices_full)
@@ -492,13 +519,19 @@ def main():
         link = get_cardmarket_deep_link(r["name"], franchise=meta["franchise"], language=meta["language"], item_type="single")
         start = r["signal_start_date"]
         start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)
+        full_meta = metadata.get(r["item_id"], {})
+        img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
+        img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
+            {img_tag}
+            <div class="signal-card-body">
             <strong>{r['name']}</strong> &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
             &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting) &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%
             &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r['months_in_signal']}m)</span>
             <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         chart = build_price_chart(r["item_id"], r["name"], singles_prices_full)
