@@ -11,8 +11,9 @@ Uso tipico (fallo ogni volta che controlli Cardmarket/eBay per un acquisto reale
     python scripts/log_execution_price.py --report
 
 Il prezzo dashboard, se non passato con --dashboard, viene preso automaticamente
-dall'ultimo mese disponibile in data_cache/historical_prices_europe.csv (o, in mancanza,
-historical_prices.csv). Ogni osservazione si accumula in
+dall'ultimo mese disponibile - dal pannello grade9 per le singole (lo stesso
+che mostra davvero il dashboard), da historical_prices_europe.csv/
+historical_prices.csv per i box. Ogni osservazione si accumula in
 data_cache/execution_price_log.csv — NON sovrascrive le precedenti.
 """
 
@@ -29,8 +30,23 @@ from poke_quant.data.execution_gap_calibrator import (
 )
 
 
-def _latest_dashboard_price(item_id: str) -> float:
-    for fname in ("historical_prices_europe.csv", "historical_prices.csv"):
+def _latest_dashboard_price(item_id: str, metadata: dict) -> float:
+    """Stesso bug gia' trovato e corretto in scripts/flag_unreliable_assets.py:
+    historical_prices.csv/historical_prices_europe.csv (legacy) e
+    historical_prices_graded_singles_grade9.csv hanno valori DIVERSI per la
+    stessa carta - il dashboard mostra SEMPRE il pannello grade9 per le
+    singole (v. app.py::get_singles_prices_full), quindi e' quello da
+    controllare qui, altrimenti si calibra lo scarto sul prezzo sbagliato.
+    Trovato loggando Raichu #14: senza questo fix avrebbe preso 22,86€
+    (legacy raw) invece di 107,60€ (grade9, il vero prezzo dashboard),
+    gonfiando lo scarto calibrato a ~900% invece del ~114% reale."""
+    item_type = metadata.get(item_id, {}).get("type")
+    filenames = (
+        ("historical_prices_graded_singles_grade9.csv", "historical_prices_europe.csv", "historical_prices.csv")
+        if item_type == "single"
+        else ("historical_prices_europe.csv", "historical_prices.csv")
+    )
+    for fname in filenames:
         df = load_price_matrix(fname)
         if df is not None and item_id in df.columns:
             series = df[item_id].dropna()
@@ -68,7 +84,8 @@ def main():
     if not args.item_id or args.ask is None:
         parser.error("servono item_id e --ask (usa --report per vedere lo stato attuale)")
 
-    dashboard_price = args.dashboard if args.dashboard is not None else _latest_dashboard_price(args.item_id)
+    metadata = load_metadata() or {}
+    dashboard_price = args.dashboard if args.dashboard is not None else _latest_dashboard_price(args.item_id, metadata)
     if dashboard_price <= 0:
         parser.error(f"prezzo dashboard non trovato per '{args.item_id}': passa --dashboard esplicitamente")
 
