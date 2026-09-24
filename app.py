@@ -55,11 +55,15 @@ VALIDATED_BOX = {
     "h1_sharpe": -0.10, "h2_sharpe": 1.29,
 }
 VALIDATED_SINGLES = {
-    "dsr_own_grid": 0.996, "dsr_full_session": 0.943, "n_trials_full_session": 51,
-    "pbo": 0.014, "sharpe": 1.74, "cagr": 27.79, "max_dd": -9.79,
-    "h1_sharpe": 0.83, "h2_sharpe": 3.16,
+    # Specifica rifinita (eta' log + rango ordinale + controlli extra, ora i
+    # default della classe - vedi scarcity_value_factor.py). pbo qui e' quello
+    # della griglia di 6 varianti di specifica (8 split), non del grid rebal/quantile:
+    # e' il numero corretto per come n_trials_full_session e' stato conteggiato.
+    "dsr_own_grid": 0.999, "dsr_full_session": 0.980, "n_trials_full_session": 62,
+    "pbo": 0.000, "sharpe": 2.02, "cagr": 32.64, "max_dd": -8.54,
+    "h1_sharpe": 0.95, "h2_sharpe": 3.44,
 }
-VALIDATED_BLEND = {"sharpe": 2.01, "cagr": 26.42, "max_dd": -5.70}
+VALIDATED_BLEND = {"sharpe": 2.08, "cagr": 28.74, "max_dd": -5.65}
 
 st.set_page_config(page_title="PokeQuant — TS Momentum", page_icon="⚡", layout="wide")
 
@@ -321,7 +325,7 @@ def main():
         capital = st.number_input("Capitale dedicato (€)", min_value=100.0, max_value=1_000_000.0,
                                    value=10000.0, step=500.0)
         st.caption("50% box sigillati, 50% singole (fattore scarsità) — le due strategie hanno "
-                   "correlazione bassa (0,19): il blend porta Sharpe 1,28→2,01 e MaxDD -13,4%→-5,7% "
+                   "correlazione bassa (0,19): il blend porta Sharpe 1,28→2,08 e MaxDD -13,4%→-5,65% "
                    "rispetto al solo box. Cap 12% del capitale per singola posizione dentro ciascuna metà, "
                    "box pesato per età (0,4x sotto i 18 mesi, 1,0x dopo).")
         st.markdown("---")
@@ -571,34 +575,39 @@ def main():
                    "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
 
     # --- GIORNALE DEI TRADE CHIUSI (SINGOLE) ---
+    st.markdown('<div class="section-title">📜 Giornale dei trade chiusi — Singole (backtest)</div>', unsafe_allow_html=True)
     trades_df_s = res_singles.trades_df
-    with st.expander(f"📜 Giornale dei trade chiusi — Singole ({res_singles.total_trades} trade, backtest)"):
-        win_rate_s = res_singles.win_rate * 100.0
-        st.markdown(f"""
-        <div class="kpi-grid">
-            <div class="kpi-card"><div class="kpi-label">Trade chiusi</div><div class="kpi-value">{res_singles.total_trades}</div></div>
-            <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value">{win_rate_s:.0f}%</div></div>
-            <div class="kpi-card"><div class="kpi-label">Profit Factor</div><div class="kpi-value">{res_singles.profit_factor:.2f}</div></div>
-        </div>
-        """, unsafe_allow_html=True)
-        if trades_df_s.empty:
-            st.info("Nessun trade chiuso nel backtest.")
-        else:
-            display_df_s = trades_df_s.sort_values("sell_date", ascending=False).copy()
-            display_df_s["net_roi_pct"] = display_df_s["net_roi"] * 100.0
-            display_df_s = display_df_s[["item_name", "buy_date", "sell_date", "holding_months",
-                                          "buy_price_unit", "sell_price_unit", "net_roi_pct", "net_pnl"]]
-            display_df_s.columns = ["Carta", "Acquisto", "Vendita", "Holding (m)",
-                                     "Prezzo acquisto (€)", "Prezzo vendita (€)", "ROI netto (%)", "P&L netto (€)"]
-            st.dataframe(
-                display_df_s, use_container_width=True, hide_index=True,
-                column_config={
-                    "Prezzo acquisto (€)": st.column_config.NumberColumn(format="%.2f €"),
-                    "Prezzo vendita (€)": st.column_config.NumberColumn(format="%.2f €"),
-                    "ROI netto (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-                    "P&L netto (€)": st.column_config.NumberColumn(format="%+.2f €"),
-                },
-            )
+    win_rate_s = res_singles.win_rate * 100.0
+    avg_holding_s = trades_df_s["holding_months"].mean() if not trades_df_s.empty else 0.0
+    st.markdown(f"""
+    <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Trade chiusi</div><div class="kpi-value">{res_singles.total_trades}</div></div>
+        <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value">{win_rate_s:.0f}%</div></div>
+        <div class="kpi-card"><div class="kpi-label">Profit Factor</div><div class="kpi-value">{res_singles.profit_factor:.2f}</div><div class="kpi-sub kpi-sub-emerald">Utile lordo / perdita lorda</div></div>
+        <div class="kpi-card"><div class="kpi-label">Holding medio</div><div class="kpi-value">{avg_holding_s:.1f}m</div><div class="kpi-sub kpi-sub-amber">Mediana {trades_df_s['holding_months'].median():.0f}m, max {trades_df_s['holding_months'].max():.0f}m</div></div>
+    </div>
+    """, unsafe_allow_html=True)
+    if trades_df_s.empty:
+        st.info("Nessun trade chiuso nel backtest.")
+    else:
+        display_df_s = trades_df_s.sort_values("sell_date", ascending=False).copy()
+        display_df_s["net_roi_pct"] = display_df_s["net_roi"] * 100.0
+        display_df_s = display_df_s[["item_name", "buy_date", "sell_date", "holding_months",
+                                      "buy_price_unit", "sell_price_unit", "net_roi_pct", "net_pnl"]]
+        display_df_s.columns = ["Carta", "Acquisto", "Vendita", "Holding (m)",
+                                 "Prezzo acquisto (€)", "Prezzo vendita (€)", "ROI netto (%)", "P&L netto (€)"]
+        col_config_s = {
+            "Prezzo acquisto (€)": st.column_config.NumberColumn(format="%.2f €"),
+            "Prezzo vendita (€)": st.column_config.NumberColumn(format="%.2f €"),
+            "ROI netto (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+            "P&L netto (€)": st.column_config.NumberColumn(format="%+.2f €"),
+        }
+        st.dataframe(display_df_s.head(20), use_container_width=True, hide_index=True, column_config=col_config_s)
+        if len(display_df_s) > 20:
+            with st.expander(f"Altri {len(display_df_s) - 20} trade chiusi"):
+                st.dataframe(display_df_s.iloc[20:], use_container_width=True, hide_index=True, column_config=col_config_s)
+        st.caption("P&L e ROI sono netti di commissioni Cardmarket (5%+0,60€), spedizione e costo di custodia — "
+                   "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
 
     st.markdown("---")
     st.caption("PokeQuant · Blend box+singole scelto per correlazione bassa (0,19), non per rendimento massimo · "

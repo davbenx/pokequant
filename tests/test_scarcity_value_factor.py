@@ -88,6 +88,22 @@ def test_returns_no_signals_below_min_cross_section():
     assert signals == []
 
 
+def test_legacy_continuous_scarcity_mode_still_works():
+    """use_rank=False, use_log_age=False, extra_controls=False riproduce la
+    specifica originale (scarsita' continua, eta' lineare, nessun controllo
+    extra) - deve restare disponibile e funzionante, non solo i nuovi default."""
+    portfolio = Portfolio(initial_cash=10000.0)
+    meta = _make_meta(25)
+    prices = {f"card_{i}": 100.0 for i in range(25)}
+    prices["card_5"] = 40.0
+
+    strat = ScarcityValueFactorStrategy(rebalance_every_months=1, top_quantile=0.10, min_age_months=0,
+                                         min_cross_section=10, use_rank=False, use_log_age=False, extra_controls=False)
+    signals = strat.generate_signals("2024-01-01", portfolio, _snapshot(prices, meta))
+    buys = [s for s in signals if s.action == "BUY"]
+    assert any(s.item_id == "card_5" for s in buys)
+
+
 def test_promo_and_unknown_rarity_excluded_from_regression():
     portfolio = Portfolio(initial_cash=10000.0)
     meta = _make_meta(20)

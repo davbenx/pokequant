@@ -37,10 +37,32 @@ e defendibile.
 
 Nessuna riserva residua identificata al momento - il candidato piu' solido
 di tutta la ricerca, sealed incluso (DSR sealed corretto per l'intera sessione:
-0,675 - vedi scripts/dsr_session_audit.py). Non ancora in produzione: un
-fattore che passa ogni controllo disponibile oggi merita comunque cautela
-practica (allocazione iniziale piccola, monitoraggio, non un salto immediato
-a pari livello del sealed) prima di qualsiasi capitale reale.
+0,675 - vedi scripts/dsr_session_audit.py).
+
+AGGIORNAMENTO - rifinitura della specifica (richiesta esplicitamente, "stessa
+idea, specifiche alternative" invece di un meccanismo nuovo): testate 6
+varianti di regressione sullo stesso fattore - eta' log-trasformata, controlli
+extra (promo, illustratore), RANGO ORDINALE della fascia di rarita' invece del
+valore continuo (elimina la dipendenza dalla tabella di probabilita' assunta -
+usa solo l'ordine: piu' raro = rango piu' alto), winsorizzazione dei prezzi
+outlier, e la combinazione delle tre. PBO tra le 6 varianti: 0,000 - nessuna
+e' un caso isolato, tutte reggono (Sharpe 1,55-2,02, walk-forward sempre
+positivo in entrambe le meta'). La combinazione migliore (eta' log + rango +
+controlli extra, ora i default) da' Sharpe 2,02, CAGR +32,6%, MaxDD -8,5%,
+DSR 0,999 sulla sola griglia di 6 varianti -> 0,980 corretto per le 62 prove
+totali sulle singole in questa sessione (46 + 5 griglia scarsita' + 5 topdown
++ 6 di qui) - ancora sopra soglia, anzi piu' alto dell'originale (0,943).
+use_rank=True e' la scelta piu' defendibile epistemicamente: non assume nessun
+numero specifico di probabilita' di pull, solo che le fasce siano ordinate
+correttamente per rarita' (rango dalla stessa tabella EXPECTED_COPIES_PER_BOX,
+ma solo il suo ordine, non i valori). I parametri precedenti (scarsita'
+continua, eta' lineare, senza extra controlli) restano disponibili passando
+use_rank=False, use_log_age=False, extra_controls=False.
+
+Non ancora in produzione a piena scala: un fattore che passa ogni controllo
+disponibile oggi merita comunque cautela pratica (allocazione iniziale
+piccola, monitoraggio, non un salto immediato a pari livello del sealed)
+prima di qualsiasi capitale reale.
 """
 
 from __future__ import annotations
@@ -64,6 +86,15 @@ EXPECTED_COPIES_PER_BOX = {
 }
 EXCLUDED_RARITIES = {"Promo", None}
 
+# Rango ordinale per fascia (0 = meno scarsa, N-1 = piu' scarsa) - stesso ordine
+# di EXPECTED_COPIES_PER_BOX, ma senza usarne i valori numerici assoluti. Usato
+# quando use_rank=True: la scelta piu' defendibile epistemicamente, dato che la
+# tabella di probabilita' e' una stima generica della community, non dati
+# ufficiali (vedi robustezza alla perturbazione nel docstring del modulo).
+_RANK_ORDER = sorted(EXPECTED_COPIES_PER_BOX.items(), key=lambda x: x[1])
+RARITY_RANK = {rarity: i for i, (rarity, _) in enumerate(_RANK_ORDER)}
+_N_TIERS = len(RARITY_RANK)
+
 
 class ScarcityValueFactorStrategy:
     def __init__(
@@ -75,6 +106,9 @@ class ScarcityValueFactorStrategy:
         min_age_months: int = 6,
         item_type_filter: str = "single",
         min_cross_section: int = 20,
+        use_log_age: bool = True,
+        use_rank: bool = True,
+        extra_controls: bool = True,
     ):
         self.rebalance_every_months = rebalance_every_months
         self.top_quantile = top_quantile
@@ -83,6 +117,9 @@ class ScarcityValueFactorStrategy:
         self.min_age_months = min_age_months
         self.item_type_filter = item_type_filter
         self.min_cross_section = min_cross_section
+        self.use_log_age = use_log_age
+        self.use_rank = use_rank
+        self.extra_controls = extra_controls
         self._call_count = 0
 
     def reset(self):
@@ -103,19 +140,28 @@ class ScarcityValueFactorStrategy:
             age_m = (cur_dt.year - rel_dt.year) * 12 + (cur_dt.month - rel_dt.month)
             if age_m < self.min_age_months:
                 continue
-            scarcity = 1.0 / EXPECTED_COPIES_PER_BOX[rarity]
+            if self.use_rank:
+                scarcity_feat = float(RARITY_RANK[rarity]) / _N_TIERS
+            else:
+                scarcity_feat = np.log(1.0 / EXPECTED_COPIES_PER_BOX[rarity])
             is_op = 1.0 if info.get("franchise") == "one_piece" else 0.0
             is_jp = 1.0 if info.get("language") == "jp" else 0.0
             is_chase = 1.0 if info.get("selection_method") == "chase_price_filter_survivorship_biased" else 0.0
+            age_feat = np.log(age_m + 1.0) if self.use_log_age else float(age_m)
+            feat = [1.0, scarcity_feat, is_op, is_jp, age_feat, is_chase]
+            if self.extra_controls:
+                is_promo = 1.0 if info.get("is_promo") else 0.0
+                has_artist = 1.0 if info.get("artist") else 0.0
+                feat += [is_promo, has_artist]
             log_price = np.log(info["current_price"])
-            rows.append([1.0, np.log(scarcity), is_op, is_jp, float(age_m), is_chase, log_price])
+            rows.append(feat + [log_price])
             ids.append(item_id)
 
         if len(rows) < self.min_cross_section:
             return {}
 
         arr = np.array(rows)
-        X, y = arr[:, :6], arr[:, 6]
+        X, y = arr[:, :-1], arr[:, -1]
         coef, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
         residual = y - X @ coef
         return dict(zip(ids, residual))
