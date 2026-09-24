@@ -9,13 +9,14 @@ trap, ed e' esclusa dalla lista mostrata all'utente.
 
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scripts.generate_singles_signal import _signal_streak, SIGNAL_FRESHNESS_MONTHS
+from scripts.generate_singles_signal import _signal_streak, SIGNAL_FRESHNESS_MONTHS, compute_singles_avoid_rows
 
 
 def _dates(n: int):
@@ -64,3 +65,24 @@ def test_missing_month_data_breaks_the_streak_conservatively():
     streak, start = _signal_streak("card_x", membership, dates)
     assert streak == 1
     assert start == dates[3]
+
+
+def test_avoid_rows_puts_the_most_overpriced_card_first():
+    """compute_singles_avoid_rows e' lo specchio del quantile BUY: la carta con
+    il residuo piu' POSITIVO (sovrapprezzata vs pari per rarita'/eta') deve
+    comparire prima."""
+    dates = pd.date_range("2024-01-01", periods=1, freq="MS")
+    ids = [f"card_{i}" for i in range(25)]
+    prices = pd.DataFrame({i: [100.0] for i in ids}, index=dates)
+    prices["card_0"] = 500.0  # molto piu' costosa delle sue pari, stessa rarita'/eta'
+    metadata = {
+        i: {"name": i, "type": "single", "release_date": "2019-01-01", "rarity": "Rare Holo",
+            "franchise": "pokemon", "language": "en", "selection_method": "random_control"}
+        for i in ids
+    }
+    with patch("scripts.generate_singles_signal.load_metadata", return_value=metadata), \
+         patch("scripts.generate_singles_signal.load_price_matrix", return_value=prices):
+        rows, latest_date = compute_singles_avoid_rows()
+    assert rows[0]["item_id"] == "card_0"
+    assert rows[0]["residual"] > 0
+    assert latest_date == dates[-1]

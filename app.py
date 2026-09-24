@@ -48,7 +48,7 @@ from poke_quant.engine.position_sizing import age_weight
 from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTOFF
 from poke_quant.data.liquidity_filter import liquid_sealed_ids
 from poke_quant.data.price_fetcher import fetch_pricecharting_cover_image_url
-from scripts.generate_singles_signal import compute_singles_signal_rows, PRODUCTION_PARAMS as SINGLES_PARAMS
+from scripts.generate_singles_signal import compute_singles_signal_rows, compute_singles_avoid_rows, PRODUCTION_PARAMS as SINGLES_PARAMS
 
 # =============================================================================
 # NUMERI VALIDATI. Fissi, non ricalcolati a ogni caricamento pagina - una
@@ -195,6 +195,12 @@ def get_backtest_results():
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_singles_signal():
     rows, latest_date = compute_singles_signal_rows()
+    return rows, latest_date.strftime("%Y-%m-%d")
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def get_singles_avoid_signal():
+    rows, latest_date = compute_singles_avoid_rows()
     return rows, latest_date.strftime("%Y-%m-%d")
 
 
@@ -554,6 +560,43 @@ def main():
                              "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
                              "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
                          })
+
+    # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---
+    avoid_rows, _ = get_singles_avoid_signal()
+    if avoid_rows:
+        st.markdown('<div class="section-title">🔴 Singole da evitare/vendere — sopravvalutate vs pari</div>', unsafe_allow_html=True)
+        st.caption("⚠️ Specchio del quantile BUY (stesso modello, residuo più positivo): la carta costa più di "
+                   "quanto la sua rarità/età/set implicherebbero rispetto alle pari. Molte di queste sono chase "
+                   "iconiche (Charizard, Lugia, carte ★) — il modello non cattura il premio da fama/desiderabilità, "
+                   "solo rarità/età/franchise, quindi un sovrapprezzo enorme spesso riflette un premio reale, non "
+                   "un errore di prezzo. A differenza del quantile BUY, qui NON è stato validato un backtest di "
+                   "vendita/short — è informativo (come le Uscite dei box), non una strategia a sé testata.")
+        for r in avoid_rows[:15]:
+            full_meta = metadata.get(r["item_id"], {})
+            img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
+            img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
+            st.markdown(f"""
+            <div class="signal-card signal-card-sell">
+                {img_tag}
+                <div class="signal-card-body">
+                <strong>{r['name']}</strong> &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
+                &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting)
+                &nbsp;·&nbsp; sovrapprezzo vs. pari {r['discount_pct']:+.0f}%
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        if len(avoid_rows) > 15:
+            with st.expander(f"Altre {len(avoid_rows) - 15} carte sopravvalutate"):
+                avoid_df = pd.DataFrame([
+                    {"Carta": r["name"], "Rarità": r["rarity"], "Grado": "Grade 9",
+                     "Prezzo (€)": r["current_price_eur"], "Sovrapprezzo vs. pari (%)": r["discount_pct"]}
+                    for r in avoid_rows[15:]
+                ])
+                st.dataframe(avoid_df, use_container_width=True, hide_index=True,
+                             column_config={
+                                 "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                 "Sovrapprezzo vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                             })
 
     # --- EQUITY CURVE (box, singole, blend) ---
     st.markdown('<div class="section-title">📈 Backtest 2020-2026 — Box, Singole, Blend</div>', unsafe_allow_html=True)

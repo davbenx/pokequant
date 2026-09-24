@@ -127,6 +127,44 @@ def compute_singles_signal_rows():
     return rows, latest_date
 
 
+def compute_singles_avoid_rows():
+    """Ritorna (rows, latest_date) per il quantile OPPOSTO (residuo piu'
+    positivo = sopravvalutata rispetto ai pari) - specchio del quantile BUY,
+    stesso ruolo informativo della sezione 'Uscite' dei box (segnala lo stato
+    dell'asset secondo il modello, non un portafoglio reale che il segnale live
+    non traccia). Nessun filtro di freschezza qui: un sovrapprezzo persistente
+    NON e' un value trap nello stesso senso del BUY, resta un'informazione
+    valida indipendentemente da quanto dura."""
+    metadata = load_metadata()
+    prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    latest_date = prices_full.index[-1]
+    snap = _snapshot_for_date(prices_full, metadata, latest_date)
+
+    strat = ScarcityValueFactorStrategy(**PRODUCTION_PARAMS)
+    residuals = strat._fit_residuals(pd.to_datetime(latest_date), snap)
+    if not residuals:
+        return [], latest_date
+
+    n_avoid = max(1, int(len(residuals) * strat.top_quantile))
+    ranked = sorted(residuals.items(), key=lambda x: -x[1])[:n_avoid][: strat.max_positions]
+
+    rows = []
+    for item_id, residual in ranked:
+        info = metadata[item_id]
+        rows.append({
+            "item_id": item_id,
+            "name": info.get("name", item_id),
+            "current_price_eur": snap[item_id]["current_price"],
+            "residual": residual,
+            "discount_pct": (np.exp(residual) - 1.0) * 100.0,
+            "rarity": info.get("rarity"),
+            "franchise": info.get("franchise", "pokemon"),
+            "language": info.get("language", "en"),
+        })
+    rows.sort(key=lambda r: -r["residual"])
+    return rows, latest_date
+
+
 def main():
     rows, latest_date = compute_singles_signal_rows()
     print(f"Data segnale: {latest_date} | {len(rows)} carte nel quantile BUY fresche "
@@ -136,6 +174,11 @@ def main():
         start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)
         print(f"  {r['name']:38s} {r['current_price_eur']:8.2f}€ | sconto {r['discount_pct']:+6.1f}% | "
               f"da {start_str} ({r['months_in_signal']}m) | {r['rarity']}")
+
+    avoid_rows, _ = compute_singles_avoid_rows()
+    print(f"\nCarte sopravvalutate vs pari (quantile opposto): {len(avoid_rows)}\n")
+    for r in avoid_rows[:20]:
+        print(f"  {r['name']:38s} {r['current_price_eur']:8.2f}€ | sovrapprezzo {r['discount_pct']:+6.1f}% | {r['rarity']}")
 
 
 if __name__ == "__main__":
