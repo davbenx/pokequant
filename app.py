@@ -48,6 +48,7 @@ from poke_quant.engine.position_sizing import age_weight
 from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTOFF
 from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSRP_RATIO
 from poke_quant.data.price_fetcher import fetch_pricecharting_cover_image_url
+from poke_quant.config import estimate_usa_import_landed_cost
 from scripts.generate_singles_signal import (
     compute_singles_signal_rows, compute_singles_avoid_rows,
     PRODUCTION_PARAMS as SINGLES_PARAMS, DAC7_SINGLES_PARAMS,
@@ -429,6 +430,16 @@ def main():
                  "ritenga sottovalutate. Utile per restare su acquisti pratici/gestibili, non è un giudizio di "
                  "convenienza: una carta esclusa qui può comunque essere un'ottima occasione, solo fuori budget.")
         st.markdown("---")
+        st.markdown("### 🛃 Import da venditore USA")
+        show_usa_import = st.checkbox(
+            "Mostra costo sdoganato stimato (TCGplayer/eBay.com)", value=False,
+            help="Il prezzo PriceCharting è quello USA — per comprarlo davvero a quel livello serve un venditore "
+                 "USA, non Cardmarket EU. Dal 1° luglio 2026 (Reg. UE 382/2026) è stata abolita la soglia di "
+                 "franchigia doganale a 150€: OGNI spedizione extra-UE paga dazio, qualsiasi valore. Stima: "
+                 "oggetto + spedizione internazionale + IVA 22% + dazio forfettario UE 3€ + commissione di "
+                 "sdoganamento del corriere (~15€, indicativa — varia per corriere). Alta confidenza su IVA/dazio "
+                 "(normativa verificata), bassa sulla commissione corriere — non è un preventivo vincolante.")
+        st.markdown("---")
         st.markdown("### 🇪🇺 Conformità DAC7")
         dac7_mode = st.checkbox("Resta sotto 2.000€ / 30 vendite annue", value=True,
                                  help="DAC7: sopra queste soglie, Cardmarket/eBay segnalano il venditore "
@@ -596,12 +607,16 @@ def main():
         img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
         max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (tot.) '
                            f'{r["max_price_eur"]:.0f}€</span>') if r.get("max_price_eur") is not None else ""
+        usa_import_html = ""
+        if show_usa_import:
+            landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="sealed")
+            usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.0f}€</span>')
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
             {img_tag}
             <div class="signal-card-body">
             <strong>{r['name']}</strong> &nbsp; <span style="color:#10b981;">+{r['trailing_12m_return_pct']:.0f}% (12m)</span>
-            &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting) &nbsp;·&nbsp; peso età {w:.2f}{max_price_html}
+            &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting) &nbsp;·&nbsp; peso età {w:.2f}{max_price_html}{usa_import_html}
             <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
             </div>
@@ -698,13 +713,17 @@ def main():
         img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
         max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (tot.) '
                            f'{r["max_edge_price_eur"]:.2f}€</span>') if r.get("max_edge_price_eur") is not None else ""
+        usa_import_html = ""
+        if show_usa_import:
+            landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="single")
+            usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.2f}€</span>')
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
             {img_tag}
             <div class="signal-card-body">
             <strong>{r['name']}</strong> &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
             &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting) &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%
-            &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r['months_in_signal']}m)</span>{max_price_html}
+            &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r['months_in_signal']}m)</span>{max_price_html}{usa_import_html}
             <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
             </div>

@@ -43,3 +43,52 @@ class GradingConfig:
     default_vintage_gem_rate: float = 0.20 # Probabilità stima PSA 10 su carte vintage (WotC)
 
 GRADING_DEFAULT = GradingConfig()
+
+# Costo di importazione da venditore extra-UE (USA - TCGplayer/eBay.com), richiesto
+# esplicitamente dall'utente: "senza poter valutare gradazioni/lingue diverse ho
+# poche opportunità dall'Italia, bisogna limare per capire il prezzo finale del
+# mio mercato". Normativa verificata al 2026-09-24 (Regolamento UE 382/2026):
+#   - Dal 1° luglio 2026 abolita la franchigia doganale a 150€ - OGNI spedizione
+#     extra-UE paga dazio, indipendentemente dal valore.
+#   - Dazio forfettario UE transitorio: 3€ per voce merceologica (fino al 2028).
+#   - IVA all'importazione 22% (Italia) su valore + spedizione - dovuta su
+#     qualsiasi importo dal 2021, nessuna soglia.
+#   - Contributo nazionale italiano aggiuntivo 2€ per spedizioni <=150€ - DAL
+#     1 OTTOBRE 2026, non ancora attivo alla data di questa nota.
+#   - Commissione di sdoganamento del corriere (DHL/UPS/FedEx/Poste): flat,
+#     NON normata, varia molto per corriere - stima indicativa, non un dato
+#     ufficiale come le voci sopra.
+# Confidenza: alta su IVA/dazio/franchigia (fonti multiple concordanti), bassa
+# sulla commissione corriere (stima) - verificare sempre col corriere reale
+# prima di trattare questo numero come vincolante.
+@dataclass(frozen=True)
+class ImportFromUsaConfig:
+    vat_rate: float = 0.22
+    eu_customs_duty_flat_eur: float = 3.00
+    italy_national_contribution_eur: float = 2.00   # dal 2026-10-01, non ancora attivo oggi
+    courier_handling_fee_eur: float = 15.00          # stima indicativa, non normata
+    intl_shipping_single_eur: float = 20.00          # tracciato/assicurato, indicativo
+    intl_shipping_sealed_eur: float = 35.00          # tracciato/assicurato, indicativo
+
+IMPORT_FROM_USA = ImportFromUsaConfig()
+
+
+def estimate_usa_import_landed_cost(
+    item_price_eur: float, item_type: str = "single",
+    include_national_contribution: bool = False,
+) -> float:
+    """Costo sdoganato stimato per comprare da un venditore USA (TCGplayer/
+    eBay.com) e farsi spedire in Italia - oggetto + spedizione internazionale
+    + IVA 22% (su oggetto+spedizione) + dazio forfettario UE 3€ + commissione
+    di sdoganamento del corriere. include_national_contribution=False di
+    default: il contributo italiano da 2€ entra in vigore il 2026-10-01, non
+    ancora attivo alla data di scrittura - passare True dopo quella data.
+    Stima, non un preventivo - la commissione corriere in particolare varia."""
+    cfg = IMPORT_FROM_USA
+    intl_shipping = cfg.intl_shipping_sealed_eur if item_type == "sealed" else cfg.intl_shipping_single_eur
+    taxable_base = item_price_eur + intl_shipping
+    vat = taxable_base * cfg.vat_rate
+    total = taxable_base + vat + cfg.eu_customs_duty_flat_eur + cfg.courier_handling_fee_eur
+    if include_national_contribution:
+        total += cfg.italy_national_contribution_eur
+    return round(total, 2)
