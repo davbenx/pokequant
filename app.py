@@ -438,7 +438,11 @@ def main():
                  "franchigia doganale a 150€: OGNI spedizione extra-UE paga dazio, qualsiasi valore. Stima: "
                  "oggetto + spedizione internazionale + IVA 22% + dazio forfettario UE 3€ + commissione di "
                  "sdoganamento del corriere (~15€, indicativa — varia per corriere). Alta confidenza su IVA/dazio "
-                 "(normativa verificata), bassa sulla commissione corriere — non è un preventivo vincolante.")
+                 "(normativa verificata), bassa sulla commissione corriere — non è un preventivo vincolante. "
+                 "⚠️ TESTATO (scripts/usa_landed_cost_edge_test.py): comprare SEMPRE a questo costo pieno "
+                 "distrugge l'edge — singole Sharpe 1,57→-0,33 (perdita netta), box Sharpe 1,18→0,58 con MaxDD "
+                 "triplicato. Usa questo numero solo come soglia informativa (EU è comunque meglio o peggio "
+                 "di importare), non come canale di acquisto regolare.")
         st.markdown("---")
         st.markdown("### 🇪🇺 Conformità DAC7")
         dac7_mode = st.checkbox("Resta sotto 2.000€ / 30 vendite annue", value=True,

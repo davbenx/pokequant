@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 from poke_quant.engine.portfolio import Portfolio
-from poke_quant.config import SHIPPING_COSTS
+from poke_quant.config import SHIPPING_COSTS, estimate_usa_import_landed_cost
 from poke_quant.validation.metrics import (
     cagr, sharpe, max_drawdown, calmar, sortino_ratio, ulcer_index, compute_trade_metrics
 )
@@ -66,7 +66,8 @@ class Backtester:
         apply_liquidity_slippage: bool = False,
         apply_holding_cost: bool = False,
         monthly_cash_injection: float = 0.0,
-        apply_buy_side_shipping: bool = False
+        apply_buy_side_shipping: bool = False,
+        buy_at_usa_landed_cost: bool = False
     ):
         self.strategy = strategy
         self.historical_prices = historical_prices_df.sort_index()
@@ -86,6 +87,15 @@ class Backtester:
         # al costo di ogni acquisto, una volta a transazione (non per unita') -
         # vedi scripts/buy_side_shipping_test.py per l'impatto misurato.
         self.apply_buy_side_shipping = apply_buy_side_shipping
+        # Esplorativo (richiesto dall'utente: "verifica se comprare al prezzo
+        # sdoganato potrebbe andare bene") - simula il CASO PEGGIORE in cui
+        # OGNI acquisto avviene al costo sdoganato da un venditore USA
+        # (poke_quant.config.estimate_usa_import_landed_cost: oggetto+spedizione
+        # intl+IVA22%+dazio+corriere), non al prezzo dashboard+spedizione EU
+        # gia' validato. Mutuamente esclusivo con apply_buy_side_shipping (o
+        # l'uno o l'altro modello di frizione all'acquisto, non entrambi
+        # sommati - vedi scripts/usa_landed_cost_edge_test.py per l'esito.
+        self.buy_at_usa_landed_cost = buy_at_usa_landed_cost
 
     def run(self) -> BacktestResult:
         if hasattr(self.strategy, "reset"):
@@ -174,7 +184,9 @@ class Backtester:
             for sig in signals:
                 if sig.action == "BUY":
                     unit_price = sig.target_price
-                    if self.apply_buy_side_shipping:
+                    if self.buy_at_usa_landed_cost:
+                        unit_price = estimate_usa_import_landed_cost(sig.target_price, item_type=sig.item_type)
+                    elif self.apply_buy_side_shipping:
                         shipping_key = "sealed_box" if sig.item_type == "sealed" else "single_tracked"
                         unit_price += SHIPPING_COSTS[shipping_key] / max(1, sig.quantity)
                     portfolio.buy(
