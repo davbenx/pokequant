@@ -34,15 +34,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from poke_quant.data.storage import load_metadata, load_price_matrix
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
 
-PRODUCTION_PARAMS = dict(top_quantile=0.20, min_age_months=6, max_positions=60, min_cross_section=20)
+PRODUCTION_PARAMS = dict(rebalance_every_months=3, top_quantile=0.20, min_age_months=6, max_positions=60, min_cross_section=20)
 
-# Cadenza di ribilanciamento del backtest validato (get_singles_backtest_results,
-# rebalance_every_months=3) - vedi spiegazione nel docstring del modulo.
-SIGNAL_FRESHNESS_MONTHS = 3
-# Mesi di storico da controllare a ritroso: basta SIGNAL_FRESHNESS_MONTHS+1 per
-# distinguere "fresca" (<=3 mesi consecutivi) da "tardiva" (>3), senza dover
-# calcolare l'intero streak per le carte che verranno comunque escluse.
-_CHECK_MONTHS = SIGNAL_FRESHNESS_MONTHS + 1
+# Variante a turnover ridotto (vedi app.py, "Modalita' conforme DAC7"): meno
+# posizioni + ribilanciamento meno frequente per restare sotto le soglie di
+# segnalazione piattaforma (2.000EUR / 30 vendite annue - direttiva UE DAC7).
+# Sharpe piu' basso della produzione (1,49 vs 2,02, vedi scripts/dac7_turnover_search.py)
+# ma e' il compromesso richiesto esplicitamente, non un errore di configurazione.
+DAC7_SINGLES_PARAMS = dict(rebalance_every_months=12, top_quantile=0.20, min_age_months=6, max_positions=20, min_cross_section=20)
+
+# Cadenza di ribilanciamento del backtest validato - vedi spiegazione nel
+# docstring del modulo. Non piu' una costante fissa: deriva dal parametro
+# rebalance_every_months di qualunque config venga passata, cosi' la finestra
+# di "freschezza" resta coerente con la cadenza REALMENTE usata nel backtest
+# (3 mesi in produzione, 12 in modalita' DAC7 a turnover ridotto).
+def _signal_freshness_months(params: dict) -> int:
+    return params.get("rebalance_every_months", 3)
 
 
 def _snapshot_for_date(prices_full: pd.DataFrame, metadata: dict, date) -> dict:
@@ -82,17 +89,23 @@ def _signal_streak(item_id: str, membership_by_month: dict, check_dates: list):
     return streak, start_date
 
 
-def compute_singles_signal_rows():
+def compute_singles_signal_rows(params: dict = None):
     """Ritorna (rows, latest_date). rows contiene solo il quantile BUY (residuo
-    piu' negativo) CON almeno SIGNAL_FRESHNESS_MONTHS+1 di storico disponibile
-    per giudicare la freschezza, ESCLUSE le carte nel quantile da piu' di
-    SIGNAL_FRESHNESS_MONTHS mesi consecutivi (vedi docstring del modulo)."""
+    piu' negativo) CON almeno freshness_months+1 di storico disponibile per
+    giudicare la freschezza, ESCLUSE le carte nel quantile da piu' di
+    freshness_months mesi consecutivi (vedi docstring del modulo) - dove
+    freshness_months = params['rebalance_every_months'], la cadenza REALE del
+    backtest per questa config (3 in produzione, 12 in modalita' DAC7)."""
+    params = params or PRODUCTION_PARAMS
+    freshness_months = _signal_freshness_months(params)
+    check_months = freshness_months + 1
+
     metadata = load_metadata()
     prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
-    check_dates = list(prices_full.index[-_CHECK_MONTHS:])
+    check_dates = list(prices_full.index[-check_months:])
     latest_date = check_dates[-1]
 
-    strat = ScarcityValueFactorStrategy(**PRODUCTION_PARAMS)
+    strat = ScarcityValueFactorStrategy(**params)
     membership_by_month, residuals_by_month = {}, {}
     for d in check_dates:
         snap = _snapshot_for_date(prices_full, metadata, d)
@@ -106,7 +119,7 @@ def compute_singles_signal_rows():
     rows = []
     for item_id in latest_eligible:
         streak, start_date = _signal_streak(item_id, membership_by_month, check_dates)
-        if streak > SIGNAL_FRESHNESS_MONTHS:
+        if streak > freshness_months:
             continue
 
         info = metadata[item_id]
@@ -127,7 +140,7 @@ def compute_singles_signal_rows():
     return rows, latest_date
 
 
-def compute_singles_avoid_rows():
+def compute_singles_avoid_rows(params: dict = None):
     """Ritorna (rows, latest_date) per il quantile OPPOSTO (residuo piu'
     positivo = sopravvalutata rispetto ai pari) - specchio del quantile BUY,
     stesso ruolo informativo della sezione 'Uscite' dei box (segnala lo stato
@@ -135,12 +148,13 @@ def compute_singles_avoid_rows():
     non traccia). Nessun filtro di freschezza qui: un sovrapprezzo persistente
     NON e' un value trap nello stesso senso del BUY, resta un'informazione
     valida indipendentemente da quanto dura."""
+    params = params or PRODUCTION_PARAMS
     metadata = load_metadata()
     prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
     latest_date = prices_full.index[-1]
     snap = _snapshot_for_date(prices_full, metadata, latest_date)
 
-    strat = ScarcityValueFactorStrategy(**PRODUCTION_PARAMS)
+    strat = ScarcityValueFactorStrategy(**params)
     residuals = strat._fit_residuals(pd.to_datetime(latest_date), snap)
     if not residuals:
         return [], latest_date
@@ -168,7 +182,7 @@ def compute_singles_avoid_rows():
 def main():
     rows, latest_date = compute_singles_signal_rows()
     print(f"Data segnale: {latest_date} | {len(rows)} carte nel quantile BUY fresche "
-          f"(<= {SIGNAL_FRESHNESS_MONTHS} mesi, fattore scarsita')\n")
+          f"(<= {_signal_freshness_months(PRODUCTION_PARAMS)} mesi, fattore scarsita')\n")
     for r in rows[:20]:
         start = r["signal_start_date"]
         start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)

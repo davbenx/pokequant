@@ -2,9 +2,9 @@
 tests/test_generate_singles_signal.py — Copertura per la logica di freschezza
 del segnale live sulle singole (scripts/generate_singles_signal.py): una carta
 va mostrata come BUY solo se e' entrata nel quantile scarsita' negli ultimi
-SIGNAL_FRESHNESS_MONTHS mesi consecutivi (la cadenza di ribilanciamento del
-backtest validato) - oltre, non e' un ingresso fresco ma un possibile value
-trap, ed e' esclusa dalla lista mostrata all'utente.
+N mesi consecutivi (N = rebalance_every_months della config usata - la cadenza
+del backtest validato, 3 in produzione) - oltre, non e' un ingresso fresco ma
+un possibile value trap, ed e' esclusa dalla lista mostrata all'utente.
 """
 
 import sys
@@ -16,7 +16,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scripts.generate_singles_signal import _signal_streak, SIGNAL_FRESHNESS_MONTHS, compute_singles_avoid_rows
+from scripts.generate_singles_signal import _signal_streak, PRODUCTION_PARAMS, compute_singles_avoid_rows
+
+SIGNAL_FRESHNESS_MONTHS = PRODUCTION_PARAMS["rebalance_every_months"]  # 3, la cadenza di produzione
 
 
 def _dates(n: int):

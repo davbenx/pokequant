@@ -48,7 +48,17 @@ from poke_quant.engine.position_sizing import age_weight
 from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTOFF
 from poke_quant.data.liquidity_filter import liquid_sealed_ids
 from poke_quant.data.price_fetcher import fetch_pricecharting_cover_image_url
-from scripts.generate_singles_signal import compute_singles_signal_rows, compute_singles_avoid_rows, PRODUCTION_PARAMS as SINGLES_PARAMS
+from scripts.generate_singles_signal import (
+    compute_singles_signal_rows, compute_singles_avoid_rows,
+    PRODUCTION_PARAMS as SINGLES_PARAMS, DAC7_SINGLES_PARAMS,
+)
+
+# Soglie DAC7 (direttiva UE 2021/514): sopra queste soglie annue le piattaforme
+# (Cardmarket, eBay, ecc.) segnalano il venditore alle autorità fiscali come
+# probabile attività commerciale, non occasionale. Non sono soglie di
+# performance - sono un vincolo operativo/di conformità richiesto dall'utente.
+DAC7_MAX_ANNUAL_EUR = 2000.0
+DAC7_MAX_ANNUAL_TRADES = 30
 
 # =============================================================================
 # NUMERI VALIDATI. Fissi, non ricalcolati a ogni caricamento pagina - una
@@ -193,15 +203,31 @@ def get_backtest_results():
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
-def get_singles_signal():
-    rows, latest_date = compute_singles_signal_rows()
+def get_singles_signal(mode: str = "production"):
+    params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
+    rows, latest_date = compute_singles_signal_rows(params)
     return rows, latest_date.strftime("%Y-%m-%d")
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
-def get_singles_avoid_signal():
-    rows, latest_date = compute_singles_avoid_rows()
+def get_singles_avoid_signal(mode: str = "production"):
+    params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
+    rows, latest_date = compute_singles_avoid_rows(params)
     return rows, latest_date.strftime("%Y-%m-%d")
+
+
+def annualized_turnover(trades_df: pd.DataFrame) -> tuple:
+    """(vendite/anno, EUR/anno) da un trades_df del backtest - il conteggio non
+    scala col capitale (e' strutturale, dipende da quante posizioni/quanto
+    spesso ruota), il volume EUR sì (proporzionale al capitale usato nel
+    backtest, qui sempre 10.000€ di partenza)."""
+    if trades_df.empty:
+        return 0.0, 0.0
+    sell_dates = pd.to_datetime(trades_df["sell_date"])
+    years = max(1e-6, (sell_dates.max() - sell_dates.min()).days / 365.25)
+    eur_per_year = (trades_df["sell_price_unit"] * trades_df["quantity"]).sum() / years
+    trades_per_year = len(trades_df) / years
+    return trades_per_year, eur_per_year
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -210,7 +236,8 @@ def get_singles_prices_full():
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
-def get_singles_backtest_results():
+def get_singles_backtest_results(mode: str = "production"):
+    params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
     metadata = load_metadata()
     prices_full = get_singles_prices_full()
     singles_ids = [
@@ -219,7 +246,7 @@ def get_singles_backtest_results():
     ]
     meta_sub = {k: v for k, v in metadata.items() if k in singles_ids}
     prices_sub = prices_full[singles_ids]
-    strat = ScarcityValueFactorStrategy(rebalance_every_months=3, **SINGLES_PARAMS)
+    strat = ScarcityValueFactorStrategy(**params)
     bt = Backtester(strat, prices_sub, meta_sub, initial_cash=10000.0, platform="cardmarket",
                      apply_liquidity_slippage=True, apply_holding_cost=True)
     res = bt.run()
@@ -352,7 +379,7 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # --- SIDEBAR: capitale ---
+    # --- SIDEBAR: capitale + conformità DAC7 ---
     with st.sidebar:
         st.markdown("### 💰 Capitale")
         capital = st.number_input("Capitale dedicato (€)", min_value=100.0, max_value=1_000_000.0,
@@ -362,6 +389,50 @@ def main():
                    "rispetto al solo box. Cap 12% del capitale per singola posizione dentro ciascuna metà, "
                    "box pesato per età (0,4x sotto i 18 mesi, 1,0x dopo).")
         st.markdown("---")
+        st.markdown("### 🇪🇺 Conformità DAC7")
+        dac7_mode = st.checkbox("Resta sotto 2.000€ / 30 vendite annue", value=True,
+                                 help="DAC7: sopra queste soglie, Cardmarket/eBay segnalano il venditore "
+                                      "come commerciale alle autorità fiscali. Con questa modalità attiva, "
+                                      "le singole usano un ribilanciamento meno frequente (12m invece di 3m, "
+                                      "meno posizioni: 20 invece di 60) e il capitale effettivo viene limitato "
+                                      "al massimo che resta sotto soglia.")
+        singles_mode = "dac7" if dac7_mode else "production"
+
+        res_box_dac7check, _ = get_backtest_results()
+        res_singles_dac7check, _ = get_singles_backtest_results(singles_mode)
+        box_trades_yr, box_eur_yr_per_10k = annualized_turnover(res_box_dac7check.trades_df)
+        singles_trades_yr, singles_eur_yr_per_10k = annualized_turnover(res_singles_dac7check.trades_df)
+
+        # Il conteggio vendite/anno e' strutturale (non scala col capitale) - solo
+        # il volume EUR/anno scala linearmente col capitale allocato a ciascuna meta'.
+        total_trades_yr = box_trades_yr + singles_trades_yr
+        eur_yr_at_capital = (box_eur_yr_per_10k + singles_eur_yr_per_10k) * (capital * 0.5 / 10000.0)
+
+        combined_rate_per_eur = (box_eur_yr_per_10k + singles_eur_yr_per_10k) / 10000.0 / 2.0  # per EUR di capitale TOTALE (non solo la meta')
+        safe_max_capital = (DAC7_MAX_ANNUAL_EUR / combined_rate_per_eur) if combined_rate_per_eur > 0 else capital
+
+        effective_capital = min(capital, safe_max_capital) if dac7_mode else capital
+
+        over_count = total_trades_yr > DAC7_MAX_ANNUAL_TRADES
+        over_volume = capital > safe_max_capital
+
+        if dac7_mode:
+            if over_count:
+                st.error(f"⚠️ Anche al minimo, questa configurazione genera ~{total_trades_yr:.0f} vendite/anno — "
+                         f"sopra le 30 indipendentemente dal capitale (il conteggio non scala col capitale, solo il volume €).")
+            if over_volume:
+                st.warning(f"Capitale limitato a **{effective_capital:,.0f}€** (da {capital:,.0f}€ richiesti) per restare "
+                           f"sotto {DAC7_MAX_ANNUAL_EUR:,.0f}€/anno di vendite stimate.")
+            else:
+                st.success(f"✅ ~{total_trades_yr:.0f} vendite/anno, ~{eur_yr_at_capital:,.0f}€/anno stimati — sotto soglia.")
+            st.caption(f"Capitale massimo sicuro stimato: **{safe_max_capital:,.0f}€** totali (50/50 box+singole). "
+                       "Stima da turnover storico del backtest, non una garanzia — la liquidità reale (quanti "
+                       "acquirenti/venditori ci sono davvero) non è verificata.")
+        else:
+            st.error(f"⚠️ Modalità DAC7 disattivata: ~{total_trades_yr:.0f} vendite/anno, ~{eur_yr_at_capital:,.0f}€/anno "
+                     f"stimati a questo capitale — probabile segnalazione come venditore commerciale se superi 2.000€/30 vendite.")
+
+        st.markdown("---")
         st.markdown("### 🇮🇹 Esecuzione dall'Italia")
         st.caption("1. Cardmarket — priorità assoluta (fee 5%, no dogana intra-UE)\n\n"
                    "2. eBay.it / eBay.de — box USA/JP con meno offerta su Cardmarket\n\n"
@@ -370,9 +441,15 @@ def main():
         st.caption("⚠️ Nessuna verifica di liquidità reale integrata. Controlla sempre il prezzo "
                    "reale su Cardmarket prima di comprare — il modello non sa se il box è disponibile.")
 
+    capital = effective_capital
+
     # --- METRICHE VALIDATE (box, singole, blend) ---
     st.markdown('<div class="section-title">📊 Metriche di Validazione</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-desc">Numeri fissi da scripts/optimize_and_falsify.py e scripts/scarcity_value_singles_test.py — non ricalcolati a ogni refresh. Rivalidare ogni 6 mesi.</div>', unsafe_allow_html=True)
+    if singles_mode == "dac7":
+        st.info("ℹ️ Modalità conforme DAC7 attiva: i numeri qui sotto restano quelli della configurazione a "
+                "turnover pieno (per confronto/audit). Le performance EFFETTIVE con la modalità DAC7 attiva sono "
+                "più basse — vedi il grafico e la nota nella sezione \"Backtest\" più sotto.")
     st.warning(
         f"**DSR corretto per l'intera sessione**: box {VALIDATED_BOX['dsr_full_session']:.3f} (era {VALIDATED_BOX['dsr_own_grid']:.3f} "
         f"sulla sola griglia originale, {VALIDATED_BOX['n_trials_full_session']} trial totali) — sotto soglia 0,90-0,95. "
@@ -524,7 +601,7 @@ def main():
                "di ribilanciamento validata nel backtest) sono mostrate — oltre, comprarla oggi non è ciò che "
                "è stato testato, è un possibile *value trap* (sconto persistente che il mercato non corregge). "
                "Prime 15 con grafico, le altre in tabella sotto.")
-    singles_rows, singles_latest_date = get_singles_signal()
+    singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
     singles_allocation = build_equal_allocation(singles_rows, capital * 0.5)
 
@@ -572,7 +649,7 @@ def main():
                          })
 
     # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---
-    avoid_rows, _ = get_singles_avoid_signal()
+    avoid_rows, _ = get_singles_avoid_signal(singles_mode)
     if avoid_rows:
         st.markdown('<div class="section-title">🔴 Singole da evitare/vendere — sopravvalutate vs pari</div>', unsafe_allow_html=True)
         st.caption("⚠️ Specchio del quantile BUY (stesso modello, residuo più positivo): la carta costa più di "
@@ -611,7 +688,7 @@ def main():
     # --- EQUITY CURVE (box, singole, blend) ---
     st.markdown('<div class="section-title">📈 Backtest 2020-2026 — Box, Singole, Blend</div>', unsafe_allow_html=True)
     res, n_universe = get_backtest_results()
-    res_singles, n_universe_singles = get_singles_backtest_results()
+    res_singles, n_universe_singles = get_singles_backtest_results(singles_mode)
 
     common_idx = res.monthly_returns.index.intersection(res_singles.monthly_returns.index)
     blend_ret = 0.5 * res.monthly_returns.loc[common_idx] + 0.5 * res_singles.monthly_returns.loc[common_idx]
@@ -637,6 +714,11 @@ def main():
                "10.000€ propri, poi combinata come media dei rendimenti mensili (equivalente a un ribilanciamento "
                "50/50 mensile) — frizioni reali incluse in entrambe (Cardmarket 5%+0,60€, spedizione, slippage, "
                "costo di custodia).")
+    if singles_mode == "dac7":
+        st.caption(f"⚠️ Grafico e metriche sopra riflettono la **modalità conforme DAC7** (singole: ribilanciamento "
+                   f"12m, max 20 posizioni) — Sharpe singole {res_singles.sharpe:.2f} (vs {VALIDATED_SINGLES['sharpe']:.2f} "
+                   f"della configurazione a turnover pieno, non conforme). Il pannello \"Metriche di Validazione\" sopra "
+                   f"mostra sempre i numeri della configurazione a turnover pieno, non quelli effettivi qui sotto.")
 
     # --- GIORNALE DEI TRADE CHIUSI (BOX) ---
     st.markdown('<div class="section-title">📜 Giornale dei trade chiusi — Box (backtest)</div>', unsafe_allow_html=True)

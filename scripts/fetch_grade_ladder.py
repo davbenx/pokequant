@@ -41,7 +41,7 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 OUT_FILE = Path(__file__).resolve().parent.parent / "data_cache" / "grade_ladder_prices.json"
 TIER_MAP = {"used": "ungraded", "cib": "grade7", "new": "grade8", "graded": "grade9",
             "boxonly": "grade9_5", "manualonly": "psa10"}
-SAMPLE_SIZE = 40
+SAMPLE_SIZE = 150
 SEED = 42
 
 
