@@ -4,19 +4,43 @@ Guida pratica per usare il segnale validato (`scripts/run_monthly_production_sig
 nella vita reale, operando dall'Italia. Non è un consiglio finanziario o fiscale —
 è la traduzione dei risultati quantitativi in passi concreti, con i limiti espliciti.
 
-## 0. Solo box sigillati — le singole gradate sono sospese
+## 0. Box sigillati + singole gradate (fattore scarsità) — entrambi validati
 
-Questo runbook copre **solo TS Momentum su box sigillati** (DSR 0.913, validato).
-Le singole gradate sono state chiuse dopo una ricerca sistematica su 5 famiglie di
-fattori (età/carry, TS momentum, cross-sectional momentum, dip mean-reversion, rarità
-ex-ante) sull'universo reale e bias-auditato (928 carte): **nessuna supera la soglia
-istituzionale** (`scripts/optimize_and_falsify.py::section_singles_factor_search`).
-Il candidato migliore (dip mean-reversion) aveva PBO=0.514 e Sharpe di segno opposto
-tra prima e seconda metà del campione storico — non un fattore stabile, solo un
-regime di mercato specifico. `scripts/generate_carry_signal_singles.py` resta
-disponibile per ricerca, ma non genera più segnali operativi finché non emerge
-un fattore che passi DSR/PBO/bootstrap/walk-forward. Dettagli nello stato di
-validazione documentato in ciascun file sotto `poke_quant/engine/strategies/`.
+**AGGIORNATO — la sezione precedente era superata.** Questo runbook copre **due**
+segnali operativi:
+- **TS Momentum su box sigillati** (DSR sessione intera 0,681, universo 40 box).
+- **Fattore Scarsità su singole gradate Grade 9** (DSR sessione intera 0,836,
+  universo 935 carte) — trovato DOPO che i 5 fattori elencati sotto erano già
+  stati scartati, quindi non contraddice quella ricerca: è un fattore diverso
+  (regressione cross-sezionale su log-prezzo ~ scarsità continua + controlli),
+  non uno dei 5.
+
+I 5 fattori seguenti restano scartati, per la cronologia: età/carry, TS momentum
+sulle singole, cross-sectional momentum, dip mean-reversion, rarità ex-ante,
+testati sull'universo reale e bias-auditato (928 carte): **nessuno supera la
+soglia istituzionale** (`scripts/optimize_and_falsify.py::section_singles_factor_search`).
+Il candidato migliore tra questi (dip mean-reversion) aveva PBO=0.514 e Sharpe
+di segno opposto tra prima e seconda metà del campione storico — non un fattore
+stabile, solo un regime di mercato specifico. `scripts/generate_carry_signal_singles.py`
+resta disponibile per ricerca su questi 5, ma non genera più segnali operativi.
+Entrambi i segnali validati (box + scarsità) sono in `app.py` con metriche
+complete, non solo in questo runbook.
+
+## 0bis. Gap di liquidità EU sulle singole gradate — attenzione specifica
+
+Il fattore scarsità è calibrato sul pannello Grade 9 di PriceCharting, che
+riflette soprattutto il mercato USA delle slab gradate (dominato da vendite/
+inserzioni eBay). **Cardmarket è nato come mercato di carte raw europee**: la
+sua offerta reale di slab gradate per una carta specifica può essere molto più
+sottile (pochi venditori, prezzi premium per assenza di concorrenza) o
+addirittura assente. Se il prezzo massimo mostrato in dashboard non trova
+NESSUNA inserzione reale sotto quella soglia, questo NON significa che il
+modello sia sbagliato in assoluto — significa che il gate di liquidità del
+punto 2 sotto ha appena fatto il suo lavoro: il modello non sa che il prodotto
+non è disponibile a quel prezzo in EU, tu sì. Registra sempre l'osservazione
+(`scripts/log_execution_price.py`, vedi punto 2) anche quando NON compri:
+è dato per calibrare lo scarto reale dashboard-vs-Cardmarket nel tempo, non solo
+un log delle operazioni fatte.
 
 ## 1. Cosa fa il sistema automaticamente
 
@@ -24,7 +48,8 @@ Il 2 di ogni mese (`.github/workflows/monthly_signal.yml`):
 1. Ricostruisce lo storico prezzi da PriceCharting con tasso EUR/USD reale del mese.
 2. Ri-applica il filtro di attendibilità (esclude serie con salti di prezzo implausibili).
 3. Genera il segnale **TS Momentum** su box sigillati era 2019+
-   (`scripts/generate_monthly_signal.py`) — unico segnale operativo, vedi punto 0.
+   (`scripts/generate_monthly_signal.py`) e il segnale **Fattore Scarsità** sulle
+   singole gradate (`scripts/generate_singles_signal.py`) — vedi punto 0.
 4. Invia un riepilogo su Telegram (se configurati `TELEGRAM_TOKEN`/`TELEGRAM_CHAT_ID`
    nei secret del repository GitHub — Settings → Secrets and variables → Actions).
 5. Pusha i dati aggiornati sul repo, con la suite di test come sanity check prima del push.

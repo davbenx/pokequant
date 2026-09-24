@@ -469,7 +469,12 @@ def main():
                    "3. TCGplayer — solo se il differenziale supera nettamente dogana+spedizione")
         st.markdown("---")
         st.caption("⚠️ Nessuna verifica di liquidità reale integrata. Controlla sempre il prezzo "
-                   "reale su Cardmarket prima di comprare — il modello non sa se il box è disponibile.")
+                   "reale su Cardmarket prima di comprare — il modello non sa se il box/la carta è disponibile. "
+                   "Sulle singole gradate in particolare, l'offerta reale EU può essere molto più sottile del "
+                   "pannello USA (PriceCharting) su cui è calibrato il modello: se non trovi nulla sotto il prezzo "
+                   "massimo mostrato, NON è un errore del modello, è il gate di liquidità che funziona. Registra "
+                   "l'osservazione (anche se non compri) con `python scripts/log_execution_price.py <item_id> "
+                   "--ask <prezzo_reale>` — calibra empiricamente lo scarto invece di lasciarlo una stima flat.")
 
     capital = effective_capital
 
