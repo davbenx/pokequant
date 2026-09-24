@@ -15,7 +15,7 @@ silenziosamente i risultati di una strategia.
 """
 
 from __future__ import annotations
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 import pandas as pd
 
 DEFAULT_MAX_MONTHLY_JUMP = 2.0   # +-200% in un mese singolo
@@ -103,3 +103,69 @@ def liquid_sealed_ids(metadata: dict, prices_df: pd.DataFrame, **kwargs) -> List
         k for k, v in metadata.items()
         if v.get("type") == "sealed" and is_liquid_sealed(k, v, prices_df, **kwargs)
     ]
+
+
+# Sotto questa percentile della propria coorte d'eta' (+-3 anni di uscita, coorte
+# richiesta >=20 carte) e' un outlier statistico vero sul rapporto grade9/raw, non
+# solo "un po' sotto la mediana" - vedi scripts/graded_raw_ratio_reliability_test.py.
+GRADE_RAW_RATIO_PERCENTILE_CUTOFF = 0.10
+GRADE_RAW_RATIO_MIN_COHORT = 20
+GRADE_RAW_RATIO_COHORT_WINDOW_YEARS = 3
+
+
+def compute_grade_raw_ratio_flags(
+    metadata: Dict[str, Any],
+    grade9_prices_df: pd.DataFrame,
+    percentile_cutoff: float = GRADE_RAW_RATIO_PERCENTILE_CUTOFF,
+    min_cohort: int = GRADE_RAW_RATIO_MIN_COHORT,
+    cohort_window_years: int = GRADE_RAW_RATIO_COHORT_WINDOW_YEARS,
+) -> Dict[str, Tuple[bool, str]]:
+    """Flagga singole gradate il cui rapporto grade9/raw (pannello PriceCharting
+    Grade 9 vs "cardmarket_ref_price_eur" in metadata, gia' presente ma non
+    usato in nessun'altra pipeline) e' un outlier basso rispetto alla coorte di
+    carte della stessa era. Trovato verificando un prezzo reale (l'utente ha
+    trovato un Raichu #14 [Fossil 1999] a 250EUR tutto compreso contro 107,60EUR
+    mostrati in dashboard): il filtro di attendibilita' esistente
+    (compute_reliability_flags) controlla solo salti/volatilita' della serie -
+    una serie liscia ma persistentemente troppo bassa rispetto al livello reale
+    (grade9 sottostimato per scarsita' di vendite PSA9 storiche su carte vintage
+    poco liquide) non viene vista per costruzione. Testato empiricamente
+    (scripts/graded_raw_ratio_reliability_test.py): escludere questi outlier
+    migliora Sharpe/CAGR/MaxDD/DSR del fattore scarsita', non solo protegge -
+    coerente con l'ipotesi che siano falsi positivi da dato sottile, non alfa
+    reale. Ritorna SOLO le carte flaggate (non ok); tutte le altre (incluse
+    quelle senza cardmarket_ref_price_eur, dato insufficiente) sono is_reliable.
+    """
+    rows = []
+    for item_id, info in metadata.items():
+        if info.get("type") != "single":
+            continue
+        ref = info.get("cardmarket_ref_price_eur")
+        rel = info.get("release_date")
+        if not ref or ref <= 0 or not rel or item_id not in grade9_prices_df.columns:
+            continue
+        s = grade9_prices_df[item_id].dropna()
+        s = s[s > 0]
+        if s.empty:
+            continue
+        ratio = float(s.iloc[-1]) / float(ref)
+        if not (0.3 < ratio < 30):  # artefatto grossolano (raw~0 o dato corrotto), non l'oggetto di questo filtro
+            continue
+        rows.append({"item_id": item_id, "year": pd.to_datetime(rel).year, "ratio": ratio})
+    df = pd.DataFrame(rows)
+
+    flags: Dict[str, Tuple[bool, str]] = {}
+    if df.empty:
+        return flags
+    for _, row in df.iterrows():
+        cohort = df[(df["year"] >= row["year"] - cohort_window_years) & (df["year"] <= row["year"] + cohort_window_years)]
+        if len(cohort) < min_cohort:
+            continue
+        cutoff = cohort["ratio"].quantile(percentile_cutoff)
+        if row["ratio"] < cutoff:
+            flags[row["item_id"]] = (
+                False,
+                f"rapporto grade9/raw {row['ratio']:.2f} sotto il {percentile_cutoff*100:.0f}° percentile "
+                f"della coorte d'eta' (soglia {cutoff:.2f})",
+            )
+    return flags

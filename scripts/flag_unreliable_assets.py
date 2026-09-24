@@ -20,6 +20,17 @@ grade9 inaffidabile - nessuna protezione reale le intercettava. Al contrario,
 133 carte oggi escluse (legacy sporco) hanno un grade9 pulito - erano escluse
 per un motivo che non le riguarda. Netto: universo singole 864 -> ~935 asset,
 PIU' pulito E PIU' grande, non un compromesso tra i due.
+
+AGGIORNAMENTO (trovato verificando un prezzo reale - vedi
+scripts/graded_raw_ratio_reliability_test.py): il filtro sopra vede solo
+salti/volatilita'. Una carta puo' avere una serie grade9 liscia ma
+PERSISTENTEMENTE troppo bassa (raichu_14: 107,60€ mostrati, 250€ reali
+trovati dall'utente, tutto compreso) - tipico di carte vintage poco liquide
+con storico PSA9 sottile che PriceCharting non riesce a prezzare bene.
+Aggiunto compute_grade_raw_ratio_flags() come check indipendente, usando
+cardmarket_ref_price_eur (raw, gia' in metadata, mai usato finora) come
+ancora: 69 carte in piu' flaggate, e testato che escluderle MIGLIORA il
+backtest (Sharpe 1,48->1,57) - falsi positivi da dato sottile, non alfa reale.
 """
 
 import sys
@@ -28,7 +39,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, save_metadata, load_price_matrix
-from poke_quant.data.liquidity_filter import compute_reliability_flags
+from poke_quant.data.liquidity_filter import compute_reliability_flags, compute_grade_raw_ratio_flags
 
 
 def main():
@@ -41,7 +52,8 @@ def main():
 
     sealed_flags = compute_reliability_flags(sealed_prices[[c for c in sealed_prices.columns if c in sealed_ids]])
     single_flags = compute_reliability_flags(grade9_prices[[c for c in grade9_prices.columns if c in single_ids]])
-    flags = {**sealed_flags, **single_flags}
+    ratio_flags = compute_grade_raw_ratio_flags(metadata, grade9_prices)  # solo le non-ok, vedi docstring
+    flags = {**sealed_flags, **single_flags, **ratio_flags}
 
     n_flagged = 0
     for item_id, (ok, reason) in flags.items():

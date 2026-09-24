@@ -1126,7 +1126,9 @@
     "cardmarket_ref_price_eur": 115.86,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Yuu Nishida"
+    "artist": "Yuu Nishida",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.34 sotto il 10° percentile della coorte d'eta' (soglia 0.59)"
   },
   "snorlax_224": {
     "name": "Snorlax #224",
@@ -1156,7 +1158,9 @@
     "cardmarket_ref_price_eur": 99.61,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Teeziro"
+    "artist": "Teeziro",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.78 sotto il 10° percentile della coorte d'eta' (soglia 0.79)"
   },
   "zapdos_ex_202": {
     "name": "Zapdos ex #202",
@@ -1231,7 +1235,9 @@
     "cardmarket_ref_price_eur": 87.42,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Mitsuhiro Arita"
+    "artist": "Mitsuhiro Arita",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.51 sotto il 10° percentile della coorte d'eta' (soglia 0.79)"
   },
   "groudon_199": {
     "name": "Groudon #199",
@@ -1293,7 +1299,9 @@
     "cardmarket_ref_price_eur": 66.57,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Oswaldo KATO"
+    "artist": "Oswaldo KATO",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.63 sotto il 10° percentile della coorte d'eta' (soglia 0.79)"
   },
   "raging_bolt_ex_208": {
     "name": "Raging Bolt ex #208",
@@ -1367,7 +1375,9 @@
     "cardmarket_ref_price_eur": 58.88,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "tetsuya koizumi"
+    "artist": "tetsuya koizumi",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.45 sotto il 10° percentile della coorte d'eta' (soglia 0.79)"
   },
   "galarian_zapdos_v_174": {
     "name": "Galarian Zapdos V #174",
@@ -1679,7 +1689,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 42.38,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.34 sotto il 10° percentile della coorte d'eta' (soglia 0.58)"
   },
   "mortys_conviction_211": {
     "name": "Morty's Conviction #211",
@@ -1724,7 +1736,9 @@
     "cardmarket_ref_price_eur": 164.75,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "You Iribi"
+    "artist": "You Iribi",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.72 sotto il 10° percentile della coorte d'eta' (soglia 0.79)"
   },
   "glaceon_v_174": {
     "name": "Glaceon V #174",
@@ -1739,7 +1753,9 @@
     "cardmarket_ref_price_eur": 40.36,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "5ban Graphics"
+    "artist": "5ban Graphics",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.64 sotto il 10° percentile della coorte d'eta' (soglia 0.79)"
   },
   "glaceon_v_175": {
     "name": "Glaceon V #175",
@@ -1754,7 +1770,9 @@
     "cardmarket_ref_price_eur": 152.75,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Narumi Sato"
+    "artist": "Narumi Sato",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.77 sotto il 10° percentile della coorte d'eta' (soglia 0.79)"
   },
   "espeon_v_180": {
     "name": "Espeon V #180",
@@ -1994,7 +2012,9 @@
     "cardmarket_ref_price_eur": 44.25,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "5ban Graphics"
+    "artist": "5ban Graphics",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.07 sotto il 10° percentile della coorte d'eta' (soglia 1.11)"
   },
   "m_sceptile_ex_85": {
     "name": "M Sceptile-EX #85",
@@ -2129,7 +2149,9 @@
     "cardmarket_ref_price_eur": 202.26,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "You Iribi"
+    "artist": "You Iribi",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.11 sotto il 10° percentile della coorte d'eta' (soglia 1.11)"
   },
   "empoleon_v_146": {
     "name": "Empoleon V #146",
@@ -2174,7 +2196,9 @@
     "cardmarket_ref_price_eur": 87.41,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "KIYOTAKA OSHIYAMA"
+    "artist": "KIYOTAKA OSHIYAMA",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.66 sotto il 10° percentile della coorte d'eta' (soglia 0.79)"
   },
   "charizard_gx_150": {
     "name": "Charizard-GX #150",
@@ -2218,7 +2242,9 @@
     "cardmarket_ref_price_eur": 75.33,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Saki Hayashiro"
+    "artist": "Saki Hayashiro",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.78 sotto il 10° percentile della coorte d'eta' (soglia 0.79)"
   },
   "gyarados_gx_18": {
     "name": "Gyarados-GX #18",
@@ -2233,7 +2259,9 @@
     "cardmarket_ref_price_eur": 52.84,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "5ban Graphics"
+    "artist": "5ban Graphics",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.99 sotto il 10° percentile della coorte d'eta' (soglia 1.10)"
   },
   "gyarados_gx_112": {
     "name": "Gyarados-GX #112",
@@ -2310,7 +2338,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 754% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw 0.32 sotto il 10° percentile della coorte d'eta' (soglia 1.11)"
   },
   "m_charizard_ex_101": {
     "name": "M Charizard-EX #101",
@@ -2340,7 +2368,9 @@
     "cardmarket_ref_price_eur": 81.01,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "5ban Graphics"
+    "artist": "5ban Graphics",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.92 sotto il 10° percentile della coorte d'eta' (soglia 1.11)"
   },
   "dragonite_ex_106": {
     "name": "Dragonite-EX #106",
@@ -2787,7 +2817,9 @@
     "cardmarket_ref_price_eur": 57.5,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Megumi Mizutani"
+    "artist": "Megumi Mizutani",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.79 sotto il 10° percentile della coorte d'eta' (soglia 0.84)"
   },
   "jasmine_177": {
     "name": "Jasmine #177",
@@ -5769,7 +5801,9 @@
     "cardmarket_ref_price_eur": 406.2,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "0313"
+    "artist": "0313",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.67 sotto il 10° percentile della coorte d'eta' (soglia 0.84)"
   },
   "reshiram_zekrom_gx_157": {
     "name": "Reshiram & Zekrom-GX #157",
@@ -6159,7 +6193,9 @@
     "cardmarket_ref_price_eur": 137.66,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "PLANETA Otani"
+    "artist": "PLANETA Otani",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.74 sotto il 10° percentile della coorte d'eta' (soglia 0.88)"
   },
   "mimikyu_gx_226": {
     "name": "Mimikyu-GX #226",
@@ -6234,7 +6270,9 @@
     "cardmarket_ref_price_eur": 177.74,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Masakazu Fukuda"
+    "artist": "Masakazu Fukuda",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.48 sotto il 10° percentile della coorte d'eta' (soglia 0.84)"
   },
   "marshadow_machamp_gx_199": {
     "name": "Marshadow & Machamp-GX #199",
@@ -6414,7 +6452,9 @@
     "cardmarket_ref_price_eur": 182.07,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "aky CG Works"
+    "artist": "aky CG Works",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.77 sotto il 10° percentile della coorte d'eta' (soglia 0.79)"
   },
   "clefable_1": {
     "name": "Clefable #1",
@@ -6686,7 +6726,9 @@
     "cardmarket_ref_price_eur": 255.08,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Mitsuhiro Arita"
+    "artist": "Mitsuhiro Arita",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.18 sotto il 10° percentile della coorte d'eta' (soglia 1.53)"
   },
   "dark_charizard_4": {
     "name": "Dark Charizard #4",
@@ -6701,7 +6743,9 @@
     "cardmarket_ref_price_eur": 452.86,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ken Sugimori"
+    "artist": "Ken Sugimori",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.41 sotto il 10° percentile della coorte d'eta' (soglia 1.53)"
   },
   "dark_dragonite_5": {
     "name": "Dark Dragonite #5",
@@ -6806,7 +6850,9 @@
     "cardmarket_ref_price_eur": 41.47,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ken Sugimori"
+    "artist": "Ken Sugimori",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.14 sotto il 10° percentile della coorte d'eta' (soglia 1.53)"
   },
   "dark_charizard_21": {
     "name": "Dark Charizard #21",
@@ -6866,7 +6912,9 @@
     "cardmarket_ref_price_eur": 69.36,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ken Sugimori"
+    "artist": "Ken Sugimori",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.34 sotto il 10° percentile della coorte d'eta' (soglia 1.53)"
   },
   "koga_19": {
     "name": "Koga #19",
@@ -7121,7 +7169,9 @@
     "cardmarket_ref_price_eur": 155.05,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Atsuko Nishida"
+    "artist": "Atsuko Nishida",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.53 sotto il 10° percentile della coorte d'eta' (soglia 1.64)"
   },
   "dark_gengar_6": {
     "name": "Dark Gengar #6",
@@ -7181,7 +7231,9 @@
     "cardmarket_ref_price_eur": 194.6,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Mitsuhiro Arita"
+    "artist": "Mitsuhiro Arita",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.53 sotto il 10° percentile della coorte d'eta' (soglia 1.64)"
   },
   "dark_typhlosion_10": {
     "name": "Dark Typhlosion #10",
@@ -7501,7 +7553,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 209% (soglia 200%)",
+    "data_quality_reason": "rapporto grade9/raw 0.85 sotto il 10° percentile della coorte d'eta' (soglia 1.64)",
     "artist": "Kagemaru Himeno"
   },
   "full_heal_energy_100": {
@@ -7714,7 +7766,9 @@
     "cardmarket_ref_price_eur": 270.48,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Yuka Morii"
+    "artist": "Yuka Morii",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.64 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "kingdra_H14": {
     "name": "Kingdra #H14",
@@ -7999,7 +8053,9 @@
     "cardmarket_ref_price_eur": 44.81,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Hisao Nakamura"
+    "artist": "Hisao Nakamura",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.56 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "umbreon_41": {
     "name": "Umbreon #41",
@@ -8073,7 +8129,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 1238.89,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.58 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "arcanine_H2_skyridge": {
     "name": "Arcanine #H2",
@@ -8115,7 +8173,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 282.4,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.45 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "crobat_H5": {
     "name": "Crobat #H5",
@@ -8227,7 +8287,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 400.63,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.84 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "ledian_H14": {
     "name": "Ledian #H14",
@@ -8311,7 +8373,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 611.66,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.59 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "moltres_H20": {
     "name": "Moltres #H20",
@@ -8395,7 +8459,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 595.78,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.12 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "raikou_H26": {
     "name": "Raikou #H26",
@@ -8535,7 +8601,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 57.05,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.51 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "umbreon_32": {
     "name": "Umbreon #32",
@@ -8565,7 +8633,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 15.3x (soglia 15.0x)"
+    "data_quality_reason": "rapporto grade9/raw 1.23 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "charizard_146": {
     "name": "Charizard #146",
@@ -8830,7 +8898,9 @@
     "cardmarket_ref_price_eur": 104.9,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ken Sugimori"
+    "artist": "Ken Sugimori",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.60 sotto il 10° percentile della coorte d'eta' (soglia 2.20)"
   },
   "altaria_ex_90": {
     "name": "Altaria ex #90",
@@ -8875,7 +8945,9 @@
     "cardmarket_ref_price_eur": 101.25,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ryo Ueda"
+    "artist": "Ryo Ueda",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 2.16 sotto il 10° percentile della coorte d'eta' (soglia 2.20)"
   },
   "deoxys_ex_93": {
     "name": "Deoxys ex #93",
@@ -9355,7 +9427,9 @@
     "cardmarket_ref_price_eur": 234.8,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ryo Ueda"
+    "artist": "Ryo Ueda",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.80 sotto il 10° percentile della coorte d'eta' (soglia 2.20)"
   },
   "jolteon_ex_109": {
     "name": "Jolteon ex #109",
@@ -9747,7 +9821,9 @@
     "cardmarket_ref_price_eur": 86.13,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Mitsuhiro Arita"
+    "artist": "Mitsuhiro Arita",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.72 sotto il 10° percentile della coorte d'eta' (soglia 2.70)"
   },
   "groudon_ex_93": {
     "name": "Groudon ex #93",
@@ -10062,7 +10138,9 @@
     "cardmarket_ref_price_eur": 43.99,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Shizurow"
+    "artist": "Shizurow",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 3.23 sotto il 10° percentile della coorte d'eta' (soglia 3.73)"
   },
   "mesprit_lvx_143": {
     "name": "Mesprit LV.X #143",
@@ -10705,7 +10783,9 @@
     "cardmarket_ref_price_eur": 50.46,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "5ban Graphics"
+    "artist": "5ban Graphics",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.53 sotto il 10° percentile della coorte d'eta' (soglia 1.12)"
   },
   "m_gengar_ex_35": {
     "name": "M Gengar-EX #35",
@@ -10917,7 +10997,9 @@
     "cardmarket_ref_price_eur": 257.65,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "5ban Graphics"
+    "artist": "5ban Graphics",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.92 sotto il 10° percentile della coorte d'eta' (soglia 1.11)"
   },
   "m_mewtwo_ex_160": {
     "name": "M Mewtwo-EX #160",
@@ -11082,7 +11164,9 @@
     "cardmarket_ref_price_eur": 62.2,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "5ban Graphics"
+    "artist": "5ban Graphics",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.83 sotto il 10° percentile della coorte d'eta' (soglia 1.11)"
   },
   "umbreon_ex_55": {
     "name": "Umbreon-EX #55",
@@ -11112,7 +11196,9 @@
     "cardmarket_ref_price_eur": 218.85,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Megumi Mizutani"
+    "artist": "Megumi Mizutani",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.87 sotto il 10° percentile della coorte d'eta' (soglia 1.11)"
   },
   "shauna_111a": {
     "name": "Shauna #111a",
@@ -11437,7 +11523,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 174.19,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.49 sotto il 10° percentile della coorte d'eta' (soglia 0.51)"
   },
   "team_rockets_crobat_ex_234": {
     "name": "Team Rocket's Crobat ex #234",
@@ -11465,7 +11553,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 47.26,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.48 sotto il 10° percentile della coorte d'eta' (soglia 0.51)"
   },
   "ethans_adventure_236": {
     "name": "Ethan's Adventure #236",
@@ -14000,7 +14090,9 @@
     "cardmarket_ref_price_eur": 3.77,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Yuka Morii"
+    "artist": "Yuka Morii",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.77 sotto il 10° percentile della coorte d'eta' (soglia 2.20)"
   },
   "unown_O": {
     "name": "Unown #O",
@@ -16336,7 +16428,9 @@
     "cardmarket_ref_price_eur": 209.45,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.35 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
   },
   "venusaur_13_promo": {
     "name": "Venusaur #13 (Promo)",
@@ -16480,7 +16574,9 @@
     "cardmarket_ref_price_eur": 43.6,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.30 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
   },
   "electabuzz_46_promo": {
     "name": "Electabuzz #46 (Promo)",
@@ -16496,7 +16592,9 @@
     "cardmarket_ref_price_eur": 49.62,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.04 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
   },
   "articuno_48_promo": {
     "name": "Articuno #48 (Promo)",
@@ -16512,7 +16610,9 @@
     "cardmarket_ref_price_eur": 57.49,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.04 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
   },
   "snorlax_49_promo": {
     "name": "Snorlax #49 (Promo)",
@@ -16544,7 +16644,9 @@
     "cardmarket_ref_price_eur": 81.72,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.37 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
   },
   "ho_oh_52_promo": {
     "name": "Ho-oh #52 (Promo)",
@@ -16560,7 +16662,9 @@
     "cardmarket_ref_price_eur": 90.77,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.47 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
   },
   "suicune_53_promo": {
     "name": "Suicune #53 (Promo)",
@@ -16674,7 +16778,9 @@
     "cardmarket_ref_price_eur": 94.55,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.76 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "marshtomp_11_promo": {
     "name": "Marshtomp #11 (Promo)",
@@ -16690,7 +16796,9 @@
     "cardmarket_ref_price_eur": 110.0,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.66 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "pikachu_12_promo": {
     "name": "Pikachu #12 (Promo)",
@@ -16788,7 +16896,9 @@
     "cardmarket_ref_price_eur": 504.5,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.15 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "championship_arena_28_promo": {
     "name": "Championship Arena #28 (Promo)",
@@ -16804,7 +16914,9 @@
     "cardmarket_ref_price_eur": 2999.0,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.88 sotto il 10° percentile della coorte d'eta' (soglia 1.88)"
   },
   "moltres_ex_31_promo": {
     "name": "Moltres ex #31 (Promo)",
@@ -16886,7 +16998,9 @@
     "cardmarket_ref_price_eur": 42.4,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.65 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
   },
   "pidove_BW15_promo": {
     "name": "Pidove #BW15 (Promo)",
@@ -16986,7 +17100,9 @@
     "cardmarket_ref_price_eur": 50.0,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.46 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
   },
   "champions_festival_BW95_promo": {
     "name": "Champions Festival #BW95 (Promo)",
@@ -17154,7 +17270,9 @@
     "cardmarket_ref_price_eur": 44.4,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.93 sotto il 10° percentile della coorte d'eta' (soglia 1.13)"
   },
   "m_blaziken_ex_XY86_promo": {
     "name": "M Blaziken-EX #XY86 (Promo)",
@@ -17170,7 +17288,9 @@
     "cardmarket_ref_price_eur": 46.24,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.09 sotto il 10° percentile della coorte d'eta' (soglia 1.13)"
   },
   "m_mawile_ex_XY104_promo": {
     "name": "M Mawile-EX #XY104 (Promo)",
@@ -17202,7 +17322,9 @@
     "cardmarket_ref_price_eur": 63.13,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.60 sotto il 10° percentile della coorte d'eta' (soglia 1.13)"
   },
   "blastoise_ex_XY122_promo": {
     "name": "Blastoise-EX #XY122 (Promo)",
@@ -17252,7 +17374,9 @@
     "cardmarket_ref_price_eur": 83.34,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.52 sotto il 10° percentile della coorte d'eta' (soglia 1.13)"
   },
   "white_kyurem_XY128_promo": {
     "name": "White Kyurem #XY128 (Promo)",
@@ -17368,7 +17492,9 @@
     "cardmarket_ref_price_eur": 85.0,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.56 sotto il 10° percentile della coorte d'eta' (soglia 1.13)"
   },
   "paradise_resort_45_promo": {
     "name": "Paradise Resort #45 (Promo)",
@@ -17416,7 +17542,9 @@
     "cardmarket_ref_price_eur": 40.29,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.43 sotto il 10° percentile della coorte d'eta' (soglia 0.59)"
   },
   "iron_thorns_98_promo": {
     "name": "Iron Thorns #98 (Promo)",
@@ -17432,7 +17560,9 @@
     "cardmarket_ref_price_eur": 43.76,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.33 sotto il 10° percentile della coorte d'eta' (soglia 0.59)"
   },
   "kingdra_ex_131_promo": {
     "name": "Kingdra ex #131 (Promo)",
@@ -17464,7 +17594,9 @@
     "cardmarket_ref_price_eur": 44.5,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.31 sotto il 10° percentile della coorte d'eta' (soglia 0.59)"
   },
   "noctowl_141_promo": {
     "name": "Noctowl #141 (Promo)",

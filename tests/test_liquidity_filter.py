@@ -4,7 +4,10 @@ tests/test_liquidity_filter.py — Unit test per il filtro di attendibilità/liq
 
 import pandas as pd
 
-from poke_quant.data.liquidity_filter import compute_reliability_flags, filter_reliable, is_liquid_sealed, liquid_sealed_ids
+from poke_quant.data.liquidity_filter import (
+    compute_reliability_flags, filter_reliable, is_liquid_sealed, liquid_sealed_ids,
+    compute_grade_raw_ratio_flags,
+)
 
 
 def _make_df():
@@ -84,3 +87,47 @@ def test_liquid_sealed_ids_returns_expected_subset():
     metadata, prices = _sealed_meta(), _sealed_prices()
     ids = liquid_sealed_ids(metadata, prices, max_price_msrp_ratio=10.0)
     assert set(ids) == {"modern_bb", "vintage_liquid_bb"}
+
+
+def _grade_raw_cohort(n_normal=25, outlier_ratio=1.0, normal_ratio=5.0):
+    """Coorte di carte 1999 con rapporto grade9/raw normale (~normal_ratio), piu'
+    una carta 'thin_outlier' con rapporto molto piu' basso (come raichu_14: serie
+    liscia, ma persistentemente sottostimata vs. il prezzo raw di riferimento)."""
+    idx = pd.date_range("2021-01-01", periods=6, freq="MS")
+    metadata, prices = {}, {}
+    for i in range(n_normal):
+        item_id = f"normal_{i}"
+        metadata[item_id] = {"type": "single", "release_date": "1999-01-01", "cardmarket_ref_price_eur": 50.0}
+        prices[item_id] = [50.0 * normal_ratio] * 6
+    metadata["thin_outlier"] = {"type": "single", "release_date": "1999-06-01", "cardmarket_ref_price_eur": 50.0}
+    prices["thin_outlier"] = [50.0 * outlier_ratio] * 6
+    return metadata, pd.DataFrame(prices, index=idx)
+
+
+def test_thin_outlier_flagged_below_cohort_percentile():
+    metadata, prices = _grade_raw_cohort()
+    flags = compute_grade_raw_ratio_flags(metadata, prices, percentile_cutoff=0.10, min_cohort=20)
+    assert "thin_outlier" in flags
+    ok, reason = flags["thin_outlier"]
+    assert ok is False
+    assert "grade9/raw" in reason
+
+
+def test_normal_cohort_members_not_flagged():
+    metadata, prices = _grade_raw_cohort()
+    flags = compute_grade_raw_ratio_flags(metadata, prices, percentile_cutoff=0.10, min_cohort=20)
+    assert "normal_0" not in flags
+
+
+def test_small_cohort_skipped_no_data_fabricated():
+    """Sotto min_cohort, nessun giudizio - dato insufficiente, non si flagga alla cieca."""
+    metadata, prices = _grade_raw_cohort(n_normal=5)
+    flags = compute_grade_raw_ratio_flags(metadata, prices, percentile_cutoff=0.10, min_cohort=20)
+    assert flags == {}
+
+
+def test_missing_reference_price_not_flagged():
+    metadata, prices = _grade_raw_cohort()
+    del metadata["thin_outlier"]["cardmarket_ref_price_eur"]
+    flags = compute_grade_raw_ratio_flags(metadata, prices, percentile_cutoff=0.10, min_cohort=20)
+    assert "thin_outlier" not in flags

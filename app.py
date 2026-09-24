@@ -98,14 +98,24 @@ VALIDATED_SINGLES = {
     # meno bene una spedizione fissa di un box da centinaia di euro. DSR scende
     # 0,954->0,836 - SOTTO la soglia di comfort 0,90-0,95 per la prima volta da
     # quando questo fattore l'ha superata. Non e' piu' "il primo candidato a
-    # superarla" con questo conto piu' onesto - resta comunque il migliore di
-    # tutta la ricerca sulle singole, walk-forward ancora positivo in entrambe
-    # le meta' (nessuna inversione).
-    "dsr_own_grid": 0.999, "dsr_full_session": 0.836, "n_trials_full_session": 64,
-    "pbo": 0.000, "sharpe": 1.48, "cagr": 25.28, "max_dd": -14.06,
-    "h1_sharpe": 0.50, "h2_sharpe": 3.05,
+    # superarla" con questo conto piu' onesto.
+    # AGGIORNAMENTO 2 (trovato verificando un prezzo reale - un Raichu #14 a
+    # 250€ tutto compreso contro 107,60€ mostrati): il filtro di attendibilita'
+    # vedeva solo salti/volatilita', non un prezzo grade9 persistentemente
+    # troppo basso su carte vintage poco liquide. Aggiunto un check indipendente
+    # (rapporto grade9/raw vs coorte d'eta', vedi liquidity_filter.py::
+    # compute_grade_raw_ratio_flags e scripts/graded_raw_ratio_reliability_test.py):
+    # universo 935->869 carte, e il risultato MIGLIORA (non solo protegge) -
+    # coerente con l'ipotesi che fossero falsi positivi da dato sottile, non
+    # alfa reale. DSR risale 0,836->0,876, ancora sotto la soglia di comfort
+    # ma piu' vicino. Nota onesta: raichu_14 stesso resta nell'universo (24°
+    # percentile della sua coorte, sopra la soglia conservativa del 10°) - il
+    # filtro riduce il problema, non lo elimina caso per caso.
+    "dsr_own_grid": 0.999, "dsr_full_session": 0.876, "n_trials_full_session": 66,
+    "pbo": 0.000, "sharpe": 1.57, "cagr": 26.73, "max_dd": -12.03,
+    "h1_sharpe": 0.52, "h2_sharpe": 3.07,
 }
-VALIDATED_BLEND = {"sharpe": 1.87, "cagr": 24.65, "max_dd": -7.10}
+VALIDATED_BLEND = {"sharpe": 1.90, "cagr": 24.73, "max_dd": -7.01}
 
 st.set_page_config(page_title="PokeQuant — TS Momentum", page_icon="⚡", layout="wide")
 
@@ -407,7 +417,7 @@ def main():
         capital = st.number_input("Capitale dedicato (€)", min_value=100.0, max_value=1_000_000.0,
                                    value=10000.0, step=500.0)
         st.caption("50% box sigillati, 50% singole (fattore scarsità) — le due strategie hanno "
-                   "correlazione bassa (0,34): il blend porta Sharpe 1,38→1,87 e MaxDD -11,1%→-7,10% "
+                   "correlazione bassa (0,37): il blend porta Sharpe 1,38→1,90 e MaxDD -11,1%→-7,01% "
                    "rispetto al solo box (stesso periodo comune, frizioni incluse). Cap 12% del capitale per "
                    "singola posizione dentro ciascuna metà, box pesato per età (0,4x sotto i 18 mesi, 1,0x dopo).")
         st.markdown("---")
@@ -489,9 +499,10 @@ def main():
         f"**DSR corretto per l'intera sessione**: box {VALIDATED_BOX['dsr_full_session']:.3f} (era {VALIDATED_BOX['dsr_own_grid']:.3f} "
         f"sulla sola griglia originale, {VALIDATED_BOX['n_trials_full_session']} trial totali) — sotto soglia 0,90-0,95. "
         f"Singole (fattore scarsità) {VALIDATED_SINGLES['dsr_full_session']:.3f} ({VALIDATED_SINGLES['n_trials_full_session']} trial totali) — "
-        f"anch'essa **sotto** soglia da quando include la spedizione reale all'acquisto (era 0,954, sopra soglia, prima "
-        f"di questa correzione — vedi `scripts/buy_side_shipping_test.py`): resta comunque il miglior risultato di "
-        f"tutta la ricerca sulle singole, walk-forward ancora positivo in entrambe le metà. Vedi `scripts/dsr_session_audit.py` e "
+        f"anch'essa **sotto** soglia (era 0,954 prima di includere la spedizione reale all'acquisto, poi 0,836, poi "
+        f"risalita a 0,876 dopo aver escluso le carte con prezzo grade9 anomalo vs. il loro prezzo raw di riferimento "
+        f"— vedi `scripts/graded_raw_ratio_reliability_test.py`): resta il miglior risultato di tutta la ricerca "
+        f"sulle singole, walk-forward ancora positivo in entrambe le metà. Vedi `scripts/dsr_session_audit.py` e "
         f"`scripts/scarcity_value_singles_test.py`."
     )
     st.markdown('<div class="section-desc"><strong>📦 Box sigillati — TS Momentum</strong></div>', unsafe_allow_html=True)
@@ -516,7 +527,7 @@ def main():
         <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_SINGLES['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,34 tra le due strategie</strong></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,37 tra le due strategie</strong></div>', unsafe_allow_html=True)
     st.markdown(f"""
     <div class="kpi-grid">
         <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,38 box da solo (stesso periodo)</div></div>
@@ -658,8 +669,12 @@ def main():
                "è stato testato, è un possibile *value trap* (sconto persistente che il mercato non corregge). "
                "\"Massimo\" è la spesa TOTALE (oggetto + spedizione) oltre la quale QUESTA carta esce dal confine "
                "del quantile BUY già validato — non sottraiamo qui una stima di spedizione: verifica tu il costo "
-               "totale reale (oggetto + spedizione dell'inserzione) contro questo numero. Prime 15 con grafico, le "
-               "altre in tabella sotto.")
+               "totale reale (oggetto + spedizione dell'inserzione) contro questo numero. ⚠️ Sulle carte vintage "
+               "poco liquide, il pannello Grade 9 di PriceCharting può restare sottostimato rispetto al prezzo reale "
+               "anche dopo il filtro di attendibilità (carte con storico PSA9 troppo sottile per un prezzo affidabile, "
+               "ma non abbastanza estreme da essere escluse) — se non trovi nulla sotto il \"massimo\" su nessun "
+               "canale, registralo con `log_execution_price.py` invece di ignorare il segnale. Prime 15 con grafico, "
+               "le altre in tabella sotto.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:
@@ -859,7 +874,7 @@ def main():
                    "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
 
     st.markdown("---")
-    st.caption("PokeQuant · Blend box+singole scelto per correlazione bassa (0,34), non per rendimento massimo · "
+    st.caption("PokeQuant · Blend box+singole scelto per correlazione bassa (0,37), non per rendimento massimo · "
                 "box sotto soglia istituzionale dopo l'audit sull'intera sessione, singole sopra (vedi avviso in alto) · "
                 "[Runbook Italia](https://github.com/davbenx/pokequant/blob/main/OPERATIONS_ITALIA.md) · "
                 "Rivalidare con `scripts/optimize_and_falsify.py` e `scripts/scarcity_value_singles_test.py` ogni 6 mesi.")
