@@ -52,6 +52,19 @@ default in produzione.
     tronca la coda destra, cioe' proprio i trade che nel trend-following
     tipicamente generano la maggior parte del rendimento. ESITO: vedi
     docstring di quel file.
+
+  - min_confirm_months (opzionale, default 1 = nessuna conferma, comportamento
+    originale invariato): richiede che il momentum sia positivo per almeno N
+    mesi CONSECUTIVI (non solo il mese corrente) prima di aprire una nuova
+    posizione - l'opposto del filtro di freschezza usato sulle singole
+    (scarcity_value_factor.py). Motivazione EMPIRICA, non simmetrica per
+    principio: un residuo di valore che persiste senza correggersi e' un
+    segnale di allarme (value trap), ma un momentum che persiste da mesi e'
+    un trend confermato - vedi scripts/sealed_momentum_confirmation_search.py
+    per il test diretto (rendimento forward per box in funzione di quanti
+    mesi consecutivi il momentum e' stato positivo) che ha motivato questo
+    parametro, e per l'esito della ricerca della soglia che massimizza il
+    rendimento per trade.
 """
 
 from __future__ import annotations
@@ -74,6 +87,7 @@ class TimeSeriesMomentumStrategy:
         exit_threshold: float = 0.0,
         trailing_stop_pct: Optional[float] = None,
         max_holding_months: Optional[int] = None,
+        min_confirm_months: int = 1,
     ):
         self.prices_df = prices_df.sort_index()
         self.lookback_months = lookback_months
@@ -85,6 +99,7 @@ class TimeSeriesMomentumStrategy:
         self.exit_threshold = exit_threshold
         self.trailing_stop_pct = trailing_stop_pct
         self.max_holding_months = max_holding_months
+        self.min_confirm_months = max(1, min_confirm_months)
 
     def reset(self):
         pass
@@ -103,6 +118,22 @@ class TimeSeriesMomentumStrategy:
         if past <= 0:
             return None
         return (now - past) / past
+
+    def _confirmed_positive(self, item_id: str, current_date: pd.Timestamp, months: int) -> bool:
+        """True se il momentum e' stato positivo negli ultimi `months` mesi di
+        valutazione CONSECUTIVI (incluso current_date) - non solo oggi."""
+        idx = self.prices_df.index
+        pos = idx.searchsorted(current_date, side="right") - 1
+        if pos < 0:
+            return False
+        for k in range(months):
+            j = pos - k
+            if j < 0:
+                return False
+            mom = self._trailing_return(item_id, idx[j])
+            if mom is None or mom <= 0:
+                return False
+        return True
 
     def _peak_since(self, item_id: str, buy_date: str, current_date: pd.Timestamp) -> Optional[float]:
         if item_id not in self.prices_df.columns:
@@ -178,6 +209,8 @@ class TimeSeriesMomentumStrategy:
                     continue
             mom = self._trailing_return(item_id, cur_dt)
             if mom is None or mom <= 0:
+                continue
+            if self.min_confirm_months > 1 and not self._confirmed_positive(item_id, cur_dt, self.min_confirm_months):
                 continue
 
             available_cash = portfolio.cash
