@@ -309,11 +309,21 @@ def get_cardmarket_deep_link(
     item_name: str,
     franchise: str = "pokemon",
     language: str = "en",
-    custom_path: Optional[str] = None
+    custom_path: Optional[str] = None,
+    item_type: str = "sealed"
 ) -> str:
     """
     Costruisce l'URL diretto e preciso su Cardmarket con filtri lingua (idLanguage)
     e parametri di ricerca ottimali.
+
+    item_type="sealed" (default, comportamento storico) -> aggiunge "Booster Box"
+    al nome se non gia' presente. item_type="single" -> NON lo aggiunge (era un bug:
+    per una singola carta il link finiva a cercare il box, non la carta) e aggiunge
+    invece "PSA 9" come suggerimento di ricerca testuale, perche' il fattore scarsita'
+    (scarcity_value_factor.py) opera solo sulla serie Grade 9 di PriceCharting - e'
+    quello il prodotto da verificare, non la carta raw. Nessun filtro Cardmarket
+    reale per grado esiste in questo URL: resta una ricerca testuale approssimata,
+    l'utente deve comunque controllare a mano il grado dell'inserzione.
     """
     game = "OnePiece" if franchise == "one_piece" or "One Piece" in item_name or "OP-" in item_name or "OP0" in item_name else "Pokemon"
     lang_id = LANGUAGE_CODES.get(language.lower(), {}).get("id", 1)
@@ -322,7 +332,9 @@ def get_cardmarket_deep_link(
         return f"https://www.cardmarket.com/en/{custom_path}?idLanguage={lang_id}"
 
     clean_name = item_name.replace("[JP]", "").replace("[OP-01]", "").replace("[OP-02]", "").replace("[OP-03]", "").replace("[OP-05]", "").replace("[OP-06]", "").replace("[OP-07]", "").replace("[OP-08]", "").strip()
-    if "box" not in clean_name.lower() and "bundle" not in clean_name.lower():
+    if item_type == "single":
+        clean_name += " PSA 9"
+    elif "box" not in clean_name.lower() and "bundle" not in clean_name.lower():
         clean_name += " Booster Box"
 
     encoded = urllib.parse.quote(clean_name)
