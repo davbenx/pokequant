@@ -19,9 +19,32 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scripts.discover_chase_cards import slugify_card, make_item_id, fetch_set_cards as _unused_import  # noqa: F401
+from scripts.discover_chase_cards import slugify_card, make_item_id, build_set_ids, fetch_set_cards as _unused_import  # noqa: F401
 import scripts.discover_chase_cards as chase_mod
 import scripts.discover_random_control_singles as control_mod
+
+
+def test_build_set_ids_matches_only_eras_with_a_known_sealed_box(monkeypatch):
+    """build_set_ids() sostituisce la mappa scritta a mano: deve trovare
+    dinamicamente solo i set pokemontcg.io la cui era ha GIA' un box sealed in
+    metadata (stesso era_id() usato da discover_sealed_universe.py per creare
+    l'item_id) - un set senza box sealed noto resta escluso."""
+    fake_sets = {"data": [
+        {"id": "swsh6", "name": "Chilling Reign"},   # ha "chilling_reign_bb" in metadata
+        {"id": "xx99", "name": "Made Up Future Set"},  # nessun box sealed noto
+    ]}
+
+    class _FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return fake_sets
+
+    monkeypatch.setattr(chase_mod.requests, "get", lambda *a, **k: _FakeResp())
+    metadata = {"chilling_reign_bb": {"type": "sealed", "game_slug": "pokemon-chilling-reign"}}
+    result = build_set_ids(metadata)
+    assert result == {"swsh6": "chilling_reign"}
 
 
 def _fake_card(name, number, rarity, price, release="2021-08-27"):
@@ -50,7 +73,7 @@ def test_slugify_and_make_item_id_are_stable_and_url_safe():
 
 
 def test_chase_cards_tags_every_new_item_as_survivorship_biased(monkeypatch, tmp_path):
-    monkeypatch.setattr(chase_mod, "SET_IDS", {"testset": "test_era"})
+    monkeypatch.setattr(chase_mod, "build_set_ids", lambda metadata: {"testset": "test_era"})
     monkeypatch.setattr(chase_mod, "fetch_set_cards", lambda set_id, retries=3: [
         _fake_card("Rare Chase Card", "1", "Rare Secret", 99.0),
     ])
@@ -74,7 +97,7 @@ def test_chase_cards_tags_every_new_item_as_survivorship_biased(monkeypatch, tmp
 def test_random_control_includes_low_price_common_cards(monkeypatch):
     """Il campione di controllo NON deve filtrare per prezzo: una Common a 0 EUR
     deve poter entrare, a differenza di discover_chase_cards.py."""
-    monkeypatch.setattr(control_mod, "SET_IDS", {"testset": "test_era"})
+    monkeypatch.setattr(control_mod, "build_set_ids", lambda metadata: {"testset": "test_era"})
     monkeypatch.setattr(control_mod, "fetch_set_cards", lambda set_id, retries=3: [
         _fake_card("Common Junk Card", "50", "Common", 0.0),
     ])
@@ -96,7 +119,7 @@ def test_random_control_includes_low_price_common_cards(monkeypatch):
 
 
 def test_random_control_skips_duplicate_game_slug_item_slug(monkeypatch):
-    monkeypatch.setattr(control_mod, "SET_IDS", {"testset": "test_era"})
+    monkeypatch.setattr(control_mod, "build_set_ids", lambda metadata: {"testset": "test_era"})
     monkeypatch.setattr(control_mod, "fetch_set_cards", lambda set_id, retries=3: [
         _fake_card("Already Known", "7", "Rare", 50.0),
     ])
@@ -126,7 +149,7 @@ def test_random_control_skips_duplicate_game_slug_item_slug(monkeypatch):
 
 
 def test_random_control_skips_unresolved_pricecharting_history(monkeypatch):
-    monkeypatch.setattr(control_mod, "SET_IDS", {"testset": "test_era"})
+    monkeypatch.setattr(control_mod, "build_set_ids", lambda metadata: {"testset": "test_era"})
     monkeypatch.setattr(control_mod, "fetch_set_cards", lambda set_id, retries=3: [
         _fake_card("No History Card", "99", "Common", 1.0),
     ])

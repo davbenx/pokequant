@@ -14,7 +14,8 @@ da CarryScarcityFactorStrategy(item_type_filter="single") su questo universo è
 gonfiato rispetto a un investitore che comprava senza sapere in anticipo l'esito.
 Ogni item scritto qui riceve "selection_method": "chase_price_filter_survivorship_biased"
 in items_metadata.json per poter essere sempre isolato/escluso nei confronti.
-Il campione di controllo NON biased (stesse 98 set, carte scelte senza filtro di
+Il campione di controllo NON biased (stessi set, scoperti dinamicamente via
+build_set_ids() - non piu' un numero fisso -, carte scelte senza filtro di
 prezzo/rarità) è in scripts/discover_random_control_singles.py — va sempre eseguito
 insieme a questo prima di fidarsi di un backtest sulle singles.
 
@@ -43,61 +44,58 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from poke_quant.data.storage import load_metadata, save_metadata
 from poke_quant.data.price_fetcher import fetch_pricecharting_series
 from poke_quant.data.fx_rates import load_eur_usd_series
+from scripts.discover_sealed_universe import era_id
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
-# Set pokemontcg.io da cercare, mappati alla stessa "era" usata negli item _bb/_etb
-# già presenti in items_metadata.json (serve per riusarne il game_slug corretto).
-SET_IDS = {
-    "swsh6": "chilling_reign", "swsh7": "evolving_skies", "swsh8": "fusion_strike",
-    "swsh9": "brilliant_stars", "swsh10": "astral_radiance", "swsh11": "lost_origin",
-    "swsh12": "silver_tempest", "sv2": "paldea_evolved", "sv3": "obsidian_flames",
-    "sv4": "paradox_rift", "sv5": "temporal_forces", "sv6": "twilight_masquerade",
-    "sv7": "stellar_crown", "sv8": "surging_sparks", "sv3pt5": "scarlet_violet_151",
-    # Seconda ondata (copertura di TUTTI gli era sealed già in items_metadata.json,
-    # non solo i 15 iniziali) — mappatura verificata su pokemontcg.io /v2/sets:
-    "xy7": "ancient_origins", "swsh5": "battle_styles", "sm3": "burning_shadows",
-    "cel25": "celebrations", "sm12": "cosmic_eclipse", "sm4": "crimson_invasion",
-    "swsh12pt5": "crown_zenith", "swsh3": "darkness_ablaze", "xy12": "evolutions",
-    "xy2": "flashfire", "sm115": "hidden_fates", "sm8": "lost_thunder",
-    "swsh2": "rebel_clash", "xy6": "roaring_skies", "swsh45": "shining_fates",
-    "sm9": "team_up", "sm5": "ultra_prism", "sm10": "unbroken_bonds",
-    "sm11": "unified_minds", "swsh4": "vivid_voltage",
-    # jp_* (VMAX Climax, VSTAR Universe, Shiny Star V, Tag All Stars, Shiny Treasure ex)
-    # sono set giapponesi esclusivi: pokemontcg.io copre la stampa inglese e non li ha,
-    # quindi non sono ricercabili con questo metodo. scarlet_violet_base è escluso: il
-    # suo game_slug booster-box è già confermato rotto su PriceCharting (redirect a
-    # ricerca generica) e non è chiaro se le singole userebbero uno slug diverso.
-
-    # Terza ondata: tutti i restanti set confermati come box sigillato reale su
-    # PriceCharting (scripts/discover_sealed_universe.py, 1999-2026), incluso il
-    # vintage. Il filtro di attendibilità (poke_quant/data/liquidity_filter.py) fa
-    # comunque da rete di sicurezza sulle serie troppo rumorose, quindi non c'è
-    # rischio ad ampliare qui: nel peggiore dei casi la carta viene flaggata ed
-    # esclusa dall'universo azionabile in automatico.
-    "base2": "jungle", "base3": "fossil", "base4": "base_set_2", "base5": "team_rocket",
-    "gym1": "gym_heroes", "gym2": "gym_challenge", "neo1": "neo_genesis", "neo2": "neo_discovery",
-    "neo3": "neo_revelation", "neo4": "neo_destiny", "base6": "legendary_collection",
-    "ecard2": "aquapolis", "ecard3": "skyridge", "ex5": "hidden_legends", "ex7": "team_rocket_returns",
-    "ex8": "deoxys", "ex9": "emerald", "ex10": "unseen_forces", "ex11": "delta_species",
-    "ex12": "legend_maker", "ex13": "holon_phantoms", "ex14": "crystal_guardians",
-    "ex15": "dragon_frontiers", "ex16": "power_keepers", "dp2": "mysterious_treasures",
-    "dp3": "secret_wonders", "dp4": "great_encounters", "dp5": "majestic_dawn",
-    "dp6": "legends_awakened", "dp7": "stormfront", "pl1": "platinum", "pl2": "rising_rivals",
-    "pl3": "supreme_victors", "pl4": "arceus", "col1": "call_of_legends", "bw2": "emerging_powers",
-    "bw3": "noble_victories", "bw4": "next_destinies", "bw5": "dark_explorers", "bw6": "dragons_exalted",
-    "bw7": "boundaries_crossed", "bw8": "plasma_storm", "bw9": "plasma_freeze", "bw10": "plasma_blast",
-    "bw11": "legendary_treasures", "xy1": "xy", "xy3": "furious_fists", "xy4": "phantom_forces",
-    "xy5": "primal_clash", "xy8": "breakthrough", "xy9": "breakpoint", "xy10": "fates_collide",
-    "xy11": "steam_siege", "sm2": "guardians_rising", "sm6": "forbidden_light", "sm7": "celestial_storm",
-    "sv9": "journey_together", "sv10": "destined_rivals", "me1": "mega_evolution",
-    "me2": "phantasmal_flames", "me3": "perfect_order", "me4": "chaos_rising", "me5": "pitch_black",
-}
+# SET_IDS ({pokemontcg_set_id: era}) non e' piu' una mappa scritta a mano - vedi
+# build_set_ids() sotto: si ricostruisce da sola a ogni run leggendo quali era
+# hanno gia' un box sealed in metadata, quindi cattura ogni nuovo set che
+# discover_sealed_universe.py aggiunge senza bisogno di toccare questo file.
+# Nota: jp_* (VMAX Climax, VSTAR Universe, Shiny Star V, Tag All Stars, Shiny
+# Treasure ex) sono set giapponesi esclusivi che pokemontcg.io non ha (copre
+# solo la stampa inglese), quindi restano fuori da questo metodo comunque.
 
 CHASE_RARITIES = {
     "Rare Secret", "Rare Rainbow", "Rare Ultra", "Special Illustration Rare",
     "Illustration Rare", "Hyper Rare", "Rare Holo VMAX", "Rare Holo VSTAR",
 }
+
+
+def build_set_ids(metadata: dict) -> dict:
+    """Costruisce {pokemontcg_set_id: era} DINAMICAMENTE al posto della mappa
+    scritta a mano - copre automaticamente ogni nuovo set sealed appena
+    discover_sealed_universe.py lo aggiunge a metadata, senza bisogno di
+    aggiornare questo file a mano. Funziona perche' discover_sealed_universe.py
+    usa la STESSA era_id() per costruire l'item_id (es. "Chilling Reign" ->
+    "chilling_reign_bb") - quindi un match esatto qui e' garantito per
+    costruzione per ogni set scoperto da quello script, non solo per quelli
+    gia' noti oggi (verificato: 97/98 delle voci storiche gia' scritte a mano
+    coincidono esattamente con questo calcolo, l'unica eccezione era gia'
+    coperta da una run precedente e non richiede piu' azione)."""
+    known_eras = set()
+    for item_id in metadata:
+        for suffix in ["_bb", "_etb", "_bundle"]:
+            if item_id.endswith(suffix):
+                known_eras.add(item_id[: -len(suffix)])
+
+    all_sets = []
+    for attempt in range(3):
+        try:
+            resp = requests.get("https://api.pokemontcg.io/v2/sets", headers=HEADERS, timeout=20)
+            resp.raise_for_status()
+            all_sets = resp.json().get("data", [])
+            break
+        except Exception as e:
+            print(f"  [retry {attempt}] /v2/sets: {e}")
+            time.sleep(4)
+
+    result = {}
+    for s in all_sets:
+        era = era_id(s["name"])
+        if era in known_eras:
+            result[s["id"]] = era
+    return result
 
 
 def fetch_set_cards(set_id: str, retries: int = 3) -> list:
@@ -143,8 +141,11 @@ def main():
 
     existing_keys = {(v.get("game_slug"), v.get("item_slug")) for v in metadata.values()}
 
+    set_ids = build_set_ids(metadata)
+    print(f"Set con box sealed gia' noto trovati su pokemontcg.io: {len(set_ids)}")
+
     candidates = []
-    for set_id, era in SET_IDS.items():
+    for set_id, era in set_ids.items():
         cards = fetch_set_cards(set_id)
         print(f"{set_id} ({era}): {len(cards)} carte scaricate")
         for c in cards:

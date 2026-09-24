@@ -7,7 +7,8 @@ gonfia i risultati della strategia Carry/Scarcity sulle singles.
 discover_chase_cards.py include una carta nell'universo SOLO SE il suo prezzo
 Cardmarket CORRENTE (oggi) supera una soglia — quindi ogni carta in quell'universo
 è, per costruzione, una carta che sappiamo con informazione 2026 essersi rivelata
-"vincente". Questo script fa l'opposto: per gli stessi 98 set, pesca un campione
+"vincente". Questo script fa l'opposto: per gli stessi set (scoperti dinamicamente
+via build_set_ids(), non piu' un numero fisso), pesca un campione
 CASUALE di carte (qualsiasi rarità, qualsiasi prezzo corrente, incluse le comuni
 che non hanno mai fatto notizia) e verifica se PriceCharting ne traccia lo storico.
 
@@ -39,7 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from poke_quant.data.storage import load_metadata, save_metadata
 from poke_quant.data.price_fetcher import fetch_pricecharting_series
 from poke_quant.data.fx_rates import load_eur_usd_series
-from scripts.discover_chase_cards import SET_IDS, fetch_set_cards, slugify_card, make_item_id
+from scripts.discover_chase_cards import build_set_ids, fetch_set_cards, slugify_card, make_item_id
 
 RANDOM_SEED = 7  # fissato per riproducibilità del campione di controllo
 
@@ -63,8 +64,9 @@ def main():
 
     existing_keys = {(v.get("game_slug"), v.get("item_slug")) for v in metadata.values()}
 
+    set_ids = build_set_ids(metadata)
     sampled = []
-    for set_id, era in SET_IDS.items():
+    for set_id, era in set_ids.items():
         cards = fetch_set_cards(set_id)
         print(f"{set_id} ({era}): {len(cards)} carte scaricate, campiono senza filtro di prezzo/rarita")
         if not cards:

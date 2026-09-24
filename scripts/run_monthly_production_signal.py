@@ -8,11 +8,18 @@ Sequenza:
      aggiunge (msrp=None esplicito per i vintage, nessun dato inventato). Idempotente:
      se non c'e' nulla di nuovo non fa nulla (verificato: 0 nuovi al momento della
      scrittura, ma il controllo va rifatto ogni mese perche' escono nuovi set).
-  2. Ricostruisce TUTTI i pannelli prezzi (sealed + graded singles) con tasso FX
+  2. Scopre nuove SINGOLE chase (discover_chase_cards.py) + controllo casuale
+     (discover_random_control_singles.py) - entrambi ora usano
+     discover_chase_cards.build_set_ids(), che si ricostruisce da solo leggendo
+     quali era hanno gia' un box sealed in metadata (incluso quello appena
+     trovato al passo 1, nella STESSA run) invece di una mappa scritta a mano:
+     un set nuovo scoperto al passo 1 ha automaticamente le sue singole
+     scoperte qui, senza intervento manuale.
+  3. Ricostruisce TUTTI i pannelli prezzi (sealed + graded singles) con tasso FX
      reale (rebuild_prices_with_real_fx.py) - rifetcha ogni item gia' in metadata,
      quindi include automaticamente il mese appena chiuso.
-  3. Ri-applica il filtro di attendibilità (flag_unreliable_assets.py).
-  4. Genera ENTRAMBI i segnali di produzione - TS Momentum sui box (universo
+  4. Ri-applica il filtro di attendibilità (flag_unreliable_assets.py).
+  5. Genera ENTRAMBI i segnali di produzione - TS Momentum sui box (universo
      allargato via liquidity_filter.is_liquid_sealed) e fattore Scarsita' sulle
      singole (BUY fresco + AVOID sopravvalutate, stessa logica della dashboard) -
      e invia un messaggio via Telegram (se configurato).
@@ -29,11 +36,12 @@ precedente di questo docstring (carry/eta', TS momentum, cross-sectional
 momentum, dip mean-reversion, rarita' ex-ante) restano non validati, ma non
 sono piu' l'ultima parola sulle singole.
 
-LIMITE CONOSCIUTO, non silenziato: il passo 1 scopre nuovi SEALED automaticamente,
-ma le SINGOLE chase/controllo di un set appena uscito richiedono ancora
-un'aggiunta manuale a SET_IDS in scripts/discover_chase_cards.py - quella mappa
-lega uno slug PriceCharting all'ID set ufficiale pokemontcg.io (es. "sv9"), che
-non e' derivabile automaticamente dal nome senza rischiare falsi appaiamenti.
+LIMITE RESIDUO, non silenziato: build_set_ids() trova un set SOLO se
+pokemontcg.io usa lo stesso nome (via era_id()) del box sealed gia' in
+metadata - verificato empiricamente 97/98 casi storici corrispondono esatti.
+I set giapponesi esclusivi (VMAX Climax, VSTAR Universe, ecc.) restano fuori
+perche' pokemontcg.io copre solo la stampa inglese - nessun modo automatico
+di risolverlo con questa fonte dati.
 
 NON verifica liquidità reale. Il messaggio lo ripete esplicitamente ogni volta,
 apposta, perché è il gate che manca ancora.
@@ -108,6 +116,8 @@ def build_message() -> str:
 
 def main():
     run_step("Scoperta nuovi set sealed", ["scripts/discover_sealed_universe.py"])
+    run_step("Scoperta nuove singole chase", ["scripts/discover_chase_cards.py"])
+    run_step("Scoperta nuove singole di controllo", ["scripts/discover_random_control_singles.py"])
     run_step("Ricostruzione prezzi con FX reale (sealed + graded singles)", ["scripts/rebuild_prices_with_real_fx.py"])
     run_step("Aggiornamento filtro attendibilità", ["scripts/flag_unreliable_assets.py"])
 
