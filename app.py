@@ -562,9 +562,9 @@ def main():
                "reale del mese — è il dato su cui il modello calcola il segnale, NON una quota Cardmarket. "
                "Il mercato europeo ha domanda/offerta propria: può differire, anche di molto. Il grafico "
                "mostra lo storico usato dal modello — confronta sempre col prezzo reale dietro al bottone. "
-               "\"Massimo (spedito incluso)\", dove mostrato, è il tetto oltre il quale il modello considera il box "
-               "già fuori dal range di prezzo/MSRP validato (21,6x, netto della spedizione stimata) — è il prezzo "
-               "tutto compreso da non superare, non un obiettivo di sconto.")
+               "\"Massimo\", dove mostrato, è la spesa TOTALE (oggetto + spedizione) oltre la quale il modello "
+               "considera il box fuori dal range di prezzo/MSRP validato (21,6x) — non sottraiamo qui una stima di "
+               "spedizione: verifica tu il costo totale reale (oggetto + spedizione dell'inserzione) contro questo numero.")
     buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
     if max_card_price > 0:
         buy_rows = [r for r in buy_rows if r["current_price_eur"] <= max_card_price]
@@ -575,11 +575,11 @@ def main():
     for r, alloc, w in allocation:
         meta = metadata.get(r["item_id"], {})
         link = get_cardmarket_deep_link(r["name"], franchise=meta.get("franchise", "pokemon"),
-                                         language=meta.get("language", "en"))
+                                         language=meta.get("language", "en"), game_slug=meta.get("game_slug"))
         img_url = get_product_image(meta.get("game_slug"), meta.get("item_slug"))
         img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
-        max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (spedito incluso) '
-                           f'{r["max_price_allin_eur"]:.0f}€</span>') if r.get("max_price_allin_eur") is not None else ""
+        max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (tot.) '
+                           f'{r["max_price_eur"]:.0f}€</span>') if r.get("max_price_eur") is not None else ""
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
             {img_tag}
@@ -627,8 +627,8 @@ def main():
                        "nuovo acquisto. Non è impossibile che salga ancora, ma comprare oltre questo confine non è "
                        "ciò che è stato validato — impedisce di comprare a un prezzo che romperebbe l'edge misurato.")
             for r in excessive_rows:
-                st.markdown(f"- **{r['name']}** — {r['current_price_eur']:.0f}€ attuale vs **{r['max_price_allin_eur']:.0f}€ massimo "
-                            f"(spedito incluso)** (+{r['trailing_12m_return_pct']:.0f}% 12m)")
+                st.markdown(f"- **{r['name']}** — {r['current_price_eur']:.0f}€ attuale vs **{r['max_price_eur']:.0f}€ massimo "
+                            f"(totale)** (+{r['trailing_12m_return_pct']:.0f}% 12m)")
 
     if n_verify:
         with st.expander(f"⚠️ Da verificare a mano ({n_verify}) — rendimento implausibile, mercato troppo sottile"):
@@ -651,33 +651,28 @@ def main():
                "consecutivi la carta è nel quantile BUY: solo le carte entrate negli ultimi 3 mesi (la cadenza "
                "di ribilanciamento validata nel backtest) sono mostrate — oltre, comprarla oggi non è ciò che "
                "è stato testato, è un possibile *value trap* (sconto persistente che il mercato non corregge). "
-               "\"Massimo (spedito incluso)\" è il prezzo tutto compreso oltre il quale QUESTA carta esce dal confine "
-               "del quantile BUY già validato — impedisce di comprare a un prezzo che romperebbe l'edge del fattore, "
-               "non solo un'indicazione di sconto. Prime 15 con grafico, le altre in tabella sotto.")
+               "\"Massimo\" è la spesa TOTALE (oggetto + spedizione) oltre la quale QUESTA carta esce dal confine "
+               "del quantile BUY già validato — non sottraiamo qui una stima di spedizione: verifica tu il costo "
+               "totale reale (oggetto + spedizione dell'inserzione) contro questo numero. Prime 15 con grafico, le "
+               "altre in tabella sotto.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:
         singles_rows = [r for r in singles_rows if r["current_price_eur"] <= max_card_price]
-    # "impedire di comprare sopra un prezzo che rompe l'edge" (richiesto
-    # esplicitamente): le carte il cui prezzo attuale supera già il massimo
-    # tutto compreso (edge_intact=False, vedi generate_singles_signal.py) non
-    # entrano nell'allocazione di capitale - sono ancora nel quantile BUY del
-    # modello, ma comprarle oggi a questo prezzo non preserva l'edge misurato.
-    singles_rows_ok = [r for r in singles_rows if r.get("edge_intact", True)]
-    singles_rows_broken = [r for r in singles_rows if not r.get("edge_intact", True)]
-    singles_allocation = build_equal_allocation(singles_rows_ok, capital * 0.5)
+    singles_allocation = build_equal_allocation(singles_rows, capital * 0.5)
 
     if not singles_allocation:
         st.info("Nessuna carta nel quantile BUY questo mese.")
     for r, alloc in singles_allocation[:15]:
         meta = {"franchise": r.get("franchise", "pokemon"), "language": r.get("language", "en")}
-        link = get_cardmarket_deep_link(r["name"], franchise=meta["franchise"], language=meta["language"], item_type="single")
+        full_meta = metadata.get(r["item_id"], {})
+        link = get_cardmarket_deep_link(r["name"], franchise=meta["franchise"], language=meta["language"],
+                                         item_type="single", game_slug=full_meta.get("game_slug"))
         start = r["signal_start_date"]
         start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)
-        full_meta = metadata.get(r["item_id"], {})
         img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
         img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
-        max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (spedito incluso) '
+        max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (tot.) '
                            f'{r["max_edge_price_eur"]:.2f}€</span>') if r.get("max_edge_price_eur") is not None else ""
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
@@ -701,7 +696,7 @@ def main():
             rest_df = pd.DataFrame([
                 {"Carta": r["name"], "Rarità": r["rarity"], "Grado": "Grade 9",
                  "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
-                 "Massimo spedito incluso (€)": r.get("max_edge_price_eur"),
+                 "Massimo totale (€)": r.get("max_edge_price_eur"),
                  "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
                  "Allocazione (€)": alloc}
                 for r, alloc in singles_allocation[15:]
@@ -710,28 +705,8 @@ def main():
                          column_config={
                              "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
                              "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-                             "Massimo spedito incluso (€)": st.column_config.NumberColumn(format="%.2f €"),
+                             "Massimo totale (€)": st.column_config.NumberColumn(format="%.2f €"),
                              "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
-                         })
-
-    if singles_rows_broken:
-        with st.expander(f"🚫 Prezzo eccessivo — nel quantile BUY ma edge già rotto dalla spedizione ({len(singles_rows_broken)})"):
-            st.caption("Il modello classifica ancora queste carte come sottovalutate vs. pari, ma il loro prezzo "
-                       "attuale supera già il massimo tutto compreso (spedizione inclusa) che preserva l'edge — "
-                       "comprarle oggi a questo prezzo non è ciò che è stato validato nel backtest. Su un trade "
-                       "piccolo (carta singola) una spedizione fissa di 7€ pesa proporzionalmente molto più che su "
-                       "un box: non sono un errore del modello, è il costo reale di eseguire il trade.")
-            broken_df = pd.DataFrame([
-                {"Carta": r["name"], "Rarità": r["rarity"], "Prezzo attuale (€)": r["current_price_eur"],
-                 "Massimo spedito incluso (€)": r["max_edge_price_eur"],
-                 "Margine (€)": r["max_edge_price_eur"] - r["current_price_eur"]}
-                for r in sorted(singles_rows_broken, key=lambda r: r["max_edge_price_eur"] - r["current_price_eur"])
-            ])
-            st.dataframe(broken_df, use_container_width=True, hide_index=True,
-                         column_config={
-                             "Prezzo attuale (€)": st.column_config.NumberColumn(format="%.2f €"),
-                             "Massimo spedito incluso (€)": st.column_config.NumberColumn(format="%.2f €"),
-                             "Margine (€)": st.column_config.NumberColumn(format="%+.2f €"),
                          })
 
     # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---

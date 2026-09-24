@@ -26,7 +26,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from poke_quant.data.storage import load_metadata, load_price_matrix
 from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSRP_RATIO
 from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentumStrategy
-from poke_quant.config import SHIPPING_COSTS
 
 LOOKBACK_MONTHS = 12
 # Sopra questa soglia il rendimento a 12m è più probabile rumore da mercato sottile
@@ -71,13 +70,14 @@ def compute_signal_rows():
         cur_price = prices_sealed[item_id].dropna().iloc[-1]
         ret_pct = mom * 100.0
         msrp = metadata[item_id].get("msrp")
+        # Spesa massima TOTALE (oggetto + spedizione) da non superare - stesso
+        # numero validato in scripts/box_max_price_ratio_test.py. Richiesto
+        # esplicitamente dall'utente di NON sottrarre qui una nostra stima di
+        # spedizione (10EUR/box e' una media, non il costo reale di QUESTA
+        # inserzione): la spedizione reale la verifica l'utente stesso
+        # sull'inserzione Cardmarket, confrontando oggetto+spedizione reali
+        # con questo numero.
         max_price_eur = msrp * MAX_PRICE_TO_MSRP_RATIO if msrp else None
-        # Versione "tutto compreso" per la dashboard (richiesto esplicitamente:
-        # il prezzo massimo mostrato deve essere il prezzo finito, spedizione
-        # inclusa) - il tetto stesso resta calcolato sul prezzo grezzo (stesso
-        # numero validato in scripts/box_max_price_ratio_test.py), qui solo
-        # nettato del costo di spedizione reale per il numero da MOSTRARE.
-        max_price_allin_eur = (max_price_eur - SHIPPING_COSTS["sealed_box"]) if max_price_eur is not None else None
         if abs(ret_pct) > PLAUSIBILITY_CAP_PCT:
             signal = "VERIFICARE A MANO (rendimento implausibile)"
         elif mom > 0 and max_price_eur is not None and cur_price > max_price_eur:
@@ -96,7 +96,6 @@ def compute_signal_rows():
             "current_price_eur": cur_price,
             "trailing_12m_return_pct": ret_pct,
             "max_price_eur": max_price_eur,
-            "max_price_allin_eur": max_price_allin_eur,
             "signal": signal,
         })
 

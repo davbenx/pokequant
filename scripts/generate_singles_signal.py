@@ -33,7 +33,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, load_price_matrix
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
-from poke_quant.config import SHIPPING_COSTS
 
 PRODUCTION_PARAMS = dict(rebalance_every_months=3, top_quantile=0.20, min_age_months=6, max_positions=60, min_cross_section=20)
 
@@ -138,26 +137,20 @@ def compute_singles_signal_rows(params: dict = None):
         # prima che il suo residuo risalga al confine del quantile BUY e la
         # carta ne esca - non e' un'ipotesi nuova, e' il confine gia' validato
         # del fattore, solo espresso in euro invece che in residuo di regressione.
-        # Netto della spedizione stimata (SHIPPING_COSTS['single_tracked']) perche'
-        # il numero mostrato in dashboard va confrontato col prezzo TUTTO COMPRESO
-        # (oggetto + spedizione), non solo il prezzo dell'oggetto.
-        max_edge_price_raw = current_price * np.exp(latest_cutoff - residual) if latest_cutoff is not None else None
-        max_edge_price_allin = (max_edge_price_raw - SHIPPING_COSTS["single_tracked"]) if max_edge_price_raw is not None else None
-        # "impedire di comprare sopra un prezzo che rompe l'edge" (richiesto
-        # esplicitamente): se il prezzo attuale supera GIA' il massimo tutto
-        # compreso, l'edge di QUESTA carta e' gia' azzerato dalla sola
-        # spedizione - non e' un'occasione azionabile oggi, anche se il
-        # modello la classifica ancora nel quantile BUY (il quantile guarda
-        # solo il prezzo dell'oggetto, non il costo tutto compreso).
-        edge_intact = max_edge_price_allin is None or current_price <= max_edge_price_allin
+        # E' la spesa massima TOTALE (oggetto + spedizione) da non superare -
+        # richiesto esplicitamente dall'utente di NON sottrarre qui una nostra
+        # stima di spedizione (7EUR/carta e' una media, non il costo reale di
+        # QUESTA inserzione): la spedizione reale la verifica l'utente stesso
+        # sull'inserzione Cardmarket, confrontando oggetto+spedizione reali con
+        # questo numero.
+        max_edge_price_eur = current_price * np.exp(latest_cutoff - residual) if latest_cutoff is not None else None
         rows.append({
             "item_id": item_id,
             "name": info.get("name", item_id),
             "current_price_eur": current_price,
             "residual": residual,
             "discount_pct": (np.exp(residual) - 1.0) * 100.0,
-            "max_edge_price_eur": max_edge_price_allin,
-            "edge_intact": edge_intact,
+            "max_edge_price_eur": max_edge_price_eur,
             "signal_start_date": start_date,
             "months_in_signal": streak,
             "rarity": info.get("rarity"),

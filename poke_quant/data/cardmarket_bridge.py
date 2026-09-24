@@ -10,6 +10,7 @@ Include caching locale, validazione dei prezzi e calcolo dello scostamento rispe
 from __future__ import annotations
 import json
 import logging
+import re
 import urllib.parse
 from pathlib import Path
 from typing import Dict, Any, Optional, List
@@ -20,12 +21,16 @@ logger = logging.getLogger(__name__)
 CACHE_FILE = Path(__file__).resolve().parent.parent.parent / "data_cache" / "cardmarket_live_quotes.json"
 
 LANGUAGE_CODES = {
+    # idLanguage secondo la documentazione pubblica dell'API Cardmarket - "jp"
+    # era erroneamente sullo stesso id del francese (2): ogni link per un box
+    # JP filtrava (se il parametro viene onorato dalla pagina di ricerca)
+    # inserzioni in FRANCESE, non in giapponese.
     "en": {"id": 1, "name": "English", "flag": "🇬🇧"},
     "fr": {"id": 2, "name": "French", "flag": "🇫🇷"},
     "de": {"id": 3, "name": "German", "flag": "🇩🇪"},
     "es": {"id": 4, "name": "Spanish", "flag": "🇪🇸"},
     "it": {"id": 5, "name": "Italian", "flag": "🇮🇹"},
-    "jp": {"id": 2, "name": "Japanese", "flag": "🇯🇵"},
+    "jp": {"id": 7, "name": "Japanese", "flag": "🇯🇵"},
 }
 
 DEFAULT_CARDMARKET_SEED: Dict[str, Dict[str, Any]] = {
@@ -305,12 +310,29 @@ def get_cardmarket_live_prices(
     return res
 
 
+def _set_name_from_slug(game_slug: str) -> Optional[str]:
+    """'pokemon-evolving-skies' -> 'Evolving Skies', 'one-piece-romance-dawn' ->
+    'Romance Dawn' - stesso game_slug/item_slug di PriceCharting gia' in
+    metadata (data_cache/items_metadata.json), nessun nuovo dato inventato."""
+    if not game_slug:
+        return None
+    parts = game_slug.split("-")
+    if parts and parts[0] in ("pokemon", "one"):
+        parts = parts[1:]
+    if parts and parts[0] == "piece":
+        parts = parts[1:]
+    if not parts:
+        return None
+    return " ".join(p.capitalize() for p in parts)
+
+
 def get_cardmarket_deep_link(
     item_name: str,
     franchise: str = "pokemon",
     language: str = "en",
     custom_path: Optional[str] = None,
-    item_type: str = "sealed"
+    item_type: str = "sealed",
+    game_slug: Optional[str] = None,
 ) -> str:
     """
     Costruisce l'URL diretto e preciso su Cardmarket con filtri lingua (idLanguage)
@@ -318,11 +340,20 @@ def get_cardmarket_deep_link(
 
     item_type="sealed" (default, comportamento storico) -> aggiunge "Booster Box"
     al nome se non gia' presente. item_type="single" -> NON lo aggiunge (era un bug:
-    per una singola carta il link finiva a cercare il box, non la carta) e aggiunge
-    invece "PSA 9" come suggerimento di ricerca testuale, perche' il fattore scarsita'
-    (scarcity_value_factor.py) opera solo sulla serie Grade 9 di PriceCharting - e'
-    quello il prodotto da verificare, non la carta raw. Nessun filtro Cardmarket
-    reale per grado esiste in questo URL: resta una ricerca testuale approssimata,
+    per una singola carta il link finiva a cercare il box, non la carta).
+
+    game_slug (opzionale, es. "pokemon-evolving-skies" da metadata) -> aggiunge il
+    NOME DEL SET alla ricerca. Trovato verificando manualmente i link generati
+    (richiesto esplicitamente dall'utente): senza il set, una ricerca per un nome
+    carta comune ("Raichu", "Magikarp"...) e' ambigua fra decine di espansioni
+    diverse in cui quel Pokemon e' apparso - il set e' il disambiguante reale,
+    non il numero di raccolta interno (#203 ecc., rimosso dalla stringa di
+    ricerca qui sotto: e' un indice PriceCharting, non fa parte del titolo
+    prodotto su Cardmarket). Rimosso anche il suggerimento testuale "PSA 9"
+    (versione precedente): Cardmarket non indicizza il grado nel titolo del
+    prodotto raw, un testo letterale "PSA 9" nella ricerca rischiava di
+    azzerare i risultati invece di filtrarli. Nessun filtro Cardmarket reale
+    per grado esiste in questo URL: resta una ricerca testuale approssimata,
     l'utente deve comunque controllare a mano il grado dell'inserzione.
     """
     game = "OnePiece" if franchise == "one_piece" or "One Piece" in item_name or "OP-" in item_name or "OP0" in item_name else "Pokemon"
@@ -332,8 +363,12 @@ def get_cardmarket_deep_link(
         return f"https://www.cardmarket.com/en/{custom_path}?idLanguage={lang_id}"
 
     clean_name = item_name.replace("[JP]", "").replace("[OP-01]", "").replace("[OP-02]", "").replace("[OP-03]", "").replace("[OP-05]", "").replace("[OP-06]", "").replace("[OP-07]", "").replace("[OP-08]", "").strip()
+    clean_name = re.sub(r"\s*#\d+\s*", " ", clean_name).strip()
+
+    set_name = _set_name_from_slug(game_slug)
     if item_type == "single":
-        clean_name += " PSA 9"
+        if set_name:
+            clean_name += f" {set_name}"
     elif "box" not in clean_name.lower() and "bundle" not in clean_name.lower():
         clean_name += " Booster Box"
 

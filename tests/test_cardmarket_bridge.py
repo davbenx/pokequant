@@ -58,12 +58,38 @@ def test_deep_link_generation():
     assert "idLanguage=1" in url_en
     assert "Pokemon" in url_en
 
+    # id Cardmarket per il giapponese e' 7, non 2 (2 e' il francese) - bug reale
+    # trovato verificando i link, correggeva silenziosamente ogni box JP a
+    # filtrare per francese se il parametro viene onorato dalla pagina.
     url_jp = get_cardmarket_deep_link("VSTAR Universe", franchise="pokemon", language="jp")
-    assert "idLanguage=2" in url_jp
+    assert "idLanguage=7" in url_jp
 
     url_op = get_cardmarket_deep_link("Wings of the Captain", franchise="one_piece", language="en")
     assert "OnePiece" in url_op
     assert "idLanguage=1" in url_op
+
+
+def test_deep_link_single_uses_set_name_not_card_number_or_grade_text():
+    """Trovato verificando i link: senza il set, una ricerca per un nome carta
+    comune e' ambigua fra decine di espansioni - il game_slug (da metadata,
+    stesso identificatore PriceCharting) e' il vero disambiguante. "#203"
+    (indice interno PriceCharting) e "PSA 9" (testo letterale che Cardmarket
+    non indicizza nel titolo prodotto raw) vanno rimossi dalla ricerca, non
+    aggiunti."""
+    url = get_cardmarket_deep_link(
+        "Magikarp #203 Illustration Rare", franchise="pokemon", language="en",
+        item_type="single", game_slug="pokemon-paldea-evolved",
+    )
+    assert "Paldea" in url and "Evolved" in url
+    assert "%23203" not in url and "#203" not in url
+    assert "PSA" not in url
+
+
+def test_deep_link_sealed_still_appends_booster_box():
+    url = get_cardmarket_deep_link("Shining Fates Elite Trainer Box", franchise="pokemon", language="en")
+    assert "Elite%20Trainer%20Box" in url or "Elite+Trainer+Box" in url
+    url2 = get_cardmarket_deep_link("Crown Zenith", franchise="pokemon", language="en")
+    assert "Booster%20Box" in url2
 
 
 def test_evaluate_item_blocked_vs_buy():
