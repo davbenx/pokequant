@@ -9,8 +9,8 @@ nella vita reale, operando dall'Italia. Non è un consiglio finanziario o fiscal
 **AGGIORNATO — la sezione precedente era superata.** Questo runbook copre **due**
 segnali operativi:
 - **TS Momentum su box sigillati** (DSR sessione intera 0,681, universo 40 box).
-- **Fattore Scarsità su singole gradate Grade 9** (DSR sessione intera 0,836,
-  universo 935 carte) — trovato DOPO che i 5 fattori elencati sotto erano già
+- **Fattore Scarsità su singole gradate Grade 9** (DSR sessione intera 0,876,
+  universo 869 carte) — trovato DOPO che i 5 fattori elencati sotto erano già
   stati scartati, quindi non contraddice quella ricerca: è un fattore diverso
   (regressione cross-sezionale su log-prezzo ~ scarsità continua + controlli),
   non uno dei 5.
