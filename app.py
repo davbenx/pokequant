@@ -851,7 +851,7 @@ def main():
                "è il set/espansione esatto — verifica sempre di cercare quel set su Cardmarket, il nome della "
                "carta da solo non basta (⚠️ **(Unlimited)** = esiste anche una 1st Edition più cara, prodotto "
                "diverso). Resta sotto il \"massimo\" mostrato. Prime 15 con grafico, le altre in tabella sotto. "
-               "⚠️ **La compagnia di gradazione conta**: compra solo **PSA o CGC** — vedi dettagli sotto.")
+               "⚠️ **La compagnia di gradazione conta**: preferisci **PSA**, poi CGC/BGS/SGC; evita GRAAD/TAG/ACE/EGS/AI-grading — vedi dettagli sotto.")
     with st.expander("ℹ️ Dettagli — sconto, freschezza, copie, limiti del modello"):
         st.caption("\"Sconto vs. pari\" è quanto la carta costa in meno (%) rispetto a quanto la sua rarità/età/set "
                    "implicherebbero rispetto alle sue pari — più negativo, più sottovalutata secondo il modello. "
@@ -872,17 +872,24 @@ def main():
                    "1,52 come un tetto teorico se compri quasi sempre un pezzo singolo, non un'aspettativa "
                    "realistica (numeri esatti non riverificati sull'ultimo aggiustamento d'universo, la direzione "
                    "non cambia).")
-        st.caption("⚠️ **Compagnia di gradazione — verificato live su PriceCharting**: il prezzo \"Grade 9\" "
-                   "che vedi qui è un dato AGGREGATO cross-company (la tabella prezzi di PriceCharting mostra "
-                   "\"Ungraded/Grade 7/Grade 8/Grade 9/Grade 9.5/PSA 10\" — solo il grado 10 è diviso per "
-                   "compagnia). Dove il dato è diviso, lo spread è enorme: su Charizard Base Set, PSA 10 vale "
-                   "**$12.275** contro **$4.707** di CGC 10 (2,6x) e **$7.365** di SGC 10 — non c'è motivo per "
-                   "cui questo effetto scompaia al grado 9, semplicemente lì non è misurato per compagnia. "
-                   "**Compra solo slab PSA o CGC** (le due compagnie con vera liquidità/riconoscimento sul "
-                   "mercato Pokémon): TAG, GRAAD, ACE, EGS, AI-grading e simili NON sono tra le compagnie "
-                   "tracciate da PriceCharting (nemmeno tutte quelle tracciate hanno sempre prezzo — ACE mostra "
-                   "\"-\" pure al grado 10) — per queste il numero mostrato in dashboard non è il prezzo che "
-                   "otterresti in una rivendita reale, il modello non lo sa distinguere.")
+        st.caption("⚠️ **Compagnia di gradazione — verificato live su PriceCharting + fonti web**: il prezzo "
+                   "\"Grade 9\" che vedi qui è un dato AGGREGATO cross-company (la tabella prezzi di "
+                   "PriceCharting mostra \"Ungraded/Grade 7/Grade 8/Grade 9/Grade 9.5/PSA 10\" — solo il grado "
+                   "10 è diviso per compagnia, dove lo spread è enorme: PSA 10 vale 2,6-3,8x CGC 10 sulla "
+                   "stessa carta). **Compra indifferentemente tra PSA, CGC, BGS, SGC** — sono le 4 compagnie "
+                   "con vero riconoscimento/liquidità sul mercato Pokémon, tutte tracciate separatamente da "
+                   "PriceCharting al grado 10 con prezzi reali (anche se non ancora al grado 9). A parità di "
+                   "prezzo d'acquisto preferisci **PSA** (pool di compratori più ampio, verificato: allo stesso "
+                   "voto CGC vende tipicamente il 10-20% in meno di PSA per pura liquidità — pokeprice.gg — "
+                   "non perché la carta sia peggiore), ma CGC/BGS/SGC non sono da evitare, solo da aspettarsi "
+                   "un realizzo leggermente diverso rispetto al \"Grade 9\" blended mostrato qui. **Evita "
+                   "invece GRAAD, TAG, ACE, EGS, AI-grading e simili**: non sono tracciate da PriceCharting né "
+                   "comparate in nessuna fonte di settore consultata (nemmeno tutte le tracciate hanno sempre "
+                   "prezzo — ACE mostra \"-\" pure al grado 10) — per queste il numero mostrato in dashboard "
+                   "non è il prezzo che otterresti in una rivendita reale, il modello non lo sa distinguere. "
+                   "NB: **rompere uno slab già gradato per tentare un'altra compagnia non conviene quasi mai** "
+                   "una volta contati costi e rischio di ricaduta (`scripts/grading_company_crossover_arbitrage_test.py`, "
+                   "`scripts/same_grade_crossover_arbitrage_test.py`) — la scelta si fa solo in acquisto.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:
