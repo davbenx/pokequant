@@ -38,7 +38,9 @@ def test_ebay_friction():
 
 def test_grading_arbitrage_positive_ev():
     # Carta raw comprata a 50€, PSA 10 vale 300€, PSA 9 vale 45€, gem rate 70%
-    # Costo grading 25€
+    # Costo grading 95€ (fee PSA Standard + handling + spedizioni IT reali 2026 - vedi
+    # commento in poke_quant/config.py, GRADING_DEFAULT aggiornato dal vecchio 25€/2 mesi
+    # non piu' reale dopo la sospensione dei tier economici PSA il 2/6/2026)
     opp = evaluate_grading_arbitrage(
         raw_price=50.0,
         psa10_price=300.0,
@@ -47,10 +49,10 @@ def test_grading_arbitrage_positive_ev():
         platform="cardmarket"
     )
     assert opp.raw_price == 50.0
-    assert opp.grading_cost == 25.0
+    assert opp.grading_cost == 95.0
     assert opp.expected_graded_gross > 200.0
     assert opp.expected_net_profit > 50.0
-    assert opp.expected_net_roi > 0.50
+    assert opp.expected_net_roi > 0.40
     assert opp.is_favorable is True
 
 

@@ -4,6 +4,21 @@ Include:
   - 24 Blue-Chip Grails (Modern, Promo, Mid-Era/Vintage, One Piece Manga)
   - 4 Asset di Controllo "Sgonfiati / Falliti" (Anti-Survivorship Bias Test)
   - Dati di disponibilità live verificata (Order Book Depth, Min Ask reale, Link Cardmarket)
+
+ATTENZIONE (trovato durante l'audit "ha senso sfruttare lo spread tra case di gradazione?
+Fai dei test", 2026-09-25): nonostante l'etichetta "VERIFIED_AVAILABLE" su ogni entry di
+live_listings sotto, NON esiste in questo repo alcuno script o log che abbia eseguito
+quella verifica - non ci sono fetch, timestamp, né fonte per nessuno di questi prezzi/
+paese/quantità. Sono numeri scritti a mano con precisione posticcia (esattamente come
+HISTORICAL_GRADE_RATIOS in edge_calculator.py, già segnalato lì come "priors plausibili,
+non misurati" - qui però manca anche quell'avviso). Confrontando con dati REALI oggi
+(fetch live PriceCharting, vedi scripts/grading_company_crossover_arbitrage_test.py) i
+rapporti CGC10/PSA10 e BGS10/PSA10 usati altrove in questo modulo sono anche nell'ordine
+di grandezza sbagliato per alcune carte (es. qui si assume CGC ~0.82x PSA10, il dato reale
+su Charizard/Blastoise Base Set è 0.26-0.38x). NON usare questi numeri come input per
+decisioni reali, e non citare i risultati di slab_backtester.py come evidenza - sono
+calcolati su questi stessi dati inventati. Il modulo resta isolato (non agganciato ad
+app.py/produzione), ma va ricostruito su dati reali (o eliminato) prima di qualunque uso.
 """
 
 from __future__ import annotations

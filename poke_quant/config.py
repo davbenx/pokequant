@@ -35,10 +35,21 @@ SHIPPING_COSTS: Dict[str, float] = {
 }
 
 # Parametri di grading PSA (costo unitario comprensivo di spedizione round-trip e dogana)
+# AGGIORNATO (2026-09-25, ricerca web su richiesta "considerando tutti i costi, ha senso
+# sfruttare lo spread tra case di gradazione? Fai dei test" - vedi
+# scripts/grading_company_crossover_arbitrage_test.py): i 25€/2 mesi precedenti erano
+# STALE. PSA ha sospeso i tier economici (Value $29-59) il 2 giugno 2026 per arretrato -
+# oggi il tier più economico disponibile e' Standard $59.99, turnaround 90-100 giorni
+# lavorativi (~4.5-5 mesi), non piu' i 2 mesi assunti. Fonti: allvintagecards.com/
+# psa-grading-costs/, cardgrade.io/psa-grading. Nuovo fee_per_card_eur: (59.99 fee +
+# 10 handling + 15 return-ship-insured)$ / 1.08 EURUSD + 15€ spedizione IT->hub
+# assicurata = ~94€, arrotondato a 95€. GradingArbitrageStrategy resta comunque SOLO
+# SEGNALE ESPLORATIVO (HUMAN_RISK_TIER = "HIGH", mai eseguita in backtest/produzione) -
+# questo aggiornamento corregge solo l'input costo, non valida la strategia.
 @dataclass(frozen=True)
 class GradingConfig:
-    fee_per_card_eur: float = 25.00     # Costo totale all-in servizio bulk (fee + spedizione USA + IVA)
-    turnaround_months: int = 2          # Mesi di fermo del capitale prima che la carta sia vendibile
+    fee_per_card_eur: float = 95.00     # Costo totale all-in (fee PSA Standard + handling + spedizioni IT<->USA/EU)
+    turnaround_months: int = 5          # Mesi di fermo del capitale prima che la carta sia vendibile (90-100gg lavorativi)
     default_modern_gem_rate: float = 0.70 # Probabilità stima PSA 10 su carte modern pack-fresh
     default_vintage_gem_rate: float = 0.20 # Probabilità stima PSA 10 su carte vintage (WotC)
 
