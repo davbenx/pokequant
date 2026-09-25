@@ -146,9 +146,26 @@ VALIDATED_SINGLES = {
     # sopra soglia di recente, es. Lombre #34). Sharpe 1,58->1,52, DSR
     # 0,878->0,850 - piccolo calo onesto, il costo naturale di una carta reale
     # in meno erroneamente inclusa, non un peggioramento del fattore stesso.
-    "dsr_own_grid": 0.999, "dsr_full_session": 0.850, "n_trials_full_session": 69,
-    "pbo": 0.000, "sharpe": 1.52, "cagr": 27.52, "max_dd": -14.63,
-    "h1_sharpe": 0.42, "h2_sharpe": 3.10,
+    # AGGIORNAMENTO 5 (richiesto dall'utente: "ricostruisci i dati... testaci sopra
+    # strategie... includi i miglioramenti in produzione"): campione di controllo
+    # casuale ampliato 6x (discover_random_control_singles.py --per-set 30, per
+    # risolvere la contaminazione 94%/6% trovata testando la rarita' premium - vedi
+    # rarity_tier_factor.py) e pannelli prezzo ricostruiti per l'universo intero
+    # (3.207 item). Universo singole 675->1.085. Headline Sharpe 1,52->2,05, DSR
+    # 0,850->0,981 - MA verificato (scripts/max_quantity_retest_expanded_universe.py)
+    # che il salto NON e' un miglioramento reale: viene quasi interamente dal poter
+    # comprare in blocco molte piu' carte comuni economiche (il campione ampliato
+    # pesca uniformemente su ogni carta di un set, la maggioranza comuni) - lo stesso
+    # limite gia' noto (scripts/max_quantity_per_trade_test.py) ma AMPLIFICATO. A
+    # tetto di quantita' realistico (1-2 copie per acquisto, il caso normale per
+    # slab gradati) il DSR resta 0,028-0,346 - INVARIATO O PEGGIORE di prima
+    # (0,044-0,371), non migliorato. L'headline resta la metodologia standard usata
+    # ovunque in questo progetto (nessun tetto), ma il divario tra teorico e
+    # realizzabile si e' allargato, non ridotto, con piu' dati - vedi il caveat
+    # "→ N pz." piu' sotto, con numeri ora riverificati (non piu' stime datate).
+    "dsr_own_grid": 1.000, "dsr_full_session": 0.981, "n_trials_full_session": 69,
+    "pbo": 0.014, "sharpe": 2.05, "cagr": 43.71, "max_dd": -15.11,
+    "h1_sharpe": 0.69, "h2_sharpe": 4.26,
 }
 VALIDATED_BLEND = {"sharpe": 1.90, "cagr": 24.73, "max_dd": -7.01}
 
@@ -602,20 +619,24 @@ def main():
     # --- METRICHE VALIDATE (box, singole, blend) — contesto/audit, non un'azione settimanale: chiuso di default ---
     with st.expander(
         f"📊 Metriche di validazione — Blend Sharpe {VALIDATED_BLEND['sharpe']:.2f} · "
-        f"Box Sharpe {VALIDATED_BOX['sharpe']:.2f} (DSR sotto soglia) · Singole Sharpe {VALIDATED_SINGLES['sharpe']:.2f} (DSR sotto soglia)"
+        f"Box Sharpe {VALIDATED_BOX['sharpe']:.2f} (DSR sotto soglia) · Singole Sharpe {VALIDATED_SINGLES['sharpe']:.2f} (DSR nominale sopra soglia — ⚠️ vedi caveat quantità)"
     ):
-        st.caption("Numeri fissi da `scripts/optimize_and_falsify.py` e `scripts/scarcity_value_singles_test.py` — "
+        st.caption("Numeri fissi da `scripts/optimize_and_falsify.py` e `scripts/max_quantity_retest_expanded_universe.py` — "
                    "non ricalcolati a ogni refresh. Rivalidare ogni 6 mesi.")
         if singles_mode == "dac7":
             st.info("Modalità DAC7 attiva: i numeri qui sotto sono della configurazione a turnover pieno (per "
                     "confronto) — le performance EFFETTIVE in modalità DAC7 sono più basse, vedi il Backtest sotto.")
         st.warning(
-            f"**DSR corretto per l'intera sessione, sotto la soglia di comfort 0,90-0,95 per entrambe le "
-            f"strategie**: box {VALIDATED_BOX['dsr_full_session']:.3f} (griglia originale: {VALIDATED_BOX['dsr_own_grid']:.3f}, "
-            f"{VALIDATED_BOX['n_trials_full_session']} trial) · singole {VALIDATED_SINGLES['dsr_full_session']:.3f} "
-            f"({VALIDATED_SINGLES['n_trials_full_session']} trial) — resta il miglior risultato di tutta la ricerca su "
-            f"ciascun lato, walk-forward ancora positivo in entrambe le metà. Storico completo: "
-            f"`scripts/dsr_session_audit.py`, `scripts/scarcity_value_singles_test.py`."
+            f"**Box**: DSR corretto per l'intera sessione **sotto** la soglia di comfort 0,90-0,95 — "
+            f"{VALIDATED_BOX['dsr_full_session']:.3f} (griglia originale: {VALIDATED_BOX['dsr_own_grid']:.3f}, "
+            f"{VALIDATED_BOX['n_trials_full_session']} trial), walk-forward positivo in entrambe le metà. "
+            f"**Singole**: DSR {VALIDATED_SINGLES['dsr_full_session']:.3f} ({VALIDATED_SINGLES['n_trials_full_session']} "
+            f"trial) è nominalmente **sopra** soglia con la metodologia standard (nessun tetto di quantità) — ma "
+            f"verificato (2026-09-25) che il numero è gonfiato dall'assunzione di comprare molte copie identiche "
+            f"per trade: a un tetto realistico (1-2 copie) il DSR scende a 0,028-0,346, **sotto** soglia come il "
+            f"box. Non trattare 0,981 come una validazione pulita — vedi il caveat \"→ N pz.\" nella sezione "
+            f"singole BUY sotto per i numeri realistici. Storico completo: "
+            f"`scripts/dsr_session_audit.py`, `scripts/max_quantity_retest_expanded_universe.py`."
         )
         st.markdown('<div class="section-desc"><strong>📦 Box sigillati — TS Momentum</strong></div>', unsafe_allow_html=True)
         st.markdown(f"""
@@ -631,7 +652,7 @@ def main():
         st.markdown('<div class="section-desc"><strong>🃏 Singole — Fattore Scarsità (log-prezzo ~ scarsità continua + controlli)</strong></div>', unsafe_allow_html=True)
         st.markdown(f"""
         <div class="kpi-grid">
-            <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_SINGLES['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">Sotto soglia · griglia propria: {VALIDATED_SINGLES['dsr_own_grid']:.3f}</div></div>
+            <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_SINGLES['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">⚠️ Gonfiato dal tetto di quantità — a 1-2 copie: 0,03-0,35</div></div>
             <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED_SINGLES['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED_SINGLES['cagr']:.1f}%</div></div>
             <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED_SINGLES['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Molto stabile</div></div>
             <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED_SINGLES['max_dd']:.1f}%</div></div>
@@ -866,12 +887,14 @@ def main():
                    "di attendibilità — se non trovi nulla sotto il \"massimo\", registralo con "
                    "`log_execution_price.py` invece di ignorare il segnale. "
                    "\"→ N pz.\" è quante copie IDENTICHE il budget comprerebbe al prezzo mostrato — ⚠️ "
-                   "**VERIFICATO** (`scripts/max_quantity_per_trade_test.py`): il backtest (Sharpe 1,52) assume "
-                   "che tu trovi TUTTE queste copie insieme, ogni mese; con un tetto realistico di 1 copia lo "
-                   "Sharpe scende drasticamente (~0,6, DSR debole), con 2 copie recupera solo in parte — tratta "
-                   "1,52 come un tetto teorico se compri quasi sempre un pezzo singolo, non un'aspettativa "
-                   "realistica (numeri esatti non riverificati sull'ultimo aggiustamento d'universo, la direzione "
-                   "non cambia).")
+                   "**RIVERIFICATO sull'universo ampliato** (`scripts/max_quantity_retest_expanded_universe.py`, "
+                   "2026-09-25): il backtest (Sharpe 2,05) assume che tu trovi TUTTE queste copie insieme, ogni "
+                   "mese — con un tetto realistico di **1 copia lo Sharpe crolla a 0,21 (DSR 0,028, rumore "
+                   "statistico)**, con 2 copie **0,86 (DSR 0,346)** — entrambi ben sotto la soglia 0,90-0,95 "
+                   "usata ovunque in questa ricerca, nello stesso territorio dei fattori già scartati. Il divario "
+                   "si è allargato con l'universo più grande (prima: 0,30/0,89), non ridotto — comprare quasi "
+                   "sempre un pezzo singolo (il caso normale su slab gradati) NON è coperto da una validazione "
+                   "solida, tratta 2,05 come un tetto teorico, non un'aspettativa realistica.")
         st.caption("⚠️ **Compagnia di gradazione — verificato live su PriceCharting + fonti web**: il prezzo "
                    "\"Grade 9\" che vedi qui è un dato AGGREGATO cross-company (la tabella prezzi di "
                    "PriceCharting mostra \"Ungraded/Grade 7/Grade 8/Grade 9/Grade 9.5/PSA 10\" — solo il grado "

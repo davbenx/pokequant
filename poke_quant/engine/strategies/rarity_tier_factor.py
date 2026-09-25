@@ -17,9 +17,18 @@ CHASE_RARITIES di discover_chase_cards.py: nell'universo attuale 270 delle 288 c
 eleggibili (94%) vengono dal campione selezionato sul prezzo corrente, solo 18 (6%) dal
 campione di controllo casuale. Il risultato full-sample (Sharpe 1.11, DSR 0.864) e'
 quasi certamente una riscoperta del survivorship bias di discover_chase_cards.py sotto
-un'altra etichetta, non un fattore indipendente. Da ritestare solo dopo aver ampliato
-molto il campione di controllo casuale per queste rarita' specifiche (oggi troppo
-piccolo, n=18, per essere conclusivo da solo).
+un'altra etichetta, non un fattore indipendente. RITESTATO (2026-09-25) dopo aver ampliato il campione di controllo casuale 6x
+(discover_random_control_singles.py --per-set 30, proprio per risolvere questo
+dubbio): contaminazione ridotta da 94%/6% a 69%/31% (chase/controllo, 280 carte
+eleggibili) - il verdetto NON cambia, ed e' ora verificabile anche in modo isolato.
+Sul campione di SOLO controllo casuale (87 carte premium, zero survivorship bias per
+costruzione): Sharpe 0.81, DSR(72) 0.303, walk-forward H1 -0.99 -> H2 +2.73.
+Sull'universo intero: Sharpe 0.69, DSR(72) 0.215, walk-forward H1 -0.56 -> H2 +2.07.
+CHIUSO: non e' (solo) una riscoperta del survivorship bias di discover_chase_cards.py -
+anche isolato dalla contaminazione, il fattore mostra lo stesso schema boom/bust di
+ogni altro fattore categoriale gia' respinto in questa ricerca, con DSR ben sotto
+qualsiasi soglia usata altrove (0.90-0.95). Vedi
+scripts/rarity_premium_clean_control_retest.py per il dettaglio completo.
 
 ESITO VALIDAZIONE (field_name="artist", fattore illustratore): NON VALIDATO, per un
 motivo statistico stavolta, non di composizione campionaria. Su 783 singole (universo
