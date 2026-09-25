@@ -873,16 +873,22 @@ def main():
                        "diversa, più rischiosa, testata a parte: peggiora ancora il MaxDD). Non è un secondo elenco "
                        "BUY equivalente al primo: usalo come ripiego per capitale altrimenti inutilizzato, non come "
                        "sostituto sistematico. Nessun filtro di freschezza qui (a differenza della lista sopra) — "
-                       "verifica comunque il grafico prezzo prima di comprare.")
+                       "verifica comunque il grafico prezzo prima di comprare. \"Massimo\" è la spesa TOTALE "
+                       "(oggetto + spedizione) oltre la quale QUESTA carta esce dal confine dell'INTERO quantile "
+                       "20% più sottovalutato (non solo dalle prime 60 per rank) — stesso significato della colonna "
+                       "\"Massimo\" nella lista principale, calcolato sul confine più largo perché queste carte "
+                       "sono già fuori dalle prime 60.")
             alt_df = pd.DataFrame([
                 {"Carta": r["name"], "Rarità": r["rarity"], "Grado": "Grade 9",
-                 "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"]}
+                 "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
+                 "Massimo totale (€)": r.get("max_edge_price_eur")}
                 for r in alt_rows[:60]
             ])
             st.dataframe(alt_df, use_container_width=True, hide_index=True,
                          column_config={
                              "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
                              "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                             "Massimo totale (€)": st.column_config.NumberColumn(format="%.2f €"),
                          })
 
     # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---

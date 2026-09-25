@@ -236,6 +236,14 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
     ranked = sorted(residuals.items(), key=lambda x: x[1])[:n_buy]
     already_shown = set(item_id for item_id, _ in ranked[: strat.max_positions])
     extra = ranked[strat.max_positions: strat.max_positions + extra_positions]
+    # Confine del quantile 20% INTERO (non quello troncato a max_positions usato
+    # per la lista principale): per un'alternativa, la domanda e' "quanto puo'
+    # salire il prezzo prima che la carta esca dal quantile piu' sottovalutato
+    # in assoluto", non prima di uscire dalle prime 60 per rank - sono due confini
+    # diversi, e usare quello sbagliato darebbe un "massimo" piu' basso del
+    # prezzo attuale per carte gia' oltre le prime 60 (matematicamente corretto
+    # ma fuorviante da leggere in dashboard).
+    quantile_cutoff_residual = ranked[-1][1] if ranked else None
 
     rows = []
     for item_id, residual in extra:
@@ -243,12 +251,15 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
             continue
         info = metadata[item_id]
         current_price = snap[item_id]["current_price"]
+        max_edge_price_eur = (current_price * np.exp(quantile_cutoff_residual - residual)
+                               if quantile_cutoff_residual is not None else None)
         rows.append({
             "item_id": item_id,
             "name": _display_name(item_id, info),
             "current_price_eur": current_price,
             "residual": residual,
             "discount_pct": (np.exp(residual) - 1.0) * 100.0,
+            "max_edge_price_eur": max_edge_price_eur,
             "rarity": info.get("rarity"),
             "franchise": info.get("franchise", "pokemon"),
             "language": info.get("language", "en"),

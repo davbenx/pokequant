@@ -119,6 +119,11 @@ def test_alternative_rows_skip_the_top_ranked_cards_already_shown():
     # le alternative sono rank 3,4,5 = card_22, card_21, card_20.
     assert [r["item_id"] for r in rows] == ["card_22", "card_21", "card_20"]
     assert rows[0]["residual"] < rows[-1]["residual"]
+    # "Massimo" per le alternative usa il confine dell'INTERO quantile 20% (rank 5,
+    # card_20 stessa), non quello troncato a max_positions=2 - card_20 e' esattamente
+    # al confine (massimo == prezzo attuale), le altre hanno margine sopra il prezzo attuale.
+    assert rows[-1]["max_edge_price_eur"] == pytest.approx(rows[-1]["current_price_eur"], rel=1e-6)
+    assert rows[0]["max_edge_price_eur"] > rows[0]["current_price_eur"]
 
 
 def test_signal_rows_exclude_thin_unreliable_and_below_grading_cost_floor():
