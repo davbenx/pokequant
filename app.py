@@ -525,7 +525,13 @@ def main():
    e `log_sell_outcome.py` — calibra il modello nel tempo, non lasciarlo una stima fissa.
 5. 🔴 **Rosso** = non comprare (box: momentum invertito · singole: sopravvalutata, solo informativo).
 6. **Capitale** diviso 50/50 come mostrato in barra laterale; resta nei limiti DAC7 se vendi in UE.
-7. **Rivalida** ogni 6 mesi con `optimize_and_falsify.py` / `scarcity_value_singles_test.py` — i numeri
+7. **Se il capitale è già investito**, la dashboard NON conosce le tue posizioni reali — non sottrae da
+   sola quanto hai già comprato. Abbassa il "Capitale dedicato" in barra laterale al contante REALE
+   ancora libero (la lista si ricalcola, i candidati in fondo escono per primi dal budget); a €0 liberi
+   non comprare oltre — i tetti per posizione fanno parte di ciò che rende Sharpe/MaxDD validi, forzarli
+   non è testato. Prima di dire "non c'è spazio", controlla i 🔴 AVOID/SELL su ciò che già possiedi: è lì
+   che la strategia libera capitale (rotazione), non da nuovi versamenti ogni mese.
+8. **Rivalida** ogni 6 mesi con `optimize_and_falsify.py` / `scarcity_value_singles_test.py` — i numeri
    di validazione qui sotto sono fissi, non si aggiornano da soli.
         """)
 
