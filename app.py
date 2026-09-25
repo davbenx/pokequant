@@ -30,6 +30,7 @@ dall'Italia, vedi OPERATIONS_ITALIA.md) su ogni posizione BUY/HOLD.
 from __future__ import annotations
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Optional
 
@@ -339,6 +340,43 @@ def get_product_image(game_slug: str, item_slug: str) -> Optional[str]:
         url = None
     _IMAGE_CACHE[key] = (url, now, _IMAGE_SUCCESS_TTL if url else _IMAGE_FAILURE_TTL)
     return url
+
+
+def prefetch_product_images(pairs: list) -> None:
+    """Scarica in PARALLELO (thread pool) tutte le immagini non ancora in
+    cache, prima dei loop di rendering che le richiedono una per una.
+
+    Trovato verificando "la dashboard continua a ricaricare": un caricamento
+    a cache fredda richiedeva ~66s (misurato) perché fino a ~50-60 immagini
+    (box BUY/uscite + singole BUY/evitare) venivano scaricate in SERIE, una
+    alla volta, ciascuna una richiesta HTTP sincrona (aggravato dai retry sul
+    429 aggiunti di recente, che a volte aggiungono secondi extra). Un
+    caricamento cosi' lento e' plausibilmente la causa del reload continuo
+    (timeout del browser/proxy -> refresh manuale -> cache di nuovo fredda ->
+    di nuovo lento -> ...). Il fetch di un'immagine è I/O-bound (attesa di
+    rete, non CPU) - parallelizzabile quasi linearmente con un thread pool,
+    a differenza del calcolo del segnale che resta sequenziale."""
+    to_fetch = []
+    now = time.time()
+    for game_slug, item_slug in pairs:
+        if not game_slug or not item_slug:
+            continue
+        key = (game_slug, item_slug)
+        cached = _IMAGE_CACHE.get(key)
+        if cached is not None and now - cached[1] < cached[2]:
+            continue
+        to_fetch.append(key)
+    if not to_fetch:
+        return
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = {executor.submit(fetch_pricecharting_cover_image_url, gs, isl): (gs, isl) for gs, isl in to_fetch}
+        for future in as_completed(futures):
+            key = futures[future]
+            try:
+                url = future.result()
+            except Exception:
+                url = None
+            _IMAGE_CACHE[key] = (url, time.time(), _IMAGE_SUCCESS_TTL if url else _IMAGE_FAILURE_TTL)
 
 
 def build_price_chart(item_id: str, name: str, prices_full: pd.DataFrame, months: int = 24):
@@ -654,6 +692,10 @@ def main():
     if max_card_price > 0:
         buy_rows = [r for r in buy_rows if r["current_price_eur"] <= max_card_price]
     allocation = build_allocation(buy_rows, capital * 0.5, metadata, latest_date)
+    prefetch_product_images([
+        (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+        for r, _, _ in allocation
+    ])
 
     if not allocation:
         st.info("Nessun segnale BUY/HOLD questo mese.")
@@ -738,6 +780,10 @@ def main():
     sell_rows = [r for r in sig_rows if r["signal"] == "AVOID/SELL"]
     if sell_rows:
         st.markdown('<div class="section-title">🔴 Uscite (momentum invertito)</div>', unsafe_allow_html=True)
+        prefetch_product_images([
+            (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+            for r in sell_rows
+        ])
         for r in sell_rows:
             meta_sell = metadata.get(r["item_id"], {})
             img_url = get_product_image(meta_sell.get("game_slug"), meta_sell.get("item_slug"))
@@ -818,6 +864,10 @@ def main():
 
     if not singles_allocation:
         st.info("Nessuna carta nel quantile BUY questo mese.")
+    prefetch_product_images([
+        (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+        for r, _ in singles_allocation[:15]
+    ])
     for r, alloc in singles_allocation[:15]:
         meta = {"franchise": r.get("franchise", "pokemon"), "language": r.get("language", "en")}
         full_meta = metadata.get(r["item_id"], {})
@@ -906,6 +956,10 @@ def main():
                    "solo rarità/età/franchise, quindi un sovrapprezzo enorme spesso riflette un premio reale, non "
                    "un errore di prezzo. A differenza del quantile BUY, qui NON è stato validato un backtest di "
                    "vendita/short — è informativo (come le Uscite dei box), non una strategia a sé testata.")
+        prefetch_product_images([
+            (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+            for r in avoid_rows[:15]
+        ])
         for r in avoid_rows[:15]:
             full_meta = metadata.get(r["item_id"], {})
             img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
