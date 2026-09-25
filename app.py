@@ -425,15 +425,20 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
-    <div style="background: rgba(15,23,42,0.5); border-radius: 8px; padding: 8px 14px; margin-bottom: 14px;
-                font-size: 12px; color: #94a3b8; display: flex; gap: 18px; flex-wrap: wrap; align-items: center;">
-        <strong style="color:#f1f5f9;">Come leggere i segnali:</strong>
-        <span>🟢 <strong style="color:#10b981;">Verde</strong> = comprare/tenere (segnale validato)</span>
-        <span>🔴 <strong style="color:#f43f5e;">Rosso</strong> = box: momentum invertito, non comprare/valuta vendita se lo possiedi ·
-              singole: sopravvalutata vs pari (informativo, non una strategia di vendita testata a sé)</span>
-    </div>
-    """, unsafe_allow_html=True)
+    with st.expander("📋 Come si usa, in pratica", expanded=True):
+        st.markdown("""
+1. **Ogni mese**, guarda le liste 🟢 verdi qui sotto (box, poi singole) — sono già filtrate, pronte all'uso.
+2. **Per ogni riga**: apri "Verifica su Cardmarket", controlla che **set/edizione coincidano esattamente**
+   (badge blu **[Set]** sulle carte), e resta **sotto il "massimo"** mostrato (oggetto + spedizione).
+3. **Rispetta i pezzi indicati** ("→ N pz.") — se non trovi tutte le copie di una carta, apri
+   "🔄 alternative" invece di forzarne di più; per i box senza scorta, salta.
+4. **Registra sempre** cosa hai trovato o venduto, anche se non hai comprato — `log_execution_price.py`
+   e `log_sell_outcome.py` — calibra il modello nel tempo, non lasciarlo una stima fissa.
+5. 🔴 **Rosso** = non comprare (box: momentum invertito · singole: sopravvalutata, solo informativo).
+6. **Capitale** diviso 50/50 come mostrato in barra laterale; resta nei limiti DAC7 se vendi in UE.
+7. **Rivalida** ogni 6 mesi con `optimize_and_falsify.py` / `scarcity_value_singles_test.py` — i numeri
+   di validazione qui sotto sono fissi, non si aggiornano da soli.
+        """)
 
     # --- SIDEBAR: capitale + conformità DAC7 ---
     with st.sidebar:
@@ -516,120 +521,114 @@ def main():
                    "2. eBay.it / eBay.de — box USA/JP con meno offerta su Cardmarket\n\n"
                    "3. TCGplayer — solo se il differenziale supera nettamente dogana+spedizione")
         st.markdown("---")
-        st.caption("⚠️ Nessuna verifica di liquidità reale integrata. Controlla sempre il prezzo "
-                   "reale su Cardmarket prima di comprare — il modello non sa se il box/la carta è disponibile. "
-                   "Sulle singole gradate in particolare, l'offerta reale EU può essere molto più sottile del "
-                   "pannello USA (PriceCharting) su cui è calibrato il modello: se non trovi nulla sotto il prezzo "
-                   "massimo mostrato, NON è un errore del modello, è il gate di liquidità che funziona. Registra "
-                   "l'osservazione (anche se non compri) con `python scripts/log_execution_price.py <item_id> "
-                   "--ask <prezzo_reale>` — calibra empiricamente lo scarto invece di lasciarlo una stima flat. "
-                   "Il lato vendita nessun backtest può simularlo (se/quando/a che prezzo un'inserzione trova un "
-                   "compratore): registralo con `scripts/log_sell_outcome.py` (list/sold/withdrawn/--report).")
+        st.caption("⚠️ Nessuna verifica di liquidità reale integrata — se non trovi nulla sotto il \"massimo\" "
+                   "mostrato, NON è un errore, è il gate di liquidità che funziona: registralo comunque con "
+                   "`log_execution_price.py` (acquisto) o `log_sell_outcome.py` (vendita), non ignorarlo.")
 
     capital = effective_capital
 
-    # --- METRICHE VALIDATE (box, singole, blend) ---
-    st.markdown('<div class="section-title">📊 Metriche di Validazione</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-desc">Numeri fissi da scripts/optimize_and_falsify.py e scripts/scarcity_value_singles_test.py — non ricalcolati a ogni refresh. Rivalidare ogni 6 mesi.</div>', unsafe_allow_html=True)
-    if singles_mode == "dac7":
-        st.info("ℹ️ Modalità conforme DAC7 attiva: i numeri qui sotto restano quelli della configurazione a "
-                "turnover pieno (per confronto/audit). Le performance EFFETTIVE con la modalità DAC7 attiva sono "
-                "più basse — vedi il grafico e la nota nella sezione \"Backtest\" più sotto.")
-    st.warning(
-        f"**DSR corretto per l'intera sessione**: box {VALIDATED_BOX['dsr_full_session']:.3f} (era {VALIDATED_BOX['dsr_own_grid']:.3f} "
-        f"sulla sola griglia originale, {VALIDATED_BOX['n_trials_full_session']} trial totali) — sotto soglia 0,90-0,95. "
-        f"Singole (fattore scarsità) {VALIDATED_SINGLES['dsr_full_session']:.3f} ({VALIDATED_SINGLES['n_trials_full_session']} trial totali) — "
-        f"anch'essa **sotto** soglia (era 0,954 prima di includere la spedizione reale all'acquisto, poi 0,836, poi "
-        f"risalita a 0,876 dopo aver escluso le carte con prezzo grade9 anomalo vs. il loro prezzo raw di riferimento "
-        f"— vedi `scripts/graded_raw_ratio_reliability_test.py`): resta il miglior risultato di tutta la ricerca "
-        f"sulle singole, walk-forward ancora positivo in entrambe le metà. Vedi `scripts/dsr_session_audit.py` e "
-        f"`scripts/scarcity_value_singles_test.py`."
-    )
-    st.markdown('<div class="section-desc"><strong>📦 Box sigillati — TS Momentum</strong></div>', unsafe_allow_html=True)
-    st.markdown(f"""
-    <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_BOX['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">Sotto soglia · griglia propria: {VALIDATED_BOX['dsr_own_grid']:.3f}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED_BOX['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED_BOX['cagr']:.1f}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED_BOX['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-amber">Sopra fascia comfort (&lt;20-25%)</div></div>
-        <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED_BOX['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Bootstrap P(&gt;0)={VALIDATED_BOX['bootstrap_cagr_p_pos']}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">Walk-forward H1</div><div class="kpi-value">{VALIDATED_BOX['h1_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-amber">Sharpe 2020-12→2023-10</div></div>
-        <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_BOX['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown('<div class="section-desc"><strong>🃏 Singole — Fattore Scarsità (log-prezzo ~ scarsità continua + controlli)</strong></div>', unsafe_allow_html=True)
-    st.markdown(f"""
-    <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_SINGLES['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">Sotto soglia · griglia propria: {VALIDATED_SINGLES['dsr_own_grid']:.3f}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED_SINGLES['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED_SINGLES['cagr']:.1f}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED_SINGLES['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Molto stabile</div></div>
-        <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED_SINGLES['max_dd']:.1f}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">Walk-forward H1</div><div class="kpi-value">{VALIDATED_SINGLES['h1_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2021-01→2023-10</div></div>
-        <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_SINGLES['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,37 tra le due strategie</strong></div>', unsafe_allow_html=True)
-    st.markdown(f"""
-    <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,38 box da solo (stesso periodo)</div></div>
-        <div class="kpi-card"><div class="kpi-label">CAGR blend</div><div class="kpi-value">+{VALIDATED_BLEND['cagr']:.1f}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">Max Drawdown blend</div><div class="kpi-value">{VALIDATED_BLEND['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">vs -11,1% solo box</div></div>
-    </div>
-    """, unsafe_allow_html=True)
+    # --- METRICHE VALIDATE (box, singole, blend) — contesto/audit, non un'azione settimanale: chiuso di default ---
+    with st.expander(
+        f"📊 Metriche di validazione — Blend Sharpe {VALIDATED_BLEND['sharpe']:.2f} · "
+        f"Box Sharpe {VALIDATED_BOX['sharpe']:.2f} (DSR sotto soglia) · Singole Sharpe {VALIDATED_SINGLES['sharpe']:.2f} (DSR sotto soglia)"
+    ):
+        st.caption("Numeri fissi da `scripts/optimize_and_falsify.py` e `scripts/scarcity_value_singles_test.py` — "
+                   "non ricalcolati a ogni refresh. Rivalidare ogni 6 mesi.")
+        if singles_mode == "dac7":
+            st.info("Modalità DAC7 attiva: i numeri qui sotto sono della configurazione a turnover pieno (per "
+                    "confronto) — le performance EFFETTIVE in modalità DAC7 sono più basse, vedi il Backtest sotto.")
+        st.warning(
+            f"**DSR corretto per l'intera sessione, sotto la soglia di comfort 0,90-0,95 per entrambe le "
+            f"strategie**: box {VALIDATED_BOX['dsr_full_session']:.3f} (griglia originale: {VALIDATED_BOX['dsr_own_grid']:.3f}, "
+            f"{VALIDATED_BOX['n_trials_full_session']} trial) · singole {VALIDATED_SINGLES['dsr_full_session']:.3f} "
+            f"({VALIDATED_SINGLES['n_trials_full_session']} trial) — resta il miglior risultato di tutta la ricerca su "
+            f"ciascun lato, walk-forward ancora positivo in entrambe le metà. Storico completo: "
+            f"`scripts/dsr_session_audit.py`, `scripts/scarcity_value_singles_test.py`."
+        )
+        st.markdown('<div class="section-desc"><strong>📦 Box sigillati — TS Momentum</strong></div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_BOX['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">Sotto soglia · griglia propria: {VALIDATED_BOX['dsr_own_grid']:.3f}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED_BOX['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED_BOX['cagr']:.1f}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED_BOX['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-amber">Sopra fascia comfort (&lt;20-25%)</div></div>
+            <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED_BOX['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Bootstrap P(&gt;0)={VALIDATED_BOX['bootstrap_cagr_p_pos']}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Walk-forward H1</div><div class="kpi-value">{VALIDATED_BOX['h1_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-amber">Sharpe 2020-12→2023-10</div></div>
+            <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_BOX['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('<div class="section-desc"><strong>🃏 Singole — Fattore Scarsità (log-prezzo ~ scarsità continua + controlli)</strong></div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_SINGLES['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">Sotto soglia · griglia propria: {VALIDATED_SINGLES['dsr_own_grid']:.3f}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED_SINGLES['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED_SINGLES['cagr']:.1f}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED_SINGLES['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Molto stabile</div></div>
+            <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED_SINGLES['max_dd']:.1f}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Walk-forward H1</div><div class="kpi-value">{VALIDATED_SINGLES['h1_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2021-01→2023-10</div></div>
+            <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_SINGLES['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,37 tra le due strategie</strong></div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,38 box da solo (stesso periodo)</div></div>
+            <div class="kpi-card"><div class="kpi-label">CAGR blend</div><div class="kpi-value">+{VALIDATED_BLEND['cagr']:.1f}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Max Drawdown blend</div><div class="kpi-value">{VALIDATED_BLEND['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">vs -11,1% solo box</div></div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # --- INDICI DI MERCATO (contesto, non segnale d'ingresso) ---
-    st.markdown('<div class="section-title">📉 Indici di mercato</div>', unsafe_allow_html=True)
-    st.caption("Indici equal-weight buy&hold (nessun timing, nessuna strategia) sull'universo sealed "
-               "validato — la 'beta' del mercato da confrontare con l'alfa della strategia. Segmenti JP "
-               "e One Piece hanno pochi titoli (5 e 4): direzionali, non statisticamente robusti da soli.")
-    overall_index, segment_indices, segment_counts, breadth_series = get_market_indices()
+    # --- INDICI DI MERCATO (contesto, non segnale d'ingresso) — chiuso di default ---
+    with st.expander("📉 Indici di mercato (contesto)"):
+        st.caption("Indici equal-weight buy&hold (nessun timing, nessuna strategia) sull'universo sealed "
+                   "validato — la 'beta' del mercato da confrontare con l'alfa della strategia. Segmenti JP "
+                   "e One Piece hanno pochi titoli (5 e 4): direzionali, non statisticamente robusti da soli.")
+        overall_index, segment_indices, segment_counts, breadth_series = get_market_indices()
 
-    idx_fig = go.Figure()
-    idx_fig.add_trace(go.Scatter(x=overall_index.index, y=overall_index.values, mode="lines",
-                                  name=f"Sealed complessivo (n={sum(segment_counts.values())})",
-                                  line=dict(color="#f8fafc", width=2.5)))
-    seg_colors = {"Pokémon EN": "#38bdf8", "Pokémon JP": "#f43f5e", "One Piece TCG": "#fbbf24"}
-    for name, series in segment_indices.items():
-        idx_fig.add_trace(go.Scatter(x=series.index, y=series.values, mode="lines",
-                                      name=f"{name} (n={segment_counts[name]})",
-                                      line=dict(color=seg_colors.get(name, "#94a3b8"), width=1.5, dash="dot")))
-    idx_fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
-                           height=320, margin=dict(l=20, r=20, t=30, b=20),
-                           legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
-                           yaxis_title="Indice (base 100)")
-    st.plotly_chart(idx_fig, use_container_width=True)
+        idx_fig = go.Figure()
+        idx_fig.add_trace(go.Scatter(x=overall_index.index, y=overall_index.values, mode="lines",
+                                      name=f"Sealed complessivo (n={sum(segment_counts.values())})",
+                                      line=dict(color="#f8fafc", width=2.5)))
+        seg_colors = {"Pokémon EN": "#38bdf8", "Pokémon JP": "#f43f5e", "One Piece TCG": "#fbbf24"}
+        for name, series in segment_indices.items():
+            idx_fig.add_trace(go.Scatter(x=series.index, y=series.values, mode="lines",
+                                          name=f"{name} (n={segment_counts[name]})",
+                                          line=dict(color=seg_colors.get(name, "#94a3b8"), width=1.5, dash="dot")))
+        idx_fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
+                               height=320, margin=dict(l=20, r=20, t=30, b=20),
+                               legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+                               yaxis_title="Indice (base 100)")
+        st.plotly_chart(idx_fig, use_container_width=True)
 
-    breadth_fig = go.Figure()
-    breadth_fig.add_trace(go.Scatter(x=breadth_series.index, y=breadth_series.values, mode="lines",
-                                      fill="tozeroy", line=dict(color="#10b981", width=1.8),
-                                      fillcolor="rgba(16,185,129,0.12)", name="Ampiezza"))
-    breadth_fig.add_hline(y=50, line_dash="dot", line_color="rgba(255,255,255,0.25)")
-    breadth_fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
-                               height=180, margin=dict(l=20, r=20, t=10, b=20), showlegend=False,
-                               yaxis=dict(range=[0, 100], title="% con momentum 12m positivo"))
-    st.plotly_chart(breadth_fig, use_container_width=True, config={"displayModeBar": False})
-    st.caption(f"Ampiezza di mercato: quota dell'universo con momentum trailing 12m positivo — stessa regola "
-               f"della strategia, aggregata. Oggi: {breadth_series.iloc[-1]:.0f}%. Un calo ampio e prolungato "
-               "sotto il 50% è un segnale di regime, non di un singolo box — utile come contesto per capire "
-               "se le uscite in corso sono isolate o parte di un raffreddamento generale.")
+        breadth_fig = go.Figure()
+        breadth_fig.add_trace(go.Scatter(x=breadth_series.index, y=breadth_series.values, mode="lines",
+                                          fill="tozeroy", line=dict(color="#10b981", width=1.8),
+                                          fillcolor="rgba(16,185,129,0.12)", name="Ampiezza"))
+        breadth_fig.add_hline(y=50, line_dash="dot", line_color="rgba(255,255,255,0.25)")
+        breadth_fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
+                                   height=180, margin=dict(l=20, r=20, t=10, b=20), showlegend=False,
+                                   yaxis=dict(range=[0, 100], title="% con momentum 12m positivo"))
+        st.plotly_chart(breadth_fig, use_container_width=True, config={"displayModeBar": False})
+        st.caption(f"Ampiezza di mercato: quota dell'universo con momentum trailing 12m positivo — stessa regola "
+                   f"della strategia, aggregata. Oggi: {breadth_series.iloc[-1]:.0f}%. Un calo ampio e prolungato "
+                   "sotto il 50% è un segnale di regime, non di un singolo box.")
 
     # --- AZIONE: BUY/HOLD con allocazione e link Cardmarket (50% del capitale) ---
     st.markdown(f'<div class="section-title">📦 Box da comprare/mantenere — 50% del capitale ({capital*0.5:,.0f}€)</div>', unsafe_allow_html=True)
-    st.caption("⚠️ Il prezzo mostrato viene da PriceCharting (mercato USA), convertito in EUR al tasso "
-               "reale del mese — è il dato su cui il modello calcola il segnale, NON una quota Cardmarket. "
-               "Il mercato europeo ha domanda/offerta propria: può differire, anche di molto. Il grafico "
-               "mostra lo storico usato dal modello — confronta sempre col prezzo reale dietro al bottone. "
-               "\"Massimo\", dove mostrato, è la spesa TOTALE (oggetto + spedizione) oltre la quale il modello "
-               "considera il box fuori dal range di prezzo/MSRP validato (21,6x) — non sottraiamo qui una stima di "
-               "spedizione: verifica tu il costo totale reale (oggetto + spedizione dell'inserzione) contro questo numero. "
-               "L'€ mostrato è l'allocazione IDEALE proporzionale (tetto 12% del capitale box) — molti box costano più "
-               "di questa cifra. Il modello TESTATO non salta questi casi: compra 1 pezzo per intero (lotto "
-               "indivisibile) finché il prezzo resta sotto il 35% del capitale dedicato ai box, anche se supera "
-               "l'allocazione ideale — lo segnaliamo in giallo con la spesa reale richiesta. Solo sopra quel 35% "
-               "la posizione viene saltata (in rosso): a questo capitale è troppo concentrata anche per la regola "
-               "testata. Nota: questo calcolo è una semplificazione statica (divide il capitale proporzionalmente "
-               "su tutti i segnali di oggi); il backtest reale spende la cassa disponibile in sequenza, quindi se il "
-               "capitale è limitato e ci sono molti segnali insieme, non è garantito che tu possa comprarli tutti — "
-               "priorità ai primi in lista.")
+    st.caption("Prezzo da PriceCharting (USA), NON una quota Cardmarket — verifica sempre col prezzo reale dietro "
+               "il bottone. Resta sotto il \"massimo\" (oggetto + spedizione). L'€ mostrato è l'allocazione ideale: "
+               "se un box costa più, il modello lo compra comunque per intero finché resta sotto il 35% del "
+               "capitale box (giallo); sopra quella soglia, salta (rosso).")
+    with st.expander("ℹ️ Dettagli — lotto indivisibile, capitale sequenziale"):
+        st.caption("\"Massimo\" è la spesa TOTALE oltre la quale il modello considera il box fuori dal range "
+                   "prezzo/MSRP validato (21,6x) — non sottraiamo qui una stima di spedizione, il numero è già "
+                   "netto: confronta oggetto + spedizione reali dell'inserzione contro questo valore. L'€ mostrato "
+                   "è l'allocazione IDEALE proporzionale (tetto 12% del capitale box): il modello TESTATO non salta "
+                   "un box solo perché costa più della sua quota ideale — lo compra per intero (lotto indivisibile) "
+                   "finché il prezzo resta sotto il 35% del capitale dedicato ai box, segnalato in giallo con la "
+                   "spesa reale richiesta; solo sopra quel 35% la posizione viene saltata (rosso), troppo concentrata "
+                   "anche per la regola testata. Questo calcolo è una semplificazione statica (divide il capitale "
+                   "proporzionalmente su tutti i segnali di oggi); il backtest reale spende la cassa in sequenza, "
+                   "quindi con molti segnali insieme non è garantito che tu possa comprarli tutti — priorità ai "
+                   "primi in lista.")
     buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
     if max_card_price > 0:
         buy_rows = [r for r in buy_rows if r["current_price_eur"] <= max_card_price]
@@ -768,40 +767,28 @@ def main():
                 "trap\" per la produzione (finestra 3 mesi) — e viceversa, una carta appena entrata nella top-60 "
                 "potrebbe non essere nella top-20 più selettiva di DAC7. Disattiva il toggle in sidebar per "
                 "vedere la lista di produzione.")
-    st.caption("⚠️ Da comprare: la carta GIÀ GRADATA Grade 9 (uno slab, non la carta raw, non PSA10) — il "
-               "fattore lavora solo su questa serie di PriceCharting, non confronta mai tra gradi diversi. "
-               "Confronta sempre col prezzo reale su Cardmarket e verifica il grado dell'inserzione a mano: "
-               "il link di ricerca è testuale, non un filtro reale per grado. \"Sconto vs. pari\" è quanto la "
-               "carta costa in meno (%) rispetto a quanto la sua rarità/età/set implicherebbero rispetto alle "
-               "sue pari — più negativo, più sottovalutata secondo il modello. \"Segnale da\" è da quanti mesi "
-               "consecutivi la carta è nel quantile BUY: solo le carte entrate negli ultimi 3 mesi (la cadenza "
-               "di ribilanciamento validata nel backtest) sono mostrate — oltre, comprarla oggi non è ciò che "
-               "è stato testato, è un possibile *value trap* (sconto persistente che il mercato non corregge). "
-               "\"Massimo\" è la spesa TOTALE (oggetto + spedizione) oltre la quale QUESTA carta esce dal confine "
-               "del quantile BUY già validato — non sottraiamo qui una stima di spedizione: verifica tu il costo "
-               "totale reale (oggetto + spedizione dell'inserzione) contro questo numero. Il riquadro blu **[Set]** "
-               "accanto al nome è il set/espansione esatto (es. \"Jungle\") — richiesto esplicitamente dall'utente "
-               "(\"Clefable: è jungle o prima edizione o Unlimited? Fai in modo che io non possa sbagliare mai la "
-               "carta da comprare\"): il nome della carta da solo (es. \"Clefable #1\") non basta a identificarla "
-               "univocamente, verifica sempre di cercare quel set esatto su Cardmarket. ⚠️ **(Unlimited)** sulle "
-               "carte dei set 1999-2000 (Base Set, Jungle, Fossil, Team Rocket, Gym, Base Set 2): esiste anche una "
-               "stampa \"1st Edition\" della stessa carta, spesso 2-4x+ più cara — è un prodotto diverso, non un "
-               "prezzo dashboard sbagliato. Il link cerca solo per nome carta (aggiungere set/edizione/grado alla "
-               "ricerca rischiava di restituire pagine vuote, verificato) — usa i filtri della pagina risultati "
-               "Cardmarket (espansione, lingua), guidati dal set indicato qui, per arrivare al prodotto giusto. "
-               "Sulle carte vintage "
-               "poco liquide in generale, il pannello Grade 9 di PriceCharting può restare sottostimato rispetto al "
-               "prezzo reale anche dopo il filtro di attendibilità — se non trovi nulla sotto il \"massimo\" su "
-               "nessun canale, registralo con `log_execution_price.py` invece di ignorare il segnale. \"→ N pz.\" è "
-               "quante copie IDENTICHE (stessa carta, stesso grado, stessa lingua) il budget assegnato comprerebbe "
-               "al prezzo mostrato — ⚠️ **VERIFICATO** (`scripts/max_quantity_per_trade_test.py`, "
-               "rieseguito dopo aver escluso le carte sotto il pavimento di costo di gradazione, vedi sopra): il "
-               "backtest validato (Sharpe 1,58) assume che tu trovi TUTTE queste copie insieme, ogni mese, per "
-               "centinaia di trade — con un tetto realistico di 1 copia per acquisto lo Sharpe scende a 0,64 (DSR "
-               "0,18, ancora debole). Con 2 copie: Sharpe 1,14 (DSR 0,59, piu' vicino alla soglia). Escludere le "
-               "carte quasi-senza-valore ha ridotto MA non eliminato la dipendenza dal comprare piu' copie identiche "
-               "— se compri quasi sempre un pezzo singolo, tratta lo Sharpe 1,58 come un tetto teorico, non "
-               "un'aspettativa realistica. Prime 15 con grafico, le altre in tabella sotto.")
+    st.caption("Da comprare: la carta GIÀ GRADATA Grade 9 (uno slab, non raw, non PSA10). Il badge blu **[Set]** "
+               "è il set/espansione esatto — verifica sempre di cercare quel set su Cardmarket, il nome della "
+               "carta da solo non basta (⚠️ **(Unlimited)** = esiste anche una 1st Edition più cara, prodotto "
+               "diverso). Resta sotto il \"massimo\" mostrato. Prime 15 con grafico, le altre in tabella sotto.")
+    with st.expander("ℹ️ Dettagli — sconto, freschezza, copie, limiti del modello"):
+        st.caption("\"Sconto vs. pari\" è quanto la carta costa in meno (%) rispetto a quanto la sua rarità/età/set "
+                   "implicherebbero rispetto alle sue pari — più negativo, più sottovalutata secondo il modello. "
+                   "\"Segnale da\" è da quanti mesi consecutivi è nel quantile BUY: solo le carte entrate negli "
+                   "ultimi 3 mesi (cadenza di ribilanciamento validata) sono mostrate qui — oltre, è un possibile "
+                   "*value trap* (sconto persistente che il mercato non corregge), non escluso ma spostato nelle "
+                   "alternative sotto. \"Massimo\" è la spesa TOTALE (oggetto + spedizione) oltre la quale la carta "
+                   "esce dal confine del quantile BUY — già netto, non sottrarre una stima di spedizione tua. Il "
+                   "link cerca solo per nome carta (aggiungere set/edizione/grado dava pagine vuote, verificato) — "
+                   "usa i filtri di Cardmarket (espansione, lingua), guidati dal set indicato nel badge. Sulle "
+                   "carte vintage poco liquide, il pannello Grade 9 può restare sottostimato anche dopo il filtro "
+                   "di attendibilità — se non trovi nulla sotto il \"massimo\", registralo con "
+                   "`log_execution_price.py` invece di ignorare il segnale. "
+                   "\"→ N pz.\" è quante copie IDENTICHE il budget comprerebbe al prezzo mostrato — ⚠️ "
+                   "**VERIFICATO** (`scripts/max_quantity_per_trade_test.py`): il backtest (Sharpe 1,58) assume "
+                   "che tu trovi TUTTE queste copie insieme, ogni mese; con un tetto realistico di 1 copia lo "
+                   "Sharpe scende a 0,64 (DSR 0,18), con 2 copie 1,14 (DSR 0,59) — tratta 1,58 come un tetto "
+                   "teorico se compri quasi sempre un pezzo singolo, non un'aspettativa realistica.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:
@@ -869,21 +856,12 @@ def main():
     alt_rows, _ = get_singles_alternatives(singles_mode)
     if alt_rows:
         with st.expander(f"🔄 Non trovi una carta o le copie sopra? {len(alt_rows)} alternative nello stesso quantile"):
-            st.caption("⚠️ **VERIFICATO** (`scripts/singles_diversify_when_capped_test.py`): se non trovi le copie "
-                       "consigliate di una carta, usare il budget liberato per comprare carte DIVERSE già "
-                       "sottovalutate — invece di lasciarlo fermo — recupera parte dell'edge perso (Sharpe 0,30→0,80 "
-                       "col tetto realistico di 1 copia), ma non tutto: il MaxDD peggiora (-13%→-21%) e il DSR resta "
-                       "sotto la soglia usata per le altre strategie di questa dashboard (0,29 contro 0,87-0,95). "
-                       "Queste carte sono ANCORA nel quantile 20% più sottovalutato (stesso fattore, stesso mese), "
-                       "solo fuori dalle prime 60 per rank — non allarghiamo qui la soglia del fattore stesso (leva "
-                       "diversa, più rischiosa, testata a parte: peggiora ancora il MaxDD). Non è un secondo elenco "
-                       "BUY equivalente al primo: usalo come ripiego per capitale altrimenti inutilizzato, non come "
-                       "sostituto sistematico. Nessun filtro di freschezza qui (a differenza della lista sopra) — "
-                       "verifica comunque il grafico prezzo prima di comprare. \"Massimo\" è la spesa TOTALE "
-                       "(oggetto + spedizione) oltre la quale QUESTA carta esce dal confine dell'INTERO quantile "
-                       "20% più sottovalutato (non solo dalle prime 60 per rank) — stesso significato della colonna "
-                       "\"Massimo\" nella lista principale, calcolato sul confine più largo perché queste carte "
-                       "sono già fuori dalle prime 60.")
+            st.caption("Ripiego, non un secondo BUY: usa il budget non speso qui invece di lasciarlo fermo o "
+                       "forzare più copie di una carta — recupera parte dell'edge perso ma non tutto (⚠️ "
+                       "**VERIFICATO**, `scripts/singles_diversify_when_capped_test.py`: Sharpe 0,30→0,80 col tetto "
+                       "di 1 copia, MaxDD peggiora -13%→-21%, DSR 0,29 sotto soglia). Ancora nel quantile 20% più "
+                       "sottovalutato, solo fuori dalle prime 60 per rank — nessun filtro di freschezza qui, "
+                       "verifica sempre il grafico prezzo prima di comprare.")
             alt_df = pd.DataFrame([
                 {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
                  "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
@@ -935,112 +913,104 @@ def main():
                                  "Sovrapprezzo vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
                              })
 
-    # --- EQUITY CURVE (box, singole, blend) ---
-    st.markdown('<div class="section-title">📈 Backtest 2020-2026 — Box, Singole, Blend</div>', unsafe_allow_html=True)
+    # --- BACKTEST + GIORNALE TRADE (box, singole, blend) — audit, non un'azione settimanale: chiuso di default ---
     res, n_universe = get_backtest_results()
     res_singles, n_universe_singles = get_singles_backtest_results(singles_mode)
+    with st.expander(f"📈 Backtest 2020-2026 e giornale trade — {res.total_trades + res_singles.total_trades} trade chiusi in tutto"):
+        common_idx = res.monthly_returns.index.intersection(res_singles.monthly_returns.index)
+        blend_ret = 0.5 * res.monthly_returns.loc[common_idx] + 0.5 * res_singles.monthly_returns.loc[common_idx]
+        blend_nav = 10000.0 * (1.0 + blend_ret).cumprod()
 
-    common_idx = res.monthly_returns.index.intersection(res_singles.monthly_returns.index)
-    blend_ret = 0.5 * res.monthly_returns.loc[common_idx] + 0.5 * res_singles.monthly_returns.loc[common_idx]
-    blend_nav = 10000.0 * (1.0 + blend_ret).cumprod()
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, row_heights=[0.7, 0.3],
+                             subplot_titles=("NAV (€, base 10.000€ per metà)", "Drawdown (%)"))
+        fig.add_trace(go.Scatter(x=res.nav_history.index, y=res.nav_history["nav"], mode="lines", name="Box (TS Momentum)",
+                                  line=dict(color="#38bdf8", width=1.5, dash="dot")), row=1, col=1)
+        fig.add_trace(go.Scatter(x=res_singles.nav_history.index, y=res_singles.nav_history["nav"], mode="lines", name="Singole (Scarsità)",
+                                  line=dict(color="#fbbf24", width=1.5, dash="dot")), row=1, col=1)
+        fig.add_trace(go.Scatter(x=blend_nav.index, y=blend_nav.values, mode="lines", name="Blend 50/50",
+                                  line=dict(color="#10b981", width=2.5)), row=1, col=1)
+        peak = blend_nav.cummax()
+        dd = (blend_nav - peak) / peak * 100.0
+        fig.add_trace(go.Scatter(x=dd.index, y=dd.values, mode="lines", fill="tozeroy", name="Drawdown Blend",
+                                  line=dict(color="#f43f5e", width=1), fillcolor="rgba(244,63,94,0.15)"), row=2, col=1)
+        fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
+                           height=420, margin=dict(l=20, r=20, t=30, b=20),
+                           legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption(f"Universo: {n_universe} box/ETB era 2019+, {n_universe_singles} singole. Ogni metà simulata con "
+                   "10.000€ propri, poi combinata come media dei rendimenti mensili — frizioni reali incluse: vendita "
+                   "Cardmarket 5% + imballaggio 0,60€ + slippage + custodia; acquisto con spedizione reale a carico "
+                   "del compratore (10€/box, 7€/carta), mai gratis nella realtà.")
+        if singles_mode == "dac7":
+            st.caption(f"⚠️ Riflette la **modalità DAC7** (singole: ribilanciamento 12m, max 20 posizioni) — Sharpe "
+                       f"singole {res_singles.sharpe:.2f} (vs {VALIDATED_SINGLES['sharpe']:.2f} a turnover pieno). Le "
+                       f"Metriche di validazione sopra mostrano sempre i numeri a turnover pieno.")
 
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, row_heights=[0.7, 0.3],
-                         subplot_titles=("NAV (€, base 10.000€ per metà)", "Drawdown (%)"))
-    fig.add_trace(go.Scatter(x=res.nav_history.index, y=res.nav_history["nav"], mode="lines", name="Box (TS Momentum)",
-                              line=dict(color="#38bdf8", width=1.5, dash="dot")), row=1, col=1)
-    fig.add_trace(go.Scatter(x=res_singles.nav_history.index, y=res_singles.nav_history["nav"], mode="lines", name="Singole (Scarsità)",
-                              line=dict(color="#fbbf24", width=1.5, dash="dot")), row=1, col=1)
-    fig.add_trace(go.Scatter(x=blend_nav.index, y=blend_nav.values, mode="lines", name="Blend 50/50",
-                              line=dict(color="#10b981", width=2.5)), row=1, col=1)
-    peak = blend_nav.cummax()
-    dd = (blend_nav - peak) / peak * 100.0
-    fig.add_trace(go.Scatter(x=dd.index, y=dd.values, mode="lines", fill="tozeroy", name="Drawdown Blend",
-                              line=dict(color="#f43f5e", width=1), fillcolor="rgba(244,63,94,0.15)"), row=2, col=1)
-    fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
-                       height=420, margin=dict(l=20, r=20, t=30, b=20),
-                       legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
-    st.plotly_chart(fig, use_container_width=True)
-    st.caption(f"Universo: {n_universe} box/ETB era 2019+, {n_universe_singles} singole. Ogni metà simulata con "
-               "10.000€ propri, poi combinata come media dei rendimenti mensili (equivalente a un ribilanciamento "
-               "50/50 mensile) — frizioni reali incluse in entrambe: alla vendita Cardmarket 5%, imballaggio 0,60€, "
-               "slippage, costo di custodia; all'acquisto la spedizione reale a carico del compratore (10€/box, "
-               "7€/carta — poke_quant.config.SHIPPING_COSTS), aggiunta al prezzo pagato, mai gratis nella realtà.")
-    if singles_mode == "dac7":
-        st.caption(f"⚠️ Grafico e metriche sopra riflettono la **modalità conforme DAC7** (singole: ribilanciamento "
-                   f"12m, max 20 posizioni) — Sharpe singole {res_singles.sharpe:.2f} (vs {VALIDATED_SINGLES['sharpe']:.2f} "
-                   f"della configurazione a turnover pieno, non conforme). Il pannello \"Metriche di Validazione\" sopra "
-                   f"mostra sempre i numeri della configurazione a turnover pieno, non quelli effettivi qui sotto.")
+        st.markdown('<div class="section-desc"><strong>📜 Trade chiusi — Box</strong></div>', unsafe_allow_html=True)
+        trades_df = res.trades_df
+        win_rate = res.win_rate * 100.0
+        avg_holding = trades_df["holding_months"].mean() if not trades_df.empty else 0.0
+        st.markdown(f"""
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Trade chiusi</div><div class="kpi-value">{res.total_trades}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value">{win_rate:.0f}%</div><div class="kpi-sub kpi-sub-amber">Pochi vincenti, grandi — tipico trend-following</div></div>
+            <div class="kpi-card"><div class="kpi-label">Profit Factor</div><div class="kpi-value">{res.profit_factor:.2f}</div><div class="kpi-sub kpi-sub-emerald">Utile lordo / perdita lorda</div></div>
+            <div class="kpi-card"><div class="kpi-label">Holding medio</div><div class="kpi-value">{avg_holding:.1f}m</div><div class="kpi-sub kpi-sub-amber">Mediana {trades_df['holding_months'].median():.0f}m, max {trades_df['holding_months'].max():.0f}m</div></div>
+        </div>
+        """, unsafe_allow_html=True)
+        if trades_df.empty:
+            st.info("Nessun trade chiuso nel backtest.")
+        else:
+            display_df = trades_df.sort_values("sell_date", ascending=False).copy()
+            display_df["net_roi_pct"] = display_df["net_roi"] * 100.0
+            display_df = display_df[["item_name", "buy_date", "sell_date", "holding_months",
+                                      "buy_price_unit", "sell_price_unit", "net_roi_pct", "net_pnl"]]
+            display_df.columns = ["Prodotto", "Acquisto", "Vendita", "Holding (m)",
+                                   "Prezzo acquisto (€)", "Prezzo vendita (€)", "ROI netto (%)", "P&L netto (€)"]
+            st.dataframe(
+                display_df, use_container_width=True, hide_index=True,
+                column_config={
+                    "Prezzo acquisto (€)": st.column_config.NumberColumn(format="%.2f €"),
+                    "Prezzo vendita (€)": st.column_config.NumberColumn(format="%.2f €"),
+                    "ROI netto (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                    "P&L netto (€)": st.column_config.NumberColumn(format="%+.2f €"),
+                },
+            )
 
-    # --- GIORNALE DEI TRADE CHIUSI (BOX) ---
-    st.markdown('<div class="section-title">📜 Giornale dei trade chiusi — Box (backtest)</div>', unsafe_allow_html=True)
-    trades_df = res.trades_df
-    win_rate = res.win_rate * 100.0
-    avg_holding = trades_df["holding_months"].mean() if not trades_df.empty else 0.0
-    st.markdown(f"""
-    <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">Trade chiusi</div><div class="kpi-value">{res.total_trades}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value">{win_rate:.0f}%</div><div class="kpi-sub kpi-sub-amber">Pochi vincenti, grandi — tipico trend-following</div></div>
-        <div class="kpi-card"><div class="kpi-label">Profit Factor</div><div class="kpi-value">{res.profit_factor:.2f}</div><div class="kpi-sub kpi-sub-emerald">Utile lordo / perdita lorda</div></div>
-        <div class="kpi-card"><div class="kpi-label">Holding medio</div><div class="kpi-value">{avg_holding:.1f}m</div><div class="kpi-sub kpi-sub-amber">Mediana {trades_df['holding_months'].median():.0f}m, max {trades_df['holding_months'].max():.0f}m</div></div>
-    </div>
-    """, unsafe_allow_html=True)
-    if trades_df.empty:
-        st.info("Nessun trade chiuso nel backtest.")
-    else:
-        display_df = trades_df.sort_values("sell_date", ascending=False).copy()
-        display_df["net_roi_pct"] = display_df["net_roi"] * 100.0
-        display_df = display_df[["item_name", "buy_date", "sell_date", "holding_months",
-                                  "buy_price_unit", "sell_price_unit", "net_roi_pct", "net_pnl"]]
-        display_df.columns = ["Prodotto", "Acquisto", "Vendita", "Holding (m)",
-                               "Prezzo acquisto (€)", "Prezzo vendita (€)", "ROI netto (%)", "P&L netto (€)"]
-        st.dataframe(
-            display_df, use_container_width=True, hide_index=True,
-            column_config={
+        st.markdown('<div class="section-desc"><strong>📜 Trade chiusi — Singole</strong></div>', unsafe_allow_html=True)
+        trades_df_s = res_singles.trades_df
+        win_rate_s = res_singles.win_rate * 100.0
+        avg_holding_s = trades_df_s["holding_months"].mean() if not trades_df_s.empty else 0.0
+        st.markdown(f"""
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Trade chiusi</div><div class="kpi-value">{res_singles.total_trades}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value">{win_rate_s:.0f}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Profit Factor</div><div class="kpi-value">{res_singles.profit_factor:.2f}</div><div class="kpi-sub kpi-sub-emerald">Utile lordo / perdita lorda</div></div>
+            <div class="kpi-card"><div class="kpi-label">Holding medio</div><div class="kpi-value">{avg_holding_s:.1f}m</div><div class="kpi-sub kpi-sub-amber">Mediana {trades_df_s['holding_months'].median():.0f}m, max {trades_df_s['holding_months'].max():.0f}m</div></div>
+        </div>
+        """, unsafe_allow_html=True)
+        if trades_df_s.empty:
+            st.info("Nessun trade chiuso nel backtest.")
+        else:
+            display_df_s = trades_df_s.sort_values("sell_date", ascending=False).copy()
+            display_df_s["net_roi_pct"] = display_df_s["net_roi"] * 100.0
+            display_df_s = display_df_s[["item_name", "buy_date", "sell_date", "holding_months",
+                                          "buy_price_unit", "sell_price_unit", "net_roi_pct", "net_pnl"]]
+            display_df_s.columns = ["Carta", "Acquisto", "Vendita", "Holding (m)",
+                                     "Prezzo acquisto (€)", "Prezzo vendita (€)", "ROI netto (%)", "P&L netto (€)"]
+            col_config_s = {
                 "Prezzo acquisto (€)": st.column_config.NumberColumn(format="%.2f €"),
                 "Prezzo vendita (€)": st.column_config.NumberColumn(format="%.2f €"),
                 "ROI netto (%)": st.column_config.NumberColumn(format="%+.1f%%"),
                 "P&L netto (€)": st.column_config.NumberColumn(format="%+.2f €"),
-            },
-        )
-        st.caption("P&L e ROI sono netti di commissione Cardmarket (5%), imballaggio (0,60€), costo di custodia e "
-                   "spedizione all'acquisto (a carico del compratore, inclusa nel prezzo d'acquisto) — "
-                   "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
+            }
+            st.dataframe(display_df_s.head(20), use_container_width=True, hide_index=True, column_config=col_config_s)
+            if len(display_df_s) > 20:
+                with st.expander(f"Altri {len(display_df_s) - 20} trade chiusi"):
+                    st.dataframe(display_df_s.iloc[20:], use_container_width=True, hide_index=True, column_config=col_config_s)
 
-    # --- GIORNALE DEI TRADE CHIUSI (SINGOLE) ---
-    st.markdown('<div class="section-title">📜 Giornale dei trade chiusi — Singole (backtest)</div>', unsafe_allow_html=True)
-    trades_df_s = res_singles.trades_df
-    win_rate_s = res_singles.win_rate * 100.0
-    avg_holding_s = trades_df_s["holding_months"].mean() if not trades_df_s.empty else 0.0
-    st.markdown(f"""
-    <div class="kpi-grid">
-        <div class="kpi-card"><div class="kpi-label">Trade chiusi</div><div class="kpi-value">{res_singles.total_trades}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value">{win_rate_s:.0f}%</div></div>
-        <div class="kpi-card"><div class="kpi-label">Profit Factor</div><div class="kpi-value">{res_singles.profit_factor:.2f}</div><div class="kpi-sub kpi-sub-emerald">Utile lordo / perdita lorda</div></div>
-        <div class="kpi-card"><div class="kpi-label">Holding medio</div><div class="kpi-value">{avg_holding_s:.1f}m</div><div class="kpi-sub kpi-sub-amber">Mediana {trades_df_s['holding_months'].median():.0f}m, max {trades_df_s['holding_months'].max():.0f}m</div></div>
-    </div>
-    """, unsafe_allow_html=True)
-    if trades_df_s.empty:
-        st.info("Nessun trade chiuso nel backtest.")
-    else:
-        display_df_s = trades_df_s.sort_values("sell_date", ascending=False).copy()
-        display_df_s["net_roi_pct"] = display_df_s["net_roi"] * 100.0
-        display_df_s = display_df_s[["item_name", "buy_date", "sell_date", "holding_months",
-                                      "buy_price_unit", "sell_price_unit", "net_roi_pct", "net_pnl"]]
-        display_df_s.columns = ["Carta", "Acquisto", "Vendita", "Holding (m)",
-                                 "Prezzo acquisto (€)", "Prezzo vendita (€)", "ROI netto (%)", "P&L netto (€)"]
-        col_config_s = {
-            "Prezzo acquisto (€)": st.column_config.NumberColumn(format="%.2f €"),
-            "Prezzo vendita (€)": st.column_config.NumberColumn(format="%.2f €"),
-            "ROI netto (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-            "P&L netto (€)": st.column_config.NumberColumn(format="%+.2f €"),
-        }
-        st.dataframe(display_df_s.head(20), use_container_width=True, hide_index=True, column_config=col_config_s)
-        if len(display_df_s) > 20:
-            with st.expander(f"Altri {len(display_df_s) - 20} trade chiusi"):
-                st.dataframe(display_df_s.iloc[20:], use_container_width=True, hide_index=True, column_config=col_config_s)
         st.caption("P&L e ROI sono netti di commissione Cardmarket (5%), imballaggio (0,60€), costo di custodia e "
-                   "spedizione all'acquisto (a carico del compratore, inclusa nel prezzo d'acquisto) — "
-                   "vedi la sezione Metriche di Validazione per CAGR/Sharpe/MaxDD aggregati sull'intero backtest.")
+                   "spedizione all'acquisto — vedi \"Metriche di validazione\" per CAGR/Sharpe/MaxDD aggregati.")
 
     st.markdown("---")
     st.caption("PokeQuant · Blend box+singole scelto per correlazione bassa (0,37), non per rendimento massimo · "
