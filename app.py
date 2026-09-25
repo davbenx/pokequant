@@ -597,7 +597,16 @@ def main():
                "mostra lo storico usato dal modello — confronta sempre col prezzo reale dietro al bottone. "
                "\"Massimo\", dove mostrato, è la spesa TOTALE (oggetto + spedizione) oltre la quale il modello "
                "considera il box fuori dal range di prezzo/MSRP validato (21,6x) — non sottraiamo qui una stima di "
-               "spedizione: verifica tu il costo totale reale (oggetto + spedizione dell'inserzione) contro questo numero.")
+               "spedizione: verifica tu il costo totale reale (oggetto + spedizione dell'inserzione) contro questo numero. "
+               "L'€ mostrato è l'allocazione IDEALE proporzionale (tetto 12% del capitale box) — molti box costano più "
+               "di questa cifra. Il modello TESTATO non salta questi casi: compra 1 pezzo per intero (lotto "
+               "indivisibile) finché il prezzo resta sotto il 35% del capitale dedicato ai box, anche se supera "
+               "l'allocazione ideale — lo segnaliamo in giallo con la spesa reale richiesta. Solo sopra quel 35% "
+               "la posizione viene saltata (in rosso): a questo capitale è troppo concentrata anche per la regola "
+               "testata. Nota: questo calcolo è una semplificazione statica (divide il capitale proporzionalmente "
+               "su tutti i segnali di oggi); il backtest reale spende la cassa disponibile in sequenza, quindi se il "
+               "capitale è limitato e ci sono molti segnali insieme, non è garantito che tu possa comprarli tutti — "
+               "priorità ai primi in lista.")
     buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
     if max_card_price > 0:
         buy_rows = [r for r in buy_rows if r["current_price_eur"] <= max_card_price]
@@ -605,6 +614,26 @@ def main():
 
     if not allocation:
         st.info("Nessun segnale BUY/HOLD questo mese.")
+    else:
+        box_capital_half = capital * 0.5
+        _total_real_spend, _n_skip = 0.0, 0
+        for r, alloc, w in allocation:
+            p = r["current_price_eur"]
+            if p <= 0 or alloc >= p:
+                _total_real_spend += alloc
+            elif p <= box_capital_half * 0.35:
+                _total_real_spend += p
+            else:
+                _n_skip += 1
+        if _total_real_spend > box_capital_half * 1.10:
+            st.warning(
+                f"⚠️ A questo capitale, comprare per intero **tutti** i {len(allocation)} box in BUY costerebbe "
+                f"~**{_total_real_spend:,.0f}€**, contro i {box_capital_half:,.0f}€ dedicati (+{(_total_real_spend/box_capital_half-1)*100:.0f}%). "
+                "Non è un errore: i box sono lotti indivisibili, quindi molti superano l'allocazione ideale per "
+                "posizione. Il modello reale spende la cassa in sequenza — priorità ai primi in lista, gli ultimi "
+                "potrebbero non essere eseguibili questo mese con questo capitale."
+                + (f" {_n_skip} box sopra il 35% del capitale vengono comunque saltati indipendentemente dalla cassa." if _n_skip else "")
+            )
     for r, alloc, w in allocation:
         meta = metadata.get(r["item_id"], {})
         link = get_cardmarket_deep_link(r["name"], franchise=meta.get("franchise", "pokemon"),
@@ -617,16 +646,42 @@ def main():
         if show_usa_import:
             landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="sealed")
             usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.0f}€</span>')
-        qty_est = max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1
-        qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più copie identiche disponibili insieme</span>' if qty_est > 3 else ""
-        qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz.{qty_warn}</span>'
+        box_price = r["current_price_eur"]
+        # Stessa regola di TimeSeriesMomentumStrategy.generate_signals (lotto
+        # minimo indivisibile): se il budget proporzionale non basta per 1 pezzo,
+        # il modello validato lo compra comunque per intero SOLO se il prezzo
+        # resta sotto il 35% del capitale dedicato ai box - altrimenti la salta.
+        # Qui capital*0.5 approssima il total_nav dello strategy (stesso valore
+        # passato a build_allocation) - una carta/box i cui bisogni superano
+        # l'allocazione "ideale" NON è un errore di visualizzazione, è la regola
+        # testata (vedi scripts/max_quantity_per_trade_test.py e la sidebar).
+        box_capital_half = capital * 0.5
+        if box_price <= 0:
+            qty_est, spend_est, skip_reason = 1, alloc, None
+        elif alloc >= box_price:
+            qty_est, spend_est, skip_reason = int(alloc // box_price), alloc, None
+        elif box_price <= box_capital_half * 0.35:
+            qty_est, spend_est, skip_reason = 1, box_price, "budget"
+        else:
+            qty_est, spend_est, skip_reason = 0, 0.0, "troppo_grande"
+
+        if skip_reason == "troppo_grande":
+            qty_html = (f' &nbsp; <span style="color:#f43f5e;">⚠️ salta a questo capitale — costa {box_price:,.0f}€, '
+                        f'sopra il 35% dei {box_capital_half:,.0f}€ dedicati ai box (regola testata, non un tetto arbitrario)</span>')
+        elif skip_reason == "budget":
+            qty_html = (f' &nbsp; <span style="color:#fbbf24;">→ 1 pz. ⚠️ richiede {spend_est:,.0f}€, più dei {alloc:,.0f}€ '
+                        f'ideali — il modello lo compra comunque per intero (lotto indivisibile) se hai il capitale libero</span>')
+        else:
+            qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più copie identiche disponibili insieme</span>' if qty_est > 3 else ""
+            qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz.{qty_warn}</span>'
+        alloc_display = spend_est if skip_reason == "budget" else alloc
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
             {img_tag}
             <div class="signal-card-body">
             <strong>{r['name']}</strong> &nbsp; <span style="color:#10b981;">+{r['trailing_12m_return_pct']:.0f}% (12m)</span>
             &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting) &nbsp;·&nbsp; peso età {w:.2f}{max_price_html}{usa_import_html}
-            <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}
+            <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc_display:,.0f}€</span>{qty_html}
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
             </div>
         </div>
