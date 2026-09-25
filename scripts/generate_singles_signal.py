@@ -34,6 +34,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from poke_quant.data.storage import load_metadata, load_price_matrix
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
 from poke_quant.data.cardmarket_bridge import WOTC_FIRST_EDITION_SETS
+from poke_quant.data.liquidity_filter import liquid_singles_ids
+
+
+def _liquid_universe(metadata: dict, prices_full: pd.DataFrame):
+    """Restringe metadata/prices_full all'universo investibile (liquidity_filter.py::
+    liquid_singles_ids) PRIMA di generare qualunque segnale. BUG TROVATO (l'utente:
+    "Mantine e' consigliata a 11EUR, ma la gradazione costa di piu'"): get_singles_backtest_results()
+    in app.py (Sharpe validato 1,57/1,58) filtra correttamente data_quality="thin_unreliable",
+    ma questo modulo - che genera le liste BUY/alternative/avoid REALMENTE mostrate in
+    dashboard - non filtrava MAI nulla: caricava metadata/prices_full grezzi. Risultato
+    verificato: 2 carte su 15 nella lista BUY e 11 su 107 nelle alternative erano gia'
+    flaggate thin_unreliable, escluse dal backtest che produce lo Sharpe mostrato ma
+    proposte comunque come acquisto. Aggiunto anche il pavimento di costo di gradazione
+    (vedi liquidity_filter.py::MIN_SINGLES_MEDIAN_PRICE_EUR) qui, non solo nel backtest."""
+    ids = liquid_singles_ids(metadata, prices_full)
+    return {k: metadata[k] for k in ids}, prices_full[ids]
 
 
 def _display_name(item_id: str, info: dict) -> str:
@@ -122,6 +138,7 @@ def compute_singles_signal_rows(params: dict = None):
 
     metadata = load_metadata()
     prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    metadata, prices_full = _liquid_universe(metadata, prices_full)
     check_dates = list(prices_full.index[-check_months:])
     latest_date = check_dates[-1]
 
@@ -186,7 +203,13 @@ def compute_singles_signal_rows(params: dict = None):
 # strategie di questa dashboard (0,29 contro 0,87-0,95). E' un ripiego
 # empiricamente migliore di lasciare il capitale fermo, NON una strategia a se'
 # validata - va mostrato come tale, non come un secondo elenco BUY equivalente.
-EXTRA_ALTERNATIVES = 113  # 60 (max_positions produzione) + 113 = 173 = intero quantile 20% (869 carte)
+# Sentinella ampia invece di un numero calibrato su una dimensione universo
+# specifica (che cambia col tempo e col nuovo pavimento di costo di gradazione
+# - vedi liquid_singles_ids): lo slicing ranked[max_positions:max_positions+N]
+# restituisce comunque solo cio' che esiste, anche se N supera la lunghezza
+# del quantile - l'intento e' "mostra TUTTO il resto del quantile 20%", non
+# un tetto di per se' significativo.
+EXTRA_ALTERNATIVES = 1000
 
 
 def compute_singles_alternative_rows(params: dict = None, extra_positions: int = EXTRA_ALTERNATIVES):
@@ -200,6 +223,7 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
     params = params or PRODUCTION_PARAMS
     metadata = load_metadata()
     prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    metadata, prices_full = _liquid_universe(metadata, prices_full)
     latest_date = prices_full.index[-1]
 
     strat = ScarcityValueFactorStrategy(**params)
@@ -244,6 +268,7 @@ def compute_singles_avoid_rows(params: dict = None):
     params = params or PRODUCTION_PARAMS
     metadata = load_metadata()
     prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    metadata, prices_full = _liquid_universe(metadata, prices_full)
     latest_date = prices_full.index[-1]
     snap = _snapshot_for_date(prices_full, metadata, latest_date)
 

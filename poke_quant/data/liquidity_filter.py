@@ -113,6 +113,52 @@ GRADE_RAW_RATIO_MIN_COHORT = 20
 GRADE_RAW_RATIO_COHORT_WINDOW_YEARS = 3
 
 
+# Trovato verificando un prezzo reale (l'utente: "Mantine e' consigliata a
+# 11EUR, ma la sola procedura di gradazione costa di piu'"): stima
+# conservativa del costo minimo reale per portare una carta a PSA/CGC Grade 9
+# anche nella fascia bulk piu' economica (tariffa di sottomissione + carta +
+# spedizione/assicurazione) - stima ragionata da conoscenza generale delle
+# tariffe correnti, NON un listino verificato in tempo reale: va corretta se
+# emergono numeri piu' precisi. Sotto questa soglia, nessuno gradirebbe oggi
+# una nuova copia (perdita garantita) - l'offerta e' un pool fisso e non
+# rinnovabile di slab gia' gradati in passato (tipicamente durante il boom
+# PSA 2020-21) e ora svenduti sotto costo da speculatori delusi, non un
+# mercato normale legato alla scarsita' della carta. Testato empiricamente
+# (scripts/grading_cost_floor_test.py): escludere queste carte NON peggiora
+# Sharpe/CAGR/DSR del fattore scarsita' (1,57->1,58 con questa soglia) -
+# coerente con l'ipotesi che il loro "sconto" sia un artefatto della
+# regressione log-lineare compressa vicino allo zero, non un segnale reale.
+MIN_SINGLES_MEDIAN_PRICE_EUR = 20.0
+
+
+def liquid_singles_ids(
+    metadata: Dict[str, Any],
+    grade9_prices_df: pd.DataFrame,
+    min_median_price_eur: float = MIN_SINGLES_MEDIAN_PRICE_EUR,
+) -> List[str]:
+    """Universo singole investibile: esclude le carte gia' flaggate
+    data_quality="thin_unreliable" (compute_reliability_flags, gia' applicato
+    in ogni backtest ma MAI wired nel segnale live prima di questa funzione -
+    vedi scripts/generate_singles_signal.py) e quelle sotto il pavimento di
+    costo di gradazione MIN_SINGLES_MEDIAN_PRICE_EUR (mediana storica, non il
+    prezzo del mese corrente - una classificazione strutturale, non un flag
+    che va e viene ogni mese)."""
+    ids = []
+    for item_id, info in metadata.items():
+        if info.get("type") != "single":
+            continue
+        if info.get("data_quality") == "thin_unreliable":
+            continue
+        if item_id not in grade9_prices_df.columns:
+            continue
+        s = grade9_prices_df[item_id].dropna()
+        s = s[s > 0]
+        if s.empty or s.median() < min_median_price_eur:
+            continue
+        ids.append(item_id)
+    return ids
+
+
 def compute_grade_raw_ratio_flags(
     metadata: Dict[str, Any],
     grade9_prices_df: pd.DataFrame,

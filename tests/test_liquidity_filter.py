@@ -6,7 +6,7 @@ import pandas as pd
 
 from poke_quant.data.liquidity_filter import (
     compute_reliability_flags, filter_reliable, is_liquid_sealed, liquid_sealed_ids,
-    compute_grade_raw_ratio_flags,
+    compute_grade_raw_ratio_flags, liquid_singles_ids,
 )
 
 
@@ -131,3 +131,47 @@ def test_missing_reference_price_not_flagged():
     del metadata["thin_outlier"]["cardmarket_ref_price_eur"]
     flags = compute_grade_raw_ratio_flags(metadata, prices, percentile_cutoff=0.10, min_cohort=20)
     assert "thin_outlier" not in flags
+
+
+def _singles_universe():
+    idx = pd.date_range("2024-01-01", periods=12, freq="MS")
+    metadata = {
+        "cheap_common": {"type": "single"},  # sotto il pavimento di costo di gradazione
+        "normal_card": {"type": "single"},
+        "flagged_thin": {"type": "single", "data_quality": "thin_unreliable"},
+        "a_sealed_box": {"type": "sealed"},
+    }
+    prices = pd.DataFrame({
+        "cheap_common": [11.0] * 12,   # mediana 11EUR - sotto un pavimento di 20EUR
+        "normal_card": [50.0] * 12,
+        "flagged_thin": [80.0] * 12,   # prezzo alto, ma gia' flaggato dati inattendibili
+        "a_sealed_box": [200.0] * 12,
+    }, index=idx)
+    return metadata, prices
+
+
+def test_liquid_singles_ids_excludes_thin_unreliable_flagged_cards():
+    """Trovato indagando un prezzo reale (Mantine #64 a 11,48EUR Grade9): il
+    segnale live (scripts/generate_singles_signal.py) non applicava MAI questo
+    filtro, anche se il backtest validato lo fa da tempo - un bug, non solo un
+    filtro mancante."""
+    metadata, prices = _singles_universe()
+    ids = liquid_singles_ids(metadata, prices, min_median_price_eur=0.0)
+    assert "flagged_thin" not in ids
+    assert "normal_card" in ids
+
+
+def test_liquid_singles_ids_excludes_below_grading_cost_floor():
+    """La sola gradazione PSA/CGC costa piu' del prezzo mostrato per queste
+    carte - nessuno le gradirebbe oggi a queste condizioni (vedi
+    scripts/grading_cost_floor_test.py)."""
+    metadata, prices = _singles_universe()
+    ids = liquid_singles_ids(metadata, prices, min_median_price_eur=20.0)
+    assert "cheap_common" not in ids
+    assert "normal_card" in ids
+
+
+def test_liquid_singles_ids_excludes_sealed_items():
+    metadata, prices = _singles_universe()
+    ids = liquid_singles_ids(metadata, prices, min_median_price_eur=0.0)
+    assert "a_sealed_box" not in ids

@@ -46,7 +46,7 @@ from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentum
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
 from poke_quant.engine.position_sizing import age_weight
 from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTOFF
-from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSRP_RATIO
+from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSRP_RATIO, liquid_singles_ids
 from poke_quant.data.price_fetcher import fetch_pricecharting_cover_image_url
 from poke_quant.config import estimate_usa_import_landed_cost
 from scripts.generate_singles_signal import (
@@ -112,9 +112,28 @@ VALIDATED_SINGLES = {
     # ma piu' vicino. Nota onesta: raichu_14 stesso resta nell'universo (24°
     # percentile della sua coorte, sopra la soglia conservativa del 10°) - il
     # filtro riduce il problema, non lo elimina caso per caso.
-    "dsr_own_grid": 0.999, "dsr_full_session": 0.876, "n_trials_full_session": 66,
-    "pbo": 0.000, "sharpe": 1.57, "cagr": 26.73, "max_dd": -12.03,
-    "h1_sharpe": 0.52, "h2_sharpe": 3.07,
+    # AGGIORNAMENTO 3 (l'utente ha verificato un prezzo reale - Mantine #64 a
+    # 11,48EUR Grade9, quando la sola gradazione PSA/CGC costa piu' di cosi'
+    # anche nella fascia bulk): trovato un BUG, non solo un filtro mancante -
+    # get_singles_backtest_results() qui sotto filtrava correttamente
+    # data_quality="thin_unreliable", ma scripts/generate_singles_signal.py
+    # (che genera le liste BUY/alternative/avoid REALMENTE mostrate) non
+    # filtrava MAI nulla: 2/15 carte BUY e 11/107 alternative erano gia'
+    # flaggate come dato inattendibile, ma proposte come acquisto. Corretto
+    # (liquidity_filter.py::liquid_singles_ids, ora usato ovunque). Aggiunto
+    # anche un pavimento di costo di gradazione (MIN_SINGLES_MEDIAN_PRICE_EUR
+    # = 20EUR, stima ragionata non un listino verificato): 216/869 carte
+    # (25%, di cui 208 "random_control" - campione casuale per testare
+    # survivorship bias, non scelte come investimento) avevano un prezzo
+    # Grade9 mediano storico sotto il costo minimo reale di farle gradare -
+    # l'intera "sottovalutazione" era un artefatto della regressione
+    # log-lineare compressa vicino allo zero. Testato
+    # (scripts/grading_cost_floor_test.py): escluderle NON peggiora l'edge
+    # (Sharpe 1,57->1,58, DSR migliora leggermente nonostante +3 trial nel
+    # conteggio onesto) - coerente con l'ipotesi che non fossero alfa reale.
+    "dsr_own_grid": 0.999, "dsr_full_session": 0.878, "n_trials_full_session": 69,
+    "pbo": 0.000, "sharpe": 1.58, "cagr": 27.66, "max_dd": -14.60,
+    "h1_sharpe": 0.61, "h2_sharpe": 3.04,
 }
 VALIDATED_BLEND = {"sharpe": 1.90, "cagr": 24.73, "max_dd": -7.01}
 
@@ -279,10 +298,7 @@ def get_singles_backtest_results(mode: str = "production"):
     params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
     metadata = load_metadata()
     prices_full = get_singles_prices_full()
-    singles_ids = [
-        k for k, v in metadata.items()
-        if v.get("type") == "single" and v.get("data_quality") != "thin_unreliable" and k in prices_full.columns
-    ]
+    singles_ids = liquid_singles_ids(metadata, prices_full)
     meta_sub = {k: v for k, v in metadata.items() if k in singles_ids}
     prices_sub = prices_full[singles_ids]
     strat = ScarcityValueFactorStrategy(**params)
@@ -773,13 +789,14 @@ def main():
                "prezzo reale anche dopo il filtro di attendibilità — se non trovi nulla sotto il \"massimo\" su "
                "nessun canale, registralo con `log_execution_price.py` invece di ignorare il segnale. \"→ N pz.\" è "
                "quante copie IDENTICHE (stessa carta, stesso grado, stessa lingua) il budget assegnato comprerebbe "
-               "al prezzo mostrato — ⚠️ **VERIFICATO** (`scripts/max_quantity_per_trade_test.py`): il backtest "
-               "validato (Sharpe 1,57) assume che tu trovi TUTTE queste copie insieme, ogni mese, per centinaia di "
-               "trade — con un tetto realistico di 1 copia per acquisto lo Sharpe scende a 0,30 (DSR 0,04, non "
-               "distinguibile dal rumore, come i fattori già scartati). Con 2 copie: Sharpe 0,89 (DSR 0,37, ancora "
-               "debole). L'edge delle singole regge solo se riesci sistematicamente a comprare più slab identici "
-               "per volta — se compri quasi sempre un pezzo singolo, tratta lo Sharpe 1,57 come un tetto teorico, "
-               "non un'aspettativa realistica. Prime 15 con grafico, le altre in tabella sotto.")
+               "al prezzo mostrato — ⚠️ **VERIFICATO** (`scripts/max_quantity_per_trade_test.py`, "
+               "rieseguito dopo aver escluso le carte sotto il pavimento di costo di gradazione, vedi sopra): il "
+               "backtest validato (Sharpe 1,58) assume che tu trovi TUTTE queste copie insieme, ogni mese, per "
+               "centinaia di trade — con un tetto realistico di 1 copia per acquisto lo Sharpe scende a 0,64 (DSR "
+               "0,18, ancora debole). Con 2 copie: Sharpe 1,14 (DSR 0,59, piu' vicino alla soglia). Escludere le "
+               "carte quasi-senza-valore ha ridotto MA non eliminato la dipendenza dal comprare piu' copie identiche "
+               "— se compri quasi sempre un pezzo singolo, tratta lo Sharpe 1,58 come un tetto teorico, non "
+               "un'aspettativa realistica. Prime 15 con grafico, le altre in tabella sotto.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:

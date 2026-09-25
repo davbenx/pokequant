@@ -17,7 +17,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.generate_singles_signal import (
-    _signal_streak, PRODUCTION_PARAMS, compute_singles_avoid_rows, compute_singles_alternative_rows, _display_name,
+    _signal_streak, PRODUCTION_PARAMS, compute_singles_signal_rows, compute_singles_avoid_rows,
+    compute_singles_alternative_rows, _display_name,
 )
 
 SIGNAL_FRESHNESS_MONTHS = PRODUCTION_PARAMS["rebalance_every_months"]  # 3, la cadenza di produzione
@@ -118,6 +119,38 @@ def test_alternative_rows_skip_the_top_ranked_cards_already_shown():
     # le alternative sono rank 3,4,5 = card_22, card_21, card_20.
     assert [r["item_id"] for r in rows] == ["card_22", "card_21", "card_20"]
     assert rows[0]["residual"] < rows[-1]["residual"]
+
+
+def test_signal_rows_exclude_thin_unreliable_and_below_grading_cost_floor():
+    """BUG TROVATO verificando un prezzo reale (l'utente: Mantine #64 a
+    11,48EUR Grade9, quando la sola gradazione PSA/CGC costa piu' di cosi'):
+    il segnale live non applicava MAI il filtro di attendibilita' (data_quality
+    ="thin_unreliable", gia' validato nel backtest ma non wired qui) ne' un
+    pavimento di costo di gradazione - entrambe le carte piu' "sottovalutate"
+    (residuo piu' negativo, quelle che il modello vorrebbe mostrare per prime)
+    devono restare escluse dalla lista mostrata all'utente."""
+    dates = pd.date_range("2024-01-01", periods=4, freq="MS")
+    ids = [f"card_{i}" for i in range(25)]
+    prices = pd.DataFrame({i: [100.0] * 4 for i in ids}, index=dates)
+    prices["thin_flagged"] = 90.0  # sconto vs pari, ma dato gia' segnalato inattendibile
+    prices["cheap_common"] = 5.0   # sconto enorme, ma sotto il pavimento di costo di gradazione
+    metadata = {
+        i: {"name": i, "type": "single", "release_date": "2019-01-01", "rarity": "Rare Holo",
+            "franchise": "pokemon", "language": "en", "selection_method": "random_control"}
+        for i in ids
+    }
+    metadata["thin_flagged"] = {"name": "thin_flagged", "type": "single", "release_date": "2019-01-01",
+                                 "rarity": "Rare Holo", "franchise": "pokemon", "language": "en",
+                                 "selection_method": "random_control", "data_quality": "thin_unreliable"}
+    metadata["cheap_common"] = {"name": "cheap_common", "type": "single", "release_date": "2019-01-01",
+                                 "rarity": "Rare Holo", "franchise": "pokemon", "language": "en",
+                                 "selection_method": "random_control"}
+    with patch("scripts.generate_singles_signal.load_metadata", return_value=metadata), \
+         patch("scripts.generate_singles_signal.load_price_matrix", return_value=prices):
+        rows, _ = compute_singles_signal_rows(PRODUCTION_PARAMS)
+    shown_ids = {r["item_id"] for r in rows}
+    assert "thin_flagged" not in shown_ids
+    assert "cheap_common" not in shown_ids
 
 
 def test_display_name_flags_wotc_unlimited_print():
