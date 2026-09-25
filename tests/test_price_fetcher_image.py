@@ -53,3 +53,37 @@ def test_returns_none_on_network_error():
     with patch("poke_quant.data.price_fetcher.requests.get", side_effect=Exception("timeout")):
         url = fetch_pricecharting_cover_image_url("pokemon-some-set", "booster-box")
     assert url is None
+
+
+def _make_response(status_code, text="", headers=None):
+    resp = MagicMock()
+    resp.status_code = status_code
+    resp.text = text
+    resp.headers = headers or {}
+    if status_code >= 400:
+        import requests as _requests
+        resp.raise_for_status.side_effect = _requests.exceptions.HTTPError(f"{status_code}")
+    else:
+        resp.raise_for_status = MagicMock()
+    return resp
+
+
+def test_retries_after_429_and_succeeds_on_second_attempt():
+    """Trovato verificando "molte immagini delle carte singole non le vedo": la
+    dashboard richiede 30-60 immagini per pagina in burst, e una parte finisce
+    rate-limited (429) da PriceCharting - prima nessun retry, un 429 isolato
+    diventava un "None" cacheato per 7 giorni. Un 429 seguito da un successo
+    deve restituire l'immagine, non arrendersi al primo tentativo."""
+    responses = [_make_response(429, headers={"Retry-After": "0"}), _make_response(200, text=_FAKE_HTML)]
+    with patch("poke_quant.data.price_fetcher.requests.get", side_effect=responses), \
+         patch("poke_quant.data.price_fetcher.time.sleep") as mock_sleep:
+        url = fetch_pricecharting_cover_image_url("pokemon-some-set", "booster-box")
+    assert url == "https://storage.googleapis.com/images.pricecharting.com/correct-hash-here/240.jpg"
+    mock_sleep.assert_called_once()
+
+
+def test_gives_up_after_repeated_429_without_crashing():
+    with patch("poke_quant.data.price_fetcher.requests.get", return_value=_make_response(429)), \
+         patch("poke_quant.data.price_fetcher.time.sleep"):
+        url = fetch_pricecharting_cover_image_url("pokemon-some-set", "booster-box")
+    assert url is None

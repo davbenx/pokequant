@@ -8,6 +8,7 @@ import datetime
 import json
 import logging
 import re
+import time
 from typing import Dict, List, Any, Optional, Tuple
 import pandas as pd
 import requests
@@ -31,14 +32,40 @@ def fetch_pricecharting_cover_image_url(game_slug: str, item_slug: str) -> Optio
     seguito da <div class="cover"><img src=...> - le altre immagini nella pagina
     (tabelle di prodotti simili/ricerca) compaiono PRIMA di questo blocco, quindi
     cercare solo dopo id="product_details" evita di prendere la copertina di un
-    prodotto diverso. Ritorna None se la pagina non ha questo blocco (slug rotto)."""
+    prodotto diverso. Ritorna None se la pagina non ha questo blocco (slug rotto).
+
+    Trovato verificando "molte immagini delle carte singole non le vedo": la
+    dashboard richiede fino a 50-60 immagini in un solo caricamento pagina (BUY
+    + AVOID box e singole), tutte sincrone senza pausa - un burst che fa scattare
+    il rate limiting 429 di PriceCharting su una parte di esse (verificato
+    empiricamente: sporadico, non un singolo prodotto rotto). Prima nessun retry:
+    un singolo 429 diventava un "None" cacheato per 7 giorni intero
+    (get_product_image in app.py) - un rate limit transitorio si trasformava in
+    "niente immagine per una settimana". Aggiunto un retry breve con backoff
+    solo sul 429 (rispetta Retry-After se presente, altrimenti 1s/2s) - non
+    elimina il rate limit, ma recupera la stragrande maggioranza dei casi senza
+    aspettare la prossima settimana."""
     url = f"https://www.pricecharting.com/game/{game_slug}/{item_slug}"
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=15)
-        resp.raise_for_status()
-    except Exception as e:
-        logger.warning(f"Impossibile scaricare {url} per l'immagine: {e}")
-        return None
+    last_attempt = 2
+    resp = None
+    for attempt in range(last_attempt + 1):
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=15)
+        except Exception as e:
+            if attempt == last_attempt:
+                logger.warning(f"Impossibile scaricare {url} per l'immagine: {e}")
+                return None
+            continue
+        if resp.status_code == 429 and attempt < last_attempt:
+            wait_s = float(resp.headers.get("Retry-After", 1.0 * (attempt + 1)))
+            time.sleep(min(wait_s, 5.0))
+            continue
+        try:
+            resp.raise_for_status()
+        except Exception as e:
+            logger.warning(f"Impossibile scaricare {url} per l'immagine: {e}")
+            return None
+        break
     text = resp.text
     marker = text.find('id="product_details"')
     if marker < 0:

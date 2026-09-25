@@ -29,6 +29,7 @@ dall'Italia, vedi OPERATIONS_ITALIA.md) su ogni posizione BUY/HOLD.
 
 from __future__ import annotations
 import sys
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -308,16 +309,36 @@ def get_singles_backtest_results(mode: str = "production"):
     return res, len(singles_ids)
 
 
-@st.cache_data(show_spinner=False, ttl=7 * 24 * 3600)
+# Cache manuale invece di @st.cache_data: serve un TTL DIVERSO per successo e
+# fallimento. Trovato verificando "molte immagini delle carte singole non le
+# vedo" - la dashboard richiede 30-60 immagini per pagina, tutte sincrone: un
+# burst che fa scattare il rate limiting 429 di PriceCharting su una parte di
+# esse (mitigato con retry in fetch_pricecharting_cover_image_url, ma non
+# eliminato). Con un unico TTL lungo (7gg, giusto per un successo - l'immagine
+# di un prodotto non cambia), un fallimento residuo diventava "nessuna
+# immagine per una settimana intera". Ora un fallimento si ritenta dopo 1h,
+# un successo resta cacheato 7gg.
+_IMAGE_CACHE: dict = {}
+_IMAGE_SUCCESS_TTL = 7 * 24 * 3600
+_IMAGE_FAILURE_TTL = 3600
+
+
 def get_product_image(game_slug: str, item_slug: str) -> Optional[str]:
-    """Immagine di copertina reale da PriceCharting, cache 7gg (l'immagine di un
-    prodotto non cambia) - evita di rifare il fetch di rete a ogni refresh pagina."""
     if not game_slug or not item_slug:
         return None
+    key = (game_slug, item_slug)
+    now = time.time()
+    cached = _IMAGE_CACHE.get(key)
+    if cached is not None:
+        url, cached_at, ttl = cached
+        if now - cached_at < ttl:
+            return url
     try:
-        return fetch_pricecharting_cover_image_url(game_slug, item_slug)
+        url = fetch_pricecharting_cover_image_url(game_slug, item_slug)
     except Exception:
-        return None
+        url = None
+    _IMAGE_CACHE[key] = (url, now, _IMAGE_SUCCESS_TTL if url else _IMAGE_FAILURE_TTL)
+    return url
 
 
 def build_price_chart(item_id: str, name: str, prices_full: pd.DataFrame, months: int = 24):
