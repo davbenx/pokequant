@@ -617,13 +617,16 @@ def main():
         if show_usa_import:
             landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="sealed")
             usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.0f}€</span>')
+        qty_est = max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1
+        qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più copie identiche disponibili insieme</span>' if qty_est > 3 else ""
+        qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz.{qty_warn}</span>'
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
             {img_tag}
             <div class="signal-card-body">
             <strong>{r['name']}</strong> &nbsp; <span style="color:#10b981;">+{r['trailing_12m_return_pct']:.0f}% (12m)</span>
             &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting) &nbsp;·&nbsp; peso età {w:.2f}{max_price_html}{usa_import_html}
-            <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>
+            <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
             </div>
         </div>
@@ -706,8 +709,15 @@ def main():
                "Cardmarket (espansione, lingua) per arrivare al prodotto giusto. Sulle carte vintage "
                "poco liquide in generale, il pannello Grade 9 di PriceCharting può restare sottostimato rispetto al "
                "prezzo reale anche dopo il filtro di attendibilità — se non trovi nulla sotto il \"massimo\" su "
-               "nessun canale, registralo con `log_execution_price.py` invece di ignorare il segnale. Prime 15 con "
-               "grafico, le altre in tabella sotto.")
+               "nessun canale, registralo con `log_execution_price.py` invece di ignorare il segnale. \"→ N pz.\" è "
+               "quante copie IDENTICHE (stessa carta, stesso grado, stessa lingua) il budget assegnato comprerebbe "
+               "al prezzo mostrato — ⚠️ **VERIFICATO** (`scripts/max_quantity_per_trade_test.py`): il backtest "
+               "validato (Sharpe 1,57) assume che tu trovi TUTTE queste copie insieme, ogni mese, per centinaia di "
+               "trade — con un tetto realistico di 1 copia per acquisto lo Sharpe scende a 0,30 (DSR 0,04, non "
+               "distinguibile dal rumore, come i fattori già scartati). Con 2 copie: Sharpe 0,89 (DSR 0,37, ancora "
+               "debole). L'edge delle singole regge solo se riesci sistematicamente a comprare più slab identici "
+               "per volta — se compri quasi sempre un pezzo singolo, tratta lo Sharpe 1,57 come un tetto teorico, "
+               "non un'aspettativa realistica. Prime 15 con grafico, le altre in tabella sotto.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:
@@ -731,6 +741,9 @@ def main():
         if show_usa_import:
             landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="single")
             usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.2f}€</span>')
+        qty_est = max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1
+        qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più slab identici disponibili insieme — verifica quante ne trovi davvero</span>' if qty_est > 1 else ""
+        qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz.{qty_warn}</span>'
         st.markdown(f"""
         <div class="signal-card signal-card-buy">
             {img_tag}
@@ -738,7 +751,7 @@ def main():
             <strong>{r['name']}</strong> &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
             &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting) &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%
             &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r['months_in_signal']}m)</span>{max_price_html}{usa_import_html}
-            <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>
+            <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}
             &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
             </div>
         </div>
@@ -755,7 +768,8 @@ def main():
                  "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
                  "Massimo totale (€)": r.get("max_edge_price_eur"),
                  "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
-                 "Allocazione (€)": alloc}
+                 "Allocazione (€)": alloc,
+                 "Quantità": max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1}
                 for r, alloc in singles_allocation[15:]
             ])
             st.dataframe(rest_df, use_container_width=True, hide_index=True,

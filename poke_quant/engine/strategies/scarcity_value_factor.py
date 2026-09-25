@@ -117,6 +117,7 @@ class ScarcityValueFactorStrategy:
         use_rank: bool = True,
         extra_controls: bool = True,
         exit_quantile: Optional[float] = None,
+        max_quantity_per_trade: Optional[int] = None,
     ):
         self.rebalance_every_months = rebalance_every_months
         self.top_quantile = top_quantile
@@ -136,6 +137,17 @@ class ScarcityValueFactorStrategy:
         # da residui che oscillano attorno al taglio esatto senza un vero
         # cambio di tesi. Vedi scripts/singles_hysteresis_search.py per l'esito.
         self.exit_quantile = exit_quantile
+        # Trovato indagando "e se compro piu' copie?": senza tetto, qty =
+        # budget_posizione // prezzo compra decine di copie IDENTICHE (stessa
+        # carta, stesso grado) su una carta economica - nel backtest validato
+        # arriva a 95 copie in un solo mese (Aegislash Grade9 a 2,20€). Nessun
+        # mercato reale ha mai 95 slab identici disponibili insieme allo
+        # stesso prezzo tracciato - il backtest assume liquidita' infinita per
+        # costruzione. Default None = nessun tetto, comportamento storico
+        # invariato (i numeri validati finora NON hanno questo limite) - vedi
+        # scripts/max_quantity_per_trade_test.py per l'impatto misurato di
+        # aggiungerne uno realistico.
+        self.max_quantity_per_trade = max_quantity_per_trade
         self._call_count = 0
 
     def reset(self):
@@ -233,6 +245,8 @@ class ScarcityValueFactorStrategy:
             qty = int(budget // cur_price)
             if qty < 1 and available_cash >= cur_price and cur_price <= total_nav * 0.35:
                 qty = 1
+            if self.max_quantity_per_trade is not None:
+                qty = min(qty, self.max_quantity_per_trade)
             if qty >= 1:
                 signals.append(Signal(
                     action="BUY", item_id=item_id, item_name=info.get("name", item_id),

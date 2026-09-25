@@ -101,6 +101,7 @@ class TimeSeriesMomentumStrategy:
         max_holding_months: Optional[int] = None,
         min_confirm_months: int = 1,
         max_price_msrp_ratio: Optional[float] = None,
+        max_quantity_per_trade: Optional[int] = None,
     ):
         self.prices_df = prices_df.sort_index()
         self.lookback_months = lookback_months
@@ -114,6 +115,12 @@ class TimeSeriesMomentumStrategy:
         self.max_holding_months = max_holding_months
         self.min_confirm_months = max(1, min_confirm_months)
         self.max_price_msrp_ratio = max_price_msrp_ratio
+        # Stesso tetto di ScarcityValueFactorStrategy - senza, qty = budget //
+        # prezzo compra decine di copie IDENTICHE dello stesso box nel
+        # backtest validato (fino a 12 in un solo mese) assumendo liquidita'
+        # infinita. Default None = nessun tetto, comportamento storico
+        # invariato - vedi scripts/max_quantity_per_trade_test.py.
+        self.max_quantity_per_trade = max_quantity_per_trade
 
     def reset(self):
         pass
@@ -236,6 +243,8 @@ class TimeSeriesMomentumStrategy:
             qty = int(budget // cur_price)
             if qty < 1 and available_cash >= cur_price and cur_price <= total_nav * 0.35:
                 qty = 1  # lotto minimo indivisibile per conti piccoli, come nelle altre strategie
+            if self.max_quantity_per_trade is not None:
+                qty = min(qty, self.max_quantity_per_trade)
             if qty >= 1:
                 signals.append(Signal(
                     action="BUY", item_id=item_id, item_name=info.get("name", item_id),
