@@ -189,3 +189,39 @@ def test_set_label_handles_known_abbreviation_and_ampersand():
 
 def test_set_label_none_without_game_slug():
     assert _set_label({"name": "x"}) is None
+
+
+def test_alternative_rows_include_stale_cards_excluded_from_buy_by_freshness():
+    """TROVATO verificando un cambio reale in dashboard (l'utente: "vedevo
+    raichu, aerodactyl, dragonite - adesso vedo moltres, dark charizard,
+    cosa l'ha provocato?"): compute_singles_alternative_rows() escludeva
+    solo le prime max_positions per RANK, non le carte EFFETTIVAMENTE
+    mostrate come BUY (che possono essere meno di max_positions per il
+    filtro di freschezza/value-trap). Una carta ancora nel quantile top-60
+    per rank ma esclusa dal BUY principale perche' li' da troppi mesi
+    finiva invisibile ovunque - ne' nel BUY (freschezza) ne' nelle
+    alternative (rank<max_positions). Verifica che una carta con streak
+    lungo (esclusa dal BUY) appaia comunque come alternativa."""
+    dates = pd.date_range("2024-01-01", periods=4, freq="MS")
+    ids = [f"card_{i}" for i in range(25)]
+    prices = pd.DataFrame({i: [100.0] * 4 for i in ids}, index=dates)
+    for i, item_id in enumerate(ids):
+        prices[item_id] = 100.0 - i  # residuo via via meno negativo al crescere di i
+    metadata = {
+        i: {"name": i, "type": "single", "release_date": "2019-01-01", "rarity": "Rare Holo",
+            "franchise": "pokemon", "language": "en", "selection_method": "random_control"}
+        for i in ids
+    }
+    params = dict(PRODUCTION_PARAMS, max_positions=2, min_cross_section=20)
+    with patch("scripts.generate_singles_signal.load_metadata", return_value=metadata), \
+         patch("scripts.generate_singles_signal.load_price_matrix", return_value=prices):
+        buy_rows, _ = compute_singles_signal_rows(params)
+        alt_rows, _ = compute_singles_alternative_rows(params, extra_positions=10)
+    # Presente in tutti i 4 mesi (streak=4 > freshness_months=3) -> escluso dal
+    # BUY come possibile value trap, ma card_24 e' rank 1 (la piu' a buon
+    # mercato) e resta nel quantile top-60 per rank - deve apparire come
+    # alternativa, non restare invisibile.
+    buy_ids = {r["item_id"] for r in buy_rows}
+    alt_ids = {r["item_id"] for r in alt_rows}
+    assert "card_24" not in buy_ids
+    assert "card_24" in alt_ids

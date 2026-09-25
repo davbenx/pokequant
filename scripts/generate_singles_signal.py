@@ -239,14 +239,28 @@ EXTRA_ALTERNATIVES = 1000
 
 
 def compute_singles_alternative_rows(params: dict = None, extra_positions: int = EXTRA_ALTERNATIVES):
-    """Carte rank max_positions..max_positions+extra_positions nello STESSO
-    quantile 20% piu' sottovalutato del mese corrente - NON allarga il
-    quantile stesso (leva diversa, testata separatamente e piu' rischiosa,
-    vedi scripts/singles_diversify_when_capped_test.py). Nessun filtro di
-    freschezza/streak (a differenza di compute_singles_signal_rows): sono
-    suggerimenti di ripiego per il mese corrente, non un elenco BUY testato
-    a se'."""
+    """Carte nel quantile 20% piu' sottovalutato del mese corrente ESCLUSE
+    quelle GIA' MOSTRATE come BUY principale (compute_singles_signal_rows) -
+    NON allarga il quantile stesso (leva diversa, testata separatamente e
+    piu' rischiosa, vedi scripts/singles_diversify_when_capped_test.py).
+    Nessun filtro di freschezza/streak qui: sono suggerimenti di ripiego per
+    il mese corrente, non un elenco BUY testato a se'.
+
+    TROVATO verificando un cambio reale in dashboard (l'utente: "vedevo
+    raichu, aerodactyl, dragonite - adesso vedo moltres, dark charizard"):
+    l'esclusione qui usava SOLO il rank (prime max_positions=60), non
+    l'elenco REALMENTE mostrato in compute_singles_signal_rows (che applica
+    ANCHE il filtro di freschezza/value-trap). Risultato: una carta ancora
+    nel quantile top-60 per rank ma esclusa dal BUY principale perche' li'
+    da piu' di 3 mesi (es. raichu_14, rank 9, streak 4 mesi) non appariva
+    NE' nel BUY (freschezza) NE' nelle alternative (rank<60) - invisibile
+    ovunque, anche se il modello la considera ancora sottovalutata. Corretto
+    usando l'elenco EFFETTIVAMENTE mostrato come esclusione, non il rank
+    grezzo - ora quella carta appare come alternativa."""
     params = params or PRODUCTION_PARAMS
+    shown_rows, _ = compute_singles_signal_rows(params)
+    already_shown = {r["item_id"] for r in shown_rows}
+
     metadata = load_metadata()
     prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
     metadata, prices_full = _liquid_universe(metadata, prices_full)
@@ -260,8 +274,7 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
 
     n_buy = max(1, int(len(residuals) * strat.top_quantile))
     ranked = sorted(residuals.items(), key=lambda x: x[1])[:n_buy]
-    already_shown = set(item_id for item_id, _ in ranked[: strat.max_positions])
-    extra = ranked[strat.max_positions: strat.max_positions + extra_positions]
+    extra = [(iid, res) for iid, res in ranked if iid not in already_shown][:extra_positions]
     # Confine del quantile 20% INTERO (non quello troncato a max_positions usato
     # per la lista principale): per un'alternativa, la domanda e' "quanto puo'
     # salire il prezzo prima che la carta esca dal quantile piu' sottovalutato
@@ -273,8 +286,6 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
 
     rows = []
     for item_id, residual in extra:
-        if item_id in already_shown:
-            continue
         info = metadata[item_id]
         current_price = snap[item_id]["current_price"]
         max_edge_price_eur = (current_price * np.exp(quantile_cutoff_residual - residual)
