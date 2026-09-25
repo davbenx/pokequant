@@ -58,3 +58,30 @@ def load_macro_matrix(filename: str = "macro_benchmarks.csv") -> Optional[pd.Dat
     df.index = pd.to_datetime(df.index)
     return df
 
+
+POPULATION_HISTORY_COLUMNS = ["date", "item_id", "grade", "psa_pop", "cgc_pop", "total_pop", "price_usd"]
+
+
+def append_population_snapshot(rows: "list[dict]", filename: str = "population_history.csv"):
+    """Accoda righe (date/item_id/grade/psa_pop/cgc_pop/total_pop/price_usd) al log di
+    popolazione - un LOG che cresce nel tempo (uno snapshot per fetch), non una matrice
+    da sovrascrivere: PriceCharting non pubblica la popolazione passata (vedi
+    poke_quant/data/population_fetcher.py), quindi la storia si costruisce solo
+    accumulando snapshot successivi, mai retroattivamente."""
+    if not rows:
+        return
+    path = ensure_cache_dir() / filename
+    df_new = pd.DataFrame(rows, columns=POPULATION_HISTORY_COLUMNS)
+    if path.exists():
+        df_new.to_csv(path, mode="a", header=False, index=False)
+    else:
+        df_new.to_csv(path, mode="w", header=True, index=False)
+
+
+def load_population_history(filename: str = "population_history.csv") -> Optional[pd.DataFrame]:
+    path = ensure_cache_dir() / filename
+    if not path.exists():
+        return None
+    df = pd.read_csv(path, parse_dates=["date"])
+    return df
+

@@ -1,0 +1,38 @@
+name: Snapshot Mensile Popolazione PSA/CGC
+
+# Cadenza indipendente da monthly_signal.yml (stesso giorno, orario diverso per non
+# sovrapporsi): PriceCharting dichiara un aggiornamento mensile della popolazione
+# (blog.pricecharting.com/2026/02/population-reports-for-psa-cgc.html), non e' un
+# archivio storico - ogni run accoda UN nuovo giorno di dati a
+# data_cache/population_history.csv (mai sovrascritto), costruendo una serie storica
+# solo in avanti da quando questo workflow ha iniziato a girare.
+on:
+  schedule:
+    - cron: '0 11 2 * *' # Il 2 di ogni mese alle 11:00 UTC
+  workflow_dispatch:
+
+jobs:
+  population-snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Scarica lo snapshot odierno di popolazione (PSA/CGC per grado)
+        run: python scripts/fetch_population_snapshot.py
+      - name: Esegui suite di test (sanity check post-refresh)
+        run: python -m pytest -q
+      - name: Commit e push dello snapshot
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data_cache/population_history.csv
+          git commit -m "Snapshot mensile automatico popolazione PSA/CGC" || echo "Nessuna modifica da pushare"
+          git pull --rebase origin main || true
+          git push
