@@ -16,7 +16,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scripts.generate_singles_signal import _signal_streak, PRODUCTION_PARAMS, compute_singles_avoid_rows, _display_name
+from scripts.generate_singles_signal import (
+    _signal_streak, PRODUCTION_PARAMS, compute_singles_avoid_rows, compute_singles_alternative_rows, _display_name,
+)
 
 SIGNAL_FRESHNESS_MONTHS = PRODUCTION_PARAMS["rebalance_every_months"]  # 3, la cadenza di produzione
 
@@ -88,6 +90,34 @@ def test_avoid_rows_puts_the_most_overpriced_card_first():
     assert rows[0]["item_id"] == "card_0"
     assert rows[0]["residual"] > 0
     assert latest_date == dates[-1]
+
+
+def test_alternative_rows_skip_the_top_ranked_cards_already_shown():
+    """compute_singles_alternative_rows() e' nato dalla domanda "se non trovo
+    tutte le copie/carte consigliate, cosa compro al loro posto?" - deve
+    restituire le carte APPENA fuori dalle prime max_positions per rank
+    (ancora nel quantile 20% piu' sottovalutato), non le stesse gia' mostrate
+    come BUY principale, e mantenere l'ordine dal residuo piu' negativo."""
+    dates = pd.date_range("2024-01-01", periods=1, freq="MS")
+    ids = [f"card_{i}" for i in range(25)]
+    prices = pd.DataFrame({i: [100.0] for i in ids}, index=dates)
+    for i, item_id in enumerate(ids):
+        prices[item_id] = 100.0 - i  # residuo via via meno negativo al crescere di i
+    metadata = {
+        i: {"name": i, "type": "single", "release_date": "2019-01-01", "rarity": "Rare Holo",
+            "franchise": "pokemon", "language": "en", "selection_method": "random_control"}
+        for i in ids
+    }
+    params = dict(PRODUCTION_PARAMS, max_positions=2, min_cross_section=20)
+    with patch("scripts.generate_singles_signal.load_metadata", return_value=metadata), \
+         patch("scripts.generate_singles_signal.load_price_matrix", return_value=prices):
+        rows, latest_date = compute_singles_alternative_rows(params, extra_positions=3)
+    # Prezzo decrescente con i (100-i) -> la carta piu' a buon mercato (card_24,
+    # residuo piu' negativo) e' rank 1. top_quantile 0.20*25=5 nel quantile BUY;
+    # le prime 2 (max_positions) sono gia' mostrate come BUY principale -
+    # le alternative sono rank 3,4,5 = card_22, card_21, card_20.
+    assert [r["item_id"] for r in rows] == ["card_22", "card_21", "card_20"]
+    assert rows[0]["residual"] < rows[-1]["residual"]
 
 
 def test_display_name_flags_wotc_unlimited_print():

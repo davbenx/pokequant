@@ -50,7 +50,7 @@ from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSR
 from poke_quant.data.price_fetcher import fetch_pricecharting_cover_image_url
 from poke_quant.config import estimate_usa_import_landed_cost
 from scripts.generate_singles_signal import (
-    compute_singles_signal_rows, compute_singles_avoid_rows,
+    compute_singles_signal_rows, compute_singles_avoid_rows, compute_singles_alternative_rows,
     PRODUCTION_PARAMS as SINGLES_PARAMS, DAC7_SINGLES_PARAMS,
 )
 
@@ -245,6 +245,13 @@ def get_singles_signal(mode: str = "production"):
 def get_singles_avoid_signal(mode: str = "production"):
     params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
     rows, latest_date = compute_singles_avoid_rows(params)
+    return rows, latest_date.strftime("%Y-%m-%d")
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def get_singles_alternatives(mode: str = "production"):
+    params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
+    rows, latest_date = compute_singles_alternative_rows(params)
     return rows, latest_date.strftime("%Y-%m-%d")
 
 
@@ -833,6 +840,32 @@ def main():
                              "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
                              "Massimo totale (€)": st.column_config.NumberColumn(format="%.2f €"),
                              "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
+                         })
+
+    # --- RIPIEGO: alternative se non trovi le copie/carte sopra ---
+    alt_rows, _ = get_singles_alternatives(singles_mode)
+    if alt_rows:
+        with st.expander(f"🔄 Non trovi una carta o le copie sopra? {len(alt_rows)} alternative nello stesso quantile"):
+            st.caption("⚠️ **VERIFICATO** (`scripts/singles_diversify_when_capped_test.py`): se non trovi le copie "
+                       "consigliate di una carta, usare il budget liberato per comprare carte DIVERSE già "
+                       "sottovalutate — invece di lasciarlo fermo — recupera parte dell'edge perso (Sharpe 0,30→0,80 "
+                       "col tetto realistico di 1 copia), ma non tutto: il MaxDD peggiora (-13%→-21%) e il DSR resta "
+                       "sotto la soglia usata per le altre strategie di questa dashboard (0,29 contro 0,87-0,95). "
+                       "Queste carte sono ANCORA nel quantile 20% più sottovalutato (stesso fattore, stesso mese), "
+                       "solo fuori dalle prime 60 per rank — non allarghiamo qui la soglia del fattore stesso (leva "
+                       "diversa, più rischiosa, testata a parte: peggiora ancora il MaxDD). Non è un secondo elenco "
+                       "BUY equivalente al primo: usalo come ripiego per capitale altrimenti inutilizzato, non come "
+                       "sostituto sistematico. Nessun filtro di freschezza qui (a differenza della lista sopra) — "
+                       "verifica comunque il grafico prezzo prima di comprare.")
+            alt_df = pd.DataFrame([
+                {"Carta": r["name"], "Rarità": r["rarity"], "Grado": "Grade 9",
+                 "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"]}
+                for r in alt_rows[:60]
+            ])
+            st.dataframe(alt_df, use_container_width=True, hide_index=True,
+                         column_config={
+                             "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
+                             "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
                          })
 
     # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---

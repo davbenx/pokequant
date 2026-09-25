@@ -176,6 +176,63 @@ def compute_singles_signal_rows(params: dict = None):
     return rows, latest_date
 
 
+# Trovato indagando "se non trovo tutte le copie consigliate di una carta,
+# cosa mi conviene comprare al suo posto?" (scripts/singles_diversify_when_capped_test.py):
+# col tetto realistico di 1 copia per acquisto, usare il budget liberato per
+# comprare PIU' carte diverse (rank 61-173, ancora dentro al quantile 20% piu'
+# sottovalutato, solo fuori dalle prime max_positions=60 per rank) recupera
+# gran parte dell'edge perso - Sharpe 0,30->0,80 - ma non tutto: MaxDD peggiora
+# (-13%->-21%) e il DSR resta sotto la soglia usata per validare le altre
+# strategie di questa dashboard (0,29 contro 0,87-0,95). E' un ripiego
+# empiricamente migliore di lasciare il capitale fermo, NON una strategia a se'
+# validata - va mostrato come tale, non come un secondo elenco BUY equivalente.
+EXTRA_ALTERNATIVES = 113  # 60 (max_positions produzione) + 113 = 173 = intero quantile 20% (869 carte)
+
+
+def compute_singles_alternative_rows(params: dict = None, extra_positions: int = EXTRA_ALTERNATIVES):
+    """Carte rank max_positions..max_positions+extra_positions nello STESSO
+    quantile 20% piu' sottovalutato del mese corrente - NON allarga il
+    quantile stesso (leva diversa, testata separatamente e piu' rischiosa,
+    vedi scripts/singles_diversify_when_capped_test.py). Nessun filtro di
+    freschezza/streak (a differenza di compute_singles_signal_rows): sono
+    suggerimenti di ripiego per il mese corrente, non un elenco BUY testato
+    a se'."""
+    params = params or PRODUCTION_PARAMS
+    metadata = load_metadata()
+    prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    latest_date = prices_full.index[-1]
+
+    strat = ScarcityValueFactorStrategy(**params)
+    snap = _snapshot_for_date(prices_full, metadata, latest_date)
+    residuals = strat._fit_residuals(pd.to_datetime(latest_date), snap)
+    if not residuals:
+        return [], latest_date
+
+    n_buy = max(1, int(len(residuals) * strat.top_quantile))
+    ranked = sorted(residuals.items(), key=lambda x: x[1])[:n_buy]
+    already_shown = set(item_id for item_id, _ in ranked[: strat.max_positions])
+    extra = ranked[strat.max_positions: strat.max_positions + extra_positions]
+
+    rows = []
+    for item_id, residual in extra:
+        if item_id in already_shown:
+            continue
+        info = metadata[item_id]
+        current_price = snap[item_id]["current_price"]
+        rows.append({
+            "item_id": item_id,
+            "name": _display_name(item_id, info),
+            "current_price_eur": current_price,
+            "residual": residual,
+            "discount_pct": (np.exp(residual) - 1.0) * 100.0,
+            "rarity": info.get("rarity"),
+            "franchise": info.get("franchise", "pokemon"),
+            "language": info.get("language", "en"),
+        })
+    rows.sort(key=lambda r: r["residual"])
+    return rows, latest_date
+
+
 def compute_singles_avoid_rows(params: dict = None):
     """Ritorna (rows, latest_date) per il quantile OPPOSTO (residuo piu'
     positivo = sopravvalutata rispetto ai pari) - specchio del quantile BUY,
