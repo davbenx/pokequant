@@ -679,6 +679,14 @@ def main():
 
     # --- AZIONE: SINGOLE — FATTORE SCARSITÀ (50% del capitale) ---
     st.markdown(f'<div class="section-title">🃏 Singole da comprare — Fattore Scarsità, 50% del capitale ({capital*0.5:,.0f}€)</div>', unsafe_allow_html=True)
+    if singles_mode == "dac7":
+        st.info("ℹ️ Modalità DAC7 attiva: questa NON è la stessa lista di produzione filtrata più stretta — è "
+                "una configurazione diversa (ribilanciamento ogni 12 mesi invece di 3, max 20 posizioni invece di "
+                "60, validata separatamente). Le due liste possono non avere **nessuna carta in comune**: una "
+                "carta nel quantile top-20 da 8 mesi è \"fresca\" per DAC7 (finestra 12 mesi) ma \"scaduta/value "
+                "trap\" per la produzione (finestra 3 mesi) — e viceversa, una carta appena entrata nella top-60 "
+                "potrebbe non essere nella top-20 più selettiva di DAC7. Disattiva il toggle in sidebar per "
+                "vedere la lista di produzione.")
     st.caption("⚠️ Da comprare: la carta GIÀ GRADATA Grade 9 (uno slab, non la carta raw, non PSA10) — il "
                "fattore lavora solo su questa serie di PriceCharting, non confronta mai tra gradi diversi. "
                "Confronta sempre col prezzo reale su Cardmarket e verifica il grado dell'inserzione a mano: "
