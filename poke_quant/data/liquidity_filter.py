@@ -130,19 +130,38 @@ GRADE_RAW_RATIO_COHORT_WINDOW_YEARS = 3
 # regressione log-lineare compressa vicino allo zero, non un segnale reale.
 MIN_SINGLES_MEDIAN_PRICE_EUR = 20.0
 
+# BUG TROVATO (l'utente: "Vedo ancora Sandslash #42, che e' sotto il prezzo
+# da gradazione"): la prima versione usava la mediana su TUTTA la storia
+# della carta - Sandslash #42 valeva 21-24EUR a fine 2025, e' sceso a ~14EUR
+# a marzo 2026 e ci resta da 7 mesi consecutivi, ma la mediana storica
+# (gonfiata dai prezzi vecchi, piu' alti) resta a 20,32EUR - appena sopra
+# soglia, quindi passa il filtro nonostante il prezzo REALE di oggi sia ben
+# sotto il costo di gradazione. Non un caso isolato: verificato che altre 9
+# carte hanno lo stesso problema (mediana storica >=20EUR ma mediana degli
+# ultimi 12 mesi <20EUR). Corretto usando la mediana sui SOLI ultimi 3 mesi
+# (stessa finestra di "freschezza" del ribilanciamento in produzione,
+# rebalance_every_months=3 - non una scelta arbitraria) invece di tutta la
+# storia: abbastanza reattiva da cogliere un calo sostenuto come questo,
+# abbastanza smussata da non far entrare/uscire una carta ogni mese per un
+# singolo dato rumoroso.
+MIN_SINGLES_PRICE_WINDOW_MONTHS = 3
+
 
 def liquid_singles_ids(
     metadata: Dict[str, Any],
     grade9_prices_df: pd.DataFrame,
     min_median_price_eur: float = MIN_SINGLES_MEDIAN_PRICE_EUR,
+    price_window_months: int = MIN_SINGLES_PRICE_WINDOW_MONTHS,
 ) -> List[str]:
     """Universo singole investibile: esclude le carte gia' flaggate
     data_quality="thin_unreliable" (compute_reliability_flags, gia' applicato
     in ogni backtest ma MAI wired nel segnale live prima di questa funzione -
     vedi scripts/generate_singles_signal.py) e quelle sotto il pavimento di
-    costo di gradazione MIN_SINGLES_MEDIAN_PRICE_EUR (mediana storica, non il
-    prezzo del mese corrente - una classificazione strutturale, non un flag
-    che va e viene ogni mese)."""
+    costo di gradazione MIN_SINGLES_MEDIAN_PRICE_EUR, valutato sulla mediana
+    degli ultimi price_window_months mesi (non tutta la storia - un prezzo
+    calato e rimasto basso per mesi non deve restare "invisibile" dietro
+    prezzi vecchi piu' alti, vedi commento sopra) e non sul solo mese
+    corrente (per non far entrare/uscire una carta ogni mese per rumore)."""
     ids = []
     for item_id, info in metadata.items():
         if info.get("type") != "single":
@@ -153,7 +172,7 @@ def liquid_singles_ids(
             continue
         s = grade9_prices_df[item_id].dropna()
         s = s[s > 0]
-        if s.empty or s.median() < min_median_price_eur:
+        if s.empty or s.tail(price_window_months).median() < min_median_price_eur:
             continue
         ids.append(item_id)
     return ids

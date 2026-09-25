@@ -133,9 +133,22 @@ VALIDATED_SINGLES = {
     # (scripts/grading_cost_floor_test.py): escluderle NON peggiora l'edge
     # (Sharpe 1,57->1,58, DSR migliora leggermente nonostante +3 trial nel
     # conteggio onesto) - coerente con l'ipotesi che non fossero alfa reale.
-    "dsr_own_grid": 0.999, "dsr_full_session": 0.878, "n_trials_full_session": 69,
-    "pbo": 0.000, "sharpe": 1.58, "cagr": 27.66, "max_dd": -14.60,
-    "h1_sharpe": 0.61, "h2_sharpe": 3.04,
+    # AGGIORNAMENTO 4 (l'utente: "Vedo ancora Sandslash #42, che e' sotto il
+    # prezzo da gradazione"): BUG nel pavimento stesso - usava la mediana su
+    # TUTTA la storia della carta, che una carta scesa e rimasta bassa per
+    # mesi puo' superare grazie a prezzi vecchi piu' alti (Sandslash: mediana
+    # storica 20,32EUR, ma sceso a ~14EUR da 7 mesi consecutivi - passava il
+    # filtro nonostante il prezzo reale di oggi sia sotto soglia). Non isolato:
+    # altre 9 carte con lo stesso problema. Corretto usando la mediana sui
+    # SOLI ultimi 3 mesi (stessa finestra di freschezza del ribilanciamento
+    # in produzione) invece di tutta la storia - universo 653->675 (rimuove
+    # le carte scese e rimaste basse, riammette quelle genuinamente risalite
+    # sopra soglia di recente, es. Lombre #34). Sharpe 1,58->1,52, DSR
+    # 0,878->0,850 - piccolo calo onesto, il costo naturale di una carta reale
+    # in meno erroneamente inclusa, non un peggioramento del fattore stesso.
+    "dsr_own_grid": 0.999, "dsr_full_session": 0.850, "n_trials_full_session": 69,
+    "pbo": 0.000, "sharpe": 1.52, "cagr": 27.52, "max_dd": -14.63,
+    "h1_sharpe": 0.42, "h2_sharpe": 3.10,
 }
 VALIDATED_BLEND = {"sharpe": 1.90, "cagr": 24.73, "max_dd": -7.01}
 
@@ -852,10 +865,12 @@ def main():
                    "di attendibilità — se non trovi nulla sotto il \"massimo\", registralo con "
                    "`log_execution_price.py` invece di ignorare il segnale. "
                    "\"→ N pz.\" è quante copie IDENTICHE il budget comprerebbe al prezzo mostrato — ⚠️ "
-                   "**VERIFICATO** (`scripts/max_quantity_per_trade_test.py`): il backtest (Sharpe 1,58) assume "
+                   "**VERIFICATO** (`scripts/max_quantity_per_trade_test.py`): il backtest (Sharpe 1,52) assume "
                    "che tu trovi TUTTE queste copie insieme, ogni mese; con un tetto realistico di 1 copia lo "
-                   "Sharpe scende a 0,64 (DSR 0,18), con 2 copie 1,14 (DSR 0,59) — tratta 1,58 come un tetto "
-                   "teorico se compri quasi sempre un pezzo singolo, non un'aspettativa realistica.")
+                   "Sharpe scende drasticamente (~0,6, DSR debole), con 2 copie recupera solo in parte — tratta "
+                   "1,52 come un tetto teorico se compri quasi sempre un pezzo singolo, non un'aspettativa "
+                   "realistica (numeri esatti non riverificati sull'ultimo aggiustamento d'universo, la direzione "
+                   "non cambia).")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:

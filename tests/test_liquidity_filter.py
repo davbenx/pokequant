@@ -175,3 +175,30 @@ def test_liquid_singles_ids_excludes_sealed_items():
     metadata, prices = _singles_universe()
     ids = liquid_singles_ids(metadata, prices, min_median_price_eur=0.0)
     assert "a_sealed_box" not in ids
+
+
+def test_liquid_singles_ids_uses_recent_price_not_stale_history():
+    """BUG TROVATO (l'utente: "Vedo ancora Sandslash #42, che e' sotto il
+    prezzo da gradazione"): la mediana su TUTTA la storia lasciava passare
+    una carta scesa e rimasta bassa per mesi, perche' i prezzi vecchi piu'
+    alti gonfiavano la mediana sopra soglia - Sandslash #42 (mediana storica
+    20,32EUR, ma ~14EUR negli ultimi 7 mesi) ne era un caso reale. Deve
+    restare escluso chi e' sceso e resta basso, mentre chi e' genuinamente
+    risalito sopra soglia di recente (es. Lombre #34 nel caso reale) deve
+    rientrare - la finestra recente conta, non la storia intera."""
+    idx = pd.date_range("2024-01-01", periods=12, freq="MS")
+    # "declined_zombie": valeva 25EUR per 9 mesi (mediana storica alta), poi
+    # sceso a 14EUR negli ultimi 3 - la mediana storica lo farebbe passare,
+    # quella recente no.
+    declined_zombie = pd.Series([25.0] * 9 + [14.0] * 3, index=idx)
+    # "recovered": simmetrico, era a 14EUR per 9 mesi, risalito a 25EUR negli
+    # ultimi 3 - deve rientrare, non restare escluso per il suo passato.
+    recovered = pd.Series([14.0] * 9 + [25.0] * 3, index=idx)
+    prices = pd.DataFrame({"declined_zombie": declined_zombie, "recovered": recovered})
+    metadata = {
+        "declined_zombie": {"type": "single"},
+        "recovered": {"type": "single"},
+    }
+    ids = liquid_singles_ids(metadata, prices, min_median_price_eur=20.0, price_window_months=3)
+    assert "declined_zombie" not in ids
+    assert "recovered" in ids
