@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.generate_singles_signal import (
     _signal_streak, PRODUCTION_PARAMS, compute_singles_signal_rows, compute_singles_avoid_rows,
-    compute_singles_alternative_rows, _display_name,
+    compute_singles_alternative_rows, _set_label,
 )
 
 SIGNAL_FRESHNESS_MONTHS = PRODUCTION_PARAMS["rebalance_every_months"]  # 3, la cadenza di produzione
@@ -158,15 +158,34 @@ def test_signal_rows_exclude_thin_unreliable_and_below_grading_cost_floor():
     assert "cheap_common" not in shown_ids
 
 
-def test_display_name_flags_wotc_unlimited_print():
+def test_set_label_flags_wotc_unlimited_print():
     """Trovato verificando un prezzo reale (Raichu #14 Fossil): esiste anche
     una stampa "1st Edition" della stessa carta, spesso 2-4x+ piu' cara - il
     nostro pannello grade9 traccia sempre la Unlimited, e senza dirlo in
     dashboard l'utente confronta involontariamente col prodotto sbagliato."""
     info = {"name": "Raichu #14", "game_slug": "pokemon-fossil"}
-    assert _display_name("raichu_14", info) == "Raichu #14 (Unlimited)"
+    assert _set_label(info) == "Fossil (Unlimited)"
 
 
-def test_display_name_unchanged_for_modern_set():
+def test_set_label_no_unlimited_suffix_for_modern_set():
     info = {"name": "Skyla #122", "game_slug": "pokemon-breakpoint"}
-    assert _display_name("skyla_122", info) == "Skyla #122"
+    assert _set_label(info) == "Breakpoint"
+
+
+def test_set_label_identifies_the_exact_set_not_just_wotc_flag():
+    """L'utente: "Clefable: mi viene consigliato l'acquisto, ma e' jungle o
+    prima edizione o Unlimited? Fai in modo che io non possa sbagliare mai
+    la carta da comprare." - PRIMA il nome mostrato non diceva MAI il set
+    (nemmeno per le carte non-WOTC): "Clefable #1" da solo non basta a
+    identificare univocamente quale carta cercare su Cardmarket."""
+    info = {"name": "Clefable #1", "game_slug": "pokemon-jungle"}
+    assert _set_label(info) == "Jungle (Unlimited)"
+
+
+def test_set_label_handles_known_abbreviation_and_ampersand():
+    assert _set_label({"name": "x", "game_slug": "pokemon-xy"}) == "XY"
+    assert _set_label({"name": "x", "game_slug": "pokemon-scarlet-&-violet-151"}) == "Scarlet & Violet 151"
+
+
+def test_set_label_none_without_game_slug():
+    assert _set_label({"name": "x"}) is None

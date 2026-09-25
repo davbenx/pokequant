@@ -25,6 +25,7 @@ lista BUY mostrata, non solo segnalate.
 from __future__ import annotations
 import sys
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -52,18 +53,42 @@ def _liquid_universe(metadata: dict, prices_full: pd.DataFrame):
     return {k: metadata[k] for k in ids}, prices_full[ids]
 
 
-def _display_name(item_id: str, info: dict) -> str:
-    """Nome da mostrare in dashboard. Per i set WOTC 1999-2000 (Base Set,
-    Jungle, Fossil, Team Rocket, Gym, Base Set 2) aggiunge "(Unlimited)":
-    esiste anche una stampa "1st Edition" della stessa carta, spesso 2-4x+
-    piu' cara, e il nostro pannello grade9 traccia sempre la Unlimited -
-    trovato indagando uno scarto di prezzo reale (Raichu #14 Fossil: 107,60€
-    Unlimited mostrati vs 250€ trovati dall'utente, quasi esattamente il
-    prezzo reale della variante 1st Edition, non un errore nel dato)."""
-    name = info.get("name", item_id)
+# Nomi di set con abbreviazioni note che title() rende male ("pokemon-xy" ->
+# "Xy" invece di "XY") - lista corretta a mano, non un algoritmo generico.
+_SET_NAME_OVERRIDES = {"pokemon-xy": "XY"}
+
+
+def _set_label(info: dict) -> Optional[str]:
+    """Nome leggibile del set/espansione da game_slug (es. "pokemon-jungle" ->
+    "Jungle"), con "(Unlimited)" aggiunto per i set WOTC 1999-2000 (Base Set,
+    Jungle, Fossil, Team Rocket, Gym, Base Set 2): esiste anche una stampa
+    "1st Edition" della stessa carta, spesso 2-4x+ piu' cara, e il nostro
+    pannello grade9 traccia sempre la Unlimited - trovato indagando uno
+    scarto di prezzo reale (Raichu #14 Fossil: 107,60€ Unlimited mostrati vs
+    250€ trovati dall'utente, quasi esattamente il prezzo reale della
+    variante 1st Edition, non un errore nel dato).
+
+    Richiesto esplicitamente dall'utente ("Clefable: e' jungle o prima
+    edizione o Unlimited? Fai in modo che io non possa sbagliare mai la
+    carta da comprare"): PRIMA questa informazione esisteva SOLO per i set
+    WOTC (come suffisso "(Unlimited)" appeso al nome, senza mai dire QUALE
+    set) - un nome carta come "Clefable #1" da solo non basta a identificare
+    univocamente la carta da cercare, va sempre affiancato dal set. Ora
+    ogni carta mostra il proprio set esplicitamente, non solo le WOTC."""
+    slug = info.get("game_slug")
+    if not slug:
+        return None
+    if slug in _SET_NAME_OVERRIDES:
+        label = _SET_NAME_OVERRIDES[slug]
+    else:
+        for prefix in ("pokemon-", "one-piece-"):
+            if slug.startswith(prefix):
+                slug = slug[len(prefix):]
+                break
+        label = slug.replace("-", " ").title()
     if info.get("game_slug") in WOTC_FIRST_EDITION_SETS:
-        return f"{name} (Unlimited)"
-    return name
+        label += " (Unlimited)"
+    return label
 
 PRODUCTION_PARAMS = dict(rebalance_every_months=3, top_quantile=0.20, min_age_months=6, max_positions=60, min_cross_section=20)
 
@@ -178,7 +203,8 @@ def compute_singles_signal_rows(params: dict = None):
         max_edge_price_eur = current_price * np.exp(latest_cutoff - residual) if latest_cutoff is not None else None
         rows.append({
             "item_id": item_id,
-            "name": _display_name(item_id, info),
+            "name": info.get("name", item_id),
+            "set_name": _set_label(info),
             "current_price_eur": current_price,
             "residual": residual,
             "discount_pct": (np.exp(residual) - 1.0) * 100.0,
@@ -255,7 +281,8 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
                                if quantile_cutoff_residual is not None else None)
         rows.append({
             "item_id": item_id,
-            "name": _display_name(item_id, info),
+            "name": info.get("name", item_id),
+            "set_name": _set_label(info),
             "current_price_eur": current_price,
             "residual": residual,
             "discount_pct": (np.exp(residual) - 1.0) * 100.0,
@@ -296,7 +323,8 @@ def compute_singles_avoid_rows(params: dict = None):
         info = metadata[item_id]
         rows.append({
             "item_id": item_id,
-            "name": _display_name(item_id, info),
+            "name": info.get("name", item_id),
+            "set_name": _set_label(info),
             "current_price_eur": snap[item_id]["current_price"],
             "residual": residual,
             "discount_pct": (np.exp(residual) - 1.0) * 100.0,

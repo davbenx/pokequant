@@ -779,12 +779,17 @@ def main():
                "è stato testato, è un possibile *value trap* (sconto persistente che il mercato non corregge). "
                "\"Massimo\" è la spesa TOTALE (oggetto + spedizione) oltre la quale QUESTA carta esce dal confine "
                "del quantile BUY già validato — non sottraiamo qui una stima di spedizione: verifica tu il costo "
-               "totale reale (oggetto + spedizione dell'inserzione) contro questo numero. ⚠️ **(Unlimited)** sulle "
+               "totale reale (oggetto + spedizione dell'inserzione) contro questo numero. Il riquadro blu **[Set]** "
+               "accanto al nome è il set/espansione esatto (es. \"Jungle\") — richiesto esplicitamente dall'utente "
+               "(\"Clefable: è jungle o prima edizione o Unlimited? Fai in modo che io non possa sbagliare mai la "
+               "carta da comprare\"): il nome della carta da solo (es. \"Clefable #1\") non basta a identificarla "
+               "univocamente, verifica sempre di cercare quel set esatto su Cardmarket. ⚠️ **(Unlimited)** sulle "
                "carte dei set 1999-2000 (Base Set, Jungle, Fossil, Team Rocket, Gym, Base Set 2): esiste anche una "
                "stampa \"1st Edition\" della stessa carta, spesso 2-4x+ più cara — è un prodotto diverso, non un "
                "prezzo dashboard sbagliato. Il link cerca solo per nome carta (aggiungere set/edizione/grado alla "
                "ricerca rischiava di restituire pagine vuote, verificato) — usa i filtri della pagina risultati "
-               "Cardmarket (espansione, lingua) per arrivare al prodotto giusto. Sulle carte vintage "
+               "Cardmarket (espansione, lingua), guidati dal set indicato qui, per arrivare al prodotto giusto. "
+               "Sulle carte vintage "
                "poco liquide in generale, il pannello Grade 9 di PriceCharting può restare sottostimato rispetto al "
                "prezzo reale anche dopo il filtro di attendibilità — se non trovi nulla sotto il \"massimo\" su "
                "nessun canale, registralo con `log_execution_price.py` invece di ignorare il segnale. \"→ N pz.\" è "
@@ -827,7 +832,8 @@ def main():
         <div class="signal-card signal-card-buy">
             {img_tag}
             <div class="signal-card-body">
-            <strong>{r['name']}</strong> &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
+            <strong>{r['name']}</strong> &nbsp; <span style="color:#38bdf8; font-weight:600;">[{r.get('set_name') or '?'}]</span>
+            &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
             &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting) &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%
             &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r['months_in_signal']}m)</span>{max_price_html}{usa_import_html}
             <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}
@@ -843,7 +849,7 @@ def main():
     if len(singles_allocation) > 15:
         with st.expander(f"Altre {len(singles_allocation) - 15} carte nel quantile BUY"):
             rest_df = pd.DataFrame([
-                {"Carta": r["name"], "Rarità": r["rarity"], "Grado": "Grade 9",
+                {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
                  "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
                  "Massimo totale (€)": r.get("max_edge_price_eur"),
                  "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
@@ -879,7 +885,7 @@ def main():
                        "\"Massimo\" nella lista principale, calcolato sul confine più largo perché queste carte "
                        "sono già fuori dalle prime 60.")
             alt_df = pd.DataFrame([
-                {"Carta": r["name"], "Rarità": r["rarity"], "Grado": "Grade 9",
+                {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
                  "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
                  "Massimo totale (€)": r.get("max_edge_price_eur")}
                 for r in alt_rows[:60]
@@ -909,7 +915,8 @@ def main():
             <div class="signal-card signal-card-sell">
                 {img_tag}
                 <div class="signal-card-body">
-                <strong>{r['name']}</strong> &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
+                <strong>{r['name']}</strong> &nbsp; <span style="color:#38bdf8; font-weight:600;">[{r.get('set_name') or '?'}]</span>
+                &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
                 &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting)
                 &nbsp;·&nbsp; sovrapprezzo vs. pari {r['discount_pct']:+.0f}%
                 </div>
@@ -918,7 +925,7 @@ def main():
         if len(avoid_rows) > 15:
             with st.expander(f"Altre {len(avoid_rows) - 15} carte sopravvalutate"):
                 avoid_df = pd.DataFrame([
-                    {"Carta": r["name"], "Rarità": r["rarity"], "Grado": "Grade 9",
+                    {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
                      "Prezzo (€)": r["current_price_eur"], "Sovrapprezzo vs. pari (%)": r["discount_pct"]}
                     for r in avoid_rows[15:]
                 ])
