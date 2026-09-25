@@ -32,20 +32,26 @@ stesso schema boom/bust visto in ogni altro fattore rotazionale testato su quest
 universo, non un premio strutturale legato all'illustratore.
 
 ESITO VALIDAZIONE (field_name="is_promo_str", fattore promo/SVP): NON VALIDATO, e
-questo è il caso più insidioso di tutta la ricerca perché i numeri aggregati sono i
+questo è il caso più insidioso di tutta la ricerca perché i numeri aggregati erano tra i
 MIGLIORI visti in assoluto - migliori anche della strategia sealed in produzione.
 Ritestato dopo aver corretto il buco nei pannelli prezzo (864 singole, 80 promo tra
-queste, vedi scripts/rebuild_prices_with_real_fx.py): 'PROMO rebal=6 minage=12' rende
-Sharpe 1.27, CAGR +31.0%, PBO 0.000 (3 candidati, 8 split), DSR 0.980, bootstrap
-P(Sharpe>0)=96%. Su qualsiasi soglia usata altrove in questa ricerca, questo passerebbe
-a pieni voti. MA il walk-forward - il test che in questa stessa ricerca ha già smontato
-LOW-VOL (PBO 5.7% eppure fallito) e ILLUSTRATOR - mostra lo stesso identico schema:
-H1 (2021-01->2023-10) Sharpe -0.95, CAGR -7.74%; H2 (2023-11->2026-09) Sharpe +1.93,
-CAGR +71.56%. Le carte promo (SVP in particolare) sono un sottomercato piccolo e meno
+queste, vedi scripts/rebuild_prices_with_real_fx.py): 'PROMO rebal=12 minage=6' rende
+Sharpe 1.06, CAGR +23.5%, PBO 0.029 (3 candidati, 8 split), DSR 0.945, bootstrap
+P(Sharpe>0)=96% (RIVERIFICATO su richiesta esplicita - "se non le hai fatte tu,
+ritestale": l'etichetta era scambiata, rebal=12/minage=6 non rebal=6/minage=12, e i
+numeri Sharpe 1.27/DSR 0.980 scritti qui in precedenza non sono piu' riproducibili
+identici oggi, probabilmente per la serie prezzi allungata nel frattempo - vedi
+scripts/retest_promo_premium_illustrator_current_universe.py per il dettaglio completo,
+incluso il numero sull'universo attuale col pavimento di costo di gradazione: Sharpe
+1.12, DSR 0.570). Su qualsiasi soglia usata altrove in questa ricerca, questo
+passerebbe a pieni voti. MA il walk-forward - il test che in questa stessa ricerca ha
+già smontato LOW-VOL (PBO 5.7% eppure fallito) e ILLUSTRATOR - mostra lo stesso
+identico schema: H1 (2021-01->2023-10) Sharpe -0.64, CAGR -5.10%; H2 (2023-11->2026-09) Sharpe +2.36,
+CAGR +68.30%. Le carte promo (SVP in particolare) sono un sottomercato piccolo e meno
 liquido che ha vissuto una mania di prezzo particolarmente estrema nel 2024-2025 (nuovi
 set Illustration Rare/SVP) - lo stesso super-ciclo boom/bust/recupero visto ovunque in
-questo universo, solo più amplificato qui per la ridotta liquidità. Un PBO=0.000 e un
-DSR=0.980 spettacolari NON bastano quando il segno si inverte tra le due metà del
+questo universo, solo più amplificato qui per la ridotta liquidità. Un PBO=0.029 e un
+DSR=0.945 spettacolari NON bastano quando il segno si inverte tra le due metà del
 campione: per coerenza con lo standard usato su ogni altro candidato di questa ricerca,
 questo fattore resta NON VALIDATO. Non testabile in modo conclusivo con solo ~5.7 anni
 di storico e un unico ciclo macro - andrebbe riprovato quando il campione includerà

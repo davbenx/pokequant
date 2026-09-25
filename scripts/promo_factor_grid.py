@@ -1,12 +1,23 @@
 """
 scripts/promo_factor_grid.py — Test del fattore "is_promo" (carte SVP/Black Star Promos)
 con la stessa griglia + PBO + DSR + bootstrap + walk-forward H1/H2 usata su ogni altro
-candidato di questa ricerca. Vedi l'esito completo nel docstring di
-poke_quant/engine/strategies/rarity_tier_factor.py: numeri full-sample migliori di
-qualsiasi altro fattore testato (Sharpe 1.27, PBO 0.000, DSR 0.980), ma NON VALIDATO
-perché il walk-forward mostra un'inversione di segno netta (H1 Sharpe -0.95 -> H2 +1.93)
-- lo stesso super-ciclo boom/bust ereditato da ogni fattore long-biased su questo
-universo, qui solo amplificato dalla minore liquidità del sottomercato promo.
+candidato di questa ricerca.
+
+AGGIORNAMENTO (rieseguito su richiesta esplicita dell'utente, "se non le hai fatte tu,
+ritestale" - vedi scripts/retest_promo_premium_illustrator_current_universe.py):
+corretto un bug di etichetta qui sotto (il terzo candidato era mostrato come
+"rebal=6 minage=12" ma passava davvero rebalance_every_months=12, min_age_months=6 -
+i due numeri erano scambiati nella stringa, mai nel valore testato). Con l'etichetta
+corretta, il candidato migliore resta lo stesso: full-sample Sharpe 1.06, PBO 0.029,
+DSR 0.945 (non piu' 1.27/0.000/0.980 come scritto qui in precedenza - quei numeri
+erano di una run precedente, non piu' riproducibili identici oggi, probabilmente per
+la serie prezzi allungata nel frattempo). NON VALIDATO in ogni caso: il walk-forward
+mostra un'inversione di segno netta (H1 Sharpe -0.64 -> H2 +2.36) - lo stesso
+super-ciclo boom/bust ereditato da ogni fattore long-biased su questo universo, qui
+solo amplificato dalla minore liquidità del sottomercato promo. Verificato anche
+sull'universo attuale (con pavimento di costo di gradazione) e con la frizione di
+spedizione all'acquisto: Sharpe 1.12, DSR 0.570, stessa inversione di segno (H1 -0.47
+-> H2 +2.53) - il verdetto non cambia, vedi lo script di retest per i dettagli.
 """
 import sys
 import numpy as np
@@ -28,9 +39,16 @@ for k in meta_sub:
 print(f"Universo: {len(singles_ids)} singole, promo tra queste: {sum(1 for v in meta_sub.values() if v.get('is_promo'))}", flush=True)
 
 configs = {
+    # BUG TROVATO (rieseguendo su richiesta esplicita dell'utente, "se non le
+    # hai fatte tu, ritestale"): l'etichetta del terzo candidato diceva
+    # "rebal=6 minage=12" ma il dict passava rebalance_every_months=12,
+    # min_age_months=6 - numeri letteralmente scambiati nell'etichetta,
+    # mai nel valore testato. Corretta solo l'etichetta, il valore
+    # (rebalance_every_months=12) era gia' quello inteso (l'esperimento
+    # varia la cadenza 3/6/12 mesi a min_age_months=6 fisso).
     "PROMO rebal=6 minage=6": dict(rebalance_every_months=6, min_age_months=6),
     "PROMO rebal=3 minage=6": dict(rebalance_every_months=3, min_age_months=6),
-    "PROMO rebal=6 minage=12": dict(rebalance_every_months=12, min_age_months=6),
+    "PROMO rebal=12 minage=6": dict(rebalance_every_months=12, min_age_months=6),
 }
 results = {}
 for name, kw in configs.items():
