@@ -37,7 +37,8 @@ def scan_slabs_market(
     user_holdings: Optional[List[SlabHolding]] = None,
     us_auction_comps_usd: Optional[Dict[str, float]] = None,
     custom_universe: Optional[Dict[str, Dict[str, Any]]] = None,
-    require_verified_available: bool = True
+    require_verified_available: bool = True,
+    **kwargs
 ) -> Dict[str, Any]:
     """
     Esegue la scansione completa del mercato Slabs con verifica di disponibilità reale in vendita.
