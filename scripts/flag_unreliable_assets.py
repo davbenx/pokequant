@@ -40,18 +40,30 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, save_metadata, load_price_matrix
 from poke_quant.data.liquidity_filter import compute_reliability_flags, compute_grade_raw_ratio_flags
+from poke_quant.data.unified_singles_panel import build_unified_singles_price_panel
 
 
 def main():
     metadata = load_metadata()
     sealed_prices = load_price_matrix("historical_prices.csv")
     grade9_prices = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    raw_prices = load_price_matrix("historical_prices_graded_singles_raw.csv")
 
     sealed_ids = {k for k, v in metadata.items() if v.get("type") == "sealed"}
     single_ids = {k for k, v in metadata.items() if v.get("type") == "single"}
 
     sealed_flags = compute_reliability_flags(sealed_prices[[c for c in sealed_prices.columns if c in sealed_ids]])
-    single_flags = compute_reliability_flags(grade9_prices[[c for c in grade9_prices.columns if c in single_ids]])
+    # BUG TROVATO (progetto pilota MTG, 2026-09-26): questo controllo valutava
+    # SOLO il pannello grade9 per le singole - le carte MTG (prezzo RAW, nessun
+    # dato gradato) erano semplicemente ASSENTI dalle sue colonne, quindi non
+    # venivano ne' promosse ne' flaggate: zero protezione dai salti di prezzo
+    # estremi (lo stesso problema che ha gia' colpito il campione di controllo
+    # Pokemon ampliato - vedi commit precedente). Corretto usando lo stesso
+    # pannello UNIFICATO (grade9 con fallback su raw) che il fattore di scarsita'
+    # userebbe davvero, cosi' ogni singola - qualunque sia la sua base di
+    # prezzo - viene valutata sulla serie che conta.
+    unified_prices = build_unified_singles_price_panel(grade9_prices, raw_prices)
+    single_flags = compute_reliability_flags(unified_prices[[c for c in unified_prices.columns if c in single_ids]])
     ratio_flags = compute_grade_raw_ratio_flags(metadata, grade9_prices)  # solo le non-ok, vedi docstring
     flags = {**sealed_flags, **single_flags, **ratio_flags}
 

@@ -225,3 +225,22 @@ def test_liquid_singles_ids_catches_sudden_single_month_crash():
     ids = liquid_singles_ids(metadata, prices, min_median_price_eur=20.0, price_window_months=3)
     assert "sudden_crash" not in ids
     assert "stable_above" in ids
+
+
+def test_liquid_singles_ids_skips_grading_floor_for_magic_franchise():
+    """Progetto pilota MTG: il pannello per le carte franchise="magic" e'
+    RAW/ungraded (non Grade 9 come Pokemon/One Piece) - il pavimento di costo
+    di gradazione non ha senso per una carta che non si intende gradare, e
+    non deve escludere carte MTG economiche che altrimenti sarebbero
+    legittimamente investibili sul mercato raw."""
+    idx = pd.date_range("2024-01-01", periods=3, freq="MS")
+    cheap_mtg_raw = pd.Series([2.0, 2.0, 2.0], index=idx)
+    cheap_pokemon = pd.Series([2.0, 2.0, 2.0], index=idx)
+    prices = pd.DataFrame({"cheap_mtg_raw": cheap_mtg_raw, "cheap_pokemon": cheap_pokemon})
+    metadata = {
+        "cheap_mtg_raw": {"type": "single", "franchise": "magic"},
+        "cheap_pokemon": {"type": "single", "franchise": "pokemon"},
+    }
+    ids = liquid_singles_ids(metadata, prices, min_median_price_eur=20.0, price_window_months=3)
+    assert "cheap_mtg_raw" in ids
+    assert "cheap_pokemon" not in ids

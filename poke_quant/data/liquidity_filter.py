@@ -183,7 +183,17 @@ def liquid_singles_ids(
     mascherato da una mediana ancora alta per gli altri 2 mesi della
     finestra - vedi il bug Unown K #58/Dark Golduck #37 nel commento sopra).
     Non sul solo mese corrente da solo (per non far entrare/uscire una carta
-    ogni mese per rumore) - la carta deve superare entrambi i controlli."""
+    ogni mese per rumore) - la carta deve superare entrambi i controlli.
+
+    Progetto pilota Magic: The Gathering (2026-09-26): il pavimento di costo
+    di gradazione NON si applica alle carte franchise="magic" - il pannello
+    prezzo passato qui per quegli item e' RAW/ungraded (scelta confermata
+    dall'utente: la gradazione MTG e' quasi assente su PriceCharting fuori
+    da poche carte vintage iconiche, vedi discover_mtg_chase_singles.py), e
+    il pavimento esiste solo perche' e' antieconomico gradare una carta che
+    costa meno della gradazione stessa - un concetto che non si applica a
+    una carta che non si intende gradare. Il controllo di attendibilita'
+    (salti di prezzo estremi) resta applicato a tutte le franchise."""
     ids = []
     for item_id, info in metadata.items():
         if info.get("type") != "single":
@@ -195,6 +205,9 @@ def liquid_singles_ids(
         s = grade9_prices_df[item_id].dropna()
         s = s[s > 0]
         if s.empty:
+            continue
+        if info.get("franchise") == "magic":
+            ids.append(item_id)
             continue
         window = s.tail(price_window_months)
         if window.median() < min_median_price_eur or window.iloc[-1] < min_median_price_eur:

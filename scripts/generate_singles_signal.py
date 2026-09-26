@@ -81,7 +81,7 @@ def _set_label(info: dict) -> Optional[str]:
     if slug in _SET_NAME_OVERRIDES:
         label = _SET_NAME_OVERRIDES[slug]
     else:
-        for prefix in ("pokemon-", "one-piece-"):
+        for prefix in ("pokemon-", "one-piece-", "magic-"):
             if slug.startswith(prefix):
                 slug = slug[len(prefix):]
                 break

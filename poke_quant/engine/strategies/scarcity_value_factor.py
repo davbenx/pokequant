@@ -90,8 +90,16 @@ EXPECTED_COPIES_PER_BOX = {
     "Rare Holo GX": 36 / 9, "Rare Holo EX": 36 / 9, "Rare Holo LV.X": 36 / 9, "Rare Holo Star": 36 / 9,
     "Illustration Rare": 36 / 4,
     "Rare Holo": 36 * 0.5, "Rare": 36 * 0.5, "Common": 36 * 1.0, "Uncommon": 36 * 1.0,
+    # Progetto pilota Magic: The Gathering (2026-09-26) - stessa convenzione "36 pack
+    # per box" del resto della tabella, con lo slotting REALE e pubblico dei booster
+    # draft MTG post-2020 (15 carte/pacco): ~10-11 comuni, 3 non comuni, 1 slot
+    # rara/mitica per pacco con rapporto 7:1 rara:mitica (non un numero scelto per
+    # far tornare il risultato - e' lo slotting dichiarato da Wizards of the Coast).
+    # "rare"/"uncommon"/"common"/"mythic" sono le stringhe minuscole restituite da
+    # Scryfall (fonte catalogo MTG, vedi scripts/discover_mtg_*.py).
+    "mythic": 36 * 0.125, "rare": 36 * 0.875, "uncommon": 36 * 3.0, "common": 36 * 10.5,
 }
-EXCLUDED_RARITIES = {"Promo", None}
+EXCLUDED_RARITIES = {"Promo", None, "special", "bonus"}
 
 # Rango ordinale per fascia (0 = meno scarsa, N-1 = piu' scarsa) - stesso ordine
 # di EXPECTED_COPIES_PER_BOX, ma senza usarne i valori numerici assoluti. Usato
@@ -173,10 +181,18 @@ class ScarcityValueFactorStrategy:
             else:
                 scarcity_feat = np.log(1.0 / EXPECTED_COPIES_PER_BOX[rarity])
             is_op = 1.0 if info.get("franchise") == "one_piece" else 0.0
+            # Progetto pilota Magic: The Gathering (2026-09-26) - dummy di franchise
+            # analoga a is_op, aggiunta con lo stesso pattern additivo (non un
+            # refactor a one-hot generico) per non toccare il comportamento gia'
+            # validato su Pokemon/One Piece: una colonna a zero per quegli item non
+            # cambia i coefficienti/residui gia' validati (lstsq assegna peso 0 a
+            # una colonna costante-zero), cambia solo quando ci sono davvero item
+            # MTG nello stesso cross-section.
+            is_mtg = 1.0 if info.get("franchise") == "magic" else 0.0
             is_jp = 1.0 if info.get("language") == "jp" else 0.0
             is_chase = 1.0 if info.get("selection_method") == "chase_price_filter_survivorship_biased" else 0.0
             age_feat = np.log(age_m + 1.0) if self.use_log_age else float(age_m)
-            feat = [1.0, scarcity_feat, is_op, is_jp, age_feat, is_chase]
+            feat = [1.0, scarcity_feat, is_op, is_mtg, is_jp, age_feat, is_chase]
             if self.extra_controls:
                 is_promo = 1.0 if info.get("is_promo") else 0.0
                 has_artist = 1.0 if info.get("artist") else 0.0
