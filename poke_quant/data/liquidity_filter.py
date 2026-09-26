@@ -146,6 +146,24 @@ MIN_SINGLES_MEDIAN_PRICE_EUR = 20.0
 # singolo dato rumoroso.
 MIN_SINGLES_PRICE_WINDOW_MONTHS = 3
 
+# BUG TROVATO (l'utente, due carte reali: "Unown [K] #58" e "Dark Golduck #37" -
+# "ancora prezzi che e' impossibile trovare gradate"): un crollo di un SOLO mese
+# recente puo' restare mascherato dalla mediana a 3 mesi se gli altri 2 mesi della
+# finestra erano ancora sopra soglia - Unown K #58 e' stabile a ~22EUR per 11 mesi
+# poi crolla a 14,63EUR nell'ultimo mese: mediana degli ultimi 3 mesi (22,55 /
+# 22,38 / 14,63) = 22,38EUR, sopra soglia, ma il prezzo ATTUALE (quello che vedi e
+# a cui compreresti oggi) e' 14,63EUR, sotto costo di gradazione. Diverso dal bug
+# Sandslash (calo SOSTENUTO per mesi mascherato dalla mediana su tutta la storia):
+# qui il calo e' improvviso e recentissimo, e la mediana-di-finestra lo diluisce
+# con 2 mesi ancora "vecchi" e piu' alti. Corretto richiedendo che ANCHE l'ultimo
+# prezzo disponibile (non solo la mediana della finestra) sia sopra soglia - una
+# carta deve essere consistentemente sopra costo, non solo "in maggioranza" nella
+# finestra, per essere considerata economicamente gradabile al prezzo mostrato
+# oggi. Non riapre il caso Sandslash (un calo sostenuto fallisce comunque
+# entrambi i controlli) e non esclude un recupero genuino iniziato prima
+# dell'ultimo mese (se gli ultimi mesi sono giA' saliti sopra soglia, sia la
+# mediana che l'ultimo prezzo la superano).
+
 
 def liquid_singles_ids(
     metadata: Dict[str, Any],
@@ -157,11 +175,15 @@ def liquid_singles_ids(
     data_quality="thin_unreliable" (compute_reliability_flags, gia' applicato
     in ogni backtest ma MAI wired nel segnale live prima di questa funzione -
     vedi scripts/generate_singles_signal.py) e quelle sotto il pavimento di
-    costo di gradazione MIN_SINGLES_MEDIAN_PRICE_EUR, valutato sulla mediana
-    degli ultimi price_window_months mesi (non tutta la storia - un prezzo
-    calato e rimasto basso per mesi non deve restare "invisibile" dietro
-    prezzi vecchi piu' alti, vedi commento sopra) e non sul solo mese
-    corrente (per non far entrare/uscire una carta ogni mese per rumore)."""
+    costo di gradazione MIN_SINGLES_MEDIAN_PRICE_EUR, valutato SIA sulla
+    mediana degli ultimi price_window_months mesi (non tutta la storia - un
+    prezzo calato e rimasto basso per mesi non deve restare "invisibile"
+    dietro prezzi vecchi piu' alti, vedi commento sopra) SIA sull'ultimo
+    prezzo disponibile (un crollo di un solo mese recente non deve restare
+    mascherato da una mediana ancora alta per gli altri 2 mesi della
+    finestra - vedi il bug Unown K #58/Dark Golduck #37 nel commento sopra).
+    Non sul solo mese corrente da solo (per non far entrare/uscire una carta
+    ogni mese per rumore) - la carta deve superare entrambi i controlli."""
     ids = []
     for item_id, info in metadata.items():
         if info.get("type") != "single":
@@ -172,7 +194,10 @@ def liquid_singles_ids(
             continue
         s = grade9_prices_df[item_id].dropna()
         s = s[s > 0]
-        if s.empty or s.tail(price_window_months).median() < min_median_price_eur:
+        if s.empty:
+            continue
+        window = s.tail(price_window_months)
+        if window.median() < min_median_price_eur or window.iloc[-1] < min_median_price_eur:
             continue
         ids.append(item_id)
     return ids

@@ -202,3 +202,26 @@ def test_liquid_singles_ids_uses_recent_price_not_stale_history():
     ids = liquid_singles_ids(metadata, prices, min_median_price_eur=20.0, price_window_months=3)
     assert "declined_zombie" not in ids
     assert "recovered" in ids
+
+
+def test_liquid_singles_ids_catches_sudden_single_month_crash():
+    """BUG TROVATO (l'utente, due carte reali: "Unown [K] #58" e "Dark Golduck
+    #37" - "ancora prezzi che e' impossibile trovare gradate"): diverso dal caso
+    Sandslash (calo SOSTENUTO mascherato dalla mediana su tutta la storia) - qui
+    il calo e' improvviso e recentissimo (un solo mese), ma la mediana della
+    finestra a 3 mesi resta sopra soglia perche' gli altri 2 mesi sono ancora
+    "vecchi" e alti. Unown K #58 reale: [22.55, 22.38, 14.63] -> mediana 22.38
+    (sopra soglia) ma prezzo ATTUALE 14.63 (sotto). Deve restare escluso finche'
+    anche l'ultimo prezzo non supera la soglia, non solo la mediana della
+    finestra."""
+    idx = pd.date_range("2024-01-01", periods=3, freq="MS")
+    sudden_crash = pd.Series([22.55, 22.38, 14.63], index=idx)  # caso reale Unown K #58
+    stable_above = pd.Series([22.0, 22.0, 22.0], index=idx)  # controllo: nessun crollo
+    prices = pd.DataFrame({"sudden_crash": sudden_crash, "stable_above": stable_above})
+    metadata = {
+        "sudden_crash": {"type": "single"},
+        "stable_above": {"type": "single"},
+    }
+    ids = liquid_singles_ids(metadata, prices, min_median_price_eur=20.0, price_window_months=3)
+    assert "sudden_crash" not in ids
+    assert "stable_above" in ids
