@@ -934,14 +934,12 @@ def main():
                "diverso). Resta sotto il \"massimo\" mostrato. Prime 15 con grafico, le altre in tabella sotto. "
                "⚠️ **La compagnia di gradazione conta**: preferisci **PSA**, poi CGC/BGS/SGC; evita GRAAD/TAG/ACE/EGS/AI-grading — vedi dettagli sotto.")
     with st.expander("ℹ️ Dettagli — sconto, freschezza, copie, limiti del modello"):
-        st.caption("\"Sconto vs. pari\" è quanto la carta costa in meno (%) rispetto a quanto la sua rarità/età/set "
-                   "implicherebbero rispetto alle sue pari — più negativo, più sottovalutata secondo il modello. "
-                   "\"Segnale da\" è da quanti mesi consecutivi è nel quantile BUY: solo le carte entrate negli "
-                   "ultimi 3 mesi (cadenza di ribilanciamento validata) sono mostrate qui — oltre, è un possibile "
-                   "*value trap* (sconto persistente che il mercato non corregge), non escluso ma spostato nelle "
-                   "alternative sotto. \"Massimo\" è la spesa TOTALE (oggetto + spedizione) oltre la quale la carta "
-                   "esce dal confine del quantile BUY — già netto, non sottrarre una stima di spedizione tua. Il "
-                   "link cerca solo per nome carta (aggiungere set/edizione/grado dava pagine vuote, verificato) — "
+        st.caption("\"Massimo (per edge)\" è la spesa TOTALE (oggetto + spedizione) calibrata empiricamente "
+                   "per MANTENERE UN EDGE ISTITUZIONALE (Sharpe ≥ 1.01, CAGR ~+20%, vedi `scripts/max_edge_preservation_test.py`): "
+                   "concede al massimo il 10% del margine di sconto statistico vs. il modello prima che l'edge netto venga eroso "
+                   "da fee di piattaforma, spedizioni e ribilanciamento (il vecchio confine teorico 100% portava a Sharpe -0.87). "
+                   "Se l'inserzione su Cardmarket (compresa spedizione) supera questo valore, l'Edge è compromesso e non conviene comprare. "
+                   "Il link cerca solo per nome carta (aggiungere set/edizione/grado dava pagine vuote, verificato) — "
                    "usa i filtri di Cardmarket (espansione, lingua), guidati dal set indicato nel badge. Sulle "
                    "carte vintage poco liquide, il pannello Grade 9 può restare sottostimato anche dopo il filtro "
                    "di attendibilità — se non trovi nulla sotto il \"massimo\", registralo con "
@@ -994,7 +992,7 @@ def main():
         start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)
         img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
         img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
-        max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (tot.) '
+        max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (per edge) '
                            f'{r["max_edge_price_eur"]:.2f}€</span>') if r.get("max_edge_price_eur") is not None else ""
         usa_import_html = ""
         if show_usa_import:
@@ -1026,7 +1024,7 @@ def main():
             rest_df = pd.DataFrame([
                 {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
                  "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
-                 "Massimo totale (€)": r.get("max_edge_price_eur"),
+                 "Massimo per Edge (€)": r.get("max_edge_price_eur"),
                  "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
                  "Allocazione (€)": alloc,
                  "Quantità": max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1}
@@ -1036,7 +1034,7 @@ def main():
                          column_config={
                              "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
                              "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-                             "Massimo totale (€)": st.column_config.NumberColumn(format="%.2f €"),
+                             "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
                              "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
                          })
 
@@ -1053,14 +1051,14 @@ def main():
             alt_df = pd.DataFrame([
                 {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
                  "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
-                 "Massimo totale (€)": r.get("max_edge_price_eur")}
+                 "Massimo per Edge (€)": r.get("max_edge_price_eur")}
                 for r in alt_rows[:60]
             ])
             st.dataframe(alt_df, use_container_width=True, hide_index=True,
                          column_config={
                              "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
                              "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-                             "Massimo totale (€)": st.column_config.NumberColumn(format="%.2f €"),
+                             "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
                          })
 
     # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---

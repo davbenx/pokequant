@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -119,11 +120,15 @@ def test_alternative_rows_skip_the_top_ranked_cards_already_shown():
     # le alternative sono rank 3,4,5 = card_22, card_21, card_20.
     assert [r["item_id"] for r in rows] == ["card_22", "card_21", "card_20"]
     assert rows[0]["residual"] < rows[-1]["residual"]
-    # "Massimo" per le alternative usa il confine dell'INTERO quantile 20% (rank 5,
-    # card_20 stessa), non quello troncato a max_positions=2 - card_20 e' esattamente
-    # al confine (massimo == prezzo attuale), le altre hanno margine sopra il prezzo attuale.
+    # "Massimo per Edge" per le alternative usa il confine dell'INTERO quantile 20% (rank 5,
+    # card_20 stessa), scalato al 10% (PRESERVE_EDGE_ALPHA) per preservare Sharpe >= 1.0.
+    # card_20 e' esattamente al confine (massimo == prezzo attuale), le altre hanno margine.
     assert rows[-1]["max_edge_price_eur"] == pytest.approx(rows[-1]["current_price_eur"], rel=1e-6)
     assert rows[0]["max_edge_price_eur"] > rows[0]["current_price_eur"]
+    theoretical_cutoff = rows[0]["current_price_eur"] * np.exp(rows[-1]["residual"] - rows[0]["residual"])
+    assert rows[0]["max_edge_price_eur"] < theoretical_cutoff
+    expected_calibrated = rows[0]["current_price_eur"] + 0.10 * (theoretical_cutoff - rows[0]["current_price_eur"])
+    assert rows[0]["max_edge_price_eur"] == pytest.approx(expected_calibrated, rel=1e-6)
 
 
 def test_signal_rows_exclude_thin_unreliable_and_below_grading_cost_floor():

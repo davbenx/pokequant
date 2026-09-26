@@ -53,6 +53,13 @@ def _liquid_universe(metadata: dict, prices_full: pd.DataFrame):
     return {k: metadata[k] for k in ids}, prices_full[ids]
 
 
+# Frazione della distanza tra prezzo attuale e confine teorico del quantile
+# che puo' essere concessa all'acquisto preservando un Edge istituzionale (Sharpe >= 1.0).
+# Validato empiricamente su 69 mesi in scripts/max_edge_preservation_test.py:
+# a 0.10 lo Sharpe resta 1.01 e il CAGR +19.42% (a 0.25 si tocca il pareggio Sharpe=0.0,
+# mentre il vecchio confine teorico 1.0 crollava a Sharpe -0.87 e CAGR -31.3%).
+PRESERVE_EDGE_ALPHA = 0.10
+
 # Nomi di set con abbreviazioni note che title() rende male ("pokemon-xy" ->
 # "Xy" invece di "XY") - lista corretta a mano, non un algoritmo generico.
 _SET_NAME_OVERRIDES = {"pokemon-xy": "XY"}
@@ -204,18 +211,19 @@ def compute_singles_signal_rows(params: dict = None):
         info = metadata[item_id]
         residual = residuals_by_month[latest_date][item_id]
         current_price = latest_snap[item_id]["current_price"]
-        # Prezzo massimo che preserva l'edge: quanto puo' salire il prezzo di
-        # QUESTA carta (a parita' di rarita'/eta'/franchise, che non cambiano)
-        # prima che il suo residuo risalga al confine del quantile BUY e la
-        # carta ne esca - non e' un'ipotesi nuova, e' il confine gia' validato
-        # del fattore, solo espresso in euro invece che in residuo di regressione.
-        # E' la spesa massima TOTALE (oggetto + spedizione) da non superare -
-        # richiesto esplicitamente dall'utente di NON sottrarre qui una nostra
-        # stima di spedizione (7EUR/carta e' una media, non il costo reale di
-        # QUESTA inserzione): la spedizione reale la verifica l'utente stesso
-        # sull'inserzione Cardmarket, confrontando oggetto+spedizione reali con
-        # questo numero.
-        max_edge_price_eur = current_price * np.exp(latest_cutoff - residual) if latest_cutoff is not None else None
+        # Prezzo massimo per MANTENERE L'EDGE:
+        # Il vecchio confine teorico (current_price * exp(latest_cutoff - residual))
+        # rappresentava la frontiera lorda del quantile BUY. Acquistare a quel
+        # prezzo distruggeva l'intero edge netto (Sharpe -0.87, CAGR -31.3%) a causa
+        # delle frizioni reali (fee 5-13%, spedizione, slippage e vendite forzate al ribilanciamento).
+        # Per mantenere un Edge statisticamente solido (Sharpe >= 1.01, CAGR +19.4%),
+        # l'investitore puo' concedere al massimo il 10% (PRESERVE_EDGE_ALPHA = 0.10) della distanza
+        # tra il prezzo attuale e il cutoff teorico (vedi scripts/max_edge_preservation_test.py).
+        if latest_cutoff is not None:
+            theoretical_cutoff_price = current_price * np.exp(latest_cutoff - residual)
+            max_edge_price_eur = current_price + PRESERVE_EDGE_ALPHA * (theoretical_cutoff_price - current_price)
+        else:
+            max_edge_price_eur = None
         rows.append({
             "item_id": item_id,
             "name": info.get("name", item_id),
@@ -303,8 +311,11 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
     for item_id, residual in extra:
         info = metadata[item_id]
         current_price = snap[item_id]["current_price"]
-        max_edge_price_eur = (current_price * np.exp(quantile_cutoff_residual - residual)
-                               if quantile_cutoff_residual is not None else None)
+        if quantile_cutoff_residual is not None:
+            theoretical_cutoff_price = current_price * np.exp(quantile_cutoff_residual - residual)
+            max_edge_price_eur = current_price + PRESERVE_EDGE_ALPHA * (theoretical_cutoff_price - current_price)
+        else:
+            max_edge_price_eur = None
         rows.append({
             "item_id": item_id,
             "name": info.get("name", item_id),
