@@ -94,10 +94,25 @@ PRODUCTION_PARAMS = dict(rebalance_every_months=3, top_quantile=0.20, min_age_mo
 
 # Variante a turnover ridotto (vedi app.py, "Modalita' conforme DAC7"): meno
 # posizioni + ribilanciamento meno frequente per restare sotto le soglie di
-# segnalazione piattaforma (2.000EUR / 30 vendite annue - direttiva UE DAC7).
-# Sharpe piu' basso della produzione (1,49 vs 2,02, vedi scripts/dac7_turnover_search.py)
-# ma e' il compromesso richiesto esplicitamente, non un errore di configurazione.
-DAC7_SINGLES_PARAMS = dict(rebalance_every_months=12, top_quantile=0.20, min_age_months=6, max_positions=20, min_cross_section=20)
+# segnalazione piattaforma (30 vendite annue - direttiva UE DAC7; la soglia dei
+# 2.000EUR/anno dipende dal capitale/taglia di posizione scelti dall'utente in
+# sidebar, non da questi parametri, e resta fuori dal perimetro di questa ricerca).
+#
+# BUG TROVATO (verificando "e' la scelta ottimale?"): il punto precedente
+# (rebalance_every_months=12, max_positions=20, "Sharpe 1,49 vs 2,02") citava
+# uno script che non esisteva nel repo - non riproducibile, un singolo punto
+# scelto a mano. scripts/dac7_turnover_search.py e' la vera grid search su
+# (rebalance_every_months, max_positions), a parita' di altri parametri:
+# rebalance=12 sprecava quasi tutto il budget di transazioni consentito (8,3
+# vendite/anno reali contro le 30 permesse) per uno Sharpe di 1,35 - un punto
+# arbitrariamente conservativo, non l'optimum vincolato. Il vero optimum sotto
+# vincolo (vendite/anno<=30) e' rebalance_every_months=3, max_positions=20:
+# Sharpe 2,39 (DSR 0,999) usando 28,6 vendite/anno, quasi tutto il budget
+# consentito - un netto miglioramento, non un compromesso peggiore mascherato.
+# Produzione stessa cadenza (3, 60): Sharpe 2,11 - quindi la modalita' DAC7,
+# corretta, e' vicina alla produzione (costo reale ~0,1-0,3 Sharpe), non un
+# downgrade pesante come il vecchio numero implicava.
+DAC7_SINGLES_PARAMS = dict(rebalance_every_months=3, top_quantile=0.20, min_age_months=6, max_positions=20, min_cross_section=20)
 
 # Cadenza di ribilanciamento del backtest validato - vedi spiegazione nel
 # docstring del modulo. Non piu' una costante fissa: deriva dal parametro

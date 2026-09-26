@@ -167,6 +167,12 @@ VALIDATED_SINGLES = {
     "pbo": 0.014, "sharpe": 2.05, "cagr": 43.71, "max_dd": -15.11,
     "h1_sharpe": 0.69, "h2_sharpe": 4.26,
 }
+# NOTA (2026-09-26): VALIDATED_BOX/BLEND non ancora riconciliati col fix di
+# priorita' d'ordine sugli acquisti box (scripts/box_entry_priority_order_test.py,
+# Sharpe box 1,14->1,227) - questi restano lo snapshot statico pre-fix, come da
+# convenzione del modulo ("rivalidare ogni 6 mesi", non ricalcolato ad ogni
+# refresh). Richiede un nuovo giro di scripts/optimize_and_falsify.py per essere
+# aggiornato con rigore (PBO/walk-forward/bootstrap), non solo il numero puntuale.
 VALIDATED_BLEND = {"sharpe": 1.90, "cagr": 24.73, "max_dd": -7.01}
 
 st.set_page_config(page_title="PokeQuant — TS Momentum", page_icon="⚡", layout="wide")
@@ -340,6 +346,40 @@ def get_singles_backtest_results(mode: str = "production"):
     return res, len(singles_ids)
 
 
+@st.cache_data(show_spinner=False, ttl=3600)
+def get_box_singles_split():
+    """Split di capitale box/singole per inverse-vol (risk parity), non piu'
+    50/50 hardcoded. BUG/GAP TROVATO (verificando "e' lo split migliore?"):
+    esisteva una vecchia analisi risk-parity reale (scripts/
+    build_combined_portfolio.py, 62,9/37,1) ma calcolata per un fattore singole
+    poi RIGETTATO e chiuso (commit 0041b53); quando il fattore Scarsita' (quello
+    davvero in produzione, DSR 0,943) ha riaperto la sleeve singole (commit
+    7372756) lo split fu rimesso a 50/50 senza ricalcolare nulla per la nuova
+    coppia - un default arrotondato, mai verificato.
+
+    Qui ricalcolato dai rendimenti mensili REALI dei due backtest di produzione
+    (sempre in modalita' produzione, non DAC7, cosi' i pesi non saltano quando
+    l'utente attiva/disattiva il toggle in sidebar): w_i ∝ 1/sigma_i, la stessa
+    quota di RISCHIO da ciascuna sleeve, non di capitale - criterio standard,
+    robusto alla stima rumorosa del rendimento atteso (a differenza di mean-
+    variance/Kelly, che scripts/box_singles_split_optimization.py mostra
+    tendere verso le singole ma con un intervallo bootstrap troppo ampio
+    [52%-91%] per essere adottato come singolo numero fisso in produzione -
+    vedi il docstring di quello script). Risultato verificato: 51,5%/48,5%,
+    quasi indistinguibile dal 50/50 preesistente (le due sleeve hanno vol
+    mensile molto simile, 4,57% vs 4,87%) - il default non era sbagliato,
+    semplicemente non era mai stato verificato."""
+    res_box, _ = get_backtest_results()
+    res_singles, _ = get_singles_backtest_results("production")
+    common_idx = res_box.monthly_returns.index.intersection(res_singles.monthly_returns.index)
+    vol_box = res_box.monthly_returns.loc[common_idx].std()
+    vol_singles = res_singles.monthly_returns.loc[common_idx].std()
+    if vol_box <= 0 or vol_singles <= 0:
+        return 0.5, 0.5
+    w_box = (1.0 / vol_box) / (1.0 / vol_box + 1.0 / vol_singles)
+    return float(w_box), float(1.0 - w_box)
+
+
 # Cache manuale invece di @st.cache_data: serve un TTL DIVERSO per successo e
 # fallimento. Trovato verificando "molte immagini delle carte singole non le
 # vedo" - la dashboard richiede 30-60 immagini per pagina, tutte sincrone: un
@@ -433,7 +473,16 @@ def build_allocation(buy_rows: list, capital: float, metadata: dict, latest_date
     dichiarato in sidebar (12% del capitale) con un waterfall: chi sfora il tetto
     viene fissato al tetto e l'eccedenza si ridistribuisce sui restanti, finche'
     nessuno sfora piu' - prima questa funzione calcolava solo la proporzione per
-    peso senza applicare alcun tetto, contraddicendo il testo in sidebar."""
+    peso senza applicare alcun tetto, contraddicendo il testo in sidebar.
+
+    L'ordine di RITORNO segue quello di buy_rows in ingresso (per momentum
+    decrescente, vedi generate_monthly_signal.py) - non viene piu' riordinato
+    per peso-eta'. Bug trovato verificando "priorita' ai primi in lista": il
+    riordino per peso faceva mostrare in cima i box piu' anziani (piu' peso di
+    sizing), non quelli col miglior segnale, contraddicendo sia la didascalia
+    sia l'ordine di acquisto REALE usato dal motore di backtest dopo il fix in
+    time_series_momentum.py (vedi scripts/box_entry_priority_order_test.py) -
+    peso-eta' resta il criterio di TAGLIA della posizione, non piu' di ordine."""
     latest_dt = pd.to_datetime(latest_date)
     weighted = []
     for r in buy_rows:
@@ -443,7 +492,6 @@ def build_allocation(buy_rows: list, capital: float, metadata: dict, latest_date
             rd = pd.to_datetime(rel_dt)
             age_m = (latest_dt.year - rd.year) * 12 + (latest_dt.month - rd.month)
         weighted.append((r, age_weight(age_m)))
-    weighted.sort(key=lambda x: -x[1])
 
     cap = capital * max_allocation_pct
     alloc_by_idx = {}
@@ -500,12 +548,15 @@ def main():
     n_sell = sum(1 for r in sig_rows if r["signal"] == "AVOID/SELL")
     n_excessive = sum(1 for r in sig_rows if "PREZZO ECCESSIVO" in r["signal"])
     n_verify = len(sig_rows) - n_buy - n_sell - n_excessive
+    # Split box/singole per inverse-vol (risk parity), non piu' 50/50 hardcoded -
+    # vedi docstring di get_box_singles_split() e scripts/box_singles_split_optimization.py.
+    w_box, w_singles = get_box_singles_split()
 
     st.markdown(f"""
     <div class="nav-header">
         <div>
             <span class="nav-title">⚡ PokeQuant</span>
-            <span style="color:#64748b; font-size:12px; margin-left:8px;">Blend 50/50 · Box Sigillati (TS Momentum) + Singole (Fattore Scarsità)</span>
+            <span style="color:#64748b; font-size:12px; margin-left:8px;">Blend {w_box*100:.0f}/{w_singles*100:.0f} · Box Sigillati (TS Momentum) + Singole (Fattore Scarsità)</span>
         </div>
         <div>
             <span class="pill-tag pill-blue">Blend Sharpe {VALIDATED_BLEND['sharpe']:.2f}</span>
@@ -515,7 +566,7 @@ def main():
     """, unsafe_allow_html=True)
 
     with st.expander("📋 Come si usa, in pratica", expanded=True):
-        st.markdown("""
+        st.markdown(f"""
 1. **Ogni mese**, guarda le liste 🟢 verdi qui sotto (box, poi singole) — sono già filtrate, pronte all'uso.
 2. **Per ogni riga**: apri "Verifica su Cardmarket", controlla che **set/edizione coincidano esattamente**
    (badge blu **[Set]** sulle carte), e resta **sotto il "massimo"** mostrato (oggetto + spedizione).
@@ -524,7 +575,7 @@ def main():
 4. **Registra sempre** cosa hai trovato o venduto, anche se non hai comprato — `log_execution_price.py`
    e `log_sell_outcome.py` — calibra il modello nel tempo, non lasciarlo una stima fissa.
 5. 🔴 **Rosso** = non comprare (box: momentum invertito · singole: sopravvalutata, solo informativo).
-6. **Capitale** diviso 50/50 come mostrato in barra laterale; resta nei limiti DAC7 se vendi in UE.
+6. **Capitale** diviso {w_box*100:.0f}/{w_singles*100:.0f} box/singole (risk parity, non piu' un 50/50 fisso) come mostrato in barra laterale; resta nei limiti DAC7 se vendi in UE.
 7. **Se il capitale è già investito**, la dashboard NON conosce le tue posizioni reali — non sottrae da
    sola quanto hai già comprato. Abbassa il "Capitale dedicato" in barra laterale al contante REALE
    ancora libero (la lista si ricalcola, i candidati in fondo escono per primi dal budget); a €0 liberi
@@ -571,9 +622,10 @@ def main():
         dac7_mode = st.checkbox("Resta sotto 2.000€ / 30 vendite annue", value=True,
                                  help="DAC7: sopra queste soglie, Cardmarket/eBay segnalano il venditore "
                                       "come commerciale alle autorità fiscali. Con questa modalità attiva, "
-                                      "le singole usano un ribilanciamento meno frequente (12m invece di 3m, "
-                                      "meno posizioni: 20 invece di 60) e il capitale effettivo viene limitato "
-                                      "al massimo che resta sotto soglia.")
+                                      "le singole usano lo stesso ribilanciamento trimestrale della produzione "
+                                      "ma solo 20 posizioni invece di 60 (optimum verificato sotto vincolo, "
+                                      "vedi scripts/dac7_turnover_search.py) e il capitale effettivo viene "
+                                      "limitato al massimo che resta sotto soglia.")
         singles_mode = "dac7" if dac7_mode else "production"
 
         res_box_dac7check, _ = get_backtest_results()
@@ -582,11 +634,12 @@ def main():
         singles_trades_yr, singles_eur_yr_per_10k = annualized_turnover(res_singles_dac7check.trades_df)
 
         # Il conteggio vendite/anno e' strutturale (non scala col capitale) - solo
-        # il volume EUR/anno scala linearmente col capitale allocato a ciascuna meta'.
+        # il volume EUR/anno scala linearmente col capitale allocato a ciascuna meta',
+        # ORA pesata per w_box/w_singles (non piu' un 50/50 implicito).
         total_trades_yr = box_trades_yr + singles_trades_yr
-        eur_yr_at_capital = (box_eur_yr_per_10k + singles_eur_yr_per_10k) * (capital * 0.5 / 10000.0)
+        eur_yr_at_capital = (box_eur_yr_per_10k * w_box + singles_eur_yr_per_10k * w_singles) * (capital / 10000.0)
 
-        combined_rate_per_eur = (box_eur_yr_per_10k + singles_eur_yr_per_10k) / 10000.0 / 2.0  # per EUR di capitale TOTALE (non solo la meta')
+        combined_rate_per_eur = (box_eur_yr_per_10k * w_box + singles_eur_yr_per_10k * w_singles) / 10000.0
         safe_max_capital = (DAC7_MAX_ANNUAL_EUR / combined_rate_per_eur) if combined_rate_per_eur > 0 else capital
 
         effective_capital = min(capital, safe_max_capital) if dac7_mode else capital
@@ -603,7 +656,8 @@ def main():
                            f"sotto {DAC7_MAX_ANNUAL_EUR:,.0f}€/anno di vendite stimate.")
             else:
                 st.success(f"✅ ~{total_trades_yr:.0f} vendite/anno, ~{eur_yr_at_capital:,.0f}€/anno stimati — sotto soglia.")
-            st.caption(f"Capitale massimo sicuro stimato: **{safe_max_capital:,.0f}€** totali (50/50 box+singole). "
+            st.caption(f"Capitale massimo sicuro stimato: **{safe_max_capital:,.0f}€** totali "
+                       f"({w_box*100:.0f}%/{w_singles*100:.0f}% box/singole, risk parity). "
                        "Stima da turnover storico del backtest, non una garanzia — la liquidità reale (quanti "
                        "acquirenti/venditori ci sono davvero) non è verificata.")
         else:
@@ -666,7 +720,7 @@ def main():
             <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_SINGLES['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
         </div>
         """, unsafe_allow_html=True)
-        st.markdown('<div class="section-desc"><strong>🔗 Blend 50/50 — correlazione 0,37 tra le due strategie</strong></div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-desc"><strong>🔗 Blend risk-parity — correlazione 0,37 tra le due strategie</strong></div>', unsafe_allow_html=True)
         st.markdown(f"""
         <div class="kpi-grid">
             <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,38 box da solo (stesso periodo)</div></div>
@@ -710,8 +764,8 @@ def main():
                    f"della strategia, aggregata. Oggi: {breadth_series.iloc[-1]:.0f}%. Un calo ampio e prolungato "
                    "sotto il 50% è un segnale di regime, non di un singolo box.")
 
-    # --- AZIONE: BUY/HOLD con allocazione e link Cardmarket (50% del capitale) ---
-    st.markdown(f'<div class="section-title">📦 Box da comprare/mantenere — 50% del capitale ({capital*0.5:,.0f}€)</div>', unsafe_allow_html=True)
+    # --- AZIONE: BUY/HOLD con allocazione e link Cardmarket (quota box, risk parity) ---
+    st.markdown(f'<div class="section-title">📦 Box da comprare/mantenere — {w_box*100:.0f}% del capitale ({capital*w_box:,.0f}€)</div>', unsafe_allow_html=True)
     st.caption("Prezzo da PriceCharting (USA), NON una quota Cardmarket — verifica sempre col prezzo reale dietro "
                "il bottone. Resta sotto il \"massimo\" (oggetto + spedizione). L'€ mostrato è l'allocazione ideale: "
                "se un box costa più, il modello lo compra comunque per intero finché resta sotto il 35% del "
@@ -731,7 +785,7 @@ def main():
     buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
     if max_card_price > 0:
         buy_rows = [r for r in buy_rows if r["current_price_eur"] <= max_card_price]
-    allocation = build_allocation(buy_rows, capital * 0.5, metadata, latest_date)
+    allocation = build_allocation(buy_rows, capital * w_box, metadata, latest_date)
     prefetch_product_images([
         (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
         for r, _, _ in allocation
@@ -740,7 +794,7 @@ def main():
     if not allocation:
         st.info("Nessun segnale BUY/HOLD questo mese.")
     else:
-        box_capital_half = capital * 0.5
+        box_capital_half = capital * w_box
         _total_real_spend, _n_skip = 0.0, 0
         for r, alloc, w in allocation:
             p = r["current_price_eur"]
@@ -776,11 +830,12 @@ def main():
         # minimo indivisibile): se il budget proporzionale non basta per 1 pezzo,
         # il modello validato lo compra comunque per intero SOLO se il prezzo
         # resta sotto il 35% del capitale dedicato ai box - altrimenti la salta.
-        # Qui capital*0.5 approssima il total_nav dello strategy (stesso valore
-        # passato a build_allocation) - una carta/box i cui bisogni superano
-        # l'allocazione "ideale" NON è un errore di visualizzazione, è la regola
-        # testata (vedi scripts/max_quantity_per_trade_test.py e la sidebar).
-        box_capital_half = capital * 0.5
+        # Qui capital*w_box approssima il total_nav dello strategy (stesso valore
+        # passato a build_allocation, ora per inverse-vol e non piu' un 50%
+        # fisso - vedi get_box_singles_split()) - una carta/box i cui bisogni
+        # superano l'allocazione "ideale" NON è un errore di visualizzazione, è
+        # la regola testata (vedi scripts/max_quantity_per_trade_test.py e la sidebar).
+        box_capital_half = capital * w_box
         if box_price <= 0:
             qty_est, spend_est, skip_reason = 1, alloc, None
         elif alloc >= box_price:
@@ -865,15 +920,14 @@ def main():
                                          key=f"chart_verify_{r['item_id']}")
 
     # --- AZIONE: SINGOLE — FATTORE SCARSITÀ (50% del capitale) ---
-    st.markdown(f'<div class="section-title">🃏 Singole da comprare — Fattore Scarsità, 50% del capitale ({capital*0.5:,.0f}€)</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">🃏 Singole da comprare — Fattore Scarsità, {w_singles*100:.0f}% del capitale ({capital*w_singles:,.0f}€)</div>', unsafe_allow_html=True)
     if singles_mode == "dac7":
-        st.info("ℹ️ Modalità DAC7 attiva: questa NON è la stessa lista di produzione filtrata più stretta — è "
-                "una configurazione diversa (ribilanciamento ogni 12 mesi invece di 3, max 20 posizioni invece di "
-                "60, validata separatamente). Le due liste possono non avere **nessuna carta in comune**: una "
-                "carta nel quantile top-20 da 8 mesi è \"fresca\" per DAC7 (finestra 12 mesi) ma \"scaduta/value "
-                "trap\" per la produzione (finestra 3 mesi) — e viceversa, una carta appena entrata nella top-60 "
-                "potrebbe non essere nella top-20 più selettiva di DAC7. Disattiva il toggle in sidebar per "
-                "vedere la lista di produzione.")
+        st.info("ℹ️ Modalità DAC7 attiva: stesso ribilanciamento trimestrale della produzione, ma solo le "
+                "**20 carte** col residuo più negativo invece di 60 (optimum verificato sotto il vincolo di "
+                "30 vendite/anno — vedi scripts/dac7_turnover_search.py, Sharpe 2,39 vs 2,11 di produzione). "
+                "È un sottoinsieme più selettivo della stessa lista, non una configurazione indipendente: "
+                "ogni carta qui mostrata è anche in produzione, ma non viceversa. Disattiva il toggle in "
+                "sidebar per vedere le 60 posizioni complete.")
     st.caption("Da comprare: la carta GIÀ GRADATA Grade 9 (uno slab, non raw, non PSA10). Il badge blu **[Set]** "
                "è il set/espansione esatto — verifica sempre di cercare quel set su Cardmarket, il nome della "
                "carta da solo non basta (⚠️ **(Unlimited)** = esiste anche una 1st Edition più cara, prodotto "
@@ -923,7 +977,7 @@ def main():
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:
         singles_rows = [r for r in singles_rows if r["current_price_eur"] <= max_card_price]
-    singles_allocation = build_equal_allocation(singles_rows, capital * 0.5)
+    singles_allocation = build_equal_allocation(singles_rows, capital * w_singles)
 
     if not singles_allocation:
         st.info("Nessuna carta nel quantile BUY questo mese.")
@@ -1056,16 +1110,18 @@ def main():
     res_singles, n_universe_singles = get_singles_backtest_results(singles_mode)
     with st.expander(f"📈 Backtest 2020-2026 e giornale trade — {res.total_trades + res_singles.total_trades} trade chiusi in tutto"):
         common_idx = res.monthly_returns.index.intersection(res_singles.monthly_returns.index)
-        blend_ret = 0.5 * res.monthly_returns.loc[common_idx] + 0.5 * res_singles.monthly_returns.loc[common_idx]
+        # w_box/w_singles = split per inverse-vol (risk parity), non piu' un
+        # 50/50 fisso - vedi get_box_singles_split().
+        blend_ret = w_box * res.monthly_returns.loc[common_idx] + w_singles * res_singles.monthly_returns.loc[common_idx]
         blend_nav = 10000.0 * (1.0 + blend_ret).cumprod()
 
         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08, row_heights=[0.7, 0.3],
-                             subplot_titles=("NAV (€, base 10.000€ per metà)", "Drawdown (%)"))
+                             subplot_titles=(f"NAV (€, base 10.000€ · {w_box*100:.0f}/{w_singles*100:.0f} box/singole)", "Drawdown (%)"))
         fig.add_trace(go.Scatter(x=res.nav_history.index, y=res.nav_history["nav"], mode="lines", name="Box (TS Momentum)",
                                   line=dict(color="#38bdf8", width=1.5, dash="dot")), row=1, col=1)
         fig.add_trace(go.Scatter(x=res_singles.nav_history.index, y=res_singles.nav_history["nav"], mode="lines", name="Singole (Scarsità)",
                                   line=dict(color="#fbbf24", width=1.5, dash="dot")), row=1, col=1)
-        fig.add_trace(go.Scatter(x=blend_nav.index, y=blend_nav.values, mode="lines", name="Blend 50/50",
+        fig.add_trace(go.Scatter(x=blend_nav.index, y=blend_nav.values, mode="lines", name=f"Blend {w_box*100:.0f}/{w_singles*100:.0f}",
                                   line=dict(color="#10b981", width=2.5)), row=1, col=1)
         peak = blend_nav.cummax()
         dd = (blend_nav - peak) / peak * 100.0
@@ -1080,9 +1136,10 @@ def main():
                    "Cardmarket 5% + imballaggio 0,60€ + slippage + custodia; acquisto con spedizione reale a carico "
                    "del compratore (10€/box, 7€/carta), mai gratis nella realtà.")
         if singles_mode == "dac7":
-            st.caption(f"⚠️ Riflette la **modalità DAC7** (singole: ribilanciamento 12m, max 20 posizioni) — Sharpe "
-                       f"singole {res_singles.sharpe:.2f} (vs {VALIDATED_SINGLES['sharpe']:.2f} a turnover pieno). Le "
-                       f"Metriche di validazione sopra mostrano sempre i numeri a turnover pieno.")
+            st.caption(f"⚠️ Riflette la **modalità DAC7** (singole: stesso ribilanciamento trimestrale, solo max "
+                       f"20 posizioni invece di 60 — optimum verificato sotto vincolo, scripts/dac7_turnover_search.py) "
+                       f"— Sharpe singole {res_singles.sharpe:.2f} (vs {VALIDATED_SINGLES['sharpe']:.2f} a turnover pieno). "
+                       f"Le Metriche di validazione sopra mostrano sempre i numeri a turnover pieno.")
 
         st.markdown('<div class="section-desc"><strong>📜 Trade chiusi — Box</strong></div>', unsafe_allow_html=True)
         trades_df = res.trades_df

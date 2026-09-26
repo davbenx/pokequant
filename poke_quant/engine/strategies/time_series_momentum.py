@@ -214,7 +214,18 @@ class TimeSeriesMomentumStrategy:
                     reason=f"TSMOM: rendimento trailing {self.exit_lookback_months}m sotto soglia ({mom*100:+.1f}% <= {self.exit_threshold*100:.1f}%)"
                 ))
 
-        # Ingresso: segnale positivo e posizione non già aperta.
+        # Ingresso: segnale positivo e posizione non già aperta. Candidati
+        # raccolti prima e ordinati per momentum DECRESCENTE (trend piu' forte
+        # prima) - non un dettaglio estetico: quando la cassa non basta per
+        # tutti i segnali dello stesso mese (bug trovato: succede in TUTTI i
+        # mesi con 2+ segnali nel backtest storico, 24/24 - vedi
+        # scripts/box_entry_priority_order_test.py), Portfolio.buy() rifiuta
+        # senza fill parziale chi arriva dopo che la cassa e' finita, quindi
+        # l'ordine di iterazione decide chi viene davvero comprato. Prima era
+        # l'ordine di inserimento in items_metadata.json (arbitrario, nessun
+        # criterio) - qui si allinea a cio' che la dashboard mostra e
+        # raccomanda ("priorita' ai primi in lista" = miglior momentum).
+        candidates = []
         for item_id, info in market_snapshot.items():
             if info.get("type") != self.item_type_filter or item_id in portfolio.positions:
                 continue
@@ -237,7 +248,10 @@ class TimeSeriesMomentumStrategy:
                 msrp = info.get("msrp")
                 if msrp and cur_price / msrp > self.max_price_msrp_ratio:
                     continue
+            candidates.append((item_id, info, cur_price, mom))
+        candidates.sort(key=lambda c: -c[3])
 
+        for item_id, info, cur_price, mom in candidates:
             available_cash = portfolio.cash
             budget = min(available_cash, max_item_budget)
             qty = int(budget // cur_price)
