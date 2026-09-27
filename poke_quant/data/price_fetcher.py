@@ -571,7 +571,27 @@ def fetch_pricecharting_variant_grade9(
     """
     Cerca la pagina dedicata della variante su PriceCharting ed estrae l'ultimo prezzo Grade 9 reale.
     Restituisce (prezzo_eur, prezzo_usd, url) oppure None se non disponibile.
+    Consulta prima la cache locale data_cache/variant_prices_grade9.json per garantire funzionamento
+    istantaneo e affidabile anche su ambienti cloud (es. Streamlit Cloud / AWS).
     """
+    from pathlib import Path
+    cache_path = Path(__file__).resolve().parent.parent.parent / "data_cache" / "variant_prices_grade9.json"
+    cache_key = f"{game_slug}:{item_slug}:{variant_type}"
+    fx_rate = get_current_eur_usd_rate()
+
+    # 1. Verifica cache persistente locale
+    if cache_path.exists():
+        try:
+            cached_data = json.loads(cache_path.read_text(encoding="utf-8"))
+            if cache_key in cached_data:
+                entry = cached_data[cache_key]
+                usd = float(entry["usd"])
+                eur = round(usd / fx_rate, 2)
+                return eur, usd, entry["url"]
+        except Exception:
+            pass
+
+    # 2. Se non presente in cache, tenta scraping in tempo reale
     candidates = []
     parts = item_slug.rsplit("-", 1)
     if len(parts) == 2 and parts[1].isdigit():
@@ -582,7 +602,6 @@ def fetch_pricecharting_variant_grade9(
         candidates.append(f"{item_slug}-{variant_type}")
         candidates.append(f"{variant_type}-{item_slug}")
 
-    fx_rate = get_current_eur_usd_rate()
     for slug in candidates:
         url = f"https://www.pricecharting.com/game/{game_slug}/{slug}"
         try:
@@ -595,6 +614,22 @@ def fetch_pricecharting_variant_grade9(
                     if graded and len(graded[-1]) >= 2 and graded[-1][1] > 0:
                         usd = round(graded[-1][1] / 100.0, 2)
                         eur = round(usd / fx_rate, 2)
+                        # Salva in cache per le prossime chiamate
+                        try:
+                            cached_data = {}
+                            if cache_path.exists():
+                                cached_data = json.loads(cache_path.read_text(encoding="utf-8"))
+                            cached_data[cache_key] = {
+                                "eur": eur,
+                                "usd": usd,
+                                "url": url,
+                                "variant_type": variant_type,
+                                "game_slug": game_slug,
+                                "item_slug": item_slug,
+                            }
+                            cache_path.write_text(json.dumps(cached_data, indent=2), encoding="utf-8")
+                        except Exception:
+                            pass
                         return eur, usd, url
         except Exception:
             continue
