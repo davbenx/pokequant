@@ -55,6 +55,14 @@ from scripts.generate_singles_signal import (
     compute_singles_signal_rows, compute_singles_avoid_rows, compute_singles_alternative_rows,
     PRODUCTION_PARAMS as SINGLES_PARAMS, DAC7_SINGLES_PARAMS,
 )
+from poke_quant.slabs.grading_multipliers import (
+    GradingCompany,
+    Era,
+    normalize_company,
+    normalize_era,
+    get_grading_adjustment,
+    adjust_price_for_grading,
+)
 
 # Soglie DAC7 (direttiva UE 2021/514): sopra queste soglie annue le piattaforme
 # (Cardmarket, eBay, ecc.) segnalano il venditore alle autorità fiscali come
@@ -976,6 +984,100 @@ def main():
     if max_card_price > 0:
         singles_rows = [r for r in singles_rows if r["current_price_eur"] <= max_card_price]
     singles_allocation = build_equal_allocation(singles_rows, capital * w_singles)
+
+    # --- CALCOLATORE RAPIDO SLAB & CORREZIONI CASE DI GRADAZIONE ---
+    with st.expander("⚖️ Calcolatore Inserzioni Slab & Moltiplicatori Case di Gradazione (BGS, CGC, GRAAD, PCA, SGC, ACE)", expanded=False):
+        st.markdown("**Valutatore Rapido Inserzioni**: Ricalcola all'istante il Fair Value, la penalità di liquidità e il **Tetto Massimo Sniper** per qualsiasi carta e casa di gradazione rispetto al benchmark PSA.")
+        
+        calc_c1, calc_c2, calc_c3 = st.columns([2, 1, 1])
+        with calc_c1:
+            card_names = [f"{r['name']} [{r.get('set_name') or '?'}] ({r['current_price_eur']:.2f}€)" for r in singles_rows[:60]]
+            card_options = ["-- Seleziona dalla lista BUY attuale --", "Personalizzata / Inserimento manuale"] + card_names
+            chosen_option = st.selectbox("Carta da valutare", options=card_options, index=0)
+            
+            if chosen_option.startswith("--"):
+                card_name_input = "Esempio (Seleziona una carta)"
+                base_psa_input = 100.0
+                era_detected = "modern"
+            elif chosen_option.startswith("Personalizzata"):
+                card_name_input = st.text_input("Nome carta", value="Kabutops #9 Holo Fossil")
+                base_psa_input = st.number_input("Benchmark PSA 9 (€)", min_value=1.0, value=100.0, step=5.0)
+                era_detected = "vintage"
+            else:
+                idx_sel = card_options.index(chosen_option) - 2
+                sel_row = singles_rows[idx_sel]
+                card_name_input = sel_row["name"]
+                base_psa_input = float(sel_row["current_price_eur"])
+                sel_meta = metadata.get(sel_row["item_id"], {})
+                rel_year = int(str(sel_meta.get("release_date", "2020"))[:4]) if sel_meta.get("release_date") else 2020
+                if rel_year <= 2003:
+                    era_detected = "vintage"
+                elif rel_year <= 2016:
+                    era_detected = "mid_era"
+                else:
+                    era_detected = "modern"
+
+        with calc_c2:
+            company_input = st.selectbox("Casa di Gradazione", options=["CGC", "BGS", "PSA", "SGC", "PCA", "GRAAD", "ACE"], index=0)
+            era_input = st.selectbox("Era Collezionistica", options=["vintage", "mid_era", "modern"], 
+                                     index=["vintage", "mid_era", "modern"].index(era_detected) if era_detected in ["vintage", "mid_era", "modern"] else 2,
+                                     format_func=lambda x: "Vintage (1999–2003)" if x == "vintage" else ("Mid-Era (2004–2016)" if x == "mid_era" else "Moderno (2017+)"))
+
+        with calc_c3:
+            grade_input = st.selectbox("Voto Slab", options=["9.0 Mint", "9.5 Gem Mint", "10.0 Gem Mint", "10.0 Pristine"], index=0)
+            is_pristine = "pristine" in grade_input.lower()
+            grade_val = "10.0" if "10" in grade_input else ("9.5" if "9.5" in grade_input else "9.0")
+
+        # Seconda riga: Prezzo offerta e spedizione
+        inp_c1, inp_c2, inp_c3 = st.columns([1.5, 1.5, 2])
+        with inp_c1:
+            offer_price_eur = st.number_input("Prezzo Annuncio / Offerta (€)", min_value=1.0, value=float(round(base_psa_input * 0.85, 2)), step=5.0)
+        with inp_c2:
+            shipping_eur = st.number_input("Spese di Spedizione (€)", min_value=0.0, value=6.0, step=1.0)
+        with inp_c3:
+            st.write("")
+            st.write("")
+            st.caption(f"Costo Totale Proposto: **{offer_price_eur + shipping_eur:.2f} € All-in**")
+
+        fair_value_calib, sniper_ceiling_calib, adj = adjust_price_for_grading(
+            base_psa_price_eur=base_psa_input,
+            company=company_input,
+            grade=grade_val,
+            era=era_input,
+            is_pristine=is_pristine,
+        )
+        total_offer = offer_price_eur + shipping_eur
+        sniper_net = max(0.0, round(sniper_ceiling_calib - shipping_eur, 2))
+        discount_real_pct = (1.0 - (total_offer / fair_value_calib)) * 100.0 if fair_value_calib > 0 else 0.0
+
+        if total_offer <= fair_value_calib * 0.75:
+            v_badge = "🚨 DEEP VALUE / COLPACCIO (-25%+ di sconto)"
+            v_color = "#10b981"
+        elif total_offer <= fair_value_calib * 0.95:
+            v_badge = "🟢 BUY CONSIGLIATO (A Sconto)"
+            v_color = "#10b981"
+        elif total_offer <= sniper_ceiling_calib:
+            v_badge = "🟡 FAIR VALUE / AL LIMITE DELL'EDGE"
+            v_color = "#fbbf24"
+        else:
+            v_badge = f"🔴 OVERPRICED (+{((total_offer/sniper_ceiling_calib)-1.0)*100:.1f}% sopra il tetto)"
+            v_color = "#f43f5e"
+
+        st.markdown(f"""
+        <div style="background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                <span style="font-weight: 700; font-size: 15px; color: #f8fafc;">Esito Valutazione: <span style="color: {v_color};">{v_badge}</span></span>
+                <span style="font-size: 12px; color: #94a3b8;">Moltiplicatore: <strong>{adj.multiplier:.3f}x</strong> · Penalità liquidità: <strong>-{adj.liquidity_penalty_pct:.0f}%</strong></span>
+            </div>
+            <div class="kpi-grid" style="margin-bottom: 0;">
+                <div class="kpi-card"><div class="kpi-label">Benchmark PSA</div><div class="kpi-value">{base_psa_input:.2f} €</div><div class="kpi-sub">{adj.benchmark_ref}</div></div>
+                <div class="kpi-card"><div class="kpi-label">Fair Value {adj.company.value}</div><div class="kpi-value">{fair_value_calib:.2f} €</div><div class="kpi-sub kpi-sub-emerald">Valore atteso reale</div></div>
+                <div class="kpi-card"><div class="kpi-label">Tetto Max (All-in)</div><div class="kpi-value">{sniper_ceiling_calib:.2f} €</div><div class="kpi-sub">Soffitto max per edge</div></div>
+                <div class="kpi-card"><div class="kpi-label">🎯 Max Sniper (Netto)</div><div class="kpi-value" style="color: #38bdf8;">{sniper_net:.2f} €</div><div class="kpi-sub">Da digitare su eBay</div></div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.caption(f"📝 **Logica**: {adj.notes}. Sconto effettivo calcolato: **{discount_real_pct:+.1f}%** rispetto al fair value di una slab {adj.company.value} {grade_input}.")
 
     if not singles_allocation:
         st.info("Nessuna carta nel quantile BUY questo mese.")
