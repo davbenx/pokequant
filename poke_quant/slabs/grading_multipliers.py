@@ -20,10 +20,12 @@ class GradingCompany(str, Enum):
     BGS = "BGS"       # Beckett Grading Services
     CGC = "CGC"       # Certified Guaranty Company
     SGC = "SGC"       # Sportscard Guaranty Corporation (The Tuxedo)
+    TAG = "TAG"       # Technical Authentication & Grading (USA)
     GRAAD = "GRAAD"   # Gem Rate Authentication And Diagnostic (Italia)
     PCA = "PCA"       # Professional Cards Authenticator (Francia)
+    CCC = "CCC"       # Classic Card Collector (Austria/Germania)
+    AIGRADING = "AiGrading"  # AiGrading (Italia)
     ACE = "ACE"       # ACE Grading (UK)
-    CCC = "CCC"       # Classic Card Collector / Central Europe
 
 
 class Era(str, Enum):
@@ -80,6 +82,11 @@ EMPIRICAL_RATIOS_GRADE9: Dict[Tuple[GradingCompany, str, Era], Tuple[float, floa
     (GradingCompany.CGC, "9.5", Era.MID_ERA): (1.250, 0.0, 1.120, "CGC 9.5 Gem Mint mid-era"),
     (GradingCompany.CGC, "9.5", Era.MODERN): (1.180, 0.0, 1.100, "CGC 9.5 Gem Mint moderno"),
 
+    # --- TAG Grading (USA, Digital 1000 DPI) 9.0 Mint ---
+    (GradingCompany.TAG, "9.0", Era.VINTAGE): (0.800, 15.0, 0.830, "TAG 9.0 vintage: diffidenza collezionisti storici"),
+    (GradingCompany.TAG, "9.0", Era.MID_ERA): (0.840, 12.0, 0.860, "TAG 9.0 mid-era: community emergente"),
+    (GradingCompany.TAG, "9.0", Era.MODERN): (0.880, 8.0, 0.900, "TAG 9.0 moderno: forte interesse tech-oriented USA"),
+
     # --- SGC (Tuxedo) 9.0 Mint ---
     (GradingCompany.SGC, "9.0", Era.VINTAGE): (0.785, 15.0, 0.820, "SGC 9.0 Mint vintage: sconto estero significativo"),
     (GradingCompany.SGC, "9.0", Era.MID_ERA): (0.800, 14.0, 0.830, "SGC 9.0 Mint mid-era"),
@@ -91,10 +98,20 @@ EMPIRICAL_RATIOS_GRADE9: Dict[Tuple[GradingCompany, str, Era], Tuple[float, floa
     (GradingCompany.GRAAD, "9.0", Era.MID_ERA): (0.711, 25.0, 0.740, "GRAAD 9.0 mid-era"),
     (GradingCompany.GRAAD, "9.0", Era.MODERN): (0.750, 20.0, 0.770, "GRAAD 9.0 moderno"),
 
+    # --- AiGrading (Italia) 9.0 Mint ---
+    (GradingCompany.AIGRADING, "9.0", Era.VINTAGE): (0.680, 28.0, 0.710, "AiGrading 9.0 vintage: ente regionale italiano (stile GRAAD)"),
+    (GradingCompany.AIGRADING, "9.0", Era.MID_ERA): (0.700, 25.0, 0.730, "AiGrading 9.0 mid-era"),
+    (GradingCompany.AIGRADING, "9.0", Era.MODERN): (0.740, 20.0, 0.760, "AiGrading 9.0 moderno: liquidità limitata all'Italia"),
+
     # --- PCA (Francia) 9.0 Mint ---
     (GradingCompany.PCA, "9.0", Era.VINTAGE): (0.726, 25.0, 0.740, "PCA 9.0 vintage: liquido principalmente in Francia"),
     (GradingCompany.PCA, "9.0", Era.MID_ERA): (0.737, 23.0, 0.750, "PCA 9.0 mid-era"),
     (GradingCompany.PCA, "9.0", Era.MODERN): (0.776, 18.0, 0.780, "PCA 9.0 moderno"),
+
+    # --- CCC (Classic Card Collector, DACH) 9.0 Mint ---
+    (GradingCompany.CCC, "9.0", Era.VINTAGE): (0.690, 28.0, 0.720, "CCC 9.0 vintage: ente regionale DACH/Germania"),
+    (GradingCompany.CCC, "9.0", Era.MID_ERA): (0.710, 25.0, 0.740, "CCC 9.0 mid-era"),
+    (GradingCompany.CCC, "9.0", Era.MODERN): (0.750, 20.0, 0.770, "CCC 9.0 moderno: scambi prevalentemente Germania/Austria"),
 
     # --- ACE Grading (UK) 9.0 Mint ---
     (GradingCompany.ACE, "9.0", Era.VINTAGE): (0.740, 22.0, 0.760, "ACE 9.0 vintage: mercato prevalentemente UK"),
@@ -124,13 +141,27 @@ EMPIRICAL_RATIOS_GRADE10: Dict[Tuple[GradingCompany, str, Era], Tuple[float, flo
     (GradingCompany.CGC, "10.0_gem", Era.MID_ERA): (0.550, 15.0, 0.600, "CGC 10 Gem Mint mid-era"),
     (GradingCompany.CGC, "10.0_gem", Era.MODERN): (0.780, 10.0, 0.820, "CGC 10 Gem Mint moderno"),
 
-    # --- GRAAD & PCA 10 ---
+    # --- TAG 10 Gem Mint & Pristine ---
+    (GradingCompany.TAG, "10.0", Era.VINTAGE): (0.500, 25.0, 0.550, "TAG 10 vintage"),
+    (GradingCompany.TAG, "10.0", Era.MID_ERA): (0.600, 20.0, 0.650, "TAG 10 mid-era"),
+    (GradingCompany.TAG, "10.0", Era.MODERN): (0.820, 12.0, 0.850, "TAG 10 moderno"),
+    (GradingCompany.TAG, "10.0_pristine", Era.VINTAGE): (0.800, 15.0, 0.850, "TAG 10 Pristine vintage"),
+    (GradingCompany.TAG, "10.0_pristine", Era.MID_ERA): (0.900, 12.0, 0.900, "TAG 10 Pristine mid-era"),
+    (GradingCompany.TAG, "10.0_pristine", Era.MODERN): (1.100, 5.0, 1.050, "TAG 10 Pristine moderno"),
+
+    # --- GRAAD, PCA, CCC, AiGrading 10 ---
     (GradingCompany.GRAAD, "10.0", Era.VINTAGE): (0.350, 35.0, 0.400, "GRAAD 10 vintage scambia molto sotto PSA 10"),
     (GradingCompany.GRAAD, "10.0", Era.MID_ERA): (0.450, 30.0, 0.500, "GRAAD 10 mid-era"),
     (GradingCompany.GRAAD, "10.0", Era.MODERN): (0.550, 25.0, 0.600, "GRAAD 10 moderno"),
     (GradingCompany.PCA, "10.0", Era.VINTAGE): (0.400, 32.0, 0.450, "PCA 10 vintage"),
     (GradingCompany.PCA, "10.0", Era.MID_ERA): (0.500, 28.0, 0.550, "PCA 10 mid-era"),
     (GradingCompany.PCA, "10.0", Era.MODERN): (0.600, 22.0, 0.650, "PCA 10 moderno"),
+    (GradingCompany.CCC, "10.0", Era.VINTAGE): (0.350, 35.0, 0.400, "CCC 10 vintage scambia molto sotto PSA 10"),
+    (GradingCompany.CCC, "10.0", Era.MID_ERA): (0.450, 30.0, 0.500, "CCC 10 mid-era"),
+    (GradingCompany.CCC, "10.0", Era.MODERN): (0.550, 25.0, 0.600, "CCC 10 moderno"),
+    (GradingCompany.AIGRADING, "10.0", Era.VINTAGE): (0.350, 35.0, 0.400, "AiGrading 10 vintage"),
+    (GradingCompany.AIGRADING, "10.0", Era.MID_ERA): (0.450, 30.0, 0.500, "AiGrading 10 mid-era"),
+    (GradingCompany.AIGRADING, "10.0", Era.MODERN): (0.550, 25.0, 0.600, "AiGrading 10 moderno"),
 }
 
 
@@ -141,8 +172,14 @@ def normalize_company(comp: str | GradingCompany) -> GradingCompany:
     c = str(comp).strip().upper()
     if "BECKETT" in c or "BGS" in c:
         return GradingCompany.BGS
-    if "CGC" in c or "CCC" in c:
+    if "CGC" in c:
         return GradingCompany.CGC
+    if "TAG" in c:
+        return GradingCompany.TAG
+    if "AIGRAD" in c or "AI GRAD" in c:
+        return GradingCompany.AIGRADING
+    if "CCC" in c or "CLASSIC" in c:
+        return GradingCompany.CCC
     if "GRAAD" in c:
         return GradingCompany.GRAAD
     if "PCA" in c:

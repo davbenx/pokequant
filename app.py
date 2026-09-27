@@ -987,7 +987,7 @@ def main():
     singles_allocation = build_equal_allocation(singles_rows, capital * w_singles)
 
     # --- CALCOLATORE RAPIDO SLAB & CORREZIONI CASE DI GRADAZIONE ---
-    with st.expander("⚖️ Calcolatore Inserzioni Slab & Moltiplicatori Case di Gradazione (BGS, CGC, GRAAD, PCA, SGC, ACE)", expanded=False):
+    with st.expander("⚖️ Calcolatore Inserzioni Slab & Moltiplicatori Case di Gradazione (BGS, CGC, PSA, SGC, TAG, PCA, GRAAD, CCC, AiGrading, ACE)", expanded=False):
         st.markdown("**Valutatore Rapido Inserzioni**: Ricalcola all'istante il Fair Value, la penalità di liquidità e il **Tetto Massimo Sniper** per qualsiasi carta e casa di gradazione rispetto al benchmark PSA.")
         
         calc_c1, calc_c2, calc_c3 = st.columns([2, 1, 1])
@@ -1040,7 +1040,7 @@ def main():
                     era_detected = "modern"
 
         with calc_c2:
-            company_input = st.selectbox("Casa di Gradazione", options=["CGC", "BGS", "PSA", "SGC", "PCA", "GRAAD", "ACE"], index=0)
+            company_input = st.selectbox("Casa di Gradazione", options=["CGC", "BGS", "PSA", "SGC", "TAG", "PCA", "GRAAD", "CCC", "AiGrading", "ACE"], index=0)
             era_input = st.selectbox("Era Collezionistica", options=["vintage", "mid_era", "modern"], 
                                      index=["vintage", "mid_era", "modern"].index(era_detected) if era_detected in ["vintage", "mid_era", "modern"] else 2,
                                      format_func=lambda x: "Vintage (1999–2003)" if x == "vintage" else ("Mid-Era (2004–2016)" if x == "mid_era" else "Moderno (2017+)"))

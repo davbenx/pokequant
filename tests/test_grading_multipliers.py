@@ -18,7 +18,11 @@ def test_normalize_company_aliases():
     assert normalize_company("BGS") == GradingCompany.BGS
     assert normalize_company("Beckett") == GradingCompany.BGS
     assert normalize_company("CGC Cards") == GradingCompany.CGC
-    assert normalize_company("CCC") == GradingCompany.CGC
+    assert normalize_company("TAG") == GradingCompany.TAG
+    assert normalize_company("CCC") == GradingCompany.CCC
+    assert normalize_company("Classic Card Collector") == GradingCompany.CCC
+    assert normalize_company("aigrading") == GradingCompany.AIGRADING
+    assert normalize_company("AI Grading") == GradingCompany.AIGRADING
     assert normalize_company("graad") == GradingCompany.GRAAD
     assert normalize_company("PCA France") == GradingCompany.PCA
     assert normalize_company("sgc tuxedo") == GradingCompany.SGC
