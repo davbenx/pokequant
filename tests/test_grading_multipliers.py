@@ -117,3 +117,24 @@ def test_special_variants():
     base_unlimited = 100.0
     fair_1st, _, _ = adjust_price_for_grading(base_unlimited, "PSA", 9.0, Era.VINTAGE, variant="1st Edition WotC")
     assert fair_1st == 250.0
+
+
+def test_black_label_multiplier():
+    base_psa10 = 500.0
+    fair_black, sniper_black, adj_black = adjust_price_for_grading(
+        base_psa_price_eur=base_psa10,
+        company="BGS",
+        grade=10.0,
+        era=Era.MODERN,
+        subgrades_black_label=True,
+    )
+    assert adj_black.multiplier >= 4.0
+    assert fair_black >= 2000.0
+    assert sniper_black >= 1500.0
+
+
+def test_current_fx_rate_integration():
+    from poke_quant.data.fx_rates import get_current_eur_usd_rate
+    rate = get_current_eur_usd_rate()
+    assert 1.0 <= rate <= 1.4  # Range realistico per EUR/USD
+

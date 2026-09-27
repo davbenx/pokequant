@@ -16,6 +16,7 @@ from typing import Optional
 import pandas as pd
 
 from poke_quant.data.storage import ensure_cache_dir
+from poke_quant.config import DEFAULT_EUR_USD
 
 FX_FILENAME = "eur_usd_fx.csv"
 
@@ -41,3 +42,13 @@ def rate_for_month(eur_usd_series: pd.Series, date: pd.Timestamp, default: float
     idx_pos = eur_usd_series.index.searchsorted(month_start)
     idx_pos = min(max(idx_pos, 0), len(eur_usd_series) - 1)
     return float(eur_usd_series.iloc[idx_pos])
+
+
+def get_current_eur_usd_rate(default: float = DEFAULT_EUR_USD) -> float:
+    """Restituisce il tasso di cambio EUR/USD più recente disponibile nella cache reale,
+    oppure il default se non disponibile."""
+    s = load_eur_usd_series()
+    if s is not None and not s.empty:
+        return float(s.iloc[-1])
+    return default
+

@@ -29,6 +29,7 @@ from poke_quant.slabs.grading_multipliers import (
     get_variant_multiplier,
     SPECIAL_VARIANTS,
 )
+from poke_quant.config import estimate_usa_import_landed_cost, IMPORT_FROM_USA
 from poke_quant.data.price_fetcher import fetch_pricecharting_variant_grade9
 from scripts.generate_singles_signal import (
     _liquid_universe,
@@ -71,6 +72,7 @@ def evaluate_listing(
     is_pristine: bool = False,
     is_black_label: bool = False,
     variant: str = "standard",
+    is_usa: bool = False,
 ):
     metadata = load_metadata()
     prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
@@ -156,9 +158,18 @@ def evaluate_listing(
 
     # Scala il tetto massimo del modello col coefficiente dello sniper
     calibrated_max_edge_allin = round(base_max_edge_price * adj.sniper_ceiling_factor, 2)
-    sniper_net_ceiling = max(0.0, round(calibrated_max_edge_allin - shipping_eur, 2))
+    
+    if is_usa:
+        landed_offer = estimate_usa_import_landed_cost(price_eur, item_type="single")
+        allin_offer = landed_offer
+        # Calcolo max offerta netta all'asta USA per non sforare il tetto sdoganato
+        fixed_customs = (IMPORT_FROM_USA.intl_shipping_single_eur * (1.0 + IMPORT_FROM_USA.vat_rate)) + IMPORT_FROM_USA.eu_customs_duty_flat_eur + IMPORT_FROM_USA.courier_handling_fee_eur
+        max_bid_usa = max(0.0, round((calibrated_max_edge_allin - fixed_customs) / (1.0 + IMPORT_FROM_USA.vat_rate), 2))
+        sniper_net_ceiling = max_bid_usa
+    else:
+        allin_offer = price_eur + shipping_eur
+        sniper_net_ceiling = max(0.0, round(calibrated_max_edge_allin - shipping_eur, 2))
 
-    allin_offer = price_eur + shipping_eur
     discount_pct = (1.0 - (allin_offer / fair_value)) * 100.0
 
     # Verdetto
@@ -184,15 +195,21 @@ def evaluate_listing(
     if v_mult > 1.0:
         print(f"• Variante/Edizione:{v_desc} (Moltiplicatore: {v_mult:.2f}x)")
     print(f"• Era Collez.:      {era.value.upper()} (Rilascio: {info.get('release_date', 'N/A')})")
-    print(f"• Slab in Esame:    {adj.company.value} {grade} ({'Pristine/Black' if is_pristine or is_black_label else 'Standard'})")
-    print(f"• Offerta Attuale:  {price_eur:.2f} € (+ {shipping_eur:.2f} € sped.) = {allin_offer:.2f} € All-in")
+    print(f"• Slab in Esame:    {adj.company.value} {grade} ({'Black Label Quad 10' if is_black_label else ('Pristine 10' if is_pristine else 'Standard')})")
+    if is_usa:
+        print(f"• Offerta Attuale:  {price_eur:.2f} € -> {allin_offer:.2f} € All-in Sdoganato da USA (IVA 22% + dazi)")
+    else:
+        print(f"• Offerta Attuale:  {price_eur:.2f} € (+ {shipping_eur:.2f} € sped.) = {allin_offer:.2f} € All-in")
     print("-" * 76)
     print(f"• Benchmark PSA:    {base_psa_price:.2f} € ({adj.benchmark_ref})")
     print(f"• Moltiplicatore:   {adj.multiplier:.3f}x (Penalità liquidità: -{adj.liquidity_penalty_pct:.1f}%)")
     print(f"• Fair Value Slab:  {fair_value:.2f} € (Valore reale atteso)")
     print(f"• Tetto Max Edge:   {calibrated_max_edge_allin:.2f} € (Costo totale massimo ammissibile)")
     print("-" * 76)
-    print(f"🎯 PREZZO MASSIMO DA METTERE NELLO SNIPER: {sniper_net_ceiling:.2f} € (netto spedizione)")
+    if is_usa:
+        print(f"🎯 MAX PUNTATA CONSIGLIATA SU EBAY USA: {sniper_net_ceiling:.2f} € (per non sforare a dogana)")
+    else:
+        print(f"🎯 PREZZO MASSIMO DA METTERE NELLO SNIPER: {sniper_net_ceiling:.2f} € (netto spedizione)")
     print(f"📊 Sconto Reale:    {discount_pct:+.1f}% rispetto al Fair Value")
     print(f"⚖️ Verdetto:         {verdict_color} {verdict}")
     print(f"📝 Note Modello:    {adj.notes}")
@@ -210,6 +227,7 @@ def main():
     parser.add_argument("--era", choices=["vintage", "mid_era", "modern"], default=None, help="Override era collezionistica")
     parser.add_argument("--pristine", action="store_true", help="Flag per grado Pristine 10")
     parser.add_argument("--black-label", action="store_true", help="Flag per BGS 10 Black Label Quad 10")
+    parser.add_argument("--usa", action="store_true", help="Flag se inserzione proviene da USA / extra-UE (applica dazi, IVA dogana 22% e oneri corriere)")
 
     args = parser.parse_args()
     evaluate_listing(
@@ -222,6 +240,7 @@ def main():
         is_pristine=args.pristine,
         is_black_label=args.black_label,
         variant=args.variant,
+        is_usa=args.usa,
     )
 
 

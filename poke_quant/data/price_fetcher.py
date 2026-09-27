@@ -17,7 +17,7 @@ from poke_quant.config import DEFAULT_EUR_USD
 from poke_quant.data.storage import (
     save_price_matrix, load_price_matrix, save_metadata, load_metadata
 )
-from poke_quant.data.fx_rates import rate_for_month
+from poke_quant.data.fx_rates import rate_for_month, get_current_eur_usd_rate
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -577,11 +577,12 @@ def fetch_pricecharting_variant_grade9(
     if len(parts) == 2 and parts[1].isdigit():
         name_part, num_part = parts[0], parts[1]
         candidates.append(f"{name_part}-{variant_type}-{num_part}")
-        if variant_type == "1st-edition":
-            candidates.append(f"1st-edition-{name_part}-{num_part}")
+        candidates.append(f"{variant_type}-{name_part}-{num_part}")
     else:
         candidates.append(f"{item_slug}-{variant_type}")
+        candidates.append(f"{variant_type}-{item_slug}")
 
+    fx_rate = get_current_eur_usd_rate()
     for slug in candidates:
         url = f"https://www.pricecharting.com/game/{game_slug}/{slug}"
         try:
@@ -593,7 +594,7 @@ def fetch_pricecharting_variant_grade9(
                     graded = data.get("graded", [])
                     if graded and len(graded[-1]) >= 2 and graded[-1][1] > 0:
                         usd = round(graded[-1][1] / 100.0, 2)
-                        eur = round(usd / 1.08, 2)
+                        eur = round(usd / fx_rate, 2)
                         return eur, usd, url
         except Exception:
             continue
