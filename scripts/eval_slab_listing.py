@@ -29,6 +29,7 @@ from poke_quant.slabs.grading_multipliers import (
     get_variant_multiplier,
     SPECIAL_VARIANTS,
 )
+from poke_quant.data.price_fetcher import fetch_pricecharting_variant_grade9
 from scripts.generate_singles_signal import (
     _liquid_universe,
     _snapshot_for_date,
@@ -125,10 +126,23 @@ def evaluate_listing(
         res = -1.0
         pct = 10.0
 
-    # Moltiplicatore eventuale variante speciale (1st Edition, No Symbol, Shadowless, ecc.)
-    v_mult, v_desc = get_variant_multiplier(variant)
-    base_psa_price = round(base_psa_price * v_mult, 2)
-    base_max_edge_price = round(base_max_edge_price * v_mult, 2)
+    # Se variante speciale, interroga prima PriceCharting per il prezzo Grade 9 reale
+    pc_data = None
+    if variant != "standard":
+        v_key = "1st-edition" if ("1" in variant or "first" in variant) else ("no-symbol" if "symbol" in variant else ("shadowless" if "shadow" in variant else "1st-edition"))
+        pc_data = fetch_pricecharting_variant_grade9(info.get("game_slug", ""), info.get("item_slug", ""), v_key)
+
+    if pc_data:
+        pc_eur, pc_usd, pc_url = pc_data
+        base_psa_price = pc_eur
+        base_max_edge_price = round(pc_eur * 1.05, 2)
+        v_desc = f"PriceCharting Grado 9 reale (${pc_usd:.2f} USD)"
+        orig_px = snap[item_id]["current_price"] if item_id in snap else base_psa_price
+        v_mult = round(pc_eur / orig_px, 2) if orig_px > 0 else 1.0
+    else:
+        v_mult, v_desc = get_variant_multiplier(variant, info.get("game_slug"))
+        base_psa_price = round(base_psa_price * v_mult, 2)
+        base_max_edge_price = round(base_max_edge_price * v_mult, 2)
 
     # Ricalibrazione per la compagnia e grado scelti
     fair_value, sniper_ceiling_raw, adj = adjust_price_for_grading(

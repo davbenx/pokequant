@@ -60,12 +60,19 @@ SPECIAL_VARIANTS: Dict[str, Tuple[float, str]] = {
 }
 
 
-def get_variant_multiplier(variant: str) -> Tuple[float, str]:
+def get_variant_multiplier(variant: str, game_slug: Optional[str] = None) -> Tuple[float, str]:
     """Ritorna (moltiplicatore, descrizione) per la variante richiesta."""
     v = str(variant).strip().lower()
-    if "base" in v and ("1" in v or "first" in v):
-        return SPECIAL_VARIANTS["first_edition_base"]
-    if "1" in v or "first" in v:
+    is_1st = "1" in v or "first" in v
+    if is_1st:
+        if game_slug:
+            gs = game_slug.lower()
+            if "base-set" in gs or "base_set" in gs:
+                return SPECIAL_VARIANTS["first_edition_base"]
+            else:
+                return SPECIAL_VARIANTS["first_edition_wotc"]
+        if "base" in v:
+            return SPECIAL_VARIANTS["first_edition_base"]
         return SPECIAL_VARIANTS["first_edition_wotc"]
     if "no_symbol" in v or "no symbol" in v or "senza logo" in v:
         return SPECIAL_VARIANTS["no_symbol"]

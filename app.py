@@ -49,7 +49,10 @@ from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFact
 from poke_quant.engine.position_sizing import age_weight
 from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTOFF
 from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSRP_RATIO, liquid_singles_ids
-from poke_quant.data.price_fetcher import fetch_pricecharting_cover_image_url
+from poke_quant.data.price_fetcher import (
+    fetch_pricecharting_cover_image_url,
+    fetch_pricecharting_variant_grade9,
+)
 from poke_quant.config import estimate_usa_import_landed_cost
 from scripts.generate_singles_signal import (
     compute_singles_signal_rows, compute_singles_avoid_rows, compute_singles_alternative_rows,
@@ -354,6 +357,11 @@ def get_singles_backtest_results(mode: str = "production"):
                      apply_liquidity_slippage=True, apply_holding_cost=True, apply_buy_side_shipping=True)
     res = bt.run()
     return res, len(singles_ids)
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def get_cached_pc_variant_grade9(game_slug: str, item_slug: str, variant_key: str):
+    return fetch_pricecharting_variant_grade9(game_slug, item_slug, variant_key)
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -1041,14 +1049,14 @@ def main():
                     "Edizione / Variante Speciale",
                     options=[
                         "Standard (Unlimited / Regolare)",
-                        "1st Edition WotC (~2.5x vs Unlimited: Jungle, Fossil, Rocket, Gym, Neo)",
-                        "1st Edition Base Set (~6.0x vs Unlimited: rarità massima)",
-                        "No Symbol Error (~1.4x vs Unlimited: Jungle Holo senza logo)",
-                        "Shadowless Base Set (~3.0x vs Unlimited)",
+                        "1st Edition (Rileva reale da PriceCharting o ~2.5x WotC)",
+                        "1st Edition Base Set (Rileva reale da PriceCharting o ~6.0x)",
+                        "No Symbol Error (Rileva reale da PriceCharting o ~1.4x)",
+                        "Shadowless Base Set (Rileva reale da PriceCharting o ~3.0x)",
                         "Reverse Holo Legendary Collection (~3.0x vs Regular)",
                     ],
                     index=0,
-                    help="I prezzi del database PokeQuant sono su edizioni Unlimited. Se la slab in vendita è una 1st Edition o un errore noto (es. No Symbol Jungle), questo moltiplicatore scala automaticamente il benchmark."
+                    help="I prezzi del database PokeQuant sono su edizioni Unlimited. Se la slab in vendita è una 1st Edition o un errore noto (es. No Symbol Jungle), il tool interroga in automatico PriceCharting per recuperare l'esatto benchmark di mercato della variante (se disponibile) o scala con moltiplicatore set-aware."
                 )
             with r2_c2:
                 manual_psa_override = st.number_input(
@@ -1081,15 +1089,16 @@ def main():
         if submit_calc:
             is_pristine = "pristine" in grade_input.lower()
             grade_val = "10.0" if "10" in grade_input else ("9.5" if "9.5" in grade_input else "9.0")
-            v_mult, v_desc = get_variant_multiplier(variant_input)
 
             # Risoluzione nome carta, prezzo base PSA ed era
+            sel_meta = {}
             if manual_psa_override > 0.0:
                 base_psa_raw = manual_psa_override
                 if custom_name_input.strip():
                     card_name = custom_name_input.strip()
                 elif chosen_option in option_to_row:
                     card_name = option_to_row[chosen_option]["name"]
+                    sel_meta = metadata.get(option_to_row[chosen_option]["item_id"], {})
                 else:
                     card_name = "Carta Personalizzata"
                 era_detected = "modern"
@@ -1112,14 +1121,44 @@ def main():
             else:
                 card_name = "Esempio (Seleziona una carta)"
                 base_psa_raw = 100.0
-                era_detected = "vintage" if v_mult > 1.0 else "modern"
+                era_detected = "vintage"
 
-            if v_mult > 1.0 and ("1st" in variant_input.lower() or "symbol" in variant_input.lower() or "shadowless" in variant_input.lower()):
+            # Gestione variante speciale e PriceCharting live
+            pc_live_info = None
+            is_special_variant = not variant_input.startswith("Standard")
+
+            if manual_psa_override > 0.0:
+                base_psa_final = manual_psa_override
+                v_mult = 1.0
+                v_desc = "Benchmark manuale inserito dall'utente"
+            elif is_special_variant:
+                v_lower = variant_input.lower()
+                v_key = "1st-edition" if ("1" in v_lower or "first" in v_lower) else ("no-symbol" if "symbol" in v_lower else ("shadowless" if "shadow" in v_lower else "1st-edition"))
+                g_slug = sel_meta.get("game_slug", "")
+                i_slug = sel_meta.get("item_slug", "")
+                if g_slug and i_slug:
+                    pc_data = get_cached_pc_variant_grade9(g_slug, i_slug, v_key)
+                    if pc_data:
+                        pc_eur, pc_usd, pc_url = pc_data
+                        pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url}
+                        base_psa_final = pc_eur
+                        v_desc = f"PriceCharting Grado 9 reale (${pc_usd:.2f} USD)"
+                        v_mult = round(pc_eur / base_psa_raw, 2) if base_psa_raw > 0 else 1.0
+
+                if pc_live_info is None:
+                    # Fallback euristico set-aware
+                    v_mult, v_desc = get_variant_multiplier(variant_input, sel_meta.get("game_slug"))
+                    base_psa_final = round(base_psa_raw * v_mult, 2)
+            else:
+                v_mult = 1.0
+                v_desc = "Versione Standard / Unlimited"
+                base_psa_final = base_psa_raw
+
+            if is_special_variant and ("1st" in variant_input.lower() or "symbol" in variant_input.lower() or "shadowless" in variant_input.lower()):
                 era_detected = "vintage"
 
             era_final = era_detected if era_input.startswith("Auto") else era_input
-            base_psa_final = round(base_psa_raw * v_mult, 2)
-            display_title = f"{card_name} [{variant_input.split('(')[0].strip()}]" if v_mult > 1.0 else card_name
+            display_title = f"{card_name} [{variant_input.split('(')[0].strip()}]" if is_special_variant else card_name
 
             fair_value_calib, sniper_ceiling_calib, adj = adjust_price_for_grading(
                 base_psa_price_eur=base_psa_final,
@@ -1152,6 +1191,7 @@ def main():
                 "v_mult": v_mult,
                 "v_desc": v_desc,
                 "base_psa_final": base_psa_final,
+                "pc_live_info": pc_live_info,
                 "company_name": adj.company.value,
                 "grade_input": grade_input,
                 "era_final": era_final,
@@ -1170,7 +1210,17 @@ def main():
         # Mostra i risultati se calcolati
         if "slab_eval_res" in st.session_state:
             res = st.session_state["slab_eval_res"]
-            variant_note = f" · Variante: <strong>{res['v_desc']} ({res['v_mult']:.2f}x)</strong>" if res['v_mult'] > 1.0 else ""
+            pc_info = res.get("pc_live_info")
+            if pc_info:
+                sub_benchmark = f"<a href='{pc_info['url']}' target='_blank' style='color: #38bdf8; text-decoration: underline;'>PriceCharting: ${pc_info['usd']:.2f} ↗</a>"
+                variant_note = f" · Variante: <strong>{res['v_desc']} (<a href='{pc_info['url']}' target='_blank' style='color:#38bdf8;'>PriceCharting ↗</a>)</strong>"
+            elif res['v_mult'] > 1.0:
+                sub_benchmark = f"Base: {res['base_psa_raw']:.2f}€ × {res['v_mult']:.2f}x"
+                variant_note = f" · Variante: <strong>{res['v_desc']} ({res['v_mult']:.2f}x)</strong>"
+            else:
+                sub_benchmark = "Prezzo riferimento PSA"
+                variant_note = ""
+
             st.markdown(f"""
             <div style="background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; margin-top: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
@@ -1178,7 +1228,7 @@ def main():
                     <span style="font-size: 12px; color: #94a3b8;">Slab: <strong>{res['company_name']} {res['grade_input']}</strong>{variant_note} · Moltiplicatore: <strong>{res['adj'].multiplier:.3f}x</strong> · Penalità liquidità: <strong>-{res['adj'].liquidity_penalty_pct:.0f}%</strong></span>
                 </div>
                 <div class="kpi-grid" style="margin-bottom: 0;">
-                    <div class="kpi-card"><div class="kpi-label">Benchmark PSA ({res['adj'].benchmark_ref})</div><div class="kpi-value">{res['base_psa_final']:.2f} €</div><div class="kpi-sub">{'Base: ' + str(round(res['base_psa_raw'], 2)) + '€ × ' + str(res['v_mult']) + 'x' if res['v_mult'] > 1.0 else 'Prezzo riferimento PSA'}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Benchmark PSA ({res['adj'].benchmark_ref})</div><div class="kpi-value">{res['base_psa_final']:.2f} €</div><div class="kpi-sub">{sub_benchmark}</div></div>
                     <div class="kpi-card"><div class="kpi-label">Fair Value {res['company_name']}</div><div class="kpi-value">{res['fair_value_calib']:.2f} €</div><div class="kpi-sub kpi-sub-emerald">Valore atteso reale</div></div>
                     <div class="kpi-card"><div class="kpi-label">Tetto Max (All-in)</div><div class="kpi-value">{res['sniper_ceiling_calib']:.2f} €</div><div class="kpi-sub">Soffitto max per edge</div></div>
                     <div class="kpi-card"><div class="kpi-label">🎯 Max Sniper (Netto)</div><div class="kpi-value" style="color: #38bdf8;">{res['sniper_net']:.2f} €</div><div class="kpi-sub">Da digitare su eBay ({res['total_offer']:.2f}€ proposti)</div></div>

@@ -563,3 +563,39 @@ def build_and_cache_universe(
     save_metadata(metadata_map)
 
     return price_df, metadata_map
+
+
+def fetch_pricecharting_variant_grade9(
+    game_slug: str, item_slug: str, variant_type: str = "1st-edition"
+) -> Optional[Tuple[float, float, str]]:
+    """
+    Cerca la pagina dedicata della variante su PriceCharting ed estrae l'ultimo prezzo Grade 9 reale.
+    Restituisce (prezzo_eur, prezzo_usd, url) oppure None se non disponibile.
+    """
+    candidates = []
+    parts = item_slug.rsplit("-", 1)
+    if len(parts) == 2 and parts[1].isdigit():
+        name_part, num_part = parts[0], parts[1]
+        candidates.append(f"{name_part}-{variant_type}-{num_part}")
+        if variant_type == "1st-edition":
+            candidates.append(f"1st-edition-{name_part}-{num_part}")
+    else:
+        candidates.append(f"{item_slug}-{variant_type}")
+
+    for slug in candidates:
+        url = f"https://www.pricecharting.com/game/{game_slug}/{slug}"
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=6)
+            if resp.status_code == 200:
+                m = re.search(r'VGPC\.chart_data\s*=\s*(\{.*?\});', resp.text, re.DOTALL)
+                if m:
+                    data = json.loads(m.group(1))
+                    graded = data.get("graded", [])
+                    if graded and len(graded[-1]) >= 2 and graded[-1][1] > 0:
+                        usd = round(graded[-1][1] / 100.0, 2)
+                        eur = round(usd / 1.08, 2)
+                        return eur, usd, url
+        except Exception:
+            continue
+    return None
+

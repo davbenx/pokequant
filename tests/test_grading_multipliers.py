@@ -107,6 +107,12 @@ def test_special_variants():
     assert v_nosym == 1.4
     assert v_shadow == 3.0
 
+    # Test set-awareness
+    v_fossil_1st, _ = get_variant_multiplier("1st Edition Base Set", game_slug="pokemon-fossil")
+    assert v_fossil_1st == 2.5  # Corretto a WotC standard anche se l'utente ha cliccato per sbaglio Base Set
+    v_base_1st, _ = get_variant_multiplier("1st Edition", game_slug="pokemon-base-set")
+    assert v_base_1st == 6.0
+
     # Test adjust_price_for_grading con variante
     base_unlimited = 100.0
     fair_1st, _, _ = adjust_price_for_grading(base_unlimited, "PSA", 9.0, Era.VINTAGE, variant="1st Edition WotC")
