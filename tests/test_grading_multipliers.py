@@ -113,6 +113,14 @@ def test_special_variants():
     v_base_1st, _ = get_variant_multiplier("1st Edition", game_slug="pokemon-base-set")
     assert v_base_1st == 6.0
 
+    # Test regressione stringhe complesse con numeri (es. etichette dropdown)
+    from poke_quant.slabs.grading_multipliers import variant_to_pricecharting_key, normalize_variant
+    ui_label = "No Symbol Error (Rileva reale da PriceCharting o ~1.4x)"
+    assert normalize_variant(ui_label) == "no_symbol"
+    assert variant_to_pricecharting_key(ui_label) == "no-symbol"
+    v_nosym_ui, _ = get_variant_multiplier(ui_label, game_slug="pokemon-jungle")
+    assert v_nosym_ui == 1.4  # Mai piu confuso con 1st edition solo per via di '1.4x'!
+
     # Test adjust_price_for_grading con variante
     base_unlimited = 100.0
     fair_1st, _, _ = adjust_price_for_grading(base_unlimited, "PSA", 9.0, Era.VINTAGE, variant="1st Edition WotC")

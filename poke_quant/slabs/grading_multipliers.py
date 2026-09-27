@@ -60,27 +60,48 @@ SPECIAL_VARIANTS: Dict[str, Tuple[float, str]] = {
 }
 
 
+def normalize_variant(variant: str) -> str:
+    """Normalizza la variante in una chiave canonica univoca."""
+    v = str(variant).strip().lower()
+    # Verifica errori specifici prima di 1st edition per evitare che '1.4x' attivi 1st edition
+    if any(k in v for k in ["no_symbol", "no-symbol", "no symbol", "senza simbolo", "senza logo"]):
+        return "no_symbol"
+    if "shadowless" in v:
+        return "shadowless"
+    if any(k in v for k in ["reverse", "firework"]):
+        return "reverse_holo_lc"
+    # Per 1st edition, cerca specificamente '1st', '1ª', '1a' o 'first' (evitando '1' isolato o in decimali)
+    if any(k in v for k in ["1st", "1ª", "1a", "first", "prima edizione"]):
+        if "base" in v:
+            return "first_edition_base"
+        return "first_edition_wotc"
+    return "standard"
+
+
+def variant_to_pricecharting_key(variant: str) -> Optional[str]:
+    """Converte una variante nella chiave slug usata da PriceCharting."""
+    canon = normalize_variant(variant)
+    if canon == "no_symbol":
+        return "no-symbol"
+    elif canon == "shadowless":
+        return "shadowless"
+    elif canon in ("first_edition_wotc", "first_edition_base"):
+        return "1st-edition"
+    return None
+
+
 def get_variant_multiplier(variant: str, game_slug: Optional[str] = None) -> Tuple[float, str]:
     """Ritorna (moltiplicatore, descrizione) per la variante richiesta."""
-    v = str(variant).strip().lower()
-    is_1st = "1" in v or "first" in v
-    if is_1st:
+    canon = normalize_variant(variant)
+    if canon in ("first_edition_wotc", "first_edition_base"):
         if game_slug:
             gs = game_slug.lower()
             if "base-set" in gs or "base_set" in gs:
                 return SPECIAL_VARIANTS["first_edition_base"]
             else:
                 return SPECIAL_VARIANTS["first_edition_wotc"]
-        if "base" in v:
-            return SPECIAL_VARIANTS["first_edition_base"]
-        return SPECIAL_VARIANTS["first_edition_wotc"]
-    if "no_symbol" in v or "no symbol" in v or "senza logo" in v:
-        return SPECIAL_VARIANTS["no_symbol"]
-    if "shadowless" in v:
-        return SPECIAL_VARIANTS["shadowless"]
-    if "reverse" in v or "firework" in v:
-        return SPECIAL_VARIANTS["reverse_holo_lc"]
-    return SPECIAL_VARIANTS["standard"]
+        return SPECIAL_VARIANTS[canon]
+    return SPECIAL_VARIANTS.get(canon, SPECIAL_VARIANTS["standard"])
 
 
 # =============================================================================

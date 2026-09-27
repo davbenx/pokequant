@@ -66,6 +66,7 @@ from poke_quant.slabs.grading_multipliers import (
     get_grading_adjustment,
     adjust_price_for_grading,
     get_variant_multiplier,
+    variant_to_pricecharting_key,
     SPECIAL_VARIANTS,
 )
 
@@ -1141,11 +1142,10 @@ def main():
                 v_mult = 1.0
                 v_desc = "Benchmark manuale inserito dall'utente"
             elif is_special_variant:
-                v_lower = variant_input.lower()
-                v_key = "1st-edition" if ("1" in v_lower or "first" in v_lower) else ("no-symbol" if "symbol" in v_lower else ("shadowless" if "shadow" in v_lower else "1st-edition"))
+                v_key = variant_to_pricecharting_key(variant_input)
                 g_slug = sel_meta.get("game_slug", "")
                 i_slug = sel_meta.get("item_slug", "")
-                if g_slug and i_slug:
+                if g_slug and i_slug and v_key:
                     pc_data = get_cached_pc_variant_grade9(g_slug, i_slug, v_key)
                     if pc_data:
                         pc_eur, pc_usd, pc_url = pc_data
@@ -1250,7 +1250,7 @@ def main():
                 variant_note = ""
 
             sub_offer_label = "🎯 Max Puntata eBay USA" if res.get("is_usa_import") else "🎯 Max Sniper (Netto)"
-            sub_offer_desc = f"Netto max per non sforare a dogana (All-in sdoganato: {res['total_offer']:.2f}€)" if res.get("is_usa_import") else f"Da digitare su eBay ({res['total_offer']:.2f}€ all-in)"
+            sub_offer_desc = f"Max puntata consentita (Tua offerta sdoganata: {res['total_offer']:.2f}€ all-in)" if res.get("is_usa_import") else f"Max puntata asta (Tua offerta inserita: {res['total_offer']:.2f}€ all-in)"
 
             st.markdown(f"""
             <div style="background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; margin-top: 10px;">

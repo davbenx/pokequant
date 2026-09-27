@@ -27,6 +27,7 @@ from poke_quant.slabs.grading_multipliers import (
     get_grading_adjustment,
     adjust_price_for_grading,
     get_variant_multiplier,
+    variant_to_pricecharting_key,
     SPECIAL_VARIANTS,
 )
 from poke_quant.config import estimate_usa_import_landed_cost, IMPORT_FROM_USA
@@ -130,8 +131,8 @@ def evaluate_listing(
 
     # Se variante speciale, interroga prima PriceCharting per il prezzo Grade 9 reale
     pc_data = None
-    if variant != "standard":
-        v_key = "1st-edition" if ("1" in variant or "first" in variant) else ("no-symbol" if "symbol" in variant else ("shadowless" if "shadow" in variant else "1st-edition"))
+    v_key = variant_to_pricecharting_key(variant)
+    if v_key:
         pc_data = fetch_pricecharting_variant_grade9(info.get("game_slug", ""), info.get("item_slug", ""), v_key)
 
     if pc_data:
