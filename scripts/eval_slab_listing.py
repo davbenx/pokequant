@@ -26,6 +26,8 @@ from poke_quant.slabs.grading_multipliers import (
     normalize_era,
     get_grading_adjustment,
     adjust_price_for_grading,
+    get_variant_multiplier,
+    SPECIAL_VARIANTS,
 )
 from scripts.generate_singles_signal import (
     _liquid_universe,
@@ -67,6 +69,7 @@ def evaluate_listing(
     era_override: str = None,
     is_pristine: bool = False,
     is_black_label: bool = False,
+    variant: str = "standard",
 ):
     metadata = load_metadata()
     prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
@@ -122,6 +125,11 @@ def evaluate_listing(
         res = -1.0
         pct = 10.0
 
+    # Moltiplicatore eventuale variante speciale (1st Edition, No Symbol, Shadowless, ecc.)
+    v_mult, v_desc = get_variant_multiplier(variant)
+    base_psa_price = round(base_psa_price * v_mult, 2)
+    base_max_edge_price = round(base_max_edge_price * v_mult, 2)
+
     # Ricalibrazione per la compagnia e grado scelti
     fair_value, sniper_ceiling_raw, adj = adjust_price_for_grading(
         base_psa_price_eur=base_psa_price,
@@ -159,6 +167,8 @@ def evaluate_listing(
     print(f"   VALUTAZIONE QUANTITATIVA SLAB — POKEQUANT VALUATION DESK")
     print("=" * 76)
     print(f"• Carta:            {info.get('name')} [{info.get('game_slug')}]")
+    if v_mult > 1.0:
+        print(f"• Variante/Edizione:{v_desc} (Moltiplicatore: {v_mult:.2f}x)")
     print(f"• Era Collez.:      {era.value.upper()} (Rilascio: {info.get('release_date', 'N/A')})")
     print(f"• Slab in Esame:    {adj.company.value} {grade} ({'Pristine/Black' if is_pristine or is_black_label else 'Standard'})")
     print(f"• Offerta Attuale:  {price_eur:.2f} € (+ {shipping_eur:.2f} € sped.) = {allin_offer:.2f} € All-in")
@@ -178,10 +188,11 @@ def evaluate_listing(
 def main():
     parser = argparse.ArgumentParser(description="PokeQuant Slab Valuation & Multiplier Desk")
     parser.add_argument("--card", required=True, help="Nome o ID della carta (es. 'kabutops', 'azumarill 114')")
-    parser.add_argument("--company", required=True, help="Casa di gradazione (PSA, BGS, CGC, SGC, GRAAD, PCA, ACE)")
+    parser.add_argument("--company", required=True, help="Casa di gradazione (PSA, BGS, CGC, SGC, GRAAD, PCA, ACE, TAG, CCC, AiGrading)")
     parser.add_argument("--grade", required=True, help="Voto slab (es. 9, 9.5, 10)")
     parser.add_argument("--price", type=float, required=True, help="Prezzo carta proposto/attuale in EUR")
     parser.add_argument("--shipping", type=float, default=0.0, help="Spese di spedizione in EUR (default: 0.0)")
+    parser.add_argument("--variant", default="standard", help="Variante speciale (standard, 1st_edition, 1st_edition_base, no_symbol, shadowless, reverse_holo)")
     parser.add_argument("--era", choices=["vintage", "mid_era", "modern"], default=None, help="Override era collezionistica")
     parser.add_argument("--pristine", action="store_true", help="Flag per grado Pristine 10")
     parser.add_argument("--black-label", action="store_true", help="Flag per BGS 10 Black Label Quad 10")
@@ -196,6 +207,7 @@ def main():
         era_override=args.era,
         is_pristine=args.pristine,
         is_black_label=args.black_label,
+        variant=args.variant,
     )
 
 

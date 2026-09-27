@@ -90,3 +90,24 @@ def test_adjust_price_for_grading_calculations():
     # GRAAD 9 vintage multiplier ~0.681
     assert 65.0 <= fair_graad9 <= 72.0
     assert sniper_graad9 < 80.0
+
+
+def test_special_variants():
+    from poke_quant.slabs.grading_multipliers import get_variant_multiplier
+
+    v_std, _ = get_variant_multiplier("standard")
+    v_1st_wotc, _ = get_variant_multiplier("1st Edition WotC")
+    v_1st_base, _ = get_variant_multiplier("1st Edition Base Set")
+    v_nosym, _ = get_variant_multiplier("No Symbol")
+    v_shadow, _ = get_variant_multiplier("Shadowless")
+
+    assert v_std == 1.0
+    assert v_1st_wotc == 2.5
+    assert v_1st_base == 6.0
+    assert v_nosym == 1.4
+    assert v_shadow == 3.0
+
+    # Test adjust_price_for_grading con variante
+    base_unlimited = 100.0
+    fair_1st, _, _ = adjust_price_for_grading(base_unlimited, "PSA", 9.0, Era.VINTAGE, variant="1st Edition WotC")
+    assert fair_1st == 250.0

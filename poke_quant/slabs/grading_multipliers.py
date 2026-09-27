@@ -47,6 +47,36 @@ class GradingAdjustment:
 
 
 # =============================================================================
+# MOLTIPLICATORI EMPIRICI PER VARIANTI SPECIALI (1st Edition, No Symbol, Shadowless)
+# =============================================================================
+
+SPECIAL_VARIANTS: Dict[str, Tuple[float, str]] = {
+    "standard": (1.00, "Versione Standard / Unlimited"),
+    "first_edition_wotc": (2.50, "1ª Edizione WotC (Jungle, Fossil, Rocket, Gym, Neo: premio ~2.5x vs Unlimited)"),
+    "first_edition_base": (6.00, "1ª Edizione Base Set (rarità estrema: premio ~6.0x vs Unlimited)"),
+    "no_symbol": (1.40, "No Symbol Error (Jungle Holo senza simbolo fiore: premio ~1.4x vs Unlimited)"),
+    "shadowless": (3.00, "Shadowless (Base Set senza ombra: premio ~3.0x vs Unlimited)"),
+    "reverse_holo_lc": (3.00, "Reverse Holo Legendary Collection (Fireworks: premio ~3.0x vs Unlimited)"),
+}
+
+
+def get_variant_multiplier(variant: str) -> Tuple[float, str]:
+    """Ritorna (moltiplicatore, descrizione) per la variante richiesta."""
+    v = str(variant).strip().lower()
+    if "base" in v and ("1" in v or "first" in v):
+        return SPECIAL_VARIANTS["first_edition_base"]
+    if "1" in v or "first" in v:
+        return SPECIAL_VARIANTS["first_edition_wotc"]
+    if "no_symbol" in v or "no symbol" in v or "senza logo" in v:
+        return SPECIAL_VARIANTS["no_symbol"]
+    if "shadowless" in v:
+        return SPECIAL_VARIANTS["shadowless"]
+    if "reverse" in v or "firework" in v:
+        return SPECIAL_VARIANTS["reverse_holo_lc"]
+    return SPECIAL_VARIANTS["standard"]
+
+
+# =============================================================================
 # MATRICE CALIBRATA DEI MOLTIPLICATORI EMPIRICI (scripts/grading_company_multiplier_research.py)
 # =============================================================================
 
@@ -264,13 +294,17 @@ def adjust_price_for_grading(
     era: str | Era = Era.MODERN,
     subgrades_black_label: bool = False,
     is_pristine: bool = False,
+    variant: str = "standard",
 ) -> Tuple[float, float, GradingAdjustment]:
     """
-    Ricalibra un prezzo benchmark PSA (Grado 9 o Grado 10) per la compagnia desiderata.
+    Ricalibra un prezzo benchmark PSA (Grado 9 o Grado 10) per la compagnia e l'eventuale variante speciale desiderata.
     
     Ritorna:
       (fair_value_calibrato_eur, max_edge_sniper_ceiling_eur, adjustment_obj)
     """
+    v_mult, v_desc = get_variant_multiplier(variant)
+    effective_base_psa = base_psa_price_eur * v_mult
+
     adj = get_grading_adjustment(
         company=company,
         grade=grade,
@@ -278,7 +312,7 @@ def adjust_price_for_grading(
         subgrades_black_label=subgrades_black_label,
         is_pristine=is_pristine,
     )
-    fair_value = base_psa_price_eur * adj.multiplier
+    fair_value = effective_base_psa * adj.multiplier
     # Tetto sniper: applica il fattore prudenziale per preservare l'edge ed evitare overpaying
-    sniper_ceiling = base_psa_price_eur * adj.sniper_ceiling_factor
+    sniper_ceiling = effective_base_psa * adj.sniper_ceiling_factor
     return round(fair_value, 2), round(sniper_ceiling, 2), adj

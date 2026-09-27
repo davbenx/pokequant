@@ -62,6 +62,8 @@ from poke_quant.slabs.grading_multipliers import (
     normalize_era,
     get_grading_adjustment,
     adjust_price_for_grading,
+    get_variant_multiplier,
+    SPECIAL_VARIANTS,
 )
 
 # Soglie DAC7 (direttiva UE 2021/514): sopra queste soglie annue le piattaforme
@@ -988,48 +990,113 @@ def main():
 
     # --- CALCOLATORE RAPIDO SLAB & CORREZIONI CASE DI GRADAZIONE ---
     with st.expander("⚖️ Calcolatore Inserzioni Slab & Moltiplicatori Case di Gradazione (BGS, CGC, PSA, SGC, TAG, PCA, GRAAD, CCC, AiGrading, ACE)", expanded=False):
-        st.markdown("**Valutatore Rapido Inserzioni**: Ricalcola all'istante il Fair Value, la penalità di liquidità e il **Tetto Massimo Sniper** per qualsiasi carta e casa di gradazione rispetto al benchmark PSA.")
+        st.markdown("**Valutatore Rapido Inserzioni**: Seleziona i dettagli dell'inserzione, la casa di gradazione, l'eventuale variante speciale (1st Edition, No Symbol, Shadowless) e clicca su **'Calcola Valutazione'** per ricevere la stima senza ricaricamenti intermedi della pagina.")
         
-        calc_c1, calc_c2, calc_c3 = st.columns([2, 1, 1])
-        with calc_c1:
-            card_options = [
-                "-- Seleziona dalla lista BUY o Alternative nel Quantile --",
-                "✏️ Personalizzata / Inserimento manuale",
-            ]
-            option_to_row = {}
-            for r in singles_rows:
-                lbl = f"🟢 [BUY] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
-                if lbl in option_to_row:
-                    lbl = f"🟢 [BUY] {r['name']} [{r.get('set_name') or '?'}] ({r['item_id']}) — {r['current_price_eur']:.2f}€"
-                card_options.append(lbl)
-                option_to_row[lbl] = r
+        card_options = [
+            "-- Seleziona dalla lista BUY o Alternative nel Quantile --",
+            "✏️ Personalizzata / Inserimento manuale",
+        ]
+        option_to_row = {}
+        for r in singles_rows:
+            lbl = f"🟢 [BUY] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
+            if lbl in option_to_row:
+                lbl = f"🟢 [BUY] {r['name']} [{r.get('set_name') or '?'}] ({r['item_id']}) — {r['current_price_eur']:.2f}€"
+            card_options.append(lbl)
+            option_to_row[lbl] = r
 
-            calc_alt_rows = [r for r in alt_rows if r["current_price_eur"] <= max_card_price] if max_card_price > 0 else alt_rows
-            for r in calc_alt_rows:
-                lbl = f"🔄 [ALT] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
-                if lbl in option_to_row:
-                    lbl = f"🔄 [ALT] {r['name']} [{r.get('set_name') or '?'}] ({r['item_id']}) — {r['current_price_eur']:.2f}€"
-                card_options.append(lbl)
-                option_to_row[lbl] = r
+        calc_alt_rows = [r for r in alt_rows if r["current_price_eur"] <= max_card_price] if max_card_price > 0 else alt_rows
+        for r in calc_alt_rows:
+            lbl = f"🔄 [ALT] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
+            if lbl in option_to_row:
+                lbl = f"🔄 [ALT] {r['name']} [{r.get('set_name') or '?'}] ({r['item_id']}) — {r['current_price_eur']:.2f}€"
+            card_options.append(lbl)
+            option_to_row[lbl] = r
 
-            chosen_option = st.selectbox(
-                f"Carta da valutare ({len(singles_rows)} BUY + {len(calc_alt_rows)} Alternative)",
-                options=card_options,
-                index=0
-            )
+        with st.form("slab_calculator_form"):
+            calc_c1, calc_c2, calc_c3 = st.columns([2, 1, 1])
+            with calc_c1:
+                chosen_option = st.selectbox(
+                    f"Carta da valutare ({len(singles_rows)} BUY + {len(calc_alt_rows)} Alternative)",
+                    options=card_options,
+                    index=0,
+                    help="Seleziona una carta investibile dal modello per recuperare in automatico il benchmark PSA 9 Unlimited."
+                )
+            with calc_c2:
+                company_input = st.selectbox(
+                    "Casa di Gradazione", 
+                    options=["CGC", "BGS", "PSA", "SGC", "TAG", "PCA", "GRAAD", "CCC", "AiGrading", "ACE"], 
+                    index=0
+                )
+            with calc_c3:
+                grade_input = st.selectbox(
+                    "Voto Slab", 
+                    options=["9.0 Mint", "9.5 Gem Mint", "10.0 Gem Mint", "10.0 Pristine"], 
+                    index=0
+                )
 
-            if chosen_option.startswith("--"):
-                card_name_input = "Esempio (Seleziona una carta)"
-                base_psa_input = 100.0
+            # Seconda riga: Variante Speciale, Benchmark PSA manuale e Era
+            r2_c1, r2_c2, r2_c3 = st.columns([1.5, 1.2, 1.3])
+            with r2_c1:
+                variant_input = st.selectbox(
+                    "Edizione / Variante Speciale",
+                    options=[
+                        "Standard (Unlimited / Regolare)",
+                        "1st Edition WotC (~2.5x vs Unlimited: Jungle, Fossil, Rocket, Gym, Neo)",
+                        "1st Edition Base Set (~6.0x vs Unlimited: rarità massima)",
+                        "No Symbol Error (~1.4x vs Unlimited: Jungle Holo senza logo)",
+                        "Shadowless Base Set (~3.0x vs Unlimited)",
+                        "Reverse Holo Legendary Collection (~3.0x vs Regular)",
+                    ],
+                    index=0,
+                    help="I prezzi del database PokeQuant sono su edizioni Unlimited. Se la slab in vendita è una 1st Edition o un errore noto (es. No Symbol Jungle), questo moltiplicatore scala automaticamente il benchmark."
+                )
+            with r2_c2:
+                manual_psa_override = st.number_input(
+                    "Benchmark PSA (€) [0 = auto da DB]", 
+                    min_value=0.0, 
+                    value=0.0, 
+                    step=5.0,
+                    help="Lascia 0.0 per usare il prezzo di mercato della carta selezionata sopra. Inserisci un valore > 0 per forzare un benchmark personalizzato."
+                )
+            with r2_c3:
+                era_input = st.selectbox(
+                    "Era Collezionistica",
+                    options=["Auto (rileva dalla carta/variante)", "vintage", "mid_era", "modern"],
+                    index=0,
+                    format_func=lambda x: "Auto (rileva dalla carta)" if x.startswith("Auto") else ("Vintage (1999–2003)" if x == "vintage" else ("Mid-Era (2004–2016)" if x == "mid_era" else "Moderno (2017+)"))
+                )
+
+            # Terza riga: Prezzo offerta, spedizione, e nome personalizzato
+            inp_c1, inp_c2, inp_c3 = st.columns([1.5, 1.2, 1.3])
+            with inp_c1:
+                offer_price_eur = st.number_input("Prezzo Annuncio / Offerta (€)", min_value=1.0, value=75.0, step=5.0)
+            with inp_c2:
+                shipping_eur = st.number_input("Spese di Spedizione (€)", min_value=0.0, value=6.0, step=1.0)
+            with inp_c3:
+                custom_name_input = st.text_input("Nome carta se personalizzata (opzionale)", value="")
+
+            submit_calc = st.form_submit_button("🔍 Calcola Valutazione Slab", use_container_width=True)
+
+        # Gestione del calcolo al submit (e salvataggio in session_state)
+        if submit_calc:
+            is_pristine = "pristine" in grade_input.lower()
+            grade_val = "10.0" if "10" in grade_input else ("9.5" if "9.5" in grade_input else "9.0")
+            v_mult, v_desc = get_variant_multiplier(variant_input)
+
+            # Risoluzione nome carta, prezzo base PSA ed era
+            if manual_psa_override > 0.0:
+                base_psa_raw = manual_psa_override
+                if custom_name_input.strip():
+                    card_name = custom_name_input.strip()
+                elif chosen_option in option_to_row:
+                    card_name = option_to_row[chosen_option]["name"]
+                else:
+                    card_name = "Carta Personalizzata"
                 era_detected = "modern"
-            elif "Personalizzata" in chosen_option:
-                card_name_input = st.text_input("Nome carta", value="Kabutops #9 Holo Fossil")
-                base_psa_input = st.number_input("Benchmark PSA 9 (€)", min_value=1.0, value=100.0, step=5.0)
-                era_detected = "vintage"
-            else:
+            elif chosen_option in option_to_row:
                 sel_row = option_to_row[chosen_option]
-                card_name_input = sel_row["name"]
-                base_psa_input = float(sel_row["current_price_eur"])
+                card_name = sel_row["name"]
+                base_psa_raw = float(sel_row["current_price_eur"])
                 sel_meta = metadata.get(sel_row["item_id"], {})
                 rel_year = int(str(sel_meta.get("release_date", "2020"))[:4]) if sel_meta.get("release_date") else 2020
                 if rel_year <= 2003:
@@ -1038,68 +1105,89 @@ def main():
                     era_detected = "mid_era"
                 else:
                     era_detected = "modern"
+            elif custom_name_input.strip():
+                card_name = custom_name_input.strip()
+                base_psa_raw = 100.0
+                era_detected = "vintage"
+            else:
+                card_name = "Esempio (Seleziona una carta)"
+                base_psa_raw = 100.0
+                era_detected = "vintage" if v_mult > 1.0 else "modern"
 
-        with calc_c2:
-            company_input = st.selectbox("Casa di Gradazione", options=["CGC", "BGS", "PSA", "SGC", "TAG", "PCA", "GRAAD", "CCC", "AiGrading", "ACE"], index=0)
-            era_input = st.selectbox("Era Collezionistica", options=["vintage", "mid_era", "modern"], 
-                                     index=["vintage", "mid_era", "modern"].index(era_detected) if era_detected in ["vintage", "mid_era", "modern"] else 2,
-                                     format_func=lambda x: "Vintage (1999–2003)" if x == "vintage" else ("Mid-Era (2004–2016)" if x == "mid_era" else "Moderno (2017+)"))
+            if v_mult > 1.0 and ("1st" in variant_input.lower() or "symbol" in variant_input.lower() or "shadowless" in variant_input.lower()):
+                era_detected = "vintage"
 
-        with calc_c3:
-            grade_input = st.selectbox("Voto Slab", options=["9.0 Mint", "9.5 Gem Mint", "10.0 Gem Mint", "10.0 Pristine"], index=0)
-            is_pristine = "pristine" in grade_input.lower()
-            grade_val = "10.0" if "10" in grade_input else ("9.5" if "9.5" in grade_input else "9.0")
+            era_final = era_detected if era_input.startswith("Auto") else era_input
+            base_psa_final = round(base_psa_raw * v_mult, 2)
+            display_title = f"{card_name} [{variant_input.split('(')[0].strip()}]" if v_mult > 1.0 else card_name
 
-        # Seconda riga: Prezzo offerta e spedizione
-        inp_c1, inp_c2, inp_c3 = st.columns([1.5, 1.5, 2])
-        with inp_c1:
-            offer_price_eur = st.number_input("Prezzo Annuncio / Offerta (€)", min_value=1.0, value=float(round(base_psa_input * 0.85, 2)), step=5.0)
-        with inp_c2:
-            shipping_eur = st.number_input("Spese di Spedizione (€)", min_value=0.0, value=6.0, step=1.0)
-        with inp_c3:
-            st.write("")
-            st.write("")
-            st.caption(f"Costo Totale Proposto: **{offer_price_eur + shipping_eur:.2f} € All-in**")
+            fair_value_calib, sniper_ceiling_calib, adj = adjust_price_for_grading(
+                base_psa_price_eur=base_psa_final,
+                company=company_input,
+                grade=grade_val,
+                era=era_final,
+                is_pristine=is_pristine,
+            )
+            total_offer = offer_price_eur + shipping_eur
+            sniper_net = max(0.0, round(sniper_ceiling_calib - shipping_eur, 2))
+            discount_real_pct = (1.0 - (total_offer / fair_value_calib)) * 100.0 if fair_value_calib > 0 else 0.0
 
-        fair_value_calib, sniper_ceiling_calib, adj = adjust_price_for_grading(
-            base_psa_price_eur=base_psa_input,
-            company=company_input,
-            grade=grade_val,
-            era=era_input,
-            is_pristine=is_pristine,
-        )
-        total_offer = offer_price_eur + shipping_eur
-        sniper_net = max(0.0, round(sniper_ceiling_calib - shipping_eur, 2))
-        discount_real_pct = (1.0 - (total_offer / fair_value_calib)) * 100.0 if fair_value_calib > 0 else 0.0
+            if total_offer <= fair_value_calib * 0.75:
+                v_badge = "🚨 DEEP VALUE / COLPACCIO (-25%+ di sconto)"
+                v_color = "#10b981"
+            elif total_offer <= fair_value_calib * 0.95:
+                v_badge = "🟢 BUY CONSIGLIATO (A Sconto)"
+                v_color = "#10b981"
+            elif total_offer <= sniper_ceiling_calib:
+                v_badge = "🟡 FAIR VALUE / AL LIMITE DELL'EDGE"
+                v_color = "#fbbf24"
+            else:
+                over_pct = ((total_offer / sniper_ceiling_calib) - 1.0) * 100.0
+                v_badge = f"🔴 OVERPRICED (+{over_pct:.1f}% sopra il tetto)"
+                v_color = "#f43f5e"
 
-        if total_offer <= fair_value_calib * 0.75:
-            v_badge = "🚨 DEEP VALUE / COLPACCIO (-25%+ di sconto)"
-            v_color = "#10b981"
-        elif total_offer <= fair_value_calib * 0.95:
-            v_badge = "🟢 BUY CONSIGLIATO (A Sconto)"
-            v_color = "#10b981"
-        elif total_offer <= sniper_ceiling_calib:
-            v_badge = "🟡 FAIR VALUE / AL LIMITE DELL'EDGE"
-            v_color = "#fbbf24"
+            st.session_state["slab_eval_res"] = {
+                "display_title": display_title,
+                "base_psa_raw": base_psa_raw,
+                "v_mult": v_mult,
+                "v_desc": v_desc,
+                "base_psa_final": base_psa_final,
+                "company_name": adj.company.value,
+                "grade_input": grade_input,
+                "era_final": era_final,
+                "fair_value_calib": fair_value_calib,
+                "sniper_ceiling_calib": sniper_ceiling_calib,
+                "sniper_net": sniper_net,
+                "total_offer": total_offer,
+                "offer_price_eur": offer_price_eur,
+                "shipping_eur": shipping_eur,
+                "discount_real_pct": discount_real_pct,
+                "v_badge": v_badge,
+                "v_color": v_color,
+                "adj": adj,
+            }
+
+        # Mostra i risultati se calcolati
+        if "slab_eval_res" in st.session_state:
+            res = st.session_state["slab_eval_res"]
+            variant_note = f" · Variante: <strong>{res['v_desc']} ({res['v_mult']:.2f}x)</strong>" if res['v_mult'] > 1.0 else ""
+            st.markdown(f"""
+            <div style="background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                    <span style="font-weight: 700; font-size: 15px; color: #f8fafc;">Valutazione per <u>{res['display_title']}</u>: <span style="color: {res['v_color']};">{res['v_badge']}</span></span>
+                    <span style="font-size: 12px; color: #94a3b8;">Slab: <strong>{res['company_name']} {res['grade_input']}</strong>{variant_note} · Moltiplicatore: <strong>{res['adj'].multiplier:.3f}x</strong> · Penalità liquidità: <strong>-{res['adj'].liquidity_penalty_pct:.0f}%</strong></span>
+                </div>
+                <div class="kpi-grid" style="margin-bottom: 0;">
+                    <div class="kpi-card"><div class="kpi-label">Benchmark PSA ({res['adj'].benchmark_ref})</div><div class="kpi-value">{res['base_psa_final']:.2f} €</div><div class="kpi-sub">{'Base: ' + str(round(res['base_psa_raw'], 2)) + '€ × ' + str(res['v_mult']) + 'x' if res['v_mult'] > 1.0 else 'Prezzo riferimento PSA'}</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Fair Value {res['company_name']}</div><div class="kpi-value">{res['fair_value_calib']:.2f} €</div><div class="kpi-sub kpi-sub-emerald">Valore atteso reale</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Tetto Max (All-in)</div><div class="kpi-value">{res['sniper_ceiling_calib']:.2f} €</div><div class="kpi-sub">Soffitto max per edge</div></div>
+                    <div class="kpi-card"><div class="kpi-label">🎯 Max Sniper (Netto)</div><div class="kpi-value" style="color: #38bdf8;">{res['sniper_net']:.2f} €</div><div class="kpi-sub">Da digitare su eBay ({res['total_offer']:.2f}€ proposti)</div></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.caption(f"📝 **Logica**: {res['adj'].notes}. Sconto effettivo calcolato: **{res['discount_real_pct']:+.1f}%** rispetto al fair value di una slab {res['company_name']} {res['grade_input']} ({res['era_final'].upper()}).")
         else:
-            v_badge = f"🔴 OVERPRICED (+{((total_offer/sniper_ceiling_calib)-1.0)*100:.1f}% sopra il tetto)"
-            v_color = "#f43f5e"
-
-        st.markdown(f"""
-        <div style="background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; margin-top: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-                <span style="font-weight: 700; font-size: 15px; color: #f8fafc;">Esito Valutazione: <span style="color: {v_color};">{v_badge}</span></span>
-                <span style="font-size: 12px; color: #94a3b8;">Moltiplicatore: <strong>{adj.multiplier:.3f}x</strong> · Penalità liquidità: <strong>-{adj.liquidity_penalty_pct:.0f}%</strong></span>
-            </div>
-            <div class="kpi-grid" style="margin-bottom: 0;">
-                <div class="kpi-card"><div class="kpi-label">Benchmark PSA</div><div class="kpi-value">{base_psa_input:.2f} €</div><div class="kpi-sub">{adj.benchmark_ref}</div></div>
-                <div class="kpi-card"><div class="kpi-label">Fair Value {adj.company.value}</div><div class="kpi-value">{fair_value_calib:.2f} €</div><div class="kpi-sub kpi-sub-emerald">Valore atteso reale</div></div>
-                <div class="kpi-card"><div class="kpi-label">Tetto Max (All-in)</div><div class="kpi-value">{sniper_ceiling_calib:.2f} €</div><div class="kpi-sub">Soffitto max per edge</div></div>
-                <div class="kpi-card"><div class="kpi-label">🎯 Max Sniper (Netto)</div><div class="kpi-value" style="color: #38bdf8;">{sniper_net:.2f} €</div><div class="kpi-sub">Da digitare su eBay</div></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.caption(f"📝 **Logica**: {adj.notes}. Sconto effettivo calcolato: **{discount_real_pct:+.1f}%** rispetto al fair value di una slab {adj.company.value} {grade_input}.")
+            st.caption("ℹ️ *Seleziona i parametri sopra e clicca su **'Calcola Valutazione Slab'** per vedere l'analisi istantanea senza ricaricare la pagina.*")
 
     if not singles_allocation:
         st.info("Nessuna carta nel quantile BUY questo mese.")
