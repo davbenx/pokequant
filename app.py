@@ -980,6 +980,7 @@ def main():
                    "una volta contati costi e rischio di ricaduta (`scripts/grading_company_crossover_arbitrage_test.py`, "
                    "`scripts/same_grade_crossover_arbitrage_test.py`) — la scelta si fa solo in acquisto.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
+    alt_rows, _ = get_singles_alternatives(singles_mode)
     singles_prices_full = get_singles_prices_full()
     if max_card_price > 0:
         singles_rows = [r for r in singles_rows if r["current_price_eur"] <= max_card_price]
@@ -991,21 +992,42 @@ def main():
         
         calc_c1, calc_c2, calc_c3 = st.columns([2, 1, 1])
         with calc_c1:
-            card_names = [f"{r['name']} [{r.get('set_name') or '?'}] ({r['current_price_eur']:.2f}€)" for r in singles_rows[:60]]
-            card_options = ["-- Seleziona dalla lista BUY attuale --", "Personalizzata / Inserimento manuale"] + card_names
-            chosen_option = st.selectbox("Carta da valutare", options=card_options, index=0)
-            
+            card_options = [
+                "-- Seleziona dalla lista BUY o Alternative nel Quantile --",
+                "✏️ Personalizzata / Inserimento manuale",
+            ]
+            option_to_row = {}
+            for r in singles_rows:
+                lbl = f"🟢 [BUY] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
+                if lbl in option_to_row:
+                    lbl = f"🟢 [BUY] {r['name']} [{r.get('set_name') or '?'}] ({r['item_id']}) — {r['current_price_eur']:.2f}€"
+                card_options.append(lbl)
+                option_to_row[lbl] = r
+
+            calc_alt_rows = [r for r in alt_rows if r["current_price_eur"] <= max_card_price] if max_card_price > 0 else alt_rows
+            for r in calc_alt_rows:
+                lbl = f"🔄 [ALT] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
+                if lbl in option_to_row:
+                    lbl = f"🔄 [ALT] {r['name']} [{r.get('set_name') or '?'}] ({r['item_id']}) — {r['current_price_eur']:.2f}€"
+                card_options.append(lbl)
+                option_to_row[lbl] = r
+
+            chosen_option = st.selectbox(
+                f"Carta da valutare ({len(singles_rows)} BUY + {len(calc_alt_rows)} Alternative)",
+                options=card_options,
+                index=0
+            )
+
             if chosen_option.startswith("--"):
                 card_name_input = "Esempio (Seleziona una carta)"
                 base_psa_input = 100.0
                 era_detected = "modern"
-            elif chosen_option.startswith("Personalizzata"):
+            elif "Personalizzata" in chosen_option:
                 card_name_input = st.text_input("Nome carta", value="Kabutops #9 Holo Fossil")
                 base_psa_input = st.number_input("Benchmark PSA 9 (€)", min_value=1.0, value=100.0, step=5.0)
                 era_detected = "vintage"
             else:
-                idx_sel = card_options.index(chosen_option) - 2
-                sel_row = singles_rows[idx_sel]
+                sel_row = option_to_row[chosen_option]
                 card_name_input = sel_row["name"]
                 base_psa_input = float(sel_row["current_price_eur"])
                 sel_meta = metadata.get(sel_row["item_id"], {})
