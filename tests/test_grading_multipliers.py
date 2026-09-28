@@ -304,3 +304,48 @@ def test_fetch_pricecharting_grade_tier_price_lower_grades():
     assert "Interpolato" in src85
 
 
+def test_get_recommended_grade_targets():
+    from poke_quant.slabs.grading_multipliers import get_recommended_grade_targets, Era
+
+    # 1. Moderno: Target PSA 10, minor alt BGS 9.5
+    mod = get_recommended_grade_targets(base_psa9_eur=50.0, era=Era.MODERN)
+    assert mod["target_grade"] == "PSA 10"
+    assert mod["target_price_eur"] == 140.0  # 50.0 * 2.80
+    assert "PSA 10" in mod["target_badge"]
+    assert mod["is_grade9_viable"] is False
+    assert len(mod["minor_alternatives"]) == 1
+    assert mod["minor_alternatives"][0]["grade"] == "9.5"
+    assert mod["minor_alternatives"][0]["company"] == "BGS"
+    assert "BGS 9.5" in mod["minor_alternatives_str"]
+    assert "Sconsigliati gradi ≤ 9.0" in mod["minor_alternatives_str"]
+
+    # 2. Vintage: Target PSA 9, minor alts PSA 8.5, 8.0, 7.0
+    vint = get_recommended_grade_targets(base_psa9_eur=200.0, era=Era.VINTAGE)
+    assert vint["target_grade"] == "PSA 9"
+    assert vint["target_price_eur"] == 200.0
+    assert vint["is_grade9_viable"] is True
+    assert len(vint["minor_alternatives"]) == 3
+    grades = [a["grade"] for a in vint["minor_alternatives"]]
+    assert grades == ["8.5", "8.0", "7.0"]
+    assert "PSA 8.5" in vint["minor_alternatives_str"]
+    assert "PSA 8.0" in vint["minor_alternatives_str"]
+    assert "PSA 7.0" in vint["minor_alternatives_str"]
+    assert vint["minor_alternatives"][0]["price_eur"] == 156.0  # 200 * 0.78
+    assert vint["minor_alternatives"][1]["price_eur"] == 130.0  # 200 * 0.65
+    assert vint["minor_alternatives"][2]["price_eur"] == 96.0   # 200 * 0.48
+
+    # 3. Mid-Era: Target PSA 9, minor alts PSA 8.5, 8.0
+    mid = get_recommended_grade_targets(base_psa9_eur=100.0, era=Era.MID_ERA)
+    assert mid["target_grade"] == "PSA 9"
+    assert mid["target_price_eur"] == 100.0
+    assert mid["is_grade9_viable"] is True
+    assert len(mid["minor_alternatives"]) == 2
+    assert [a["grade"] for a in mid["minor_alternatives"]] == ["8.5", "8.0"]
+
+    # 4. Con dati reali PC (m_rayquaza_ex_105)
+    ray = get_recommended_grade_targets(base_psa9_eur=1000.0, era=Era.MID_ERA, item_id="m_rayquaza_ex_105")
+    assert ray["minor_alternatives"][1]["is_real"] is True
+    assert ray["minor_alternatives"][1]["price_eur"] == 680.01
+
+
+

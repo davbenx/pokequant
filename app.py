@@ -78,6 +78,7 @@ from poke_quant.slabs.grading_multipliers import (
     estimate_psa10_from_psa9,
     estimate_grade95_from_psa9,
     get_recommended_grade_for_card,
+    get_recommended_grade_targets,
     get_grade_benchmarks_ladder,
     get_company_relative_factor_vs_psa,
 )
@@ -799,14 +800,20 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
     if r.get("recommended_grade"):
         rec["target_grade"] = r["recommended_grade"]
 
-    # Risoluzione Target Grade (PSA 10 vs PSA 9)
-    is_target_psa10 = r.get("is_target_psa10")
-    if is_target_psa10 is None:
-        rec_target = r.get("recommended_grade") or rec.get("target_grade") or ""
-        is_target_psa10 = ("PSA 10" in rec_target) or (normalize_era(rec["era"]) == Era.MODERN)
+    # Risoluzione Target Grade e Alternative Minori
+    rec_targets = get_recommended_grade_targets(
+        base_psa9_eur=float(r["current_price_eur"]),
+        era=rec["era"],
+        item_id=r.get("item_id"),
+        game_slug=full_meta.get("game_slug"),
+        item_slug=full_meta.get("item_slug"),
+    )
+    ladder = rec_targets["ladder"]
+
+    is_target_psa10 = (rec_targets["target_grade"] == "PSA 10")
 
     if is_target_psa10:
-        target_p = float(r.get("target_price_eur") or estimate_psa10_from_psa9(r["current_price_eur"], rec["era"]))
+        target_p = float(r.get("target_price_eur") or rec_targets["target_price_eur"])
         era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec["era"]), 2.80)
         target_max_edge = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(target_p * 1.05, 2)))
         target_grade_label = "PSA 10"
@@ -827,37 +834,31 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
         landed = estimate_usa_import_landed_cost(target_p, item_type="single")
         usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.2f}€</span>')
 
-    qty_est = max(1, int(alloc // target_p)) if target_p > 0 else 1
-    qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più slab identici disponibili insieme — verifica quante ne trovi davvero</span>' if qty_est > 1 else ""
-    qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz. {target_grade_label}{qty_warn}</span>'
+    if alloc > 0:
+        qty_est = max(1, int(alloc // target_p)) if target_p > 0 else 1
+        qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più slab identici disponibili insieme — verifica quante ne trovi davvero</span>' if qty_est > 1 else ""
+        qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz. {target_grade_label}{qty_warn}</span>'
+        alloc_display = f'<span style="font-family:\'JetBrains Mono\',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}'
+    else:
+        alloc_display = f'<span style="font-family:\'JetBrains Mono\',monospace; font-size:13px; color:#94a3b8;">Alternativa (budget non speso) &nbsp;→ 1 pz. {target_grade_label}</span>'
 
-    # Scala benchmark gradi (10.0 fino a 7.0 con mezzi voti)
-    ladder = get_grade_benchmarks_ladder(
-        base_psa9_eur=float(r["current_price_eur"]),
-        era=rec["era"],
-        item_id=r.get("item_id"),
-        game_slug=full_meta.get("game_slug"),
-        item_slug=full_meta.get("item_slug"),
-    )
-
-    if rec.get("is_grade9_viable"):
+    if rec_targets["is_grade9_viable"]:
         has_real_lower = ladder["8.0"]["is_real"] or ladder["7.0"]["is_real"]
         data_badge = '<span style="color:#10b981; font-weight:600;">✨ Dati Reali PriceCharting</span>' if has_real_lower else '<span style="color:#94a3b8;">📊 Stima Algoritmica</span>'
         accessible_strip_html = f"""
-        <div style="margin: 5px 0 3px 0; font-size: 11.5px; line-height: 1.4; color: #cbd5e1; background: rgba(30, 41, 59, 0.7); border-radius: 4px; padding: 4px 8px; border: 1px solid rgba(56, 189, 248, 0.25);">
-            🏷️ <strong>Gradi Accessibili (PSA):</strong> &nbsp;
-            <strong>8.5</strong> ~{ladder['8.5']['price_eur']:.2f}€ <span style="color:#38bdf8;">({ladder['8.5']['discount_vs_psa9_pct']:+.0f}%)</span> &nbsp;·&nbsp;
-            <strong>8.0</strong> ~{ladder['8.0']['price_eur']:.2f}€ <span style="color:#38bdf8;">({ladder['8.0']['discount_vs_psa9_pct']:+.0f}%)</span> &nbsp;·&nbsp;
-            <strong>7.5</strong> ~{ladder['7.5']['price_eur']:.2f}€ <span style="color:#38bdf8;">({ladder['7.5']['discount_vs_psa9_pct']:+.0f}%)</span> &nbsp;·&nbsp;
-            <strong>7.0</strong> ~{ladder['7.0']['price_eur']:.2f}€ <span style="color:#38bdf8;">({ladder['7.0']['discount_vs_psa9_pct']:+.0f}%)</span>
-            &nbsp;·&nbsp; {data_badge}
+        <div style="margin: 5px 0 3px 0; font-size: 11.5px; line-height: 1.5; color: #cbd5e1; background: rgba(30, 41, 59, 0.7); border-radius: 4px; padding: 5px 9px; border: 1px solid rgba(56, 189, 248, 0.25);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; margin-bottom:2px;">
+                <span>🎯 <strong>Migliore Gradazione (Target):</strong> <span style="color:#10b981; font-weight:700;">{rec_targets['target_label']}</span></span>
+                {data_badge}
+            </div>
+            <div>🥈 <strong>Alternative Minori Consigliate:</strong> <span style="color:#f8fafc; font-family:'JetBrains Mono',monospace;">{rec_targets['minor_alternatives_str']}</span></div>
         </div>
         """
     else:
         accessible_strip_html = f"""
-        <div style="margin: 5px 0 3px 0; font-size: 11.5px; line-height: 1.4; color: #94a3b8; background: rgba(30, 41, 59, 0.5); border-radius: 4px; padding: 4px 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
-            🏷️ <strong>Scala Gradi:</strong> PSA 10 ~{ladder['10.0']['price_eur']:.2f}€ &nbsp;·&nbsp; Base PSA 9 {ladder['9.0']['price_eur']:.2f}€ &nbsp;·&nbsp;
-            <span style="color:#f59e0b;">⚠️ Gradi ≤ 9.0 (8.5/8/7.5/7) sconsigliati su Moderno (scarsa liquidità vs Raw)</span>
+        <div style="margin: 5px 0 3px 0; font-size: 11.5px; line-height: 1.5; color: #cbd5e1; background: rgba(30, 41, 59, 0.7); border-radius: 4px; padding: 5px 9px; border: 1px solid rgba(245, 158, 11, 0.25);">
+            <div style="margin-bottom:2px;">🎯 <strong>Migliore Gradazione (Target):</strong> <span style="color:#f59e0b; font-weight:700;">{rec_targets['target_label']}</span></div>
+            <div>🥈 <strong>Alternative Minori Consigliate:</strong> <span style="color:#f8fafc; font-family:'JetBrains Mono',monospace;">{rec_targets['minor_alternatives_str']}</span></div>
         </div>
         """
 
@@ -878,7 +879,7 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
         &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r.get('months_in_signal', 0)}m)</span>{max_price_html}{usa_import_html}
         <div style="margin: 6px 0 4px 0; font-size: 12px; line-height: 1.4; color: #cbd5e1; background: rgba(15,23,42,0.6); border-left: 3px solid {rec['badge_color']}; padding: 4px 8px; border-radius: 0 4px 4px 0;">💡 <strong>Consiglio Grado ({rec['era_label']}):</strong> {rec['short_advice']}</div>
         {accessible_strip_html}
-        <span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}
+        {alloc_display}
         &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
         </div>
     </div>
@@ -1985,20 +1986,26 @@ def main():
                     with st.expander(f"Altre {len(bench_singles) - 8} carte in panchina"):
                         bench_table_rows = []
                         for r, alloc in bench_singles[8:]:
-                            is_p10 = r.get("is_target_psa10")
-                            if is_p10 is None:
-                                rec_target = r.get("recommended_grade") or ""
-                                is_p10 = ("PSA 10" in rec_target) or (normalize_era(r.get("era", "modern")) == Era.MODERN)
-                            p_target = float(r.get("target_price_eur") or (estimate_psa10_from_psa9(r["current_price_eur"], r.get("era", "modern")) if is_p10 else r["current_price_eur"]))
-                            era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(r.get("era", "modern")), 2.80) if is_p10 else 1.0
+                            full_meta_b = metadata.get(r["item_id"], {})
+                            rec_t = get_recommended_grade_targets(
+                                base_psa9_eur=float(r["current_price_eur"]),
+                                era=r.get("era") or full_meta_b.get("era", "modern"),
+                                item_id=r.get("item_id"),
+                                game_slug=full_meta_b.get("game_slug"),
+                                item_slug=full_meta_b.get("item_slug"),
+                            )
+                            is_p10 = (rec_t["target_grade"] == "PSA 10")
+                            p_target = float(r.get("target_price_eur") or rec_t["target_price_eur"])
+                            era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec_t["era"]), 2.80) if is_p10 else 1.0
                             max_edge_target = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(p_target * 1.05, 2)))
-                            target_grade_lbl = "PSA 10" if is_p10 else "PSA 9"
+                            target_grade_lbl = rec_t["target_grade"]
                             qty_est = max(1, int(alloc // p_target)) if p_target > 0 and alloc > 0 else 1
                             bench_table_rows.append({
                                 "Carta": r["name"],
                                 "Set": r.get("set_name") or "?",
                                 "Rarità": r["rarity"],
                                 "Grado Target": target_grade_lbl,
+                                "Alternative Minori Consigliate": rec_t["minor_alternatives_str"],
                                 "Prezzo Target (€)": p_target,
                                 "Massimo per Edge (€)": max_edge_target,
                                 "Base G9 (€)": r["current_price_eur"],
@@ -2026,19 +2033,25 @@ def main():
             else:
                 alt_table_rows = []
                 for r in alt_rows[:60]:
-                    is_p10 = r.get("is_target_psa10")
-                    if is_p10 is None:
-                        rec_target = r.get("recommended_grade") or ""
-                        is_p10 = ("PSA 10" in rec_target) or (normalize_era(r.get("era", "modern")) == Era.MODERN)
-                    p_target = float(r.get("target_price_eur") or (estimate_psa10_from_psa9(r["current_price_eur"], r.get("era", "modern")) if is_p10 else r["current_price_eur"]))
-                    era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(r.get("era", "modern")), 2.80) if is_p10 else 1.0
+                    full_meta_a = metadata.get(r["item_id"], {})
+                    rec_t = get_recommended_grade_targets(
+                        base_psa9_eur=float(r["current_price_eur"]),
+                        era=r.get("era") or full_meta_a.get("era", "modern"),
+                        item_id=r.get("item_id"),
+                        game_slug=full_meta_a.get("game_slug"),
+                        item_slug=full_meta_a.get("item_slug"),
+                    )
+                    is_p10 = (rec_t["target_grade"] == "PSA 10")
+                    p_target = float(r.get("target_price_eur") or rec_t["target_price_eur"])
+                    era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec_t["era"]), 2.80) if is_p10 else 1.0
                     max_edge_target = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(p_target * 1.05, 2)))
-                    target_grade_lbl = "PSA 10" if is_p10 else "PSA 9"
+                    target_grade_lbl = rec_t["target_grade"]
                     alt_table_rows.append({
                         "Carta": r["name"],
                         "Set": r.get("set_name") or "?",
                         "Rarità": r["rarity"],
                         "Grado Target": target_grade_lbl,
+                        "Alternative Minori Consigliate": rec_t["minor_alternatives_str"],
                         "Prezzo Target (€)": p_target,
                         "Massimo per Edge (€)": max_edge_target,
                         "Base G9 (€)": r["current_price_eur"],
@@ -2052,6 +2065,15 @@ def main():
                                  "Base G9 (€)": st.column_config.NumberColumn(format="%.2f €"),
                                  "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
                              })
+
+                with st.expander("🔍 Esplora nel Dettaglio le Prime 10 Alternative (scheda completa, grafici e ladder gradi)"):
+                    st.caption("Visualizza le prime 10 carte alternative come schede singole complete con bottoni Cardmarket, grafici storici e ladder di prezzo da PSA 10 a 7.0.")
+                    prefetch_product_images([
+                        (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+                        for r in alt_rows[:10]
+                    ])
+                    for r in alt_rows[:10]:
+                        render_single_card(r, 0.0, metadata, singles_prices_full, show_usa_import, key_prefix="single_alt")
 
     # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---
     avoid_rows, _ = get_singles_avoid_signal(singles_mode)

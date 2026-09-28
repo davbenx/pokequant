@@ -829,3 +829,154 @@ def adjust_price_for_grading(
 
     return round(fair_value, 2), round(sniper_ceiling, 2), adj
 
+
+def get_recommended_grade_targets(
+    base_psa9_eur: float,
+    era: Era | str,
+    item_id: Optional[str] = None,
+    game_slug: Optional[str] = None,
+    item_slug: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Identifica la migliore gradazione consigliata (Target Primario) e le alternative
+    minori consigliate (punti di ingresso a sconto ad alta liquidità) per una specifica carta ed era.
+    """
+    norm_era = normalize_era(era)
+    ladder = get_grade_benchmarks_ladder(
+        base_psa9_eur=base_psa9_eur,
+        era=norm_era,
+        item_id=item_id,
+        game_slug=game_slug,
+        item_slug=item_slug,
+    )
+
+    if norm_era == Era.MODERN:
+        target_grade = "PSA 10"
+        target_price = ladder["10.0"]["price_eur"]
+        target_label = "PSA 10 Gem Mint (Target Primario Moderno)"
+        target_badge = "🎯 Target: PSA 10 (Gem Mint)"
+        badge_color = "#f59e0b"
+        max_edge = round(target_price * 1.05, 2)
+
+        p_95 = ladder["9.5"]["price_eur"]
+        disc_vs_10 = round((1.0 - (p_95 / target_price)) * 100.0, 1) if target_price > 0 else 0.0
+        minor_alts = [
+            {
+                "grade": "9.5",
+                "company": "BGS",
+                "label": "BGS 9.5 Gem Mint",
+                "price_eur": p_95,
+                "discount_vs_target_pct": -disc_vs_10,
+                "is_real": ladder["9.5"]["is_real"],
+                "source": ladder["9.5"]["source"],
+                "rationale": "Unica alternativa minore consigliata sul Moderno (-35/40% vs PSA 10, alta qualità costruttiva Beckett e potenziale regrade)",
+            }
+        ]
+        minor_str = f"BGS 9.5 ~{p_95:.0f}€ (-{disc_vs_10:.0f}% vs 10) · ⚠️ Sconsigliati gradi ≤ 9.0"
+        advice = "Nel Moderno il Pop Report è saturo di Gem Mint (>70-80%). Punta a PSA 10 o come alternativa minore a BGS 9.5. I gradi ≤ 9.0 scambiano sotto il costo di gradazione e distruggono valore rispetto al Raw."
+        is_grade9_viable = False
+    elif norm_era == Era.VINTAGE:
+        target_grade = "PSA 9"
+        target_price = ladder["9.0"]["price_eur"]
+        target_label = "PSA 9 Mint (Sweet Spot Istituzionale)"
+        target_badge = "🎯 Target: PSA 9 (Mint)"
+        badge_color = "#10b981"
+        max_edge = round(target_price * 1.05, 2)
+
+        p_85 = ladder["8.5"]["price_eur"]
+        p_80 = ladder["8.0"]["price_eur"]
+        p_70 = ladder["7.0"]["price_eur"]
+        d85 = ladder["8.5"]["discount_vs_psa9_pct"]
+        d80 = ladder["8.0"]["discount_vs_psa9_pct"]
+        d70 = ladder["7.0"]["discount_vs_psa9_pct"]
+
+        minor_alts = [
+            {
+                "grade": "8.5",
+                "company": "PSA",
+                "label": "PSA 8.5 NM-Mint+",
+                "price_eur": p_85,
+                "discount_vs_target_pct": d85,
+                "is_real": ladder["8.5"]["is_real"],
+                "source": ladder["8.5"]["source"],
+                "rationale": "Near Mint+ solido, ottimo compromesso qualitativo ed estetico a sconto",
+            },
+            {
+                "grade": "8.0",
+                "company": "PSA",
+                "label": "PSA 8.0 NM-Mint",
+                "price_eur": p_80,
+                "discount_vs_target_pct": d80,
+                "is_real": ladder["8.0"]["is_real"],
+                "source": ladder["8.0"]["source"],
+                "rationale": "Soglia di ingresso ad alta rotazione e liquidità retail su mercato EU",
+            },
+            {
+                "grade": "7.0",
+                "company": "PSA",
+                "label": "PSA 7.0 Near Mint",
+                "price_eur": p_70,
+                "discount_vs_target_pct": d70,
+                "is_real": ladder["7.0"]["is_real"],
+                "source": ladder["7.0"]["source"],
+                "rationale": "Entry-level per carte rare e costose (WotC Holo, 1st Edition, Shinings)",
+            },
+        ]
+        minor_str = f"PSA 8.5 ~{p_85:.0f}€ ({d85:+.0f}%) · PSA 8.0 ~{p_80:.0f}€ ({d80:+.0f}%) · PSA 7.0 ~{p_70:.0f}€ ({d70:+.0f}%)"
+        advice = "Nel Vintage PSA 9 è lo Sweet Spot Istituzionale di massima liquidità. Se il budget è limitato o la carta supera i 150-200€, PSA 8.5, 8.0 e 7.0 offrono ottimi ingressi a forte sconto (-22%/-52%)."
+        is_grade9_viable = True
+    else:  # MID_ERA
+        target_grade = "PSA 9"
+        target_price = ladder["9.0"]["price_eur"]
+        target_label = "PSA 9 Mint (Target Bilanciato)"
+        target_badge = "🎯 Target: PSA 9 (Mint)"
+        badge_color = "#10b981"
+        max_edge = round(target_price * 1.05, 2)
+
+        p_85 = ladder["8.5"]["price_eur"]
+        p_80 = ladder["8.0"]["price_eur"]
+        d85 = ladder["8.5"]["discount_vs_psa9_pct"]
+        d80 = ladder["8.0"]["discount_vs_psa9_pct"]
+
+        minor_alts = [
+            {
+                "grade": "8.5",
+                "company": "PSA",
+                "label": "PSA 8.5 NM-Mint+",
+                "price_eur": p_85,
+                "discount_vs_target_pct": d85,
+                "is_real": ladder["8.5"]["is_real"],
+                "source": ladder["8.5"]["source"],
+                "rationale": "Near Mint+ a sconto (-25%)",
+            },
+            {
+                "grade": "8.0",
+                "company": "PSA",
+                "label": "PSA 8.0 NM-Mint",
+                "price_eur": p_80,
+                "discount_vs_target_pct": d80,
+                "is_real": ladder["8.0"]["is_real"],
+                "source": ladder["8.0"]["source"],
+                "rationale": "Soglia liquida per carte EX/Lv.X rare a sconto (-40%)",
+            },
+        ]
+        minor_str = f"PSA 8.5 ~{p_85:.0f}€ ({d85:+.0f}%) · PSA 8.0 ~{p_80:.0f}€ ({d80:+.0f}%)"
+        advice = "Nel Mid-Era PSA 9 è la scelta principale; PSA 8.5 e 8.0 offrono valide entrate secondarie a sconto con solida conservazione del valore."
+        is_grade9_viable = True
+
+    return {
+        "era": norm_era.value,
+        "target_grade": target_grade,
+        "target_price_eur": target_price,
+        "target_label": target_label,
+        "target_badge": target_badge,
+        "badge_color": badge_color,
+        "max_edge_eur": max_edge,
+        "minor_alternatives": minor_alts,
+        "minor_alternatives_str": minor_str,
+        "advice": advice,
+        "is_grade9_viable": is_grade9_viable,
+        "ladder": ladder,
+    }
+
+

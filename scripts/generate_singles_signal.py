@@ -38,6 +38,7 @@ from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFact
 from poke_quant.data.cardmarket_bridge import WOTC_FIRST_EDITION_SETS
 from poke_quant.slabs.grading_multipliers import (
     get_recommended_grade_for_card,
+    get_recommended_grade_targets,
     estimate_psa10_from_psa9,
     ERA_PSA10_TO_PSA9_RATIO,
     normalize_era,
@@ -220,6 +221,13 @@ def compute_singles_signal_rows(params: dict = None):
 
         rel_year = int(str(info.get("release_date", "2020"))[:4]) if info.get("release_date") else 2020
         rec = get_recommended_grade_for_card(rel_year=rel_year)
+        rec_targets = get_recommended_grade_targets(
+            base_psa9_eur=current_price,
+            era=rec["era"],
+            item_id=item_id,
+            game_slug=info.get("game_slug"),
+            item_slug=info.get("item_slug"),
+        )
 
         is_target_psa10 = (rec["target_grade"] == "PSA 10")
         if is_target_psa10:
@@ -241,6 +249,10 @@ def compute_singles_signal_rows(params: dict = None):
             "is_target_psa10": is_target_psa10,
             "target_price_eur": target_price_eur,
             "target_max_edge_price_eur": target_max_edge_eur,
+            "target_grade": rec_targets["target_grade"],
+            "target_label": rec_targets["target_label"],
+            "minor_alternatives": rec_targets["minor_alternatives"],
+            "minor_alternatives_str": rec_targets["minor_alternatives_str"],
             "signal_start_date": start_date,
             "months_in_signal": streak,
             "rarity": info.get("rarity"),
@@ -340,6 +352,13 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
 
         rel_year = int(str(info.get("release_date", "2020"))[:4]) if info.get("release_date") else 2020
         rec = get_recommended_grade_for_card(rel_year=rel_year)
+        rec_targets = get_recommended_grade_targets(
+            base_psa9_eur=current_price,
+            era=rec["era"],
+            item_id=item_id,
+            game_slug=info.get("game_slug"),
+            item_slug=info.get("item_slug"),
+        )
 
         is_target_psa10 = (rec["target_grade"] == "PSA 10")
         if is_target_psa10:
@@ -361,6 +380,10 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
             "is_target_psa10": is_target_psa10,
             "target_price_eur": target_price_eur,
             "target_max_edge_price_eur": target_max_edge_eur,
+            "target_grade": rec_targets["target_grade"],
+            "target_label": rec_targets["target_label"],
+            "minor_alternatives": rec_targets["minor_alternatives"],
+            "minor_alternatives_str": rec_targets["minor_alternatives_str"],
             "rarity": info.get("rarity"),
             "franchise": info.get("franchise", "pokemon"),
             "language": info.get("language", "en"),
