@@ -90,16 +90,46 @@ def compute_signal_rows():
             signal = "PREZZO ECCESSIVO (oltre tetto MSRP)"
         else:
             signal = "BUY/HOLD" if mom > 0 else "AVOID/SELL"
+        info = metadata.get(item_id, {})
         rows.append({
             "item_id": item_id,
-            "name": metadata[item_id].get("name", item_id),
+            "name": info.get("name", item_id),
             "current_price_eur": cur_price,
             "trailing_12m_return_pct": ret_pct,
             "max_price_eur": max_price_eur,
             "signal": signal,
+            "franchise": info.get("franchise", "pokemon"),
+            "language": info.get("language", "en"),
+            "era": info.get("era", "modern"),
         })
 
     rows.sort(key=lambda r: -r["trailing_12m_return_pct"])
+
+    # Assegnazione gerarchica Tier per franchise/language:
+    # - Vault: box >= 500€ o set_tier 'Grail' (pezzi da collezione/museo)
+    # - Core: i primi 8 box con momentum positivo (<500€) che assorbono la cassa
+    # - Bench: i successivi box ad alto momentum (alternative/riserve)
+    core_counts: dict[tuple[str, str], int] = {}
+    for r in rows:
+        if r["signal"] == "BUY/HOLD":
+            set_tier = metadata.get(r["item_id"], {}).get("set_tier")
+            if r["current_price_eur"] >= 500.0 or set_tier == "Grail":
+                r["tier"] = "vault"
+            else:
+                f_key = (r["franchise"], r["language"])
+                cnt = core_counts.get(f_key, 0)
+                if cnt < 8:
+                    r["tier"] = "core"
+                    core_counts[f_key] = cnt + 1
+                else:
+                    r["tier"] = "bench"
+        elif "PREZZO ECCESSIVO" in r["signal"]:
+            r["tier"] = "excessive"
+        elif "VERIFICARE" in r["signal"]:
+            r["tier"] = "verify"
+        else:
+            r["tier"] = "avoid"
+
     return rows, latest_date
 
 
@@ -114,12 +144,17 @@ def main():
     n_verify = sum(1 for r in rows if "VERIFICARE" in r["signal"])
     n_excessive = sum(1 for r in rows if "PREZZO ECCESSIVO" in r["signal"])
     n_sell = len(rows) - n_buy - n_verify - n_excessive
-    print(f"\nBUY/HOLD: {n_buy} | AVOID/SELL: {n_sell} | PREZZO ECCESSIVO: {n_excessive} | DA VERIFICARE A MANO: {n_verify}\n")
+    n_core = sum(1 for r in rows if r.get("tier") == "core")
+    n_bench = sum(1 for r in rows if r.get("tier") == "bench")
+    n_vault = sum(1 for r in rows if r.get("tier") == "vault")
+    print(f"\nBUY/HOLD: {n_buy} (💎 Core: {n_core} | 🛡️ Panchina: {n_bench} | 🏛️ Vault: {n_vault}) | AVOID/SELL: {n_sell} | PREZZO ECCESSIVO: {n_excessive} | DA VERIFICARE: {n_verify}\n")
 
-    print(f"{'Segnale':32s} {'Rend.12m':>9s}  {'Prezzo':>10s}  Nome")
-    print("-" * 100)
+    print(f"{'Tier':10s} {'Segnale':28s} {'Rend.12m':>9s}  {'Prezzo':>10s}  {'Franchise':12s} Nome")
+    print("-" * 115)
     for r in rows:
-        print(f"{r['signal']:32s} {r['trailing_12m_return_pct']:>+8.1f}%  {r['current_price_eur']:>9.2f}€  {r['name']}")
+        tier_label = r.get("tier", "").upper()
+        f_label = f"{r.get('franchise', '')}-{r.get('language', '')}"
+        print(f"{tier_label:10s} {r['signal']:28s} {r['trailing_12m_return_pct']:>+8.1f}%  {r['current_price_eur']:>9.2f}€  {f_label:12s} {r['name']}")
 
 
 if __name__ == "__main__":

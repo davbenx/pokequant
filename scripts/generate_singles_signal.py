@@ -36,6 +36,7 @@ from poke_quant.data.storage import load_metadata, load_price_matrix
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
 from poke_quant.data.cardmarket_bridge import WOTC_FIRST_EDITION_SETS
 from poke_quant.data.liquidity_filter import liquid_singles_ids
+from poke_quant.slabs.grading_multipliers import get_recommended_grade_for_card
 
 
 def _liquid_universe(metadata: dict, prices_full: pd.DataFrame):
@@ -224,6 +225,10 @@ def compute_singles_signal_rows(params: dict = None):
             max_edge_price_eur = current_price + PRESERVE_EDGE_ALPHA * (theoretical_cutoff_price - current_price)
         else:
             max_edge_price_eur = None
+
+        rel_year = int(str(info.get("release_date", "2020"))[:4]) if info.get("release_date") else 2020
+        rec = get_recommended_grade_for_card(rel_year=rel_year)
+
         rows.append({
             "item_id": item_id,
             "name": info.get("name", item_id),
@@ -237,8 +242,18 @@ def compute_singles_signal_rows(params: dict = None):
             "rarity": info.get("rarity"),
             "franchise": info.get("franchise", "pokemon"),
             "language": info.get("language", "en"),
+            "era": rec["era"],
+            "recommended_grade": rec["target_grade"],
+            "target_badge": rec["target_badge"],
+            "badge_color": rec["badge_color"],
+            "grade_advice": rec["rationale"],
+            "short_grade_advice": rec["short_advice"],
+            "is_grade9_viable": rec["is_grade9_viable"],
+            "warning_modern_g9": rec["warning_modern_g9"],
         })
     rows.sort(key=lambda r: r["residual"])
+    for idx, r in enumerate(rows):
+        r["tier"] = "core" if idx < 8 else "bench"
     return rows, latest_date
 
 
@@ -316,6 +331,10 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
             max_edge_price_eur = current_price + PRESERVE_EDGE_ALPHA * (theoretical_cutoff_price - current_price)
         else:
             max_edge_price_eur = None
+
+        rel_year = int(str(info.get("release_date", "2020"))[:4]) if info.get("release_date") else 2020
+        rec = get_recommended_grade_for_card(rel_year=rel_year)
+
         rows.append({
             "item_id": item_id,
             "name": info.get("name", item_id),
@@ -327,6 +346,15 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
             "rarity": info.get("rarity"),
             "franchise": info.get("franchise", "pokemon"),
             "language": info.get("language", "en"),
+            "era": rec["era"],
+            "recommended_grade": rec["target_grade"],
+            "target_badge": rec["target_badge"],
+            "badge_color": rec["badge_color"],
+            "grade_advice": rec["rationale"],
+            "short_grade_advice": rec["short_advice"],
+            "is_grade9_viable": rec["is_grade9_viable"],
+            "warning_modern_g9": rec["warning_modern_g9"],
+            "tier": "alternative",
         })
     rows.sort(key=lambda r: r["residual"])
     return rows, latest_date
@@ -368,6 +396,7 @@ def compute_singles_avoid_rows(params: dict = None):
             "rarity": info.get("rarity"),
             "franchise": info.get("franchise", "pokemon"),
             "language": info.get("language", "en"),
+            "tier": "avoid",
         })
     rows.sort(key=lambda r: -r["residual"])
     return rows, latest_date
@@ -384,6 +413,7 @@ def filter_singles_rows(
     max_price: float = 0.0,
     only_holo: bool = False,
     pokemon_only: bool = True,
+    retag_tiers: bool = True,
 ) -> list[dict]:
     """Filtra una lista di segnali singole per rimuovere frizione di spedizione,
     carte bulk/non-holo poco liquide ed eventuali TCG non desiderati."""
@@ -398,7 +428,13 @@ def filter_singles_rows(
             continue
         if only_holo and str(r.get("rarity")) in NON_HOLO_BULK_RARITIES:
             continue
-        filtered.append(r)
+        filtered.append(dict(r))
+
+    if retag_tiers and any(r.get("tier") in ("core", "bench") for r in filtered):
+        for idx, r in enumerate(filtered):
+            if r.get("tier") in ("core", "bench"):
+                r["tier"] = "core" if idx < 8 else "bench"
+
     return filtered
 
 

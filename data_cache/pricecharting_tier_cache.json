@@ -1,0 +1,20 @@
+{
+  "pokemon-evolutions:dragonite-ex-106:psa10": {
+    "eur": 413.17,
+    "usd": 480.0,
+    "url": "https://www.pricecharting.com/game/pokemon-evolutions/dragonite-ex-106",
+    "tier": "psa10",
+    "game_slug": "pokemon-evolutions",
+    "item_slug": "dragonite-ex-106",
+    "date": "2026-09-28"
+  },
+  "pokemon-evolutions:dragonite-ex-106:grade9_5": {
+    "eur": 142.03,
+    "usd": 165.0,
+    "url": "https://www.pricecharting.com/game/pokemon-evolutions/dragonite-ex-106",
+    "tier": "grade9_5",
+    "game_slug": "pokemon-evolutions",
+    "item_slug": "dragonite-ex-106",
+    "date": "2026-09-28"
+  }
+}

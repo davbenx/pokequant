@@ -260,6 +260,113 @@ def normalize_era(era: str | Era) -> Era:
     return Era.MODERN
 
 
+# Rapporti medi empirici PSA 10 / PSA 9 calibrati per Era collezionistica
+# Fonti: scripts/grading_company_multiplier_research.py e dataset PriceCharting
+ERA_PSA10_TO_PSA9_RATIO: Dict[Era, float] = {
+    Era.VINTAGE: 3.80,   # Vintage (1999–2003): rarità estrema delle gemme (~3.8x vs PSA 9)
+    Era.MID_ERA: 3.40,   # Mid-Era (2004–2016): popolazioni contenute, premio solido (~3.4x vs PSA 9)
+    Era.MODERN: 2.80,    # Moderno (2017+): gem rate elevato, premio più compresso (~2.8x vs PSA 9)
+}
+
+ERA_BGS95_TO_PSA9_RATIO: Dict[Era, float] = {
+    Era.VINTAGE: 1.81,   # BGS 9.5 nel Vintage
+    Era.MID_ERA: 1.55,   # BGS 9.5 nel Mid-Era
+    Era.MODERN: 1.70,    # BGS 9.5 nel Moderno
+}
+
+
+def estimate_psa10_from_psa9(psa9_price_eur: float, era: Era | str) -> float:
+    """Calcola la stima algoritmica del benchmark PSA 10 partendo dal benchmark PSA 9 in assenza di dati reali PriceCharting."""
+    era_enum = normalize_era(era)
+    ratio = ERA_PSA10_TO_PSA9_RATIO.get(era_enum, 3.00)
+    return round(psa9_price_eur * ratio, 2)
+
+
+def estimate_grade95_from_psa9(psa9_price_eur: float, era: Era | str) -> float:
+    """Calcola la stima algoritmica del benchmark Grado 9.5 partendo dal benchmark PSA 9 in assenza di dati reali PriceCharting."""
+    era_enum = normalize_era(era)
+    ratio = ERA_BGS95_TO_PSA9_RATIO.get(era_enum, 1.65)
+    return round(psa9_price_eur * ratio, 2)
+
+
+def get_recommended_grade_for_card(
+    rel_year: Optional[int] = None,
+    era: Optional[str | Era] = None,
+) -> Dict[str, Any]:
+    """
+    Ritorna la raccomandazione quantitativa istituzionale sul grado su cui puntare
+    in base all'era collezionistica della carta (Vintage vs Mid-Era vs Modern).
+    
+    Regole di Liquidità ed Efficienza di Mercato:
+      - Vintage (1999–2003): Sweet Spot su PSA 9. Ottima liquidità, fair value accessibile.
+        PSA 10 ha premi estremi (3.8x+) e scambi rarefatti.
+      - Mid-Era (2004–2016): Bilanciato su PSA 9 o BGS 9.5 / CGC 9.5. Sano premium su Raw.
+      - Moderno (2017+): Puntare tassativamente su PSA 10 (o BGS 9.5).
+        ATTENZIONE: Grado 9 nel moderno è una trappola di liquidità (pop report saturo di 10,
+        prezzi compressi a ridosso del Raw).
+    """
+    if era is not None:
+        era_enum = normalize_era(era)
+    elif rel_year is not None:
+        if rel_year <= 2003:
+            era_enum = Era.VINTAGE
+        elif rel_year <= 2016:
+            era_enum = Era.MID_ERA
+        else:
+            era_enum = Era.MODERN
+    else:
+        era_enum = Era.MODERN
+
+    if era_enum == Era.VINTAGE:
+        return {
+            "era": "vintage",
+            "era_label": "Vintage (1999–2003)",
+            "target_grade": "PSA 9",
+            "target_badge": "🎯 Target: PSA 9 (Mint)",
+            "badge_color": "#10b981",
+            "is_grade9_viable": True,
+            "warning_modern_g9": False,
+            "rationale": (
+                "Vintage (1999–2003): PSA 9 è lo Sweet Spot Istituzionale. Offre massima liquidità, "
+                "ampia domanda collezionistica e un eccellente rapporto rischio/rendimento. Il Grado 10 ha "
+                "moltiplicatori proibitivi (~3.8x+) e spread elevati, con scambi rarefatti."
+            ),
+            "short_advice": "Vintage: Punta a PSA 9 (sweet spot liquidità e fair value; PSA 10 ha premi estremi e volumi rarefatti).",
+        }
+    elif era_enum == Era.MID_ERA:
+        return {
+            "era": "mid_era",
+            "era_label": "Mid-Era (2004–2016)",
+            "target_grade": "PSA 9 / BGS 9.5",
+            "target_badge": "🎯 Target: PSA 9 o BGS 9.5",
+            "badge_color": "#38bdf8",
+            "is_grade9_viable": True,
+            "warning_modern_g9": False,
+            "rationale": (
+                "Mid-Era (2004–2016, EX/DP/HGSS/BW/XY): Equilibrio solido tra liquidità e premium. "
+                "I gradi 9 e 9.5 scambiano con frequenza e mantengono un sano margine sul Raw. "
+                "PSA 10 consigliato se acquistabile a sconto sul benchmark di era (~3.4x)."
+            ),
+            "short_advice": "Mid-Era: Bilanciato su PSA 9 o BGS 9.5 (buona liquidità e solido premium su Raw).",
+        }
+    else:
+        return {
+            "era": "modern",
+            "era_label": "Moderno (2017+)",
+            "target_grade": "PSA 10",
+            "target_badge": "🎯 Target: PSA 10 (Evita G9)",
+            "badge_color": "#f59e0b",
+            "is_grade9_viable": False,
+            "warning_modern_g9": True,
+            "rationale": (
+                "Moderno (2017+): Il Pop Report è saturo di Gem Mint (>70-80%). Il Grado 9 è una trappola "
+                "di liquidità che scambia a ridosso del prezzo della carta Raw. "
+                "Nel moderno comprare SOLO Grado 10 (PSA 10, BGS 9.5 o CGC Pristine 10)."
+            ),
+            "short_advice": "⚠️ Moderno: Punta a PSA 10! Evita Grado 9 (pop report saturo di 10, scarso premium su Raw e liquidità debole).",
+        }
+
+
 def get_grading_adjustment(
     company: str | GradingCompany,
     grade: str | float,

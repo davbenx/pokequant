@@ -53,11 +53,12 @@ from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSR
 from poke_quant.data.price_fetcher import (
     fetch_pricecharting_cover_image_url,
     fetch_pricecharting_variant_grade9,
+    fetch_pricecharting_grade_tier_price,
 )
 from poke_quant.config import estimate_usa_import_landed_cost, IMPORT_FROM_USA
 from scripts.generate_singles_signal import (
     compute_singles_signal_rows, compute_singles_avoid_rows, compute_singles_alternative_rows,
-    filter_singles_rows,
+    filter_singles_rows, _set_label,
     PRODUCTION_PARAMS as SINGLES_PARAMS, DAC7_SINGLES_PARAMS,
 )
 from poke_quant.slabs.grading_multipliers import (
@@ -70,6 +71,11 @@ from poke_quant.slabs.grading_multipliers import (
     get_variant_multiplier,
     variant_to_pricecharting_key,
     SPECIAL_VARIANTS,
+    ERA_PSA10_TO_PSA9_RATIO,
+    ERA_BGS95_TO_PSA9_RATIO,
+    estimate_psa10_from_psa9,
+    estimate_grade95_from_psa9,
+    get_recommended_grade_for_card,
 )
 
 # Soglie DAC7 (direttiva UE 2021/514): sopra queste soglie annue le piattaforme
@@ -450,6 +456,31 @@ def get_singles_prices_full():
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
+def get_all_database_card_options():
+    metadata = load_metadata()
+    prices_full = get_singles_prices_full()
+    if prices_full.empty:
+        return [], {}
+    latest = prices_full.iloc[-1]
+    options = []
+    opt_map = {}
+    for item_id, info in metadata.items():
+        if info.get("type") == "single" and item_id in latest and latest[item_id] > 0 and not pd.isna(latest[item_id]):
+            set_lbl = _set_label(info) or "?"
+            lbl = f"{info.get('name', item_id)} [{set_lbl}] — {latest[item_id]:.2f}€"
+            options.append(lbl)
+            opt_map[lbl] = {
+                "item_id": item_id,
+                "name": info.get("name", item_id),
+                "set_name": set_lbl,
+                "current_price_eur": float(latest[item_id]),
+                "max_edge_price_eur": float(latest[item_id]) * 1.05,
+            }
+    options.sort()
+    return options, opt_map
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
 def get_singles_backtest_results(mode: str = "production"):
     cached = load_precomputed_dashboard_data()
     key = "singles_production" if mode == "production" else "singles_dac7"
@@ -647,6 +678,148 @@ def build_equal_allocation(buy_rows: list, capital: float, max_allocation_pct: f
             remaining_capital -= cap
             free_idx.remove(i)
     return [(buy_rows[i], alloc_by_idx[i]) for i in range(n)]
+
+
+def get_box_franchise_label(r: dict, metadata: dict | None = None) -> str:
+    """Restituisce l'etichetta del franchise per i box (Pokémon EN, Pokémon JP, One Piece TCG, Magic (MTG))."""
+    f = r.get("franchise")
+    lang = r.get("language")
+    if f in ["Pokémon EN", "Pokémon JP", "One Piece TCG", "Magic (MTG)"]:
+        return f
+    if not f and metadata:
+        meta = metadata.get(r.get("item_id"), {})
+        f = meta.get("franchise", "pokemon")
+        lang = meta.get("language", "en")
+    f = f or "pokemon"
+    lang = lang or "en"
+    if f == "pokemon":
+        return "Pokémon JP" if lang == "jp" else "Pokémon EN"
+    elif f == "one_piece":
+        return "One Piece TCG"
+    elif f == "magic":
+        return "Magic (MTG)"
+    return str(f).title()
+
+
+def render_box_card(r: dict, alloc: float | None, w: float | None, capital_box: float,
+                    metadata: dict, prices_full: pd.DataFrame, show_usa_import: bool,
+                    tier_type: str = "core") -> None:
+    """Renderizza la card per un box sigillato in base al tier (core, bench, vault)."""
+    meta = metadata.get(r["item_id"], {})
+    link = get_cardmarket_deep_link(r["name"], franchise=meta.get("franchise", "pokemon"),
+                                     language=meta.get("language", "en"), game_slug=meta.get("game_slug"))
+    img_url = get_product_image(meta.get("game_slug"), meta.get("item_slug"))
+    img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
+    max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (tot.) '
+                       f'{r["max_price_eur"]:.0f}€</span>') if r.get("max_price_eur") is not None else ""
+    usa_import_html = ""
+    if show_usa_import:
+        landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="sealed")
+        usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.0f}€</span>')
+    box_price = r["current_price_eur"]
+
+    if tier_type == "core" and alloc is not None and w is not None:
+        if box_price <= 0:
+            qty_est, spend_est, skip_reason = 1, alloc, None
+        elif alloc >= box_price:
+            qty_est, spend_est, skip_reason = int(alloc // box_price), alloc, None
+        elif box_price <= capital_box * 0.35:
+            qty_est, spend_est, skip_reason = 1, box_price, "budget"
+        else:
+            qty_est, spend_est, skip_reason = 0, 0.0, "troppo_grande"
+
+        if skip_reason == "troppo_grande":
+            qty_html = (f' &nbsp; <span style="color:#f43f5e;">⚠️ salta a questo capitale — costa {box_price:,.0f}€, '
+                        f'sopra il 35% dei {capital_box:,.0f}€ dedicati ai box</span>')
+        elif skip_reason == "budget":
+            qty_html = (f' &nbsp; <span style="color:#fbbf24;">→ 1 pz. ⚠️ richiede {spend_est:,.0f}€, più dei {alloc:,.0f}€ '
+                        f'ideali — comprato per intero (lotto indivisibile) se hai capitale libero</span>')
+        else:
+            qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più copie identiche disponibili insieme</span>' if qty_est > 3 else ""
+            qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz.{qty_warn}</span>'
+        alloc_display = spend_est if skip_reason == "budget" else alloc
+        alloc_line = f'<br><span style="font-family:\'JetBrains Mono\',monospace; font-size:15px; color:#f8fafc;">{alloc_display:,.0f}€</span>{qty_html}'
+        weight_html = f" &nbsp;·&nbsp; peso età {w:.2f}"
+    elif tier_type == "vault":
+        alloc_line = f'<br><span style="font-family:\'JetBrains Mono\',monospace; font-size:14px; color:#fbbf24;">🏛️ Asset Vault / Grail</span> &nbsp; <span style="color:#94a3b8;">(Richiede liquidità dedicata o capitale elevato)</span>'
+        weight_html = ""
+    else:  # bench
+        alloc_line = f'<br><span style="font-family:\'JetBrains Mono\',monospace; font-size:14px; color:#38bdf8;">🛡️ Riserva / Panchina</span> &nbsp; <span style="color:#94a3b8;">(Subentra in sequenza se un box Core è irreperibile a prezzo equo)</span>'
+        weight_html = ""
+
+    st.markdown(f"""
+    <div class="signal-card signal-card-buy">
+        {img_tag}
+        <div class="signal-card-body">
+        <strong>{r['name']}</strong> &nbsp; <span style="color:#10b981;">+{r['trailing_12m_return_pct']:.0f}% (12m)</span>
+        &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting){weight_html}{max_price_html}{usa_import_html}
+        {alloc_line}
+        &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    chart = build_price_chart(r["item_id"], r["name"], prices_full)
+    if chart is not None:
+        st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
+                         key=f"chart_buy_{tier_type}_{r['item_id']}")
+
+
+def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_full: pd.DataFrame,
+                       show_usa_import: bool, key_prefix: str = "single") -> None:
+    """Renderizza la card per una singola gradata con badge e consiglio target grade."""
+    meta = {"franchise": r.get("franchise", "pokemon"), "language": r.get("language", "en")}
+    full_meta = metadata.get(r["item_id"], {})
+    link = get_cardmarket_deep_link(r["name"], franchise=meta["franchise"], language=meta["language"],
+                                     item_type="single", game_slug=full_meta.get("game_slug"))
+    start = r.get("signal_start_date")
+    start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)
+    img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
+    img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
+    max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (per edge) '
+                       f'{r["max_edge_price_eur"]:.2f}€</span>') if r.get("max_edge_price_eur") is not None else ""
+    usa_import_html = ""
+    if show_usa_import:
+        landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="single")
+        usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.2f}€</span>')
+    qty_est = max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1
+    qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più slab identici disponibili insieme — verifica quante ne trovi davvero</span>' if qty_est > 1 else ""
+    qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz.{qty_warn}</span>'
+
+    rec = {
+        "target_badge": r.get("target_badge"),
+        "badge_color": r.get("badge_color"),
+        "short_advice": r.get("short_advice"),
+        "era_label": r.get("era_label"),
+    }
+    if not rec["target_badge"]:
+        rel_year = int(str(full_meta.get("release_date", "2020"))[:4]) if full_meta.get("release_date") else 2020
+        rec = get_recommended_grade_for_card(rel_year=rel_year, era=r.get("era"))
+
+    st.markdown(f"""
+    <div class="signal-card signal-card-buy">
+        {img_tag}
+        <div class="signal-card-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+                <strong>{r['name']}</strong> &nbsp; <span style="color:#38bdf8; font-weight:600;">[{r.get('set_name') or '?'}]</span>
+                &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
+            </div>
+            <div>
+                <span style="background:{rec['badge_color']}22; color:{rec['badge_color']}; border:1px solid {rec['badge_color']}; border-radius:4px; padding:2px 8px; font-size:12px; font-weight:700;">{rec['target_badge']}</span>
+            </div>
+        </div>
+        &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Benchmark G9]</span> (PriceCharting) &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%
+        &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r.get('months_in_signal', 0)}m)</span>{max_price_html}{usa_import_html}
+        <div style="margin: 6px 0 4px 0; font-size: 12px; line-height: 1.4; color: #cbd5e1; background: rgba(15,23,42,0.6); border-left: 3px solid {rec['badge_color']}; padding: 4px 8px; border-radius: 0 4px 4px 0;">💡 <strong>Consiglio Grado ({rec['era_label']}):</strong> {rec['short_advice']}</div>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}
+        &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    chart = build_price_chart(r["item_id"], r["name"], singles_prices_full)
+    if chart is not None:
+        st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
+                         key=f"chart_{key_prefix}_{r['item_id']}")
 
 
 def main():
@@ -897,112 +1070,139 @@ def main():
     # --- AZIONE: BUY/HOLD con allocazione e link Cardmarket (quota box, risk parity) ---
     st.markdown(f'<div class="section-title">📦 Box da comprare/mantenere — {w_box*100:.0f}% del capitale ({capital*w_box:,.0f}€)</div>', unsafe_allow_html=True)
     st.caption("Prezzo da PriceCharting (USA), NON una quota Cardmarket — verifica sempre col prezzo reale dietro "
-               "il bottone. Resta sotto il \"massimo\" (oggetto + spedizione). L'€ mostrato è l'allocazione ideale: "
-               "se un box costa più, il modello lo compra comunque per intero finché resta sotto il 35% del "
-               "capitale box (giallo); sopra quella soglia, salta (rosso).")
-    with st.expander("ℹ️ Dettagli — lotto indivisibile, capitale sequenziale"):
+               "il bottone. Resta sotto il \"massimo\" (oggetto + spedizione). L'€ mostrato è l'allocazione reale: "
+               "i box sono ripartiti gerarchicamente in Tier 1 (Core prioritari), Tier 2 (Panchina) e Tier 3 (Vault >500€).")
+
+    # Segmento / Franchise selector (Pills)
+    selected_box_franchise = st.pills(
+        "Segmento / Franchise (Box Sigillati):",
+        options=["Pokémon EN", "Pokémon JP", "One Piece TCG", "Magic (MTG)", "Tutti i Segmenti"],
+        default="Pokémon EN",
+        help="Filtra i box per franchise e lingua. 'Pokémon EN' è il segmento principale validato istituzionalmente."
+    )
+
+    with st.expander("ℹ️ Dettagli — gerarchia a 3 Tier, lotto indivisibile, capitale sequenziale"):
         st.caption("\"Massimo\" è la spesa TOTALE oltre la quale il modello considera il box fuori dal range "
-                   "prezzo/MSRP validato (21,6x) — non sottraiamo qui una stima di spedizione, il numero è già "
-                   "netto: confronta oggetto + spedizione reali dell'inserzione contro questo valore. L'€ mostrato "
-                   "è l'allocazione IDEALE proporzionale (tetto 12% del capitale box): il modello TESTATO non salta "
-                   "un box solo perché costa più della sua quota ideale — lo compra per intero (lotto indivisibile) "
-                   "finché il prezzo resta sotto il 35% del capitale dedicato ai box, segnalato in giallo con la "
-                   "spesa reale richiesta; solo sopra quel 35% la posizione viene saltata (rosso), troppo concentrata "
-                   "anche per la regola testata. Questo calcolo è una semplificazione statica (divide il capitale "
-                   "proporzionalmente su tutti i segnali di oggi); il backtest reale spende la cassa in sequenza, "
-                   "quindi con molti segnali insieme non è garantito che tu possa comprarli tutti — priorità ai "
-                   "primi in lista.")
-    buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
+                   "prezzo/MSRP validato (21,6x) — confronta oggetto + spedizione reali dell'inserzione contro questo valore.\n\n"
+                   "**Architettura a 3 Tier**:\n"
+                   "- **Tier 1 (Core Conviction)**: I top 5-8 box a più alto momentum (<500€) che assorbono la cassa mensile "
+                   "rispettando i vincoli di portafoglio.\n"
+                   "- **Tier 2 (Panchina & Alternative)**: Riserve liquide ad alto momentum. Subentrano solo se un box Core è "
+                   "già in tuo possesso o non reperibile a prezzo equo.\n"
+                   "- **Tier 3 (Vault & Grails >500€)**: Pezzi storici/museali ad alto capitale (>10-35% del budget). Acquistabili "
+                   "solo con cassa dedicata di livello Vault.")
+
+    all_buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
     if max_box_price > 0:
-        buy_rows = [r for r in buy_rows if r["current_price_eur"] <= max_box_price]
-    allocation = build_allocation(buy_rows, capital * w_box, metadata, latest_date)
-    prefetch_product_images([
-        (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
-        for r, _, _ in allocation
+        all_buy_rows = [r for r in all_buy_rows if r["current_price_eur"] <= max_box_price]
+
+    if selected_box_franchise != "Tutti i Segmenti":
+        buy_rows = [r for r in all_buy_rows if get_box_franchise_label(r, metadata) == selected_box_franchise]
+    else:
+        buy_rows = all_buy_rows
+
+    core_rows = [r for r in buy_rows if r.get("tier") == "core"]
+    bench_rows = [r for r in buy_rows if r.get("tier") == "bench"]
+    vault_rows = [r for r in buy_rows if r.get("tier") == "vault"]
+
+    # Fallback dinamico se i tiers non sono presenti nel dizionario
+    if not core_rows and not bench_rows and not vault_rows and buy_rows:
+        for r in buy_rows:
+            set_tier = metadata.get(r["item_id"], {}).get("set_tier")
+            if r["current_price_eur"] >= 500.0 or set_tier == "Grail":
+                vault_rows.append(r)
+            elif len(core_rows) < 8:
+                core_rows.append(r)
+            else:
+                bench_rows.append(r)
+
+    box_capital_half = capital * w_box
+
+    tab_core, tab_bench, tab_vault = st.tabs([
+        f"💎 Tier 1: Core Conviction ({len(core_rows)})",
+        f"🛡️ Tier 2: Panchina & Riserve ({len(bench_rows)})",
+        f"🏛️ Tier 3: Vault / Grails >500€ ({len(vault_rows)})",
     ])
 
-    if not allocation:
-        st.info("Nessun segnale BUY/HOLD questo mese.")
-    else:
-        box_capital_half = capital * w_box
-        _total_real_spend, _n_skip = 0.0, 0
-        for r, alloc, w in allocation:
-            p = r["current_price_eur"]
-            if p <= 0 or alloc >= p:
-                _total_real_spend += alloc
-            elif p <= box_capital_half * 0.35:
-                _total_real_spend += p
-            else:
-                _n_skip += 1
-        if _total_real_spend > box_capital_half * 1.10:
-            st.warning(
-                f"⚠️ A questo capitale, comprare per intero **tutti** i {len(allocation)} box in BUY costerebbe "
-                f"~**{_total_real_spend:,.0f}€**, contro i {box_capital_half:,.0f}€ dedicati (+{(_total_real_spend/box_capital_half-1)*100:.0f}%). "
-                "Non è un errore: i box sono lotti indivisibili, quindi molti superano l'allocazione ideale per "
-                "posizione. Il modello reale spende la cassa in sequenza — priorità ai primi in lista, gli ultimi "
-                "potrebbero non essere eseguibili questo mese con questo capitale."
-                + (f" {_n_skip} box sopra il 35% del capitale vengono comunque saltati indipendentemente dalla cassa." if _n_skip else "")
-            )
-    for r, alloc, w in allocation:
-        meta = metadata.get(r["item_id"], {})
-        link = get_cardmarket_deep_link(r["name"], franchise=meta.get("franchise", "pokemon"),
-                                         language=meta.get("language", "en"), game_slug=meta.get("game_slug"))
-        img_url = get_product_image(meta.get("game_slug"), meta.get("item_slug"))
-        img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
-        max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (tot.) '
-                           f'{r["max_price_eur"]:.0f}€</span>') if r.get("max_price_eur") is not None else ""
-        usa_import_html = ""
-        if show_usa_import:
-            landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="sealed")
-            usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.0f}€</span>')
-        box_price = r["current_price_eur"]
-        # Stessa regola di TimeSeriesMomentumStrategy.generate_signals (lotto
-        # minimo indivisibile): se il budget proporzionale non basta per 1 pezzo,
-        # il modello validato lo compra comunque per intero SOLO se il prezzo
-        # resta sotto il 35% del capitale dedicato ai box - altrimenti la salta.
-        # Qui capital*w_box approssima il total_nav dello strategy (stesso valore
-        # passato a build_allocation, ora per inverse-vol e non piu' un 50%
-        # fisso - vedi get_box_singles_split()) - una carta/box i cui bisogni
-        # superano l'allocazione "ideale" NON è un errore di visualizzazione, è
-        # la regola testata (vedi scripts/max_quantity_per_trade_test.py e la sidebar).
-        box_capital_half = capital * w_box
-        if box_price <= 0:
-            qty_est, spend_est, skip_reason = 1, alloc, None
-        elif alloc >= box_price:
-            qty_est, spend_est, skip_reason = int(alloc // box_price), alloc, None
-        elif box_price <= box_capital_half * 0.35:
-            qty_est, spend_est, skip_reason = 1, box_price, "budget"
+    with tab_core:
+        if not core_rows:
+            st.info("Nessun box Core per questo segmento con i filtri attuali.")
         else:
-            qty_est, spend_est, skip_reason = 0, 0.0, "troppo_grande"
+            allocation = build_allocation(core_rows, box_capital_half, metadata, latest_date)
+            prefetch_product_images([
+                (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+                for r, _, _ in allocation
+            ])
 
-        if skip_reason == "troppo_grande":
-            qty_html = (f' &nbsp; <span style="color:#f43f5e;">⚠️ salta a questo capitale — costa {box_price:,.0f}€, '
-                        f'sopra il 35% dei {box_capital_half:,.0f}€ dedicati ai box (regola testata, non un tetto arbitrario)</span>')
-        elif skip_reason == "budget":
-            qty_html = (f' &nbsp; <span style="color:#fbbf24;">→ 1 pz. ⚠️ richiede {spend_est:,.0f}€, più dei {alloc:,.0f}€ '
-                        f'ideali — il modello lo compra comunque per intero (lotto indivisibile) se hai il capitale libero</span>')
-        else:
-            qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più copie identiche disponibili insieme</span>' if qty_est > 3 else ""
-            qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz.{qty_warn}</span>'
-        alloc_display = spend_est if skip_reason == "budget" else alloc
-        st.markdown(f"""
-        <div class="signal-card signal-card-buy">
-            {img_tag}
-            <div class="signal-card-body">
-            <strong>{r['name']}</strong> &nbsp; <span style="color:#10b981;">+{r['trailing_12m_return_pct']:.0f}% (12m)</span>
-            &nbsp;·&nbsp; {r['current_price_eur']:.0f}€ (PriceCharting) &nbsp;·&nbsp; peso età {w:.2f}{max_price_html}{usa_import_html}
-            <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc_display:,.0f}€</span>{qty_html}
-            &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
+            _total_real_spend, _n_skip = 0.0, 0
+            for r, alloc, w in allocation:
+                p = r["current_price_eur"]
+                if p <= 0 or alloc >= p:
+                    _total_real_spend += alloc
+                elif p <= box_capital_half * 0.35:
+                    _total_real_spend += p
+                else:
+                    _n_skip += 1
+
+            st.markdown(f"""
+            <div class="kpi-grid">
+                <div class="kpi-card"><div class="kpi-label">Budget Box ({w_box*100:.0f}%)</div><div class="kpi-value">{box_capital_half:,.0f} €</div><div class="kpi-sub">Capitale risk-parity</div></div>
+                <div class="kpi-card"><div class="kpi-label">Spesa Reale Stimata</div><div class="kpi-value" style="color:#10b981;">{_total_real_spend:,.0f} €</div><div class="kpi-sub kpi-sub-emerald">{_total_real_spend/box_capital_half*100:.1f}% del budget box</div></div>
+                <div class="kpi-card"><div class="kpi-label">Box Core Coperti</div><div class="kpi-value">{len(allocation) - _n_skip} / {len(core_rows)}</div><div class="kpi-sub">Priorità momentum decrescente</div></div>
+                <div class="kpi-card"><div class="kpi-label">Liquidità Residua</div><div class="kpi-value">{max(0.0, box_capital_half - _total_real_spend):,.0f} €</div><div class="kpi-sub">Cassa pronta o per singole</div></div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-        chart = build_price_chart(r["item_id"], r["name"], prices_full)
-        if chart is not None:
-            st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
-                             key=f"chart_buy_{r['item_id']}")
+            """, unsafe_allow_html=True)
+
+            if _total_real_spend > box_capital_half * 1.10:
+                st.warning(
+                    f"⚠️ A questo capitale, comprare per intero tutti i box Core costerebbe ~**{_total_real_spend:,.0f}€**, "
+                    f"contro i {box_capital_half:,.0f}€ dedicati (+{(_total_real_spend/box_capital_half-1)*100:.0f}%). "
+                    "I box sono lotti indivisibili: il modello reale spende la cassa in sequenza (priorità ai primi in lista)."
+                    + (f" {_n_skip} box sopra il 35% del capitale vengono saltati." if _n_skip else "")
+                )
+            else:
+                st.caption("✅ **Allocazione equilibrata**: I primi box a più alto momentum rientrano nel budget dedicato, "
+                           "rispettando la regola del lotto indivisibile e la diversificazione.")
+
+            for r, alloc, w in allocation:
+                render_box_card(r, alloc, w, box_capital_half, metadata, prices_full, show_usa_import, tier_type="core")
+
+    with tab_bench:
+        st.info("🛡️ **Panchina & Riserve Liquide**: Se possiedi già uno dei box Core o non riesci a trovarlo su Cardmarket "
+                "sotto il prezzo massimo per preservare l'edge, acquista in sequenza da questa lista. Condividono tutti "
+                "momentum trailing 12m positivo e sono pronti a subentrare senza compromettere la validazione.")
+        if not bench_rows:
+            st.caption("Nessun box in panchina per questo segmento.")
+        else:
+            prefetch_product_images([
+                (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+                for r in bench_rows
+            ])
+            for r in bench_rows:
+                render_box_card(r, None, None, box_capital_half, metadata, prices_full, show_usa_import, tier_type="bench")
+
+    with tab_vault:
+        st.info("🏛️ **Tier 3 Vault & Grails**: Box storici e set rari con prezzo unitario > 500€ o catalogati come 'Grail'. "
+                "Hanno momentum trailing 12m positivo ma richiederebbero una concentrazione sproporzionata del budget mensile "
+                "(>10-35%). Il modello validato li esegue solo se si dispone di liquidità dedicata di livello 'Vault', altrimenti "
+                "li salta per proteggere la diversificazione del portafoglio.")
+        if not vault_rows:
+            st.caption("Nessun box nel Vault per questo segmento.")
+        else:
+            prefetch_product_images([
+                (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+                for r in vault_rows
+            ])
+            for r in vault_rows:
+                render_box_card(r, None, None, box_capital_half, metadata, prices_full, show_usa_import, tier_type="vault")
 
     # --- ROTAZIONE: AVOID/SELL ---
-    sell_rows = [r for r in sig_rows if r["signal"] == "AVOID/SELL"]
+    all_sell_rows = [r for r in sig_rows if r["signal"] == "AVOID/SELL"]
+    if selected_box_franchise != "Tutti i Segmenti":
+        sell_rows = [r for r in all_sell_rows if get_box_franchise_label(r, metadata) == selected_box_franchise]
+    else:
+        sell_rows = all_sell_rows
+
     if sell_rows:
         st.markdown('<div class="section-title">🔴 Uscite (momentum invertito)</div>', unsafe_allow_html=True)
         prefetch_product_images([
@@ -1027,9 +1227,14 @@ def main():
                 st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
                                  key=f"chart_sell_{r['item_id']}")
 
-    if n_excessive:
-        excessive_rows = [r for r in sig_rows if "PREZZO ECCESSIVO" in r["signal"]]
-        with st.expander(f"🚫 Prezzo eccessivo — momentum positivo ma bloccato ({n_excessive})"):
+    all_excessive_rows = [r for r in sig_rows if "PREZZO ECCESSIVO" in r["signal"]]
+    if selected_box_franchise != "Tutti i Segmenti":
+        excessive_rows = [r for r in all_excessive_rows if get_box_franchise_label(r, metadata) == selected_box_franchise]
+    else:
+        excessive_rows = all_excessive_rows
+
+    if excessive_rows:
+        with st.expander(f"🚫 Prezzo eccessivo — momentum positivo ma bloccato ({len(excessive_rows)})"):
             st.caption("Il modello direbbe di comprare (momentum 12m positivo), ma il prezzo attuale supera già il "
                        "tetto che preserva l'edge: stesso rapporto prezzo/MSRP già usato per ammettere un box vintage "
                        "nell'universo (21,6x, vedi `poke_quant/data/liquidity_filter.py`), qui applicato anche a un "
@@ -1039,15 +1244,20 @@ def main():
                 st.markdown(f"- **{r['name']}** — {r['current_price_eur']:.0f}€ attuale vs **{r['max_price_eur']:.0f}€ massimo "
                             f"(totale)** (+{r['trailing_12m_return_pct']:.0f}% 12m)")
 
-    if n_verify:
-        with st.expander(f"⚠️ Da verificare a mano ({n_verify}) — rendimento implausibile, mercato troppo sottile"):
-            for r in sig_rows:
-                if "VERIFICARE" in r["signal"]:
-                    st.markdown(f"- **{r['name']}** — {r['trailing_12m_return_pct']:+.0f}% (12m), {r['current_price_eur']:.0f}€ (PriceCharting)")
-                    chart = build_price_chart(r["item_id"], r["name"], prices_full)
-                    if chart is not None:
-                        st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
-                                         key=f"chart_verify_{r['item_id']}")
+    all_verify_rows = [r for r in sig_rows if "VERIFICARE" in r["signal"]]
+    if selected_box_franchise != "Tutti i Segmenti":
+        verify_rows = [r for r in all_verify_rows if get_box_franchise_label(r, metadata) == selected_box_franchise]
+    else:
+        verify_rows = all_verify_rows
+
+    if verify_rows:
+        with st.expander(f"⚠️ Da verificare a mano ({len(verify_rows)}) — rendimento implausibile, mercato troppo sottile"):
+            for r in verify_rows:
+                st.markdown(f"- **{r['name']}** — {r['trailing_12m_return_pct']:+.0f}% (12m), {r['current_price_eur']:.0f}€ (PriceCharting)")
+                chart = build_price_chart(r["item_id"], r["name"], prices_full)
+                if chart is not None:
+                    st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
+                                     key=f"chart_verify_{r['item_id']}")
 
     # --- AZIONE: SINGOLE — FATTORE SCARSITÀ (50% del capitale) ---
     st.markdown(f'<div class="section-title">🃏 Singole da comprare — Fattore Scarsità, {w_singles*100:.0f}% del capitale ({capital*w_singles:,.0f}€)</div>', unsafe_allow_html=True)
@@ -1111,6 +1321,7 @@ def main():
         max_price=max_card_price,
         only_holo=only_holo_specials,
         pokemon_only=pokemon_only,
+        retag_tiers=True,
     )
     alt_rows = filter_singles_rows(
         alt_rows,
@@ -1118,37 +1329,61 @@ def main():
         max_price=max_card_price,
         only_holo=only_holo_specials,
         pokemon_only=pokemon_only,
+        retag_tiers=False,
     )
+    calc_alt_rows = alt_rows[:30]
     singles_allocation = build_equal_allocation(singles_rows, capital * w_singles)
 
     # --- CALCOLATORE RAPIDO SLAB & CORREZIONI CASE DI GRADAZIONE ---
     with st.expander("⚖️ Calcolatore Inserzioni Slab & Moltiplicatori Case di Gradazione (BGS, CGC, PSA, SGC, TAG, PCA, GRAAD, CCC, AiGrading, ACE)", expanded=True):
-        st.markdown("**Valutatore Rapido Inserzioni**: Seleziona una carta dai segnali BUY o inseriscine una personalizzata, indica la casa di gradazione e l'eventuale variante speciale (1st Edition, No Symbol, Shadowless). Il modello recupera il benchmark reale ed applica i correttivi quantitativi per preservare l'edge.")
+        st.markdown("**Valutatore Rapido Inserzioni**: Seleziona una carta dai segnali BUY, cercala nell'intero database (3.100+ carte) o inseriscine una personalizzata. Indica la casa di gradazione, il voto e l'eventuale variante speciale (1st Edition, No Symbol, Shadowless). Il modello recupera il benchmark reale ed applica i correttivi quantitativi per preservare l'edge.")
         
+        calc_mode = st.radio(
+            "Origine della carta da valutare:",
+            options=[
+                f"⭐ Segnali Modello ({len(singles_rows)} BUY + {len(calc_alt_rows)} Alternative)",
+                "🔍 Cerca tra tutte le 3.100+ carte del Database PokeQuant",
+                "✏️ Inserimento Libero / Manuale",
+            ],
+            horizontal=True,
+            index=0,
+            help="Scegli se valutare una carta tra i segnali attuali, cercare una carta qualsiasi del database completo (3.100+ carte con storico e metadati automatici), oppure inserire manualmente nome e benchmark."
+        )
+
         card_options = []
         option_to_row = {}
-        for i, r in enumerate(singles_rows):
-            lbl = f"🟢 [BUY #{i+1}] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
-            card_options.append(lbl)
-            option_to_row[lbl] = r
 
-        calc_alt_rows = alt_rows
-        for r in calc_alt_rows:
-            lbl = f"🔄 [ALT] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
-            card_options.append(lbl)
-            option_to_row[lbl] = r
+        if calc_mode.startswith("⭐"):
+            for i, r in enumerate(singles_rows):
+                lbl = f"🟢 [BUY #{i+1}] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
+                card_options.append(lbl)
+                option_to_row[lbl] = r
 
-        card_options.append("✏️ Personalizzata / Inserimento manuale")
+            for r in calc_alt_rows:
+                lbl = f"🔄 [ALT] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
+                card_options.append(lbl)
+                option_to_row[lbl] = r
+            card_options.append("✏️ Personalizzata / Inserimento manuale")
+        elif calc_mode.startswith("🔍"):
+            all_opts, all_map = get_all_database_card_options()
+            card_options = all_opts
+            option_to_row = all_map
+        else:
+            card_options = ["✏️ Personalizzata / Inserimento manuale"]
 
         with st.form("slab_calculator_form"):
             calc_c1, calc_c2, calc_c3 = st.columns([2, 1, 1])
             with calc_c1:
-                chosen_option = st.selectbox(
-                    f"Carta da valutare ({len(singles_rows)} BUY + {len(calc_alt_rows)} Alternative)",
-                    options=card_options,
-                    index=0,
-                    help="Seleziona una carta investibile dal modello per recuperare in automatico il benchmark PSA 9 Unlimited."
-                )
+                if calc_mode.startswith("✏️"):
+                    chosen_option = "✏️ Personalizzata / Inserimento manuale"
+                    st.text_input("Carta da valutare", value="✏️ Personalizzata (completa i campi sotto)", disabled=True)
+                else:
+                    chosen_option = st.selectbox(
+                        f"Carta da valutare ({len(card_options)} disponibili)",
+                        options=card_options,
+                        index=0,
+                        help="Seleziona o digita il nome per cercare istantaneamente tra le carte disponibili."
+                    )
             with calc_c2:
                 company_input = st.selectbox(
                     "Casa di Gradazione", 
@@ -1296,6 +1531,50 @@ def main():
             era_final = era_detected if era_input.startswith("Auto") else era_input
             display_title = f"{card_name} [{variant_input.split('(')[0].strip()}]" if is_special_variant else card_name
 
+            # Risoluzione benchmark per Grado 10 o Grado 9.5
+            is_grade_10 = "10" in grade_val
+            is_grade_95 = "9.5" in grade_val
+            g_slug = sel_meta.get("game_slug", "")
+            i_slug = sel_meta.get("item_slug", "")
+            sel_item_id = sel_row["item_id"] if sel_row else None
+            benchmark_source = "Database PokeQuant (PSA 9)"
+
+            if is_grade_10 and manual_psa_override == 0.0:
+                pc_tier = fetch_pricecharting_grade_tier_price(g_slug, i_slug, tier="psa10", item_id=sel_item_id) if (g_slug and i_slug) else None
+                if pc_tier:
+                    pc_eur, pc_usd, pc_url, pc_source = pc_tier
+                    base_psa_final = pc_eur
+                    effective_max_edge = round(pc_eur * 1.05, 2)
+                    pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": pc_source, "tier": "PSA 10"}
+                    benchmark_source = f"PriceCharting Reale PSA 10 (${pc_usd:.2f} USD)"
+                else:
+                    p10_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(era_final), 3.00)
+                    base_psa_final = round(base_psa_final * p10_ratio, 2)
+                    effective_max_edge = round(effective_max_edge * p10_ratio, 2)
+                    benchmark_source = f"Stima Algoritmica PSA 10 ({p10_ratio:.2f}x era)"
+            elif is_grade_95 and manual_psa_override == 0.0:
+                pc_tier = fetch_pricecharting_grade_tier_price(g_slug, i_slug, tier="grade9_5", item_id=sel_item_id) if (g_slug and i_slug) else None
+                if pc_tier:
+                    pc_eur, pc_usd, pc_url, pc_source = pc_tier
+                    base_psa_final = pc_eur
+                    effective_max_edge = round(pc_eur * 1.05, 2)
+                    pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": pc_source, "tier": "Grado 9.5"}
+                    benchmark_source = f"PriceCharting Reale Grado 9.5 (${pc_usd:.2f} USD)"
+                else:
+                    g95_ratio = ERA_BGS95_TO_PSA9_RATIO.get(normalize_era(era_final), 1.65)
+                    base_psa_final = round(base_psa_final * g95_ratio, 2)
+                    effective_max_edge = round(effective_max_edge * g95_ratio, 2)
+                    benchmark_source = f"Stima Algoritmica Grado 9.5 ({g95_ratio:.2f}x era)"
+            elif pc_live_info:
+                benchmark_source = f"PriceCharting Reale Grado 9 (${pc_live_info['usd']:.2f} USD)"
+            elif is_special_variant:
+                benchmark_source = f"Stima Variante ({v_mult:.2f}x)"
+            elif manual_psa_override > 0.0:
+                benchmark_source = f"Manuale ({manual_psa_override:.2f} €)"
+
+            rec_grade = get_recommended_grade_for_card(era=era_final)
+            is_modern_g9 = (normalize_era(era_final) == Era.MODERN and ("9.0" in grade_input or grade_input.strip() == "9"))
+
             fair_value_calib, _, adj = adjust_price_for_grading(
                 base_psa_price_eur=base_psa_final,
                 company=company_input,
@@ -1341,6 +1620,9 @@ def main():
                 "base_psa_final": base_psa_final,
                 "effective_max_edge": effective_max_edge,
                 "pc_live_info": pc_live_info,
+                "benchmark_source": benchmark_source,
+                "rec_grade": rec_grade,
+                "is_modern_g9": is_modern_g9,
                 "company_name": adj.company.value,
                 "grade_input": grade_input,
                 "is_black_label": is_black_label,
@@ -1363,23 +1645,36 @@ def main():
         if "slab_eval_res" in st.session_state:
             res = st.session_state["slab_eval_res"]
             pc_info = res.get("pc_live_info")
-            if pc_info:
-                sub_benchmark = f"<a href='{pc_info['url']}' target='_blank' style='color: #38bdf8; text-decoration: underline;'>PriceCharting: ${pc_info['usd']:.2f} ↗</a>"
+            if pc_info and pc_info.get("url"):
+                sub_benchmark = f"<a href='{pc_info['url']}' target='_blank' style='color: #38bdf8; text-decoration: underline;'>{res.get('benchmark_source', 'PriceCharting ↗')}</a>"
                 variant_note = f" · Variante: <strong>{res['v_desc']} (<a href='{pc_info['url']}' target='_blank' style='color:#38bdf8;'>PriceCharting ↗</a>)</strong>"
             elif res['v_mult'] > 1.0:
-                sub_benchmark = f"Base: {res['base_psa_raw']:.2f}€ × {res['v_mult']:.2f}x"
+                sub_benchmark = f"Base: {res['base_psa_raw']:.2f}€ × {res['v_mult']:.2f}x ({res.get('benchmark_source', 'Variante')})"
                 variant_note = f" · Variante: <strong>{res['v_desc']} ({res['v_mult']:.2f}x)</strong>"
             else:
-                sub_benchmark = f"Prezzo mercato PSA (Max Edge: {res['effective_max_edge']:.2f}€)"
+                sub_benchmark = res.get("benchmark_source", f"Prezzo mercato PSA (Max Edge: {res['effective_max_edge']:.2f}€)")
                 variant_note = ""
 
             sub_offer_label = "🎯 Max Puntata eBay USA" if res.get("is_usa_import") else "🎯 Max Sniper (Netto)"
             sub_offer_desc = f"Max puntata consentita (Tua offerta sdoganata: {res['total_offer']:.2f}€ all-in)" if res.get("is_usa_import") else f"Max puntata asta (Tua offerta inserita: {res['total_offer']:.2f}€ all-in)"
 
+            rec_grade = res.get("rec_grade")
+            rec_badge_html = f"<span style='background: {rec_grade['badge_color']}22; color: {rec_grade['badge_color']}; border: 1px solid {rec_grade['badge_color']}; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; margin-left: 8px;'>{rec_grade['target_badge']}</span>" if rec_grade else ""
+
+            if res.get("is_modern_g9"):
+                st.warning(
+                    "⚠️ **Avviso Liquidità Moderno (Grado 9)**: Nelle carte moderne (2017+), il Grado 9 soffre di scarsa "
+                    "liquidità secondaria e scambia spesso a ridosso del valore della carta Raw perché i pop report sono dominati da PSA 10 (>70–80%). "
+                    "Per il moderno si raccomanda di puntare a **PSA 10** (o BGS 9.5) per preservare la rivendibilità."
+                )
+
             st.markdown(f"""
             <div style="background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; margin-top: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-                    <span style="font-weight: 700; font-size: 15px; color: #f8fafc;">Valutazione per <u>{res['display_title']}</u>: <span style="color: {res['v_color']};">{res['v_badge']}</span></span>
+                    <div>
+                        <span style="font-weight: 700; font-size: 15px; color: #f8fafc;">Valutazione per <u>{res['display_title']}</u>: <span style="color: {res['v_color']};">{res['v_badge']}</span></span>
+                        {rec_badge_html}
+                    </div>
                     <span style="font-size: 12px; color: #94a3b8;">Slab: <strong>{res['company_name']} {res['grade_input']}</strong>{variant_note} · Moltiplicatore: <strong>{res['adj'].multiplier:.3f}x</strong> · Penalità liquidità: <strong>-{res['adj'].liquidity_penalty_pct:.0f}%</strong></span>
                 </div>
                 <div class="kpi-grid" style="margin-bottom: 0;">
@@ -1395,91 +1690,106 @@ def main():
                 disc_str = f"Sconto effettivo: **+{res['discount_real_pct']:.1f}%**"
             else:
                 disc_str = f"🔴 Sovrapprezzo offerta: **+{abs(res['discount_real_pct']):.1f}%**"
-            st.caption(f"📝 **Logica**: {res['adj'].notes}. {disc_str} rispetto al fair value di una slab {res['company_name']} {res['grade_input']} ({res['era_final'].upper()}){usa_warn}.")
+            rec_advice_str = f" · 💡 {rec_grade['short_advice']}" if rec_grade else ""
+            st.caption(f"📝 **Logica**: {res['adj'].notes}. {disc_str} rispetto al fair value di una slab {res['company_name']} {res['grade_input']} ({res['era_final'].upper()}){usa_warn}{rec_advice_str}.")
         else:
             st.caption("ℹ️ *Seleziona i parametri sopra e clicca su **'Calcola Valutazione Slab'** per vedere l'analisi istantanea senza ricaricare la pagina.*")
 
     if not singles_allocation:
         st.info("Nessuna carta nel quantile BUY questo mese.")
-    prefetch_product_images([
-        (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
-        for r, _ in singles_allocation[:15]
-    ])
-    for r, alloc in singles_allocation[:15]:
-        meta = {"franchise": r.get("franchise", "pokemon"), "language": r.get("language", "en")}
-        full_meta = metadata.get(r["item_id"], {})
-        link = get_cardmarket_deep_link(r["name"], franchise=meta["franchise"], language=meta["language"],
-                                         item_type="single", game_slug=full_meta.get("game_slug"))
-        start = r["signal_start_date"]
-        start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)
-        img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
-        img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
-        max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (per edge) '
-                           f'{r["max_edge_price_eur"]:.2f}€</span>') if r.get("max_edge_price_eur") is not None else ""
-        usa_import_html = ""
-        if show_usa_import:
-            landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="single")
-            usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.2f}€</span>')
-        qty_est = max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1
-        qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più slab identici disponibili insieme — verifica quante ne trovi davvero</span>' if qty_est > 1 else ""
-        qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz.{qty_warn}</span>'
-        st.markdown(f"""
-        <div class="signal-card signal-card-buy">
-            {img_tag}
-            <div class="signal-card-body">
-            <strong>{r['name']}</strong> &nbsp; <span style="color:#38bdf8; font-weight:600;">[{r.get('set_name') or '?'}]</span>
-            &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
-            &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting) &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%
-            &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r['months_in_signal']}m)</span>{max_price_html}{usa_import_html}
-            <br><span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}
-            &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
+    else:
+        core_singles = [item for item in singles_allocation if item[0].get("tier") == "core"]
+        if not core_singles and singles_allocation:
+            core_singles = singles_allocation[:8]
+            bench_singles = singles_allocation[8:]
+        else:
+            bench_singles = [item for item in singles_allocation if item[0].get("tier") != "core"]
+
+        tab_s_core, tab_s_bench, tab_s_alt = st.tabs([
+            f"💎 Tier 1: Core Conviction ({len(core_singles)})",
+            f"🛡️ Tier 2: Panchina & Riserve ({len(bench_singles)})",
+            f"🔄 Alternative Stesso Quantile ({len(alt_rows)})",
+        ])
+
+        singles_budget_half = capital * w_singles
+        alloc_core_focus = singles_budget_half / max(1, len(core_singles))
+        alloc_full_dist = singles_budget_half / max(1, len(singles_allocation))
+
+        with tab_s_core:
+            st.markdown(
+                "**Massima Convinzione Quantitativa**: Le 8 posizioni di assoluta eccellenza con il maggior sconto statistico rispetto alla rarità. "
+                "Concentra prioritariamente qui la liquidità mensile. Per ciascuna carta è indicato il **Target Grade** ottimale "
+                "(**PSA 9** su Vintage/Mid-Era vs **PSA 10** su Moderno)."
+            )
+            st.markdown(f"""
+            <div class="kpi-grid">
+                <div class="kpi-card"><div class="kpi-label">Budget Singole ({w_singles*100:.0f}%)</div><div class="kpi-value">{singles_budget_half:,.0f} €</div><div class="kpi-sub">Capitale risk-parity</div></div>
+                <div class="kpi-card"><div class="kpi-label">Quota Focus (Top 8)</div><div class="kpi-value" style="color:#10b981;">{alloc_core_focus:,.0f} € / carta</div><div class="kpi-sub kpi-sub-emerald">Concentrazione raccomandata</div></div>
+                <div class="kpi-card"><div class="kpi-label">Quota Standard ({len(singles_allocation)} pos.)</div><div class="kpi-value">{alloc_full_dist:,.0f} € / carta</div><div class="kpi-sub">Distribuzione uniforme</div></div>
+                <div class="kpi-card"><div class="kpi-label">Carte Core</div><div class="kpi-value">{len(core_singles)}</div><div class="kpi-sub">Top decile residui</div></div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
-        chart = build_price_chart(r["item_id"], r["name"], singles_prices_full)
-        if chart is not None:
-            st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
-                             key=f"chart_single_{r['item_id']}")
+            """, unsafe_allow_html=True)
 
-    if len(singles_allocation) > 15:
-        with st.expander(f"Altre {len(singles_allocation) - 15} carte nel quantile BUY"):
-            rest_df = pd.DataFrame([
-                {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
-                 "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
-                 "Massimo per Edge (€)": r.get("max_edge_price_eur"),
-                 "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
-                 "Allocazione (€)": alloc,
-                 "Quantità": max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1}
-                for r, alloc in singles_allocation[15:]
+            prefetch_product_images([
+                (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+                for r, _ in core_singles
             ])
-            st.dataframe(rest_df, use_container_width=True, hide_index=True,
-                         column_config={
-                             "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
-                             "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-                             "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
-                             "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
-                         })
+            for r, alloc in core_singles:
+                render_single_card(r, alloc, metadata, singles_prices_full, show_usa_import, key_prefix="single_core")
 
-    # --- RIPIEGO: alternative se non trovi le copie/carte sopra ---
-    if alt_rows:
-        with st.expander(f"🔄 Non trovi una carta o le copie sopra? {len(alt_rows)} alternative nello stesso quantile"):
+        with tab_s_bench:
+            st.info("🛡️ **Panchina & Posizioni Secondarie**: Carte validate dal modello di scarsità (dalla 9ª in poi). "
+                    "Usale se una carta della Top 8 Core non è reperibile su Cardmarket al di sotto del 'Massimo per Edge'.")
+            if not bench_singles:
+                st.caption("Nessuna carta in panchina (tutte le posizioni rientrano nella Top 8 Core).")
+            else:
+                prefetch_product_images([
+                    (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+                    for r, _ in bench_singles[:8]
+                ])
+                for r, alloc in bench_singles[:8]:
+                    render_single_card(r, alloc, metadata, singles_prices_full, show_usa_import, key_prefix="single_bench")
+
+                if len(bench_singles) > 8:
+                    with st.expander(f"Altre {len(bench_singles) - 8} carte in panchina"):
+                        rest_df = pd.DataFrame([
+                            {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado Benchmark": "Grade 9",
+                             "Grado Consigliato": r.get("target_badge") or get_recommended_grade_for_card(rel_year=int(str(metadata.get(r["item_id"], {}).get("release_date", "2020"))[:4]) if metadata.get(r["item_id"], {}).get("release_date") else 2020)["target_badge"],
+                             "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
+                             "Massimo per Edge (€)": r.get("max_edge_price_eur"),
+                             "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
+                             "Allocazione (€)": alloc,
+                             "Quantità": max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1}
+                            for r, alloc in bench_singles[8:]
+                        ])
+                        st.dataframe(rest_df, use_container_width=True, hide_index=True,
+                                     column_config={
+                                         "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                         "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                                         "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                         "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
+                                     })
+
+        with tab_s_alt:
             st.caption("Ripiego, non un secondo BUY: usa il budget non speso qui invece di lasciarlo fermo o "
-                       "forzare più copie di una carta — recupera parte dell'edge perso ma non tutto (⚠️ "
-                       "**VERIFICATO**, `scripts/singles_diversify_when_capped_test.py`: Sharpe 0,30→0,80 col tetto "
-                       "di 1 copia, MaxDD peggiora -13%→-21%, DSR 0,29 sotto soglia). Ancora nel quantile 20% più "
-                       "sottovalutato, solo fuori dalle prime 60 per rank — filtrate con gli stessi criteri di qualità sopra.")
-            alt_df = pd.DataFrame([
-                {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
-                 "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
-                 "Massimo per Edge (€)": r.get("max_edge_price_eur")}
-                for r in alt_rows[:60]
-            ])
-            st.dataframe(alt_df, use_container_width=True, hide_index=True,
-                         column_config={
-                             "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
-                             "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-                             "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
-                         })
+                       "forzare più copie di una carta — recupera parte dell'edge perso ma non tutto. "
+                       "Ancora nel quantile 20% più sottovalutato, solo fuori dalle prime posizioni per rank.")
+            if not alt_rows:
+                st.caption("Nessuna alternativa disponibile con i filtri attuali.")
+            else:
+                alt_df = pd.DataFrame([
+                    {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado Benchmark": "Grade 9",
+                     "Grado Consigliato": r.get("target_badge") or get_recommended_grade_for_card(rel_year=int(str(metadata.get(r["item_id"], {}).get("release_date", "2020"))[:4]) if metadata.get(r["item_id"], {}).get("release_date") else 2020)["target_badge"],
+                     "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
+                     "Massimo per Edge (€)": r.get("max_edge_price_eur")}
+                    for r in alt_rows[:60]
+                ])
+                st.dataframe(alt_df, use_container_width=True, hide_index=True,
+                             column_config={
+                                 "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                 "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                                 "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
+                             })
 
     # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---
     avoid_rows, _ = get_singles_avoid_signal(singles_mode)

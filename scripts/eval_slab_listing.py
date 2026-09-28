@@ -29,9 +29,17 @@ from poke_quant.slabs.grading_multipliers import (
     get_variant_multiplier,
     variant_to_pricecharting_key,
     SPECIAL_VARIANTS,
+    ERA_PSA10_TO_PSA9_RATIO,
+    ERA_BGS95_TO_PSA9_RATIO,
+    estimate_psa10_from_psa9,
+    estimate_grade95_from_psa9,
+    get_recommended_grade_for_card,
 )
 from poke_quant.config import estimate_usa_import_landed_cost, IMPORT_FROM_USA
-from poke_quant.data.price_fetcher import fetch_pricecharting_variant_grade9
+from poke_quant.data.price_fetcher import (
+    fetch_pricecharting_variant_grade9,
+    fetch_pricecharting_grade_tier_price,
+)
 from scripts.generate_singles_signal import (
     _liquid_universe,
     _snapshot_for_date,
@@ -114,17 +122,18 @@ def evaluate_listing(
     ranked_top = sorted(residuals.items(), key=lambda x: x[1])[:n_buy][: strat.max_positions]
     cutoff_res = ranked_top[-1][1] if ranked_top else -1.1550
 
-    if item_id in snap:
+    if item_id in snap and item_id in residuals:
         base_psa_price = snap[item_id]["current_price"]
-        res = residuals.get(item_id, -1.0)
-        rank = sorted(residuals.items(), key=lambda x: x[1]).index((item_id, res)) + 1
+        res = residuals[item_id]
+        sorted_res = sorted(residuals.items(), key=lambda x: x[1])
+        rank = sorted_res.index((item_id, res)) + 1
         pct = rank / len(all_res) * 100.0
         # Prezzo max edge modello standard PSA 9
         theo_cutoff_price = base_psa_price * np.exp(cutoff_res - res)
         base_max_edge_price = base_psa_price + PRESERVE_EDGE_ALPHA * (theo_cutoff_price - base_psa_price)
     else:
-        # Fallback se carta fuori dal panel liquido
-        base_psa_price = float(prices_full[item_id].dropna().iloc[-1]) if item_id in prices_full else 100.0
+        # Fallback se carta fuori dal panel liquido o non nei residui
+        base_psa_price = float(snap[item_id]["current_price"]) if item_id in snap else (float(prices_full[item_id].dropna().iloc[-1]) if item_id in prices_full else 100.0)
         base_max_edge_price = base_psa_price * 1.05
         res = -1.0
         pct = 10.0
@@ -142,10 +151,46 @@ def evaluate_listing(
         v_desc = f"PriceCharting Grado 9 reale (${pc_usd:.2f} USD)"
         orig_px = snap[item_id]["current_price"] if item_id in snap else base_psa_price
         v_mult = round(pc_eur / orig_px, 2) if orig_px > 0 else 1.0
+        benchmark_note = f"PriceCharting Grado 9 reale (${pc_usd:.2f} USD)"
     else:
         v_mult, v_desc = get_variant_multiplier(variant, info.get("game_slug"))
         base_psa_price = round(base_psa_price * v_mult, 2)
         base_max_edge_price = round(base_max_edge_price * v_mult, 2)
+        benchmark_note = "Prezzo mercato PSA 9"
+
+    # Risoluzione benchmark per Grado 10 o Grado 9.5
+    grade_str = str(grade).strip()
+    is_grade_10 = "10" in grade_str
+    is_grade_95 = "9.5" in grade_str
+
+    if is_grade_10:
+        pc_tier = fetch_pricecharting_grade_tier_price(
+            info.get("game_slug", ""), info.get("item_slug", ""), tier="psa10", item_id=item_id
+        )
+        if pc_tier:
+            pc_eur, pc_usd, pc_url, pc_source = pc_tier
+            base_psa_price = pc_eur
+            base_max_edge_price = round(pc_eur * 1.05, 2)
+            benchmark_note = f"Dato Reale {pc_source} (${pc_usd:.2f} USD)"
+        else:
+            p10_ratio = ERA_PSA10_TO_PSA9_RATIO.get(era, 3.00)
+            base_psa_price = round(base_psa_price * p10_ratio, 2)
+            base_max_edge_price = round(base_max_edge_price * p10_ratio, 2)
+            benchmark_note = f"Stima algoritmica Grado 10 (Base PSA 9 × {p10_ratio:.2f}x)"
+    elif is_grade_95:
+        pc_tier = fetch_pricecharting_grade_tier_price(
+            info.get("game_slug", ""), info.get("item_slug", ""), tier="grade9_5", item_id=item_id
+        )
+        if pc_tier:
+            pc_eur, pc_usd, pc_url, pc_source = pc_tier
+            base_psa_price = pc_eur
+            base_max_edge_price = round(pc_eur * 1.05, 2)
+            benchmark_note = f"Dato Reale {pc_source} (${pc_usd:.2f} USD)"
+        else:
+            g95_ratio = ERA_BGS95_TO_PSA9_RATIO.get(era, 1.65)
+            base_psa_price = round(base_psa_price * g95_ratio, 2)
+            base_max_edge_price = round(base_max_edge_price * g95_ratio, 2)
+            benchmark_note = f"Stima algoritmica Grado 9.5 (Base PSA 9 × {g95_ratio:.2f}x)"
 
     # Ricalibrazione per la compagnia e grado scelti
     fair_value, sniper_ceiling_raw, adj = adjust_price_for_grading(
@@ -193,16 +238,18 @@ def evaluate_listing(
     print(f"   VALUTAZIONE QUANTITATIVA SLAB — POKEQUANT VALUATION DESK")
     print("=" * 76)
     print(f"• Carta:            {info.get('name')} [{info.get('game_slug')}]")
-    if v_mult > 1.0:
+    if v_mult > 1.0 and not is_grade_10 and not is_grade_95:
         print(f"• Variante/Edizione:{v_desc} (Moltiplicatore: {v_mult:.2f}x)")
+    rec_grade = get_recommended_grade_for_card(era=era)
     print(f"• Era Collez.:      {era.value.upper()} (Rilascio: {info.get('release_date', 'N/A')})")
+    print(f"• Target Grado:     {rec_grade['target_badge']} — {rec_grade['short_advice']}")
     print(f"• Slab in Esame:    {adj.company.value} {grade} ({'Black Label Quad 10' if is_black_label else ('Pristine 10' if is_pristine else 'Standard')})")
     if is_usa:
         print(f"• Offerta Attuale:  {price_eur:.2f} € -> {allin_offer:.2f} € All-in Sdoganato da USA (IVA 22% + dazi)")
     else:
         print(f"• Offerta Attuale:  {price_eur:.2f} € (+ {shipping_eur:.2f} € sped.) = {allin_offer:.2f} € All-in")
     print("-" * 76)
-    print(f"• Benchmark PSA:    {base_psa_price:.2f} € ({adj.benchmark_ref})")
+    print(f"• Benchmark PSA:    {base_psa_price:.2f} € ({adj.benchmark_ref} — {benchmark_note})")
     print(f"• Moltiplicatore:   {adj.multiplier:.3f}x (Penalità liquidità: -{adj.liquidity_penalty_pct:.1f}%)")
     print(f"• Fair Value Slab:  {fair_value:.2f} € (Valore reale atteso)")
     print(f"• Tetto Max Edge:   {calibrated_max_edge_allin:.2f} € (Costo totale massimo ammissibile)")
@@ -214,6 +261,11 @@ def evaluate_listing(
     print(f"📊 Sconto Reale:    {discount_pct:+.1f}% rispetto al Fair Value")
     print(f"⚖️ Verdetto:         {verdict_color} {verdict}")
     print(f"📝 Note Modello:    {adj.notes}")
+    if era == Era.MODERN and ("9.0" in grade_str or grade_str == "9"):
+        print("-" * 76)
+        print("⚠️  ATTENZIONE LIQUIDITÀ MODERNO: Sulle carte moderne (2017+) il mercato assorbe")
+        print("   quasi esclusivamente copie PSA 10 o Raw. Le slab Grado 9 moderne hanno turnover")
+        print("   lento e scarso premio rispetto al Raw. Si raccomanda di puntare a PSA 10 o BGS 9.5.")
     print("=" * 76 + "\n")
 
 

@@ -146,3 +146,72 @@ def test_current_fx_rate_integration():
     rate = get_current_eur_usd_rate()
     assert 1.0 <= rate <= 1.4  # Range realistico per EUR/USD
 
+
+def test_era_ratios_and_estimation():
+    from poke_quant.slabs.grading_multipliers import (
+        ERA_PSA10_TO_PSA9_RATIO,
+        ERA_BGS95_TO_PSA9_RATIO,
+        estimate_psa10_from_psa9,
+        estimate_grade95_from_psa9,
+    )
+
+    # Verifica moltiplicatori empirici
+    assert ERA_PSA10_TO_PSA9_RATIO[Era.VINTAGE] == 3.80
+    assert ERA_PSA10_TO_PSA9_RATIO[Era.MID_ERA] == 3.40
+    assert ERA_PSA10_TO_PSA9_RATIO[Era.MODERN] == 2.80
+
+    assert ERA_BGS95_TO_PSA9_RATIO[Era.VINTAGE] == 1.81
+    assert ERA_BGS95_TO_PSA9_RATIO[Era.MID_ERA] == 1.55
+    assert ERA_BGS95_TO_PSA9_RATIO[Era.MODERN] == 1.70
+
+    # Test stima da PSA 9
+    psa9_price = 100.0
+    assert estimate_psa10_from_psa9(psa9_price, Era.VINTAGE) == 380.0
+    assert estimate_psa10_from_psa9(psa9_price, Era.MID_ERA) == 340.0
+    assert estimate_psa10_from_psa9(psa9_price, Era.MODERN) == 280.0
+
+    assert estimate_grade95_from_psa9(psa9_price, Era.VINTAGE) == 181.0
+    assert estimate_grade95_from_psa9(psa9_price, Era.MID_ERA) == 155.0
+    assert estimate_grade95_from_psa9(psa9_price, Era.MODERN) == 170.0
+
+
+def test_get_recommended_grade_for_card():
+    from poke_quant.slabs.grading_multipliers import get_recommended_grade_for_card
+
+    # Vintage (anno <= 2003)
+    rec_v = get_recommended_grade_for_card(rel_year=2000)
+    assert rec_v["era"] == "vintage"
+    assert "PSA 9" in rec_v["target_grade"]
+    assert rec_v["is_grade9_viable"] is True
+    assert rec_v["warning_modern_g9"] is False
+    assert "Sweet Spot" in rec_v["rationale"]
+
+    # Mid-Era (2004 <= anno <= 2016)
+    rec_m = get_recommended_grade_for_card(rel_year=2010)
+    assert rec_m["era"] == "mid_era"
+    assert "PSA 9" in rec_m["target_grade"]
+    assert "9.5" in rec_m["target_grade"]
+    assert rec_m["is_grade9_viable"] is True
+    assert rec_m["warning_modern_g9"] is False
+
+    # Moderno (anno >= 2017)
+    rec_mod = get_recommended_grade_for_card(rel_year=2021)
+    assert rec_mod["era"] == "modern"
+    assert "PSA 10" in rec_mod["target_grade"]
+    assert rec_mod["is_grade9_viable"] is False
+    assert rec_mod["warning_modern_g9"] is True
+    assert "Evita Grado 9" in rec_mod["target_badge"] or "Evita G9" in rec_mod["target_badge"]
+    assert "trappola" in rec_mod["rationale"].lower()
+
+
+def test_fetch_pricecharting_grade_tier_price():
+    from poke_quant.data.price_fetcher import fetch_pricecharting_grade_tier_price
+
+    # Verifica lookup su carta con dati reali (Dragonite-EX)
+    res = fetch_pricecharting_grade_tier_price("pokemon-evolutions", "dragonite-ex-106", tier="psa10")
+    assert res is not None
+    eur, usd, url, src = res
+    assert usd == 480.0
+    assert eur > 350.0
+    assert "pricecharting.com" in url
+
