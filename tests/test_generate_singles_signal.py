@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.generate_singles_signal import (
     _signal_streak, PRODUCTION_PARAMS, compute_singles_signal_rows, compute_singles_avoid_rows,
-    compute_singles_alternative_rows, _set_label,
+    compute_singles_alternative_rows, _set_label, filter_singles_rows, NON_HOLO_BULK_RARITIES,
 )
 
 SIGNAL_FRESHNESS_MONTHS = PRODUCTION_PARAMS["rebalance_every_months"]  # 3, la cadenza di produzione
@@ -230,3 +230,60 @@ def test_alternative_rows_include_stale_cards_excluded_from_buy_by_freshness():
     alt_ids = {r["item_id"] for r in alt_rows}
     assert "card_24" not in buy_ids
     assert "card_24" in alt_ids
+
+
+def test_filter_singles_rows_min_price():
+    rows = [
+        {"item_id": "c1", "current_price_eur": 20.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+        {"item_id": "c2", "current_price_eur": 45.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+        {"item_id": "c3", "current_price_eur": 120.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+    ]
+    res = filter_singles_rows(rows, min_price=40.0)
+    assert [r["item_id"] for r in res] == ["c2", "c3"]
+
+
+def test_filter_singles_rows_max_price():
+    rows = [
+        {"item_id": "c1", "current_price_eur": 30.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+        {"item_id": "c2", "current_price_eur": 80.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+        {"item_id": "c3", "current_price_eur": 200.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+    ]
+    res = filter_singles_rows(rows, max_price=100.0)
+    assert [r["item_id"] for r in res] == ["c1", "c2"]
+
+
+def test_filter_singles_rows_only_holo_excludes_bulk():
+    rows = [
+        {"item_id": "c_common", "current_price_eur": 21.0, "rarity": "Common", "franchise": "pokemon"},
+        {"item_id": "c_uncommon", "current_price_eur": 22.0, "rarity": "Uncommon", "franchise": "pokemon"},
+        {"item_id": "c_rare", "current_price_eur": 23.0, "rarity": "Rare", "franchise": "pokemon"},
+        {"item_id": "c_holo", "current_price_eur": 85.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+        {"item_id": "c_ultra", "current_price_eur": 75.0, "rarity": "Rare Ultra", "franchise": "pokemon"},
+        {"item_id": "c_secret", "current_price_eur": 240.0, "rarity": "Rare Secret", "franchise": "pokemon"},
+    ]
+    res = filter_singles_rows(rows, only_holo=True)
+    assert [r["item_id"] for r in res] == ["c_holo", "c_ultra", "c_secret"]
+
+
+def test_filter_singles_rows_pokemon_only():
+    rows = [
+        {"item_id": "p1", "current_price_eur": 60.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+        {"item_id": "m1", "current_price_eur": 50.0, "rarity": "rare", "franchise": "magic"},
+        {"item_id": "op1", "current_price_eur": 80.0, "rarity": "Rare Secret", "franchise": "one-piece"},
+    ]
+    res = filter_singles_rows(rows, pokemon_only=True)
+    assert [r["item_id"] for r in res] == ["p1"]
+
+
+def test_filter_singles_rows_combined_filters():
+    rows = [
+        {"item_id": "low_bulk", "current_price_eur": 20.2, "rarity": "Common", "franchise": "pokemon"},
+        {"item_id": "high_bulk", "current_price_eur": 65.0, "rarity": "Common", "franchise": "pokemon"},
+        {"item_id": "low_holo", "current_price_eur": 25.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+        {"item_id": "magic_card", "current_price_eur": 70.0, "rarity": "Rare Holo", "franchise": "magic"},
+        {"item_id": "over_budget", "current_price_eur": 300.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+        {"item_id": "target_chase", "current_price_eur": 110.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+    ]
+    res = filter_singles_rows(rows, min_price=40.0, max_price=200.0, only_holo=True, pokemon_only=True)
+    assert [r["item_id"] for r in res] == ["target_chase"]
+

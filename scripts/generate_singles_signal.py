@@ -373,6 +373,35 @@ def compute_singles_avoid_rows(params: dict = None):
     return rows, latest_date
 
 
+NON_HOLO_BULK_RARITIES = {
+    "Common", "common", "Uncommon", "uncommon", "Rare", "rare", "Rare ACE", "ACE SPEC Rare"
+}
+
+
+def filter_singles_rows(
+    rows: list[dict],
+    min_price: float = 0.0,
+    max_price: float = 0.0,
+    only_holo: bool = False,
+    pokemon_only: bool = True,
+) -> list[dict]:
+    """Filtra una lista di segnali singole per rimuovere frizione di spedizione,
+    carte bulk/non-holo poco liquide ed eventuali TCG non desiderati."""
+    filtered = []
+    for r in rows:
+        p = float(r.get("current_price_eur", 0.0))
+        if min_price > 0 and p < min_price:
+            continue
+        if max_price > 0 and p > max_price:
+            continue
+        if pokemon_only and r.get("franchise") != "pokemon":
+            continue
+        if only_holo and str(r.get("rarity")) in NON_HOLO_BULK_RARITIES:
+            continue
+        filtered.append(r)
+    return filtered
+
+
 def main():
     rows, latest_date = compute_singles_signal_rows()
     print(f"Data segnale: {latest_date} | {len(rows)} carte nel quantile BUY fresche "

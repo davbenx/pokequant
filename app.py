@@ -56,6 +56,7 @@ from poke_quant.data.price_fetcher import (
 from poke_quant.config import estimate_usa_import_landed_cost, IMPORT_FROM_USA
 from scripts.generate_singles_signal import (
     compute_singles_signal_rows, compute_singles_avoid_rows, compute_singles_alternative_rows,
+    filter_singles_rows,
     PRODUCTION_PARAMS as SINGLES_PARAMS, DAC7_SINGLES_PARAMS,
 )
 from poke_quant.slabs.grading_multipliers import (
@@ -615,13 +616,34 @@ def main():
                    "rispetto al solo box (stesso periodo comune, frizioni incluse). Cap 12% del capitale per "
                    "singola posizione dentro ciascuna metà, box pesato per età (0,4x sotto i 18 mesi, 1,0x dopo).")
         st.markdown("---")
-        st.markdown("### 💳 Budget massimo per carta")
+        st.markdown("### 📦 Budget Box")
+        max_box_price = st.number_input(
+            "Prezzo massimo per box (€, 0 = nessun limite)", min_value=0.0, max_value=100_000.0,
+            value=0.0, step=50.0,
+            help="Filtra i box in acquisto sopra questa soglia (0 = nessun limite)."
+        )
+        st.markdown("---")
+        st.markdown("### 🃏 Filtri Singole (Fattore Scarsità)")
+        min_card_price = st.number_input(
+            "Prezzo minimo per carta (€)", min_value=0.0, max_value=10_000.0,
+            value=40.0, step=5.0,
+            help="Filtra le carte troppo economiche (sotto 40-50€ l'incidenza di spedizione e la non-convenienza di gradazione distruggono l'edge operativo)."
+        )
         max_card_price = st.number_input(
             "Prezzo massimo per singola carta (€, 0 = nessun limite)", min_value=0.0, max_value=100_000.0,
             value=0.0, step=50.0,
             help="Filtra le carte in acquisto sopra questa soglia - indipendentemente da quanto il modello le "
                  "ritenga sottovalutate. Utile per restare su acquisti pratici/gestibili, non è un giudizio di "
-                 "convenienza: una carta esclusa qui può comunque essere un'ottima occasione, solo fuori budget.")
+                 "convenienza: una carta esclusa qui può comunque essere un'ottima occasione, solo fuori budget."
+        )
+        only_holo_specials = st.checkbox(
+            "Solo Holo & Rarità Speciali", value=True,
+            help="Esclude carte Common, Uncommon e Non-Holo ordinarie, focalizzandosi su Rare Holo vintage, Secret, Ultra Rare, Rainbow, Illustration Rare (SIR/SAR)."
+        )
+        pokemon_only = st.checkbox(
+            "Solo carte Pokémon", value=True,
+            help="Mostra esclusivamente carte del franchise Pokémon (esclude Magic: The Gathering o altri giochi sperimentali)."
+        )
         st.markdown("---")
         st.markdown("### 🛃 Import da venditore USA")
         show_usa_import = st.checkbox(
@@ -802,8 +824,8 @@ def main():
                    "quindi con molti segnali insieme non è garantito che tu possa comprarli tutti — priorità ai "
                    "primi in lista.")
     buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
-    if max_card_price > 0:
-        buy_rows = [r for r in buy_rows if r["current_price_eur"] <= max_card_price]
+    if max_box_price > 0:
+        buy_rows = [r for r in buy_rows if r["current_price_eur"] <= max_box_price]
     allocation = build_allocation(buy_rows, capital * w_box, metadata, latest_date)
     prefetch_product_images([
         (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
@@ -993,8 +1015,21 @@ def main():
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     alt_rows, _ = get_singles_alternatives(singles_mode)
     singles_prices_full = get_singles_prices_full()
-    if max_card_price > 0:
-        singles_rows = [r for r in singles_rows if r["current_price_eur"] <= max_card_price]
+    # Applica i filtri qualitativi e di prezzo alle singole (rimuove rumore a basso prezzo / bulk non-holo / altri TCG)
+    singles_rows = filter_singles_rows(
+        singles_rows,
+        min_price=min_card_price,
+        max_price=max_card_price,
+        only_holo=only_holo_specials,
+        pokemon_only=pokemon_only,
+    )
+    alt_rows = filter_singles_rows(
+        alt_rows,
+        min_price=min_card_price,
+        max_price=max_card_price,
+        only_holo=only_holo_specials,
+        pokemon_only=pokemon_only,
+    )
     singles_allocation = build_equal_allocation(singles_rows, capital * w_singles)
 
     # --- CALCOLATORE RAPIDO SLAB & CORREZIONI CASE DI GRADAZIONE ---
@@ -1008,7 +1043,7 @@ def main():
             card_options.append(lbl)
             option_to_row[lbl] = r
 
-        calc_alt_rows = [r for r in alt_rows if r["current_price_eur"] <= max_card_price] if max_card_price > 0 else alt_rows
+        calc_alt_rows = alt_rows
         for r in calc_alt_rows:
             lbl = f"🔄 [ALT] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
             card_options.append(lbl)
@@ -1333,15 +1368,13 @@ def main():
                          })
 
     # --- RIPIEGO: alternative se non trovi le copie/carte sopra ---
-    alt_rows, _ = get_singles_alternatives(singles_mode)
     if alt_rows:
         with st.expander(f"🔄 Non trovi una carta o le copie sopra? {len(alt_rows)} alternative nello stesso quantile"):
             st.caption("Ripiego, non un secondo BUY: usa il budget non speso qui invece di lasciarlo fermo o "
                        "forzare più copie di una carta — recupera parte dell'edge perso ma non tutto (⚠️ "
                        "**VERIFICATO**, `scripts/singles_diversify_when_capped_test.py`: Sharpe 0,30→0,80 col tetto "
                        "di 1 copia, MaxDD peggiora -13%→-21%, DSR 0,29 sotto soglia). Ancora nel quantile 20% più "
-                       "sottovalutato, solo fuori dalle prime 60 per rank — nessun filtro di freschezza qui, "
-                       "verifica sempre il grafico prezzo prima di comprare.")
+                       "sottovalutato, solo fuori dalle prime 60 per rank — filtrate con gli stessi criteri di qualità sopra.")
             alt_df = pd.DataFrame([
                 {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
                  "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
@@ -1357,6 +1390,8 @@ def main():
 
     # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---
     avoid_rows, _ = get_singles_avoid_signal(singles_mode)
+    if pokemon_only:
+        avoid_rows = [r for r in avoid_rows if r.get("franchise") == "pokemon"]
     if avoid_rows:
         st.markdown('<div class="section-title">🔴 Singole da evitare/vendere — sopravvalutate vs pari</div>', unsafe_allow_html=True)
         st.caption("⚠️ Specchio del quantile BUY (stesso modello, residuo più positivo): la carta costa più di "
