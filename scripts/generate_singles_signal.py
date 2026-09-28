@@ -103,29 +103,16 @@ def _set_label(info: dict) -> Optional[str]:
         label += " (Unlimited)"
     return label
 
-PRODUCTION_PARAMS = dict(rebalance_every_months=3, top_quantile=0.20, min_age_months=6, max_positions=60, min_cross_section=20)
-
-# Variante a turnover ridotto (vedi app.py, "Modalita' conforme DAC7"): meno
-# posizioni + ribilanciamento meno frequente per restare sotto le soglie di
-# segnalazione piattaforma (30 vendite annue - direttiva UE DAC7; la soglia dei
-# 2.000EUR/anno dipende dal capitale/taglia di posizione scelti dall'utente in
-# sidebar, non da questi parametri, e resta fuori dal perimetro di questa ricerca).
-#
-# BUG TROVATO (verificando "e' la scelta ottimale?"): il punto precedente
-# (rebalance_every_months=12, max_positions=20, "Sharpe 1,49 vs 2,02") citava
-# uno script che non esisteva nel repo - non riproducibile, un singolo punto
-# scelto a mano. scripts/dac7_turnover_search.py e' la vera grid search su
-# (rebalance_every_months, max_positions), a parita' di altri parametri:
-# rebalance=12 sprecava quasi tutto il budget di transazioni consentito (8,3
-# vendite/anno reali contro le 30 permesse) per uno Sharpe di 1,35 - un punto
-# arbitrariamente conservativo, non l'optimum vincolato. Il vero optimum sotto
-# vincolo (vendite/anno<=30) e' rebalance_every_months=3, max_positions=20:
-# Sharpe 2,39 (DSR 0,999) usando 28,6 vendite/anno, quasi tutto il budget
-# consentito - un netto miglioramento, non un compromesso peggiore mascherato.
-# Produzione stessa cadenza (3, 60): Sharpe 2,11 - quindi la modalita' DAC7,
-# corretta, e' vicina alla produzione (costo reale ~0,1-0,3 Sharpe), non un
-# downgrade pesante come il vecchio numero implicava.
-DAC7_SINGLES_PARAMS = dict(rebalance_every_months=3, top_quantile=0.20, min_age_months=6, max_positions=20, min_cross_section=20)
+# STRATEGIA UNIFICATA PRODUZIONE:
+# Optimum vincolato verificato empiricamente in scripts/dac7_turnover_search.py:
+# rebalance_every_months=3, max_positions=20.
+# Unifica la modalita' standard e la conformita' DAC7 (< 30 vendite annue):
+# Sharpe 2.386 (DSR 0.999), CAGR +67.68%, MaxDD -9.70%, 28.6 vendite/anno reali.
+# Supera la vecchia configurazione a 60 posizioni (Sharpe 2.115, CAGR +44.41%, 61.2 vendite/anno)
+# eliminando frizioni, concentrando il capitale solo sui residui a massimo sconto (-80%/-81%)
+# e garantendo di default la conformita' fiscale senza modalita' separate.
+PRODUCTION_PARAMS = dict(rebalance_every_months=3, top_quantile=0.20, min_age_months=6, max_positions=20, min_cross_section=20)
+DAC7_SINGLES_PARAMS = PRODUCTION_PARAMS  # Alias per retrocompatibilita'
 
 # Cadenza di ribilanciamento del backtest validato - vedi spiegazione nel
 # docstring del modulo. Non piu' una costante fissa: deriva dal parametro

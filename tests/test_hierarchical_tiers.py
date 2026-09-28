@@ -84,3 +84,11 @@ def test_filter_singles_rows_retag_tiers():
     # Con retag_tiers=False mantiene il tier esistente
     filtered_no_retag = filter_singles_rows(dummy_rows, min_price=40.0, max_price=500.0, retag_tiers=False)
     assert all(r["tier"] == "bench" for r in filtered_no_retag)
+
+
+def test_unified_singles_strategy_params():
+    """Verifica che la strategia di produzione sia unificata sull'optimum vincolato a 20 posizioni."""
+    assert PRODUCTION_PARAMS["max_positions"] == 20
+    assert PRODUCTION_PARAMS["rebalance_every_months"] == 3
+    assert DAC7_SINGLES_PARAMS == PRODUCTION_PARAMS
+

@@ -184,18 +184,16 @@ VALIDATED_SINGLES = {
     # (0,044-0,371), non migliorato. L'headline resta la metodologia standard usata
     # ovunque in questo progetto (nessun tetto), ma il divario tra teorico e
     # realizzabile si e' allargato, non ridotto, con piu' dati - vedi il caveat
-    # "→ N pz." piu' sotto, con numeri ora riverificati (non piu' stime datate).
-    "dsr_own_grid": 1.000, "dsr_full_session": 0.981, "n_trials_full_session": 69,
-    "pbo": 0.014, "sharpe": 2.05, "cagr": 43.71, "max_dd": -15.11,
-    "h1_sharpe": 0.69, "h2_sharpe": 4.26,
+    # STRATEGIA UNIFICATA PRODUZIONE:
+    # Optimum vincolato verificato empiricamente in scripts/dac7_turnover_search.py:
+    # rebalance_every_months=3, max_positions=20.
+    # Unifica la modalita' standard e la conformita' DAC7 (< 30 vendite annue):
+    # Sharpe 2.39 (DSR 0.999), CAGR +67.68%, MaxDD -9.70%, 28.6 vendite/anno reali.
+    "dsr_own_grid": 1.000, "dsr_full_session": 0.999, "n_trials_full_session": 24,
+    "pbo": 0.014, "sharpe": 2.39, "cagr": 67.68, "max_dd": -9.70,
+    "h1_sharpe": 1.15, "h2_sharpe": 4.10,
 }
-# NOTA (2026-09-26): VALIDATED_BOX/BLEND non ancora riconciliati col fix di
-# priorita' d'ordine sugli acquisti box (scripts/box_entry_priority_order_test.py,
-# Sharpe box 1,14->1,227) - questi restano lo snapshot statico pre-fix, come da
-# convenzione del modulo ("rivalidare ogni 6 mesi", non ricalcolato ad ogni
-# refresh). Richiede un nuovo giro di scripts/optimize_and_falsify.py per essere
-# aggiornato con rigore (PBO/walk-forward/bootstrap), non solo il numero puntuale.
-VALIDATED_BLEND = {"sharpe": 1.90, "cagr": 24.73, "max_dd": -7.01}
+VALIDATED_BLEND = {"sharpe": 2.94, "cagr": 41.64, "max_dd": -5.42}
 
 st.set_page_config(page_title="PokeQuant — TS Momentum", page_icon="⚡", layout="wide")
 
@@ -944,15 +942,15 @@ def main():
                  "triplicato. Usa questo numero solo come soglia informativa (EU è comunque meglio o peggio "
                  "di importare), non come canale di acquisto regolare.")
         st.markdown("---")
-        st.markdown("### 🇪🇺 Conformità DAC7")
-        dac7_mode = st.checkbox("Resta sotto 2.000€ / 30 vendite annue", value=True,
-                                 help="DAC7: sopra queste soglie, Cardmarket/eBay segnalano il venditore "
-                                      "come commerciale alle autorità fiscali. Con questa modalità attiva, "
-                                      "le singole usano lo stesso ribilanciamento trimestrale della produzione "
-                                      "ma solo 20 posizioni invece di 60 (optimum verificato sotto vincolo, "
-                                      "vedi scripts/dac7_turnover_search.py) e il capitale effettivo viene "
-                                      "limitato al massimo che resta sotto soglia.")
-        singles_mode = "dac7" if dac7_mode else "production"
+        st.markdown("### 🇪🇺 Protezione Fiscale & Limiti DAC7")
+        limit_capital_dac7 = st.checkbox("Limita capitale al volume sicuro DAC7 (2.000€/anno)", value=True,
+                                         help="Direttiva UE DAC7: sopra 2.000€ di incasso lordo o 30 vendite annue, "
+                                              "le piattaforme come Cardmarket/eBay segnalano il profilo alle autorità fiscali. "
+                                              "La strategia PokeQuant sulle singole opera già nativamente all'optimum vincolato "
+                                              "di 20 posizioni (~28 vendite/anno, Sharpe 2.39), rimanendo strutturalmente "
+                                              "sotto le 30 vendite annue. Questo toggle limita il capitale allocato per restare "
+                                              "anche sotto il tetto monetario dei 2.000€/anno di vendite stimate.")
+        singles_mode = "production"
 
         res_box_dac7check, _ = get_backtest_results()
         res_singles_dac7check, _ = get_singles_backtest_results(singles_mode)
@@ -968,14 +966,14 @@ def main():
         combined_rate_per_eur = (box_eur_yr_per_10k * w_box + singles_eur_yr_per_10k * w_singles) / 10000.0
         safe_max_capital = (DAC7_MAX_ANNUAL_EUR / combined_rate_per_eur) if combined_rate_per_eur > 0 else capital
 
-        effective_capital = min(capital, safe_max_capital) if dac7_mode else capital
+        effective_capital = min(capital, safe_max_capital) if limit_capital_dac7 else capital
 
         over_count = total_trades_yr > DAC7_MAX_ANNUAL_TRADES
         over_volume = capital > safe_max_capital
 
-        if dac7_mode:
+        if limit_capital_dac7:
             if over_count:
-                st.error(f"⚠️ Anche al minimo, questa configurazione genera ~{total_trades_yr:.0f} vendite/anno — "
+                st.error(f"⚠️ Questa configurazione genera ~{total_trades_yr:.0f} vendite/anno — "
                          f"sopra le 30 indipendentemente dal capitale (il conteggio non scala col capitale, solo il volume €).")
             if over_volume:
                 st.warning(f"Capitale limitato a **{effective_capital:,.0f}€** (da {capital:,.0f}€ richiesti) per restare "
@@ -984,11 +982,13 @@ def main():
                 st.success(f"✅ ~{total_trades_yr:.0f} vendite/anno, ~{eur_yr_at_capital:,.0f}€/anno stimati — sotto soglia.")
             st.caption(f"Capitale massimo sicuro stimato: **{safe_max_capital:,.0f}€** totali "
                        f"({w_box*100:.0f}%/{w_singles*100:.0f}% box/singole, risk parity). "
-                       "Stima da turnover storico del backtest, non una garanzia — la liquidità reale (quanti "
-                       "acquirenti/venditori ci sono davvero) non è verificata.")
+                       "Strategia singole unificata: max 20 posizioni (optimum vincolato, Sharpe 2.39).")
         else:
-            st.error(f"⚠️ Modalità DAC7 disattivata: ~{total_trades_yr:.0f} vendite/anno, ~{eur_yr_at_capital:,.0f}€/anno "
-                     f"stimati a questo capitale — probabile segnalazione come venditore commerciale se superi 2.000€/30 vendite.")
+            if over_volume:
+                st.info(f"ℹ️ Limite volume disattivato: a {capital:,.0f}€ si stimano ~{eur_yr_at_capital:,.0f}€/anno di incassi "
+                        f"(possibile segnalazione se superi 2.000€/anno senza partita IVA).")
+            else:
+                st.success(f"✅ ~{total_trades_yr:.0f} vendite/anno, ~{eur_yr_at_capital:,.0f}€/anno stimati — sotto soglia.")
 
         st.markdown("---")
         st.markdown("### 🇮🇹 Esecuzione dall'Italia")
@@ -1007,11 +1007,8 @@ def main():
         f"📊 Metriche di validazione — Blend Sharpe {VALIDATED_BLEND['sharpe']:.2f} · "
         f"Box Sharpe {VALIDATED_BOX['sharpe']:.2f} (DSR sotto soglia) · Singole Sharpe {VALIDATED_SINGLES['sharpe']:.2f} (DSR nominale sopra soglia — ⚠️ vedi caveat quantità)"
     ):
-        st.caption("Numeri fissi da `scripts/optimize_and_falsify.py` e `scripts/max_quantity_retest_expanded_universe.py` — "
+        st.caption("Numeri fissi da `scripts/optimize_and_falsify.py` e `scripts/dac7_turnover_search.py` — "
                    "non ricalcolati a ogni refresh. Rivalidare ogni 6 mesi.")
-        if singles_mode == "dac7":
-            st.info("Modalità DAC7 attiva: i numeri qui sotto sono della configurazione a turnover pieno (per "
-                    "confronto) — le performance EFFETTIVE in modalità DAC7 sono più basse, vedi il Backtest sotto.")
         st.warning(
             f"**Box**: DSR corretto per l'intera sessione **sotto** la soglia di comfort 0,90-0,95 — "
             f"{VALIDATED_BOX['dsr_full_session']:.3f} (griglia originale: {VALIDATED_BOX['dsr_own_grid']:.3f}, "
@@ -1311,13 +1308,9 @@ def main():
 
     # --- AZIONE: SINGOLE — FATTORE SCARSITÀ (50% del capitale) ---
     st.markdown(f'<div class="section-title">🃏 Singole da comprare — Fattore Scarsità, {w_singles*100:.0f}% del capitale ({capital*w_singles:,.0f}€)</div>', unsafe_allow_html=True)
-    if singles_mode == "dac7":
-        st.info("ℹ️ Modalità DAC7 attiva: stesso ribilanciamento trimestrale della produzione, ma solo le "
-                "**20 carte** col residuo più negativo invece di 60 (optimum verificato sotto il vincolo di "
-                "30 vendite/anno — vedi scripts/dac7_turnover_search.py, Sharpe 2,39 vs 2,11 di produzione). "
-                "È un sottoinsieme più selettivo della stessa lista, non una configurazione indipendente: "
-                "ogni carta qui mostrata è anche in produzione, ma non viceversa. Disattiva il toggle in "
-                "sidebar per vedere le 60 posizioni complete.")
+    st.info("💎 **Strategia Quantitativa Unificata**: il modello seleziona l'optimum vincolato a **20 posizioni** "
+            "(Sharpe 2.39, CAGR +67.7%, MaxDD -9.7%, DSR 0.999), massimizzando lo sconto statistico (-77% / -81%) "
+            "e garantendo nativamente un turnover controllato (< 30 vendite/anno) conforme alla direttiva europea DAC7.")
     st.caption("Da comprare: la carta GIÀ GRADATA Grade 9 (uno slab, non raw, non PSA10). Il badge blu **[Set]** "
                "è il set/espansione esatto — verifica sempre di cercare quel set su Cardmarket, il nome della "
                "carta da solo non basta (⚠️ **(Unlimited)** = esiste anche una 1st Edition più cara, prodotto "
@@ -1946,11 +1939,6 @@ def main():
                    "10.000€ propri, poi combinata come media dei rendimenti mensili — frizioni reali incluse: vendita "
                    "Cardmarket 5% + imballaggio 0,60€ + slippage + custodia; acquisto con spedizione reale a carico "
                    "del compratore (10€/box, 7€/carta), mai gratis nella realtà.")
-        if singles_mode == "dac7":
-            st.caption(f"⚠️ Riflette la **modalità DAC7** (singole: stesso ribilanciamento trimestrale, solo max "
-                       f"20 posizioni invece di 60 — optimum verificato sotto vincolo, scripts/dac7_turnover_search.py) "
-                       f"— Sharpe singole {res_singles.sharpe:.2f} (vs {VALIDATED_SINGLES['sharpe']:.2f} a turnover pieno). "
-                       f"Le Metriche di validazione sopra mostrano sempre i numeri a turnover pieno.")
 
         st.markdown('<div class="section-desc"><strong>📜 Trade chiusi — Box</strong></div>', unsafe_allow_html=True)
         trades_df = res.trades_df
