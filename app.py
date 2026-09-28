@@ -775,25 +775,48 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
     start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)
     img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
     img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
-    max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (per edge) '
-                       f'{r["max_edge_price_eur"]:.2f}€</span>') if r.get("max_edge_price_eur") is not None else ""
-    usa_import_html = ""
-    if show_usa_import:
-        landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="single")
-        usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.2f}€</span>')
-    qty_est = max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1
-    qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più slab identici disponibili insieme — verifica quante ne trovi davvero</span>' if qty_est > 1 else ""
-    qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz.{qty_warn}</span>'
-
     rec = {
         "target_badge": r.get("target_badge"),
         "badge_color": r.get("badge_color"),
         "short_advice": r.get("short_advice"),
         "era_label": r.get("era_label"),
+        "target_grade": r.get("recommended_grade"),
     }
     if not rec["target_badge"]:
         rel_year = int(str(full_meta.get("release_date", "2020"))[:4]) if full_meta.get("release_date") else 2020
         rec = get_recommended_grade_for_card(rel_year=rel_year, era=r.get("era"))
+
+    # Risoluzione Target Grade (PSA 10 vs PSA 9)
+    is_target_psa10 = r.get("is_target_psa10")
+    if is_target_psa10 is None:
+        rec_target = r.get("recommended_grade") or rec.get("target_grade") or ""
+        is_target_psa10 = ("PSA 10" in rec_target) or (normalize_era(r.get("era", "modern")) == Era.MODERN)
+
+    if is_target_psa10:
+        target_p = float(r.get("target_price_eur") or estimate_psa10_from_psa9(r["current_price_eur"], r.get("era", "modern")))
+        era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(r.get("era", "modern")), 2.80)
+        target_max_edge = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(target_p * 1.05, 2)))
+        target_grade_label = "PSA 10"
+        price_tag_html = f'<span style="color:#10b981; font-weight:700;">~{target_p:.2f}€</span> <span style="color:#fbbf24;">[Target PSA 10]</span>'
+        base_g9_html = f' &nbsp;·&nbsp; <span style="color:#64748b; font-size:12px;">(Base G9: {r["current_price_eur"]:.2f}€)</span>'
+    else:
+        target_p = float(r["current_price_eur"])
+        target_max_edge = float(r["max_edge_price_eur"]) if r.get("max_edge_price_eur") is not None else None
+        target_grade_label = "PSA 9"
+        price_tag_html = f'<span style="color:#10b981; font-weight:700;">{target_p:.2f}€</span> <span style="color:#38bdf8;">[Benchmark PSA 9]</span>'
+        base_g9_html = ""
+
+    max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (per edge {target_grade_label}) '
+                       f'{target_max_edge:.2f}€</span>') if target_max_edge is not None else ""
+
+    usa_import_html = ""
+    if show_usa_import:
+        landed = estimate_usa_import_landed_cost(target_p, item_type="single")
+        usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.2f}€</span>')
+
+    qty_est = max(1, int(alloc // target_p)) if target_p > 0 else 1
+    qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più slab identici disponibili insieme — verifica quante ne trovi davvero</span>' if qty_est > 1 else ""
+    qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz. {target_grade_label}{qty_warn}</span>'
 
     st.markdown(f"""
     <div class="signal-card signal-card-buy">
@@ -808,7 +831,7 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
                 <span style="background:{rec['badge_color']}22; color:{rec['badge_color']}; border:1px solid {rec['badge_color']}; border-radius:4px; padding:2px 8px; font-size:12px; font-weight:700;">{rec['target_badge']}</span>
             </div>
         </div>
-        &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Benchmark G9]</span> (PriceCharting) &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%
+        &nbsp;·&nbsp; {price_tag_html} &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%{base_g9_html}
         &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r.get('months_in_signal', 0)}m)</span>{max_price_html}{usa_import_html}
         <div style="margin: 6px 0 4px 0; font-size: 12px; line-height: 1.4; color: #cbd5e1; background: rgba(15,23,42,0.6); border-left: 3px solid {rec['badge_color']}; padding: 4px 8px; border-radius: 0 4px 4px 0;">💡 <strong>Consiglio Grado ({rec['era_label']}):</strong> {rec['short_advice']}</div>
         <span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}
@@ -1779,21 +1802,37 @@ def main():
 
                 if len(bench_singles) > 8:
                     with st.expander(f"Altre {len(bench_singles) - 8} carte in panchina"):
-                        rest_df = pd.DataFrame([
-                            {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado Benchmark": "Grade 9",
-                             "Grado Consigliato": r.get("target_badge") or get_recommended_grade_for_card(rel_year=int(str(metadata.get(r["item_id"], {}).get("release_date", "2020"))[:4]) if metadata.get(r["item_id"], {}).get("release_date") else 2020)["target_badge"],
-                             "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
-                             "Massimo per Edge (€)": r.get("max_edge_price_eur"),
-                             "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
-                             "Allocazione (€)": alloc,
-                             "Quantità": max(1, int(alloc // r["current_price_eur"])) if r["current_price_eur"] > 0 else 1}
-                            for r, alloc in bench_singles[8:]
-                        ])
+                        bench_table_rows = []
+                        for r, alloc in bench_singles[8:]:
+                            is_p10 = r.get("is_target_psa10")
+                            if is_p10 is None:
+                                rec_target = r.get("recommended_grade") or ""
+                                is_p10 = ("PSA 10" in rec_target) or (normalize_era(r.get("era", "modern")) == Era.MODERN)
+                            p_target = float(r.get("target_price_eur") or (estimate_psa10_from_psa9(r["current_price_eur"], r.get("era", "modern")) if is_p10 else r["current_price_eur"]))
+                            era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(r.get("era", "modern")), 2.80) if is_p10 else 1.0
+                            max_edge_target = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(p_target * 1.05, 2)))
+                            target_grade_lbl = "PSA 10" if is_p10 else "PSA 9"
+                            qty_est = max(1, int(alloc // p_target)) if p_target > 0 and alloc > 0 else 1
+                            bench_table_rows.append({
+                                "Carta": r["name"],
+                                "Set": r.get("set_name") or "?",
+                                "Rarità": r["rarity"],
+                                "Grado Target": target_grade_lbl,
+                                "Prezzo Target (€)": p_target,
+                                "Massimo per Edge (€)": max_edge_target,
+                                "Base G9 (€)": r["current_price_eur"],
+                                "Sconto vs. pari (%)": r["discount_pct"],
+                                "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
+                                "Allocazione (€)": alloc,
+                                "Quantità Target": qty_est,
+                            })
+                        rest_df = pd.DataFrame(bench_table_rows)
                         st.dataframe(rest_df, use_container_width=True, hide_index=True,
                                      column_config={
-                                         "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
-                                         "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                                         "Prezzo Target (€)": st.column_config.NumberColumn(format="%.2f €"),
                                          "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                         "Base G9 (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                         "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
                                          "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
                                      })
 
@@ -1804,18 +1843,33 @@ def main():
             if not alt_rows:
                 st.caption("Nessuna alternativa disponibile con i filtri attuali.")
             else:
-                alt_df = pd.DataFrame([
-                    {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado Benchmark": "Grade 9",
-                     "Grado Consigliato": r.get("target_badge") or get_recommended_grade_for_card(rel_year=int(str(metadata.get(r["item_id"], {}).get("release_date", "2020"))[:4]) if metadata.get(r["item_id"], {}).get("release_date") else 2020)["target_badge"],
-                     "Prezzo (€)": r["current_price_eur"], "Sconto vs. pari (%)": r["discount_pct"],
-                     "Massimo per Edge (€)": r.get("max_edge_price_eur")}
-                    for r in alt_rows[:60]
-                ])
+                alt_table_rows = []
+                for r in alt_rows[:60]:
+                    is_p10 = r.get("is_target_psa10")
+                    if is_p10 is None:
+                        rec_target = r.get("recommended_grade") or ""
+                        is_p10 = ("PSA 10" in rec_target) or (normalize_era(r.get("era", "modern")) == Era.MODERN)
+                    p_target = float(r.get("target_price_eur") or (estimate_psa10_from_psa9(r["current_price_eur"], r.get("era", "modern")) if is_p10 else r["current_price_eur"]))
+                    era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(r.get("era", "modern")), 2.80) if is_p10 else 1.0
+                    max_edge_target = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(p_target * 1.05, 2)))
+                    target_grade_lbl = "PSA 10" if is_p10 else "PSA 9"
+                    alt_table_rows.append({
+                        "Carta": r["name"],
+                        "Set": r.get("set_name") or "?",
+                        "Rarità": r["rarity"],
+                        "Grado Target": target_grade_lbl,
+                        "Prezzo Target (€)": p_target,
+                        "Massimo per Edge (€)": max_edge_target,
+                        "Base G9 (€)": r["current_price_eur"],
+                        "Sconto vs. pari (%)": r["discount_pct"],
+                    })
+                alt_df = pd.DataFrame(alt_table_rows)
                 st.dataframe(alt_df, use_container_width=True, hide_index=True,
                              column_config={
-                                 "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
-                                 "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                                 "Prezzo Target (€)": st.column_config.NumberColumn(format="%.2f €"),
                                  "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                 "Base G9 (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                 "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
                              })
 
     # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---

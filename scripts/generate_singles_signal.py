@@ -33,10 +33,15 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, load_price_matrix
+from poke_quant.data.liquidity_filter import liquid_singles_ids
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
 from poke_quant.data.cardmarket_bridge import WOTC_FIRST_EDITION_SETS
-from poke_quant.data.liquidity_filter import liquid_singles_ids
-from poke_quant.slabs.grading_multipliers import get_recommended_grade_for_card
+from poke_quant.slabs.grading_multipliers import (
+    get_recommended_grade_for_card,
+    estimate_psa10_from_psa9,
+    ERA_PSA10_TO_PSA9_RATIO,
+    normalize_era,
+)
 
 
 def _liquid_universe(metadata: dict, prices_full: pd.DataFrame):
@@ -229,6 +234,15 @@ def compute_singles_signal_rows(params: dict = None):
         rel_year = int(str(info.get("release_date", "2020"))[:4]) if info.get("release_date") else 2020
         rec = get_recommended_grade_for_card(rel_year=rel_year)
 
+        is_target_psa10 = (rec["target_grade"] == "PSA 10")
+        if is_target_psa10:
+            target_price_eur = estimate_psa10_from_psa9(current_price, rec["era"])
+            era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec["era"]), 2.80)
+            target_max_edge_eur = round(max_edge_price_eur * era_ratio, 2) if max_edge_price_eur is not None else None
+        else:
+            target_price_eur = current_price
+            target_max_edge_eur = max_edge_price_eur
+
         rows.append({
             "item_id": item_id,
             "name": info.get("name", item_id),
@@ -237,6 +251,9 @@ def compute_singles_signal_rows(params: dict = None):
             "residual": residual,
             "discount_pct": (np.exp(residual) - 1.0) * 100.0,
             "max_edge_price_eur": max_edge_price_eur,
+            "is_target_psa10": is_target_psa10,
+            "target_price_eur": target_price_eur,
+            "target_max_edge_price_eur": target_max_edge_eur,
             "signal_start_date": start_date,
             "months_in_signal": streak,
             "rarity": info.get("rarity"),
@@ -335,6 +352,15 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
         rel_year = int(str(info.get("release_date", "2020"))[:4]) if info.get("release_date") else 2020
         rec = get_recommended_grade_for_card(rel_year=rel_year)
 
+        is_target_psa10 = (rec["target_grade"] == "PSA 10")
+        if is_target_psa10:
+            target_price_eur = estimate_psa10_from_psa9(current_price, rec["era"])
+            era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec["era"]), 2.80)
+            target_max_edge_eur = round(max_edge_price_eur * era_ratio, 2) if max_edge_price_eur is not None else None
+        else:
+            target_price_eur = current_price
+            target_max_edge_eur = max_edge_price_eur
+
         rows.append({
             "item_id": item_id,
             "name": info.get("name", item_id),
@@ -343,6 +369,9 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
             "residual": residual,
             "discount_pct": (np.exp(residual) - 1.0) * 100.0,
             "max_edge_price_eur": max_edge_price_eur,
+            "is_target_psa10": is_target_psa10,
+            "target_price_eur": target_price_eur,
+            "target_max_edge_price_eur": target_max_edge_eur,
             "rarity": info.get("rarity"),
             "franchise": info.get("franchise", "pokemon"),
             "language": info.get("language", "en"),
@@ -419,7 +448,7 @@ def filter_singles_rows(
     carte bulk/non-holo poco liquide ed eventuali TCG non desiderati."""
     filtered = []
     for r in rows:
-        p = float(r.get("current_price_eur", 0.0))
+        p = float(r.get("target_price_eur") or r.get("current_price_eur", 0.0))
         if min_price > 0 and p < min_price:
             continue
         if max_price > 0 and p > max_price:

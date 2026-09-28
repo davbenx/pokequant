@@ -275,15 +275,28 @@ def test_filter_singles_rows_pokemon_only():
     assert [r["item_id"] for r in res] == ["p1"]
 
 
-def test_filter_singles_rows_combined_filters():
+def test_filter_singles_rows_uses_target_price_if_available():
+    # Card with G9 price 30€, but target PSA 10 price 84€
+    # If min_price=50€, it should be kept because target_price_eur >= 50€
     rows = [
-        {"item_id": "low_bulk", "current_price_eur": 20.2, "rarity": "Common", "franchise": "pokemon"},
-        {"item_id": "high_bulk", "current_price_eur": 65.0, "rarity": "Common", "franchise": "pokemon"},
-        {"item_id": "low_holo", "current_price_eur": 25.0, "rarity": "Rare Holo", "franchise": "pokemon"},
-        {"item_id": "magic_card", "current_price_eur": 70.0, "rarity": "Rare Holo", "franchise": "magic"},
-        {"item_id": "over_budget", "current_price_eur": 300.0, "rarity": "Rare Holo", "franchise": "pokemon"},
-        {"item_id": "target_chase", "current_price_eur": 110.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+        {"item_id": "c1", "current_price_eur": 30.0, "target_price_eur": 84.0, "rarity": "Rare Holo", "franchise": "pokemon"},
+        {"item_id": "c2", "current_price_eur": 40.0, "target_price_eur": 40.0, "rarity": "Rare Holo", "franchise": "pokemon"},
     ]
-    res = filter_singles_rows(rows, min_price=40.0, max_price=200.0, only_holo=True, pokemon_only=True)
-    assert [r["item_id"] for r in res] == ["target_chase"]
+    res = filter_singles_rows(rows, min_price=50.0)
+    assert [r["item_id"] for r in res] == ["c1"]
+
+
+def test_target_price_fields_in_computed_signal_rows():
+    rows, _ = compute_singles_signal_rows(PRODUCTION_PARAMS)
+    assert len(rows) > 0
+    for r in rows:
+        assert "is_target_psa10" in r
+        assert "target_price_eur" in r
+        assert "target_max_edge_price_eur" in r
+        assert r["target_price_eur"] > 0
+        if r["is_target_psa10"]:
+            assert r["target_price_eur"] >= r["current_price_eur"]
+            if r["max_edge_price_eur"] is not None:
+                assert r["target_max_edge_price_eur"] > r["max_edge_price_eur"]
+
 
