@@ -346,6 +346,27 @@ def test_get_recommended_grade_targets():
     ray = get_recommended_grade_targets(base_psa9_eur=1000.0, era=Era.MID_ERA, item_id="m_rayquaza_ex_105")
     assert ray["minor_alternatives"][1]["is_real"] is True
     assert ray["minor_alternatives"][1]["price_eur"] == 680.01
+    assert "pop_pressure" in ray
+
+
+def test_get_card_pop_pressure():
+    from poke_quant.slabs.grading_multipliers import get_card_pop_pressure, Era
+
+    # Test con carta con dati di popolazione noti
+    pop_info = get_card_pop_pressure("alakazam_1", Era.VINTAGE)
+    assert pop_info is not None
+    assert "tier" in pop_info
+    assert "badge_html" in pop_info
+    assert "ratio_8_9" in pop_info
+    if pop_info["ratio_8_9"] is not None:
+        assert pop_info["ratio_8_9"] >= 0.0
+        assert 0.0 <= pop_info["percentile"] <= 100.0
+
+    # Test con carta sconosciuta (fallback graceful)
+    unknown = get_card_pop_pressure("carta_inesistente_xyz_999", Era.MODERN)
+    assert unknown["tier"] == "unknown"
+    assert "Pop N/D" in unknown["badge_html"]
+    assert unknown["is_overcrowded"] is False
 
 
 

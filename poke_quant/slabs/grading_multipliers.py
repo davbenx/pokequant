@@ -830,6 +830,144 @@ def adjust_price_for_grading(
     return round(fair_value, 2), round(sniper_ceiling, 2), adj
 
 
+_POP_PRESSURE_CACHE: Optional[Dict[str, Dict[str, Any]]] = None
+
+
+def load_pop_pressure_cache() -> Dict[str, Dict[str, Any]]:
+    """Carica e calcola in cache le metriche di pressione demografica relativa per carta ed era."""
+    global _POP_PRESSURE_CACHE
+    if _POP_PRESSURE_CACHE is not None:
+        return _POP_PRESSURE_CACHE
+
+    pop_file = Path(__file__).resolve().parent.parent.parent / "data_cache" / "population_history.csv"
+    if not pop_file.exists():
+        _POP_PRESSURE_CACHE = {}
+        return _POP_PRESSURE_CACHE
+
+    try:
+        import pandas as pd
+        import numpy as np
+        from poke_quant.data.storage import load_metadata
+
+        meta = load_metadata()
+        df = pd.read_csv(pop_file)
+        piv = df.pivot_table(index="item_id", columns="grade", values="total_pop", aggfunc="first")
+        piv.columns = [int(c) if str(c).isdigit() else c for c in piv.columns]
+
+        era_ratios: Dict[str, list] = {"vintage": [], "mid_era": [], "modern": []}
+        card_raw: Dict[str, Dict[str, Any]] = {}
+
+        for iid in piv.index:
+            m = meta.get(iid, {})
+            era_val = m.get("era")
+            if not era_val:
+                rd = str(m.get("release_date", "2020"))[:4]
+                yr = int(rd) if rd.isdigit() else 2020
+                era_val = "vintage" if yr <= 2003 else ("mid_era" if yr <= 2016 else "modern")
+            norm_e = normalize_era(era_val).value
+            if norm_e not in era_ratios:
+                norm_e = "modern"
+
+            p8 = piv.loc[iid].get(8, np.nan)
+            p9 = piv.loc[iid].get(9, np.nan)
+            p10 = piv.loc[iid].get(10, np.nan)
+
+            if pd.notna(p8) and pd.notna(p9) and p9 > 0:
+                r = float(p8 / p9)
+                era_ratios[norm_e].append(r)
+                card_raw[iid] = {
+                    "era": norm_e,
+                    "ratio_8_9": r,
+                    "pop_8": float(p8),
+                    "pop_9": float(p9),
+                    "pop_10": float(p10) if pd.notna(p10) else None,
+                }
+            elif pd.notna(p9) and (pd.isna(p8) or p8 == 0):
+                r = 0.0
+                era_ratios[norm_e].append(r)
+                card_raw[iid] = {
+                    "era": norm_e,
+                    "ratio_8_9": r,
+                    "pop_8": 0.0,
+                    "pop_9": float(p9),
+                    "pop_10": float(p10) if pd.notna(p10) else None,
+                }
+
+        sorted_arrays = {k: np.sort(np.array(v)) for k, v in era_ratios.items() if len(v) > 0}
+
+        cache: Dict[str, Dict[str, Any]] = {}
+        for iid, data in card_raw.items():
+            norm_e = data["era"]
+            arr = sorted_arrays.get(norm_e)
+            r = data["ratio_8_9"]
+            if arr is not None and len(arr) > 0:
+                idx = np.searchsorted(arr, r, side="right")
+                pct = float((idx / len(arr)) * 100.0)
+            else:
+                pct = 50.0
+
+            if pct <= 50.0:
+                tier = "low"
+                badge_html = f'<span style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid #10b981; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🟢 Pop Equilibrata (P{pct:.0f})</span>'
+                is_overcrowded = False
+            elif pct <= 75.0:
+                tier = "fisiologica"
+                badge_html = f'<span style="background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid #fbbf24; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🟡 Pop Fisiologica (P{pct:.0f})</span>'
+                is_overcrowded = False
+            elif pct <= 90.0:
+                tier = "moderata"
+                badge_html = f'<span style="background:rgba(249,115,22,0.15); color:#fb923c; border:1px solid #fb923c; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🟠 Diluizione Moderata (P{pct:.0f})</span>'
+                is_overcrowded = False
+            else:
+                tier = "overcrowded"
+                badge_html = f'<span style="background:rgba(244,63,94,0.15); color:#f43f5e; border:1px solid #f43f5e; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🔴 Sovraffollamento Pop (P{pct:.0f})</span>'
+                is_overcrowded = True
+
+            cache[iid] = {
+                "ratio_8_9": round(r, 2),
+                "percentile": round(pct, 1),
+                "tier": tier,
+                "badge_html": badge_html,
+                "is_overcrowded": is_overcrowded,
+                "pop_8": data["pop_8"],
+                "pop_9": data["pop_9"],
+                "pop_10": data["pop_10"],
+            }
+        _POP_PRESSURE_CACHE = cache
+    except Exception:
+        _POP_PRESSURE_CACHE = {}
+
+    return _POP_PRESSURE_CACHE
+
+
+def get_card_pop_pressure(item_id: Optional[str], era: Era | str) -> Dict[str, Any]:
+    """Ritorna le metriche relative di pressione demografica per una carta."""
+    if not item_id:
+        return {
+            "ratio_8_9": None,
+            "percentile": None,
+            "tier": "unknown",
+            "badge_html": '<span style="color:#64748b; font-size:11px;">Pop N/D</span>',
+            "is_overcrowded": False,
+        }
+    cache = load_pop_pressure_cache()
+    if item_id in cache:
+        return cache[item_id]
+
+    clean_id = item_id.lower().replace("-", "_")
+    for k, v in cache.items():
+        if k.lower() in clean_id or clean_id in k.lower():
+            return v
+
+    return {
+        "ratio_8_9": None,
+        "percentile": None,
+        "tier": "unknown",
+        "badge_html": '<span style="color:#64748b; font-size:11px;">Pop N/D</span>',
+        "is_overcrowded": False,
+    }
+
+
 def get_recommended_grade_targets(
     base_psa9_eur: float,
     era: Era | str,
@@ -839,7 +977,8 @@ def get_recommended_grade_targets(
 ) -> Dict[str, Any]:
     """
     Identifica la migliore gradazione consigliata (Target Primario) e le alternative
-    minori consigliate (punti di ingresso a sconto ad alta liquidità) per una specifica carta ed era.
+    minori consigliate (punti di ingresso a sconto ad alta liquidità) per una specifica carta ed era,
+    arricchito con indicatori di pressione demografica relativa (Pop Pressure Index).
     """
     norm_era = normalize_era(era)
     ladder = get_grade_benchmarks_ladder(
@@ -849,6 +988,7 @@ def get_recommended_grade_targets(
         game_slug=game_slug,
         item_slug=item_slug,
     )
+    pop_info = get_card_pop_pressure(item_id, norm_era)
 
     if norm_era == Era.MODERN:
         target_grade = "PSA 10"
@@ -923,6 +1063,8 @@ def get_recommended_grade_targets(
             },
         ]
         minor_str = f"PSA 8.5 ~{p_85:.0f}€ ({d85:+.0f}%) · PSA 8.0 ~{p_80:.0f}€ ({d80:+.0f}%) · PSA 7.0 ~{p_70:.0f}€ ({d70:+.0f}%)"
+        if pop_info.get("is_overcrowded"):
+            minor_str += f" · ⚠️ Pop G8 abbondante (P{pop_info['percentile']:.0f}): preferire Target PSA 9"
         advice = "Nel Vintage PSA 9 è lo Sweet Spot Istituzionale di massima liquidità. Se il budget è limitato o la carta supera i 150-200€, PSA 8.5, 8.0 e 7.0 offrono ottimi ingressi a forte sconto (-22%/-52%)."
         is_grade9_viable = True
     else:  # MID_ERA
@@ -961,6 +1103,8 @@ def get_recommended_grade_targets(
             },
         ]
         minor_str = f"PSA 8.5 ~{p_85:.0f}€ ({d85:+.0f}%) · PSA 8.0 ~{p_80:.0f}€ ({d80:+.0f}%)"
+        if pop_info.get("is_overcrowded"):
+            minor_str += f" · ⚠️ Pop G8 abbondante (P{pop_info['percentile']:.0f}): preferire Target PSA 9"
         advice = "Nel Mid-Era PSA 9 è la scelta principale; PSA 8.5 e 8.0 offrono valide entrate secondarie a sconto con solida conservazione del valore."
         is_grade9_viable = True
 
@@ -977,6 +1121,7 @@ def get_recommended_grade_targets(
         "advice": advice,
         "is_grade9_viable": is_grade9_viable,
         "ladder": ladder,
+        "pop_pressure": pop_info,
     }
 
 

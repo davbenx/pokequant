@@ -592,21 +592,54 @@ def prefetch_product_images(pairs: list) -> None:
             _IMAGE_CACHE[key] = (url, time.time(), _IMAGE_SUCCESS_TTL if url else _IMAGE_FAILURE_TTL)
 
 
-def build_price_chart(item_id: str, name: str, prices_full: pd.DataFrame, months: int = 24):
+def build_price_chart(item_id: str, name: str, prices_full: pd.DataFrame, months: int = 36):
+    """Costruisce un grafico del prezzo fisso e non zoomabile (36 mesi), calibrato per
+    evidenziare a colpo d'occhio il trend strutturale ed eventuali anomalie (dump, spike)."""
     if item_id not in prices_full.columns:
         return None
     series = prices_full[item_id].dropna()
     series = series[series > 0].tail(months)
     if len(series) < 2:
         return None
+
+    y_min, y_max = float(series.min()), float(series.max())
+    pad = (y_max - y_min) * 0.08 if y_max > y_min else y_max * 0.1
+    y_range = [max(0.0, y_min - pad), y_max + pad]
+
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=series.index, y=series.values, mode="lines+markers",
-                              line=dict(color="#38bdf8", width=1.8), marker=dict(size=3),
-                              hovertemplate="%{x|%b %Y}: %{y:.0f}€<extra></extra>"))
-    fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                       height=140, margin=dict(l=0, r=0, t=4, b=0), showlegend=False,
-                       xaxis=dict(showgrid=False, tickfont=dict(size=9)),
-                       yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)", tickfont=dict(size=9)))
+    fig.add_trace(go.Scatter(
+        x=series.index,
+        y=series.values,
+        mode="lines+markers",
+        line=dict(color="#38bdf8", width=2.0),
+        marker=dict(size=3.5, color="#38bdf8"),
+        fill="tozeroy",
+        fillcolor="rgba(56, 189, 248, 0.06)",
+        hovertemplate="%{x|%b %Y}: <b>%{y:,.0f}€</b><extra></extra>",
+    ))
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        height=175,
+        margin=dict(l=4, r=8, t=6, b=4),
+        showlegend=False,
+        dragmode=False,
+        xaxis=dict(
+            fixedrange=True,
+            showgrid=False,
+            tickfont=dict(size=10, color="#94a3b8"),
+            tickformat="%b %y",
+        ),
+        yaxis=dict(
+            fixedrange=True,
+            range=y_range,
+            showgrid=True,
+            gridcolor="rgba(255,255,255,0.06)",
+            tickfont=dict(size=10, color="#94a3b8"),
+            tickformat=",.0f€",
+        ),
+    )
     return fig
 
 
@@ -763,13 +796,14 @@ def render_box_card(r: dict, alloc: float | None, w: float | None, capital_box: 
     """, unsafe_allow_html=True)
     chart = build_price_chart(r["item_id"], r["name"], prices_full)
     if chart is not None:
-        st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
+        st.plotly_chart(chart, use_container_width=True,
+                         config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False, "doubleClick": False},
                          key=f"chart_buy_{tier_type}_{r['item_id']}")
 
 
 def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_full: pd.DataFrame,
                        show_usa_import: bool, key_prefix: str = "single") -> None:
-    """Renderizza la card per una singola gradata con badge e consiglio target grade."""
+    """Renderizza la card per una singola gradata: Target, Prezzo, Alternative e Pressione Popolazione."""
     meta = {"franchise": r.get("franchise", "pokemon"), "language": r.get("language", "en")}
     full_meta = metadata.get(r["item_id"], {})
     link = get_cardmarket_deep_link(r["name"], franchise=meta["franchise"], language=meta["language"],
@@ -782,25 +816,7 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
     rel_year = int(str(full_meta.get("release_date", "2020"))[:4]) if full_meta.get("release_date") else 2020
     rec = get_recommended_grade_for_card(rel_year=rel_year, era=card_era)
 
-    # Aggiorna con eventuali proprietà specifiche pre-calcolate nella riga r
-    if r.get("target_badge"):
-        rec["target_badge"] = r["target_badge"]
-    if r.get("badge_color"):
-        rec["badge_color"] = r["badge_color"]
-    if r.get("short_grade_advice"):
-        rec["short_advice"] = r["short_grade_advice"]
-    elif r.get("short_advice"):
-        rec["short_advice"] = r["short_advice"]
-    if r.get("era_label"):
-        rec["era_label"] = r["era_label"]
-    if r.get("is_grade9_viable") is not None:
-        rec["is_grade9_viable"] = r["is_grade9_viable"]
-    if r.get("warning_modern_g9") is not None:
-        rec["warning_modern_g9"] = r["warning_modern_g9"]
-    if r.get("recommended_grade"):
-        rec["target_grade"] = r["recommended_grade"]
-
-    # Risoluzione Target Grade e Alternative Minori
+    # Risoluzione Target Grade, Alternative Minori e Pop Pressure
     rec_targets = get_recommended_grade_targets(
         base_psa9_eur=float(r["current_price_eur"]),
         era=rec["era"],
@@ -809,106 +825,90 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
         item_slug=full_meta.get("item_slug"),
     )
     ladder = rec_targets["ladder"]
+    pop_pressure = rec_targets.get("pop_pressure", {})
+    pop_badge = pop_pressure.get("badge_html", "")
 
     is_target_psa10 = (rec_targets["target_grade"] == "PSA 10")
-
     if is_target_psa10:
         target_p = float(r.get("target_price_eur") or rec_targets["target_price_eur"])
         era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec["era"]), 2.80)
         target_max_edge = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(target_p * 1.05, 2)))
         target_grade_label = "PSA 10"
-        price_tag_html = f'<span style="color:#10b981; font-weight:700;">~{target_p:.2f}€</span> <span style="color:#fbbf24;">[Target PSA 10]</span>'
+        target_badge_text = "🎯 Target: PSA 10"
+        target_badge_color = "#f59e0b"
         base_g9_html = f' &nbsp;·&nbsp; <span style="color:#64748b; font-size:12px;">(Base G9: {r["current_price_eur"]:.2f}€)</span>'
     else:
         target_p = float(r["current_price_eur"])
         target_max_edge = float(r["max_edge_price_eur"]) if r.get("max_edge_price_eur") is not None else None
         target_grade_label = "PSA 9"
-        price_tag_html = f'<span style="color:#10b981; font-weight:700;">{target_p:.2f}€</span> <span style="color:#38bdf8;">[Benchmark PSA 9]</span>'
+        target_badge_text = "🎯 Target: PSA 9"
+        target_badge_color = "#10b981"
         base_g9_html = ""
 
-    max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (per edge {target_grade_label}) '
-                       f'{target_max_edge:.2f}€</span>') if target_max_edge is not None else ""
+    max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">max per edge '
+                       f'<strong style="color:#f8fafc;">{target_max_edge:.2f}€</strong></span>') if target_max_edge is not None else ""
 
     usa_import_html = ""
     if show_usa_import:
         landed = estimate_usa_import_landed_cost(target_p, item_type="single")
-        usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.2f}€</span>')
+        usa_import_html = f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato USA ~{landed:.2f}€</span>'
 
+    # Allocazione e quantità
     if alloc > 0:
         qty_est = max(1, int(alloc // target_p)) if target_p > 0 else 1
-        qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più slab identici disponibili insieme — verifica quante ne trovi davvero</span>' if qty_est > 1 else ""
-        qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz. {target_grade_label}{qty_warn}</span>'
-        alloc_display = f'<span style="font-family:\'JetBrains Mono\',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}'
+        qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più slab reperibili</span>' if qty_est > 1 else ""
+        alloc_display = (f'<span style="font-family:\'JetBrains Mono\',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>'
+                         f' &nbsp; <span style="color:#94a3b8;">→ <strong>{qty_est} pz.</strong> {target_grade_label}{qty_warn}</span>')
     else:
-        alloc_display = f'<span style="font-family:\'JetBrains Mono\',monospace; font-size:13px; color:#94a3b8;">Alternativa (budget non speso) &nbsp;→ 1 pz. {target_grade_label}</span>'
+        alloc_display = f'<span style="font-family:\'JetBrains Mono\',monospace; font-size:13px; color:#94a3b8;">Alternativa &nbsp;→ 1 pz. {target_grade_label}</span>'
 
-    if rec_targets["is_grade9_viable"]:
-        has_real_lower = ladder["8.0"]["is_real"] or ladder["7.0"]["is_real"]
-        data_badge = '<span style="color:#10b981; font-weight:600;">✨ Dati Reali PriceCharting</span>' if has_real_lower else '<span style="color:#94a3b8;">📊 Stima Algoritmica</span>'
-        accessible_strip_html = f"""
-        <div style="margin: 5px 0 3px 0; font-size: 11.5px; line-height: 1.5; color: #cbd5e1; background: rgba(30, 41, 59, 0.7); border-radius: 4px; padding: 5px 9px; border: 1px solid rgba(56, 189, 248, 0.25);">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; margin-bottom:2px;">
-                <span>🎯 <strong>Migliore Gradazione (Target):</strong> <span style="color:#10b981; font-weight:700;">{rec_targets['target_label']}</span></span>
-                {data_badge}
-            </div>
-            <div>🥈 <strong>Alternative Minori Consigliate:</strong> <span style="color:#f8fafc; font-family:'JetBrains Mono',monospace;">{rec_targets['minor_alternatives_str']}</span></div>
-        </div>
-        """
-    else:
-        accessible_strip_html = f"""
-        <div style="margin: 5px 0 3px 0; font-size: 11.5px; line-height: 1.5; color: #cbd5e1; background: rgba(30, 41, 59, 0.7); border-radius: 4px; padding: 5px 9px; border: 1px solid rgba(245, 158, 11, 0.25);">
-            <div style="margin-bottom:2px;">🎯 <strong>Migliore Gradazione (Target):</strong> <span style="color:#f59e0b; font-weight:700;">{rec_targets['target_label']}</span></div>
-            <div>🥈 <strong>Alternative Minori Consigliate:</strong> <span style="color:#f8fafc; font-family:'JetBrains Mono',monospace;">{rec_targets['minor_alternatives_str']}</span></div>
-        </div>
-        """
+    # Badge fonte dati reale vs stima
+    has_real_lower = ladder["8.0"]["is_real"] or ladder["7.0"]["is_real"]
+    data_badge = '<span style="color:#10b981; font-size:11px; font-weight:600;">✨ Dati Reali PC</span>' if has_real_lower else '<span style="color:#64748b; font-size:11px;">📊 Stima Algoritmica</span>'
 
-    st.markdown(f"""
-    <div class="signal-card signal-card-buy">
-        {img_tag}
-        <div class="signal-card-body">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <div>
-                <strong>{r['name']}</strong> &nbsp; <span style="color:#38bdf8; font-weight:600;">[{r.get('set_name') or '?'}]</span>
-                &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
-            </div>
-            <div>
-                <span style="background:{rec['badge_color']}22; color:{rec['badge_color']}; border:1px solid {rec['badge_color']}; border-radius:4px; padding:2px 8px; font-size:12px; font-weight:700;">{rec['target_badge']}</span>
-            </div>
-        </div>
-        &nbsp;·&nbsp; {price_tag_html} &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%{base_g9_html}
-        &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r.get('months_in_signal', 0)}m)</span>{max_price_html}{usa_import_html}
-        <div style="margin: 6px 0 4px 0; font-size: 12px; line-height: 1.4; color: #cbd5e1; background: rgba(15,23,42,0.6); border-left: 3px solid {rec['badge_color']}; padding: 4px 8px; border-radius: 0 4px 4px 0;">💡 <strong>Consiglio Grado ({rec['era_label']}):</strong> {rec['short_advice']}</div>
-        {accessible_strip_html}
-        {alloc_display}
-        &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Lean strip: alternative minori + pop pressure + data badge (costruito senza spazi bianchi multipli per evitare bug markdown <div>)
+    strip_html = (
+        f'<div style="margin:5px 0 4px 0; font-size:12px; line-height:1.4; color:#cbd5e1; background:rgba(30,41,59,0.6); border-radius:4px; padding:5px 8px; border:1px solid rgba(56,189,248,0.2);">'
+        f'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">'
+        f'<span>🥈 <strong>Alternative Minori:</strong> <span style="color:#f8fafc; font-family:\'JetBrains Mono\',monospace;">{rec_targets["minor_alternatives_str"]}</span></span>'
+        f'<span>{pop_badge} &nbsp;{data_badge}</span>'
+        f'</div>'
+        f'</div>'
+    )
+
+    card_html = (
+        f'<div class="signal-card signal-card-buy">'
+        f'{img_tag}'
+        f'<div class="signal-card-body">'
+        f'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">'
+        f'<div>'
+        f'<strong>{r["name"]}</strong> &nbsp; <span style="color:#38bdf8; font-weight:600;">[{r.get("set_name") or "?"}]</span>'
+        f' &nbsp; <span style="color:#94a3b8;">{r["rarity"]}</span>'
+        f'</div>'
+        f'<div>'
+        f'<span style="background:{target_badge_color}22; color:{target_badge_color}; border:1px solid {target_badge_color}; border-radius:4px; padding:2px 8px; font-size:12px; font-weight:700;">{target_badge_text}</span>'
+        f'</div>'
+        f'</div>'
+        f'<div style="margin-top:2px;">'
+        f'<span style="color:#10b981; font-weight:700; font-size:14px;">~{target_p:.2f}€</span>'
+        f' &nbsp;·&nbsp; sconto vs. pari <strong style="color:#38bdf8;">{r["discount_pct"]:+.0f}%</strong>{base_g9_html}'
+        f'{max_price_html}'
+        f' &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r.get("months_in_signal", 0)}m)</span>{usa_import_html}'
+        f'</div>'
+        f'{strip_html}'
+        f'<div style="margin-top:4px;">'
+        f'{alloc_display} &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>'
+        f'</div>'
+        f'</div>'
+        f'</div>'
+    )
+
+    st.markdown(card_html, unsafe_allow_html=True)
     chart = build_price_chart(r["item_id"], r["name"], singles_prices_full)
     if chart is not None:
-        st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
+        st.plotly_chart(chart, use_container_width=True,
+                         config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False, "doubleClick": False},
                          key=f"chart_{key_prefix}_{r['item_id']}")
-
-    v_10 = '🎯 Target consigliato su Moderno' if not rec.get('is_grade9_viable') else 'Rarità estrema, premi elevati'
-    v_95 = 'Ottimo compromesso tra grado 9 e 10'
-    v_90 = '🎯 Sweet Spot Istituzionale' if rec.get('is_grade9_viable') else '⚠️ Trappola liquidità su Moderno'
-    v_85 = 'Soglia di ingresso solida' if rec.get('is_grade9_viable') else 'Sconsigliato su Moderno'
-    v_80 = 'Ingresso accessibile ad alta liquidità' if rec.get('is_grade9_viable') else 'Sconsigliato su Moderno'
-    v_75 = 'Entry-level per carte rare WotC' if rec.get('is_grade9_viable') else 'Sconsigliato su Moderno'
-    v_70 = 'Minimo collezionistico consigliato' if rec.get('is_grade9_viable') else 'Sconsigliato su Moderno'
-
-    with st.expander(f"🪜 Scala Prezzi Dettagliata per Grado (PSA 10 fino a 7.0) — {r['name']}"):
-        st.markdown(f"""
-| Grado Slab | Benchmark PSA (€) | Sconto / Premio vs G9 | Fonte del Dato | Valutazione Istituzionale |
-| :--- | :--- | :--- | :--- | :--- |
-| **PSA 10 Gem Mint** | **{ladder['10.0']['price_eur']:.2f} €** | {ladder['10.0']['discount_vs_psa9_pct']:+.1f}% | {ladder['10.0']['source']} | {v_10} |
-| **PSA 9.5 Gem Mint** | **{ladder['9.5']['price_eur']:.2f} €** | {ladder['9.5']['discount_vs_psa9_pct']:+.1f}% | {ladder['9.5']['source']} | {v_95} |
-| **PSA 9.0 Mint** | **{ladder['9.0']['price_eur']:.2f} €** | 0.0% | {ladder['9.0']['source']} | {v_90} |
-| **PSA 8.5 NM-Mint+** | **{ladder['8.5']['price_eur']:.2f} €** | {ladder['8.5']['discount_vs_psa9_pct']:+.1f}% | {ladder['8.5']['source']} | {v_85} |
-| **PSA 8.0 NM-Mint** | **{ladder['8.0']['price_eur']:.2f} €** | {ladder['8.0']['discount_vs_psa9_pct']:+.1f}% | {ladder['8.0']['source']} | {v_80} |
-| **PSA 7.5 Near Mint+** | **{ladder['7.5']['price_eur']:.2f} €** | {ladder['7.5']['discount_vs_psa9_pct']:+.1f}% | {ladder['7.5']['source']} | {v_75} |
-| **PSA 7.0 Near Mint** | **{ladder['7.0']['price_eur']:.2f} €** | {ladder['7.0']['discount_vs_psa9_pct']:+.1f}% | {ladder['7.0']['source']} | {v_70} |
-        """)
 
 
 def main():
@@ -936,25 +936,13 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    with st.expander("📋 Come si usa, in pratica", expanded=True):
+    with st.expander("📋 Come si usa, in pratica", expanded=False):
         st.markdown(f"""
-1. **Ogni mese**, guarda le liste 🟢 verdi qui sotto (box, poi singole) — sono già filtrate, pronte all'uso.
-2. **Per ogni riga**: apri "Verifica su Cardmarket", controlla che **set/edizione coincidano esattamente**
-   (badge blu **[Set]** sulle carte), e resta **sotto il "massimo"** mostrato (oggetto + spedizione).
-3. **Rispetta i pezzi indicati** ("→ N pz.") — se non trovi tutte le copie di una carta, apri
-   "🔄 alternative" invece di forzarne di più; per i box senza scorta, salta.
-4. **Registra sempre** cosa hai trovato o venduto, anche se non hai comprato — `log_execution_price.py`
-   e `log_sell_outcome.py` — calibra il modello nel tempo, non lasciarlo una stima fissa.
-5. 🔴 **Rosso** = non comprare (box: momentum invertito · singole: sopravvalutata, solo informativo).
-6. **Capitale** diviso {w_box*100:.0f}/{w_singles*100:.0f} box/singole (risk parity, non piu' un 50/50 fisso) come mostrato in barra laterale; resta nei limiti DAC7 se vendi in UE.
-7. **Se il capitale è già investito**, la dashboard NON conosce le tue posizioni reali — non sottrae da
-   sola quanto hai già comprato. Abbassa il "Capitale dedicato" in barra laterale al contante REALE
-   ancora libero (la lista si ricalcola, i candidati in fondo escono per primi dal budget); a €0 liberi
-   non comprare oltre — i tetti per posizione fanno parte di ciò che rende Sharpe/MaxDD validi, forzarli
-   non è testato. Prima di dire "non c'è spazio", controlla i 🔴 AVOID/SELL su ciò che già possiedi: è lì
-   che la strategia libera capitale (rotazione), non da nuovi versamenti ogni mese.
-8. **Rivalida** ogni 6 mesi con `optimize_and_falsify.py` / `scarcity_value_singles_test.py` — i numeri
-   di validazione qui sotto sono fissi, non si aggiornano da soli.
+1. **Ogni mese**, consulta le liste 🟢 verdi (Box, poi Singole) già filtrate e pronte all'uso.
+2. **Cardmarket**: clicca "Verifica su Cardmarket", verifica la corrispondenza esatta del set **[Set]** e resta **sotto il prezzo massimo per edge**.
+3. **Pezzi indicati**: rispetta "→ N pz." — per singole alternative o budget rimanente, consulta la panchina.
+4. **Target Grado & Pop**: punta al grado indicato nel badge (PSA 10 moderno, PSA 9 vintage/mid-era); verifica il badge di pressione demografica per le alternative minori.
+5. **Capitale**: ripartito {w_box*100:.0f}/{w_singles*100:.0f} box/singole in risk parity. Registra sempre gli acquisti/esiti per calibrare il modello.
         """)
 
     # --- SIDEBAR: capitale + conformità DAC7 ---
@@ -1011,7 +999,7 @@ def main():
                  "di importare), non come canale di acquisto regolare.")
         st.markdown("---")
         st.markdown("### 🇪🇺 Protezione Fiscale & Limiti DAC7")
-        limit_capital_dac7 = st.checkbox("Limita capitale al volume sicuro DAC7 (2.000€/anno)", value=True,
+        limit_capital_dac7 = st.checkbox("Limita capitale al volume sicuro DAC7 (2.000€/anno)", value=False,
                                          help="Direttiva UE DAC7: sopra 2.000€ di incasso lordo o 30 vendite annue, "
                                               "le piattaforme come Cardmarket/eBay segnalano il profilo alle autorità fiscali. "
                                               "La strategia PokeQuant sulle singole opera già nativamente all'optimum vincolato "
@@ -1339,7 +1327,8 @@ def main():
             """, unsafe_allow_html=True)
             chart = build_price_chart(r["item_id"], r["name"], prices_full)
             if chart is not None:
-                st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
+                st.plotly_chart(chart, use_container_width=True,
+                                 config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False, "doubleClick": False},
                                  key=f"chart_sell_{r['item_id']}")
 
     all_excessive_rows = [r for r in sig_rows if "PREZZO ECCESSIVO" in r["signal"]]
@@ -1371,57 +1360,20 @@ def main():
                 st.markdown(f"- **{r['name']}** — {r['trailing_12m_return_pct']:+.0f}% (12m), {r['current_price_eur']:.0f}€ (PriceCharting)")
                 chart = build_price_chart(r["item_id"], r["name"], prices_full)
                 if chart is not None:
-                    st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
+                    st.plotly_chart(chart, use_container_width=True,
+                                     config={"displayModeBar": False, "scrollZoom": False, "staticPlot": False, "doubleClick": False},
                                      key=f"chart_verify_{r['item_id']}")
 
     # --- AZIONE: SINGOLE — FATTORE SCARSITÀ (50% del capitale) ---
     st.markdown(f'<div class="section-title">🃏 Singole da comprare — Fattore Scarsità, {w_singles*100:.0f}% del capitale ({capital*w_singles:,.0f}€)</div>', unsafe_allow_html=True)
-    st.info("💎 **Strategia Quantitativa Unificata**: il modello seleziona l'optimum vincolato a **20 posizioni** "
-            "(Sharpe 2.39, CAGR +67.7%, MaxDD -9.7%, DSR 0.999), massimizzando lo sconto statistico (-77% / -81%) "
-            "e garantendo nativamente un turnover controllato (< 30 vendite/anno) conforme alla direttiva europea DAC7.")
-    st.caption("Da comprare: la carta GIÀ GRADATA Grade 9 (uno slab, non raw, non PSA10). Il badge blu **[Set]** "
-               "è il set/espansione esatto — verifica sempre di cercare quel set su Cardmarket, il nome della "
-               "carta da solo non basta (⚠️ **(Unlimited)** = esiste anche una 1st Edition più cara, prodotto "
-               "diverso). Resta sotto il \"massimo\" mostrato. Prime 15 con grafico, le altre in tabella sotto. "
-               "⚠️ **La compagnia di gradazione conta**: preferisci **PSA**, poi CGC/BGS/SGC; evita GRAAD/TAG/ACE/EGS/AI-grading — vedi dettagli sotto.")
-    with st.expander("ℹ️ Dettagli — sconto, freschezza, copie, limiti del modello"):
-        st.caption("\"Massimo (per edge)\" è la spesa TOTALE (oggetto + spedizione) calibrata empiricamente "
-                   "per MANTENERE UN EDGE ISTITUZIONALE (Sharpe ≥ 1.01, CAGR ~+20%, vedi `scripts/max_edge_preservation_test.py`): "
-                   "concede al massimo il 10% del margine di sconto statistico vs. il modello prima che l'edge netto venga eroso "
-                   "da fee di piattaforma, spedizioni e ribilanciamento (il vecchio confine teorico 100% portava a Sharpe -0.87). "
-                   "Se l'inserzione su Cardmarket (compresa spedizione) supera questo valore, l'Edge è compromesso e non conviene comprare. "
-                   "Il link cerca solo per nome carta (aggiungere set/edizione/grado dava pagine vuote, verificato) — "
-                   "usa i filtri di Cardmarket (espansione, lingua), guidati dal set indicato nel badge. Sulle "
-                   "carte vintage poco liquide, il pannello Grade 9 può restare sottostimato anche dopo il filtro "
-                   "di attendibilità — se non trovi nulla sotto il \"massimo\", registralo con "
-                   "`log_execution_price.py` invece di ignorare il segnale. "
-                   "\"→ N pz.\" è quante copie IDENTICHE il budget comprerebbe al prezzo mostrato — ⚠️ "
-                   "**RIVERIFICATO sull'universo ampliato** (`scripts/max_quantity_retest_expanded_universe.py`, "
-                   "2026-09-25): il backtest (Sharpe 2,05) assume che tu trovi TUTTE queste copie insieme, ogni "
-                   "mese — con un tetto realistico di **1 copia lo Sharpe crolla a 0,21 (DSR 0,028, rumore "
-                   "statistico)**, con 2 copie **0,86 (DSR 0,346)** — entrambi ben sotto la soglia 0,90-0,95 "
-                   "usata ovunque in questa ricerca, nello stesso territorio dei fattori già scartati. Il divario "
-                   "si è allargato con l'universo più grande (prima: 0,30/0,89), non ridotto — comprare quasi "
-                   "sempre un pezzo singolo (il caso normale su slab gradati) NON è coperto da una validazione "
-                   "solida, tratta 2,05 come un tetto teorico, non un'aspettativa realistica.")
-        st.caption("⚠️ **Compagnia di gradazione — verificato live su PriceCharting + fonti web**: il prezzo "
-                   "\"Grade 9\" che vedi qui è un dato AGGREGATO cross-company (la tabella prezzi di "
-                   "PriceCharting mostra \"Ungraded/Grade 7/Grade 8/Grade 9/Grade 9.5/PSA 10\" — solo il grado "
-                   "10 è diviso per compagnia, dove lo spread è enorme: PSA 10 vale 2,6-3,8x CGC 10 sulla "
-                   "stessa carta). **Compra indifferentemente tra PSA, CGC, BGS, SGC** — sono le 4 compagnie "
-                   "con vero riconoscimento/liquidità sul mercato Pokémon, tutte tracciate separatamente da "
-                   "PriceCharting al grado 10 con prezzi reali (anche se non ancora al grado 9). A parità di "
-                   "prezzo d'acquisto preferisci **PSA** (pool di compratori più ampio, verificato: allo stesso "
-                   "voto CGC vende tipicamente il 10-20% in meno di PSA per pura liquidità — pokeprice.gg — "
-                   "non perché la carta sia peggiore), ma CGC/BGS/SGC non sono da evitare, solo da aspettarsi "
-                   "un realizzo leggermente diverso rispetto al \"Grade 9\" blended mostrato qui. **Evita "
-                   "invece GRAAD, TAG, ACE, EGS, AI-grading e simili**: non sono tracciate da PriceCharting né "
-                   "comparate in nessuna fonte di settore consultata (nemmeno tutte le tracciate hanno sempre "
-                   "prezzo — ACE mostra \"-\" pure al grado 10) — per queste il numero mostrato in dashboard "
-                   "non è il prezzo che otterresti in una rivendita reale, il modello non lo sa distinguere. "
-                   "NB: **rompere uno slab già gradato per tentare un'altra compagnia non conviene quasi mai** "
-                   "una volta contati costi e rischio di ricaduta (`scripts/grading_company_crossover_arbitrage_test.py`, "
-                   "`scripts/same_grade_crossover_arbitrage_test.py`) — la scelta si fa solo in acquisto.")
+    st.info("💎 **Strategia Quantitativa Unificata**: optimum a **20 posizioni** (Sharpe 2.39, CAGR +67.7%, MaxDD -9.7%), "
+            "con target di gradazione calibrato per era (PSA 10 su Moderno, PSA 9 su Vintage/Mid-Era) e indicatore di pressione demografica.")
+    st.caption("Verifica sempre set e lingua esatti su Cardmarket (**[Set]** nel badge). Resta sotto il prezzo **massimo per edge**. "
+               "Preferisci slab **PSA** (o BGS/CGC). Per alternative minori, controlla il Pop Pressure badge.")
+    with st.expander("ℹ️ Note su edge, compagnie di gradazione e limiti di modello"):
+        st.caption("• **Massimo per Edge**: spesa totale massima (inclusa spedizione) oltre la quale l'edge netto statistico viene eroso dalle fee.\n\n"
+                   "• **Compagnie di Gradazione**: consigliate PSA, poi BGS, CGC e SGC (alta liquidità internazionale). Evita enti regionali senza riconoscimento globale (GRAAD, TAG, ACE) salvo forti sconti.\n\n"
+                   "• **Pressione Popolazione (Pop Pressure)**: calcolata sul percentile di diluizione dell'era. Se segnalato sovraffollamento (P > 90), punta esclusivamente al Target primario.")
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     alt_rows, _ = get_singles_alternatives(singles_mode)
     singles_prices_full = get_singles_prices_full()
@@ -2066,8 +2018,8 @@ def main():
                                  "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
                              })
 
-                with st.expander("🔍 Esplora nel Dettaglio le Prime 10 Alternative (scheda completa, grafici e ladder gradi)"):
-                    st.caption("Visualizza le prime 10 carte alternative come schede singole complete con bottoni Cardmarket, grafici storici e ladder di prezzo da PSA 10 a 7.0.")
+                with st.expander("🔍 Mostra le Prime 10 Alternative in formato scheda"):
+                    st.caption("Visualizza le prime 10 carte alternative come schede singole con prezzi target, pop pressure, grafici e link Cardmarket.")
                     prefetch_product_images([
                         (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
                         for r in alt_rows[:10]
