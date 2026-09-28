@@ -28,6 +28,7 @@ dall'Italia, vedi OPERATIONS_ITALIA.md) su ogni posizione BUY/HOLD.
 """
 
 from __future__ import annotations
+import json
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -225,8 +226,78 @@ html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystem
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 
+DATA_CACHE_DIR = Path(__file__).resolve().parent / "data_cache"
+PRECOMPUTED_FILE = DATA_CACHE_DIR / "precomputed_dashboard_data.json"
+IMAGE_CACHE_FILE = DATA_CACHE_DIR / "product_image_cache.json"
+
+
+class PrecomputedBacktestResult:
+    """Wrapper leggero che emula l'interfaccia di BacktestResult a partire dai dati
+    precomputati in data_cache/precomputed_dashboard_data.json, evitando di rieseguire
+    la simulazione su migliaia di serie ad ogni apertura/refresh della dashboard."""
+    def __init__(self, data: dict):
+        self.strategy_name = data.get("strategy_name", "")
+        self.total_trades = data.get("total_trades", 0)
+        self.win_rate = float(data.get("win_rate", 0.0))
+        self.profit_factor = float(data.get("profit_factor", 0.0))
+        self.sharpe = float(data.get("sharpe", 0.0))
+        self.cagr = float(data.get("cagr", 0.0))
+        self.max_drawdown = float(data.get("max_drawdown", 0.0))
+
+        m_ret = data.get("monthly_returns", {})
+        self.monthly_returns = pd.Series(
+            {pd.to_datetime(k): float(v) for k, v in m_ret.items()}
+        ).sort_index()
+
+        nav_list = data.get("nav_history", [])
+        if nav_list:
+            df_nav = pd.DataFrame(nav_list)
+            df_nav["date"] = pd.to_datetime(df_nav["date"])
+            df_nav.set_index("date", inplace=True)
+            self.nav_history = df_nav
+        else:
+            self.nav_history = pd.DataFrame(columns=["nav", "cash", "portfolio_value"])
+
+        trades_list = data.get("trades", [])
+        if trades_list:
+            df_trades = pd.DataFrame(trades_list)
+            df_trades["buy_date"] = pd.to_datetime(df_trades["buy_date"])
+            df_trades["sell_date"] = pd.to_datetime(df_trades["sell_date"])
+            self.trades_df = df_trades
+        else:
+            self.trades_df = pd.DataFrame()
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def load_precomputed_dashboard_data() -> Optional[dict]:
+    """Carica i dati precomputati mensilmente/trimestralmente da disco/GitHub.
+    Ritorna None se il file non esiste o è corrotto, attivando il fallback al calcolo live."""
+    if not PRECOMPUTED_FILE.exists():
+        return None
+    try:
+        with open(PRECOMPUTED_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def load_persistent_image_cache() -> dict:
+    """Carica l'indice URL copertine persistito da data_cache/product_image_cache.json."""
+    if not IMAGE_CACHE_FILE.exists():
+        return {}
+    try:
+        with open(IMAGE_CACHE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_signal():
+    cached = load_precomputed_dashboard_data()
+    if cached and "box_signals" in cached:
+        return cached["box_signals"], cached.get("latest_date_box", "N/A")
     rows, latest_date = compute_signal_rows()
     return rows, latest_date.strftime("%Y-%m-%d")
 
@@ -242,6 +313,18 @@ def get_market_indices():
     sealed validato - la 'beta' del mercato, da confrontare con l'alfa della
     strategia (curva NAV più sotto). Utili come contesto, non come segnale
     d'ingresso: mostrano quale segmento è caldo/freddo, non quando comprare."""
+    cached = load_precomputed_dashboard_data()
+    if cached and "market_indices" in cached:
+        idx_data = cached["market_indices"]
+        overall = pd.Series({pd.to_datetime(k): float(v) for k, v in idx_data["overall_index"].items()}).sort_index()
+        segments = {
+            name: pd.Series({pd.to_datetime(k): float(v) for k, v in s.items()}).sort_index()
+            for name, s in idx_data.get("segment_indices", {}).items()
+        }
+        counts = idx_data.get("segment_counts", {})
+        breadth = pd.Series({pd.to_datetime(k): float(v) for k, v in idx_data.get("breadth_series", {}).items()}).sort_index()
+        return overall, segments, counts, breadth
+
     metadata = load_metadata()
     prices_full = load_price_matrix()
     sealed_ids = liquid_sealed_ids(metadata, prices_full)
@@ -294,6 +377,11 @@ def get_market_indices():
 
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_backtest_results():
+    cached = load_precomputed_dashboard_data()
+    if cached and "backtest_results" in cached and "box" in cached["backtest_results"]:
+        data = cached["backtest_results"]["box"]
+        return PrecomputedBacktestResult(data), data.get("n_universe", 52)
+
     metadata = load_metadata()
     prices_full = load_price_matrix()
     sealed_ids = liquid_sealed_ids(metadata, prices_full)
@@ -308,6 +396,11 @@ def get_backtest_results():
 
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_singles_signal(mode: str = "production"):
+    cached = load_precomputed_dashboard_data()
+    key = "production" if mode == "production" else "dac7"
+    if cached and "singles_signals" in cached and key in cached["singles_signals"]:
+        buy_rows = cached["singles_signals"][key].get("buy_rows", [])
+        return buy_rows, cached.get("latest_date_singles", "N/A")
     params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
     rows, latest_date = compute_singles_signal_rows(params)
     return rows, latest_date.strftime("%Y-%m-%d")
@@ -315,6 +408,11 @@ def get_singles_signal(mode: str = "production"):
 
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_singles_avoid_signal(mode: str = "production"):
+    cached = load_precomputed_dashboard_data()
+    key = "production" if mode == "production" else "dac7"
+    if cached and "singles_signals" in cached and key in cached["singles_signals"]:
+        avoid_rows = cached["singles_signals"][key].get("avoid_rows", [])
+        return avoid_rows, cached.get("latest_date_singles", "N/A")
     params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
     rows, latest_date = compute_singles_avoid_rows(params)
     return rows, latest_date.strftime("%Y-%m-%d")
@@ -322,6 +420,11 @@ def get_singles_avoid_signal(mode: str = "production"):
 
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_singles_alternatives(mode: str = "production"):
+    cached = load_precomputed_dashboard_data()
+    key = "production" if mode == "production" else "dac7"
+    if cached and "singles_signals" in cached and key in cached["singles_signals"]:
+        alt_rows = cached["singles_signals"][key].get("alt_rows", [])
+        return alt_rows, cached.get("latest_date_singles", "N/A")
     params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
     rows, latest_date = compute_singles_alternative_rows(params)
     return rows, latest_date.strftime("%Y-%m-%d")
@@ -348,6 +451,12 @@ def get_singles_prices_full():
 
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_singles_backtest_results(mode: str = "production"):
+    cached = load_precomputed_dashboard_data()
+    key = "singles_production" if mode == "production" else "singles_dac7"
+    if cached and "backtest_results" in cached and key in cached["backtest_results"]:
+        data = cached["backtest_results"][key]
+        return PrecomputedBacktestResult(data), data.get("n_universe", 3105)
+
     params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
     metadata = load_metadata()
     prices_full = get_singles_prices_full()
@@ -368,27 +477,13 @@ def get_cached_pc_variant_grade9(game_slug: str, item_slug: str, variant_key: st
 
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_box_singles_split():
-    """Split di capitale box/singole per inverse-vol (risk parity), non piu'
-    50/50 hardcoded. BUG/GAP TROVATO (verificando "e' lo split migliore?"):
-    esisteva una vecchia analisi risk-parity reale (scripts/
-    build_combined_portfolio.py, 62,9/37,1) ma calcolata per un fattore singole
-    poi RIGETTATO e chiuso (commit 0041b53); quando il fattore Scarsita' (quello
-    davvero in produzione, DSR 0,943) ha riaperto la sleeve singole (commit
-    7372756) lo split fu rimesso a 50/50 senza ricalcolare nulla per la nuova
-    coppia - un default arrotondato, mai verificato.
+    """Split di capitale box/singole per inverse-vol (risk parity).
+    Legge dai dati precomputati se disponibili, altrimenti calcola live."""
+    cached = load_precomputed_dashboard_data()
+    if cached and "risk_parity" in cached:
+        rp = cached["risk_parity"]
+        return float(rp.get("w_box", 0.52)), float(rp.get("w_singles", 0.48))
 
-    Qui ricalcolato dai rendimenti mensili REALI dei due backtest di produzione
-    (sempre in modalita' produzione, non DAC7, cosi' i pesi non saltano quando
-    l'utente attiva/disattiva il toggle in sidebar): w_i ∝ 1/sigma_i, la stessa
-    quota di RISCHIO da ciascuna sleeve, non di capitale - criterio standard,
-    robusto alla stima rumorosa del rendimento atteso (a differenza di mean-
-    variance/Kelly, che scripts/box_singles_split_optimization.py mostra
-    tendere verso le singole ma con un intervallo bootstrap troppo ampio
-    [52%-91%] per essere adottato come singolo numero fisso in produzione -
-    vedi il docstring di quello script). Risultato verificato: 51,5%/48,5%,
-    quasi indistinguibile dal 50/50 preesistente (le due sleeve hanno vol
-    mensile molto simile, 4,57% vs 4,87%) - il default non era sbagliato,
-    semplicemente non era mai stato verificato."""
     res_box, _ = get_backtest_results()
     res_singles, _ = get_singles_backtest_results("production")
     common_idx = res_box.monthly_returns.index.intersection(res_singles.monthly_returns.index)
@@ -400,15 +495,7 @@ def get_box_singles_split():
     return float(w_box), float(1.0 - w_box)
 
 
-# Cache manuale invece di @st.cache_data: serve un TTL DIVERSO per successo e
-# fallimento. Trovato verificando "molte immagini delle carte singole non le
-# vedo" - la dashboard richiede 30-60 immagini per pagina, tutte sincrone: un
-# burst che fa scattare il rate limiting 429 di PriceCharting su una parte di
-# esse (mitigato con retry in fetch_pricecharting_cover_image_url, ma non
-# eliminato). Con un unico TTL lungo (7gg, giusto per un successo - l'immagine
-# di un prodotto non cambia), un fallimento residuo diventava "nessuna
-# immagine per una settimana intera". Ora un fallimento si ritenta dopo 1h,
-# un successo resta cacheato 7gg.
+# Cache in memoria con TTL
 _IMAGE_CACHE: dict = {}
 _IMAGE_SUCCESS_TTL = 7 * 24 * 3600
 _IMAGE_FAILURE_TTL = 3600
@@ -424,6 +511,15 @@ def get_product_image(game_slug: str, item_slug: str) -> Optional[str]:
         url, cached_at, ttl = cached
         if now - cached_at < ttl:
             return url
+
+    # Verifica cache persistita su disco (data_cache/product_image_cache.json)
+    p_cache = load_persistent_image_cache()
+    p_key = f"{game_slug}:{item_slug}"
+    if p_key in p_cache and p_cache[p_key]:
+        url = p_cache[p_key]
+        _IMAGE_CACHE[key] = (url, now, _IMAGE_SUCCESS_TTL)
+        return url
+
     try:
         url = fetch_pricecharting_cover_image_url(game_slug, item_slug)
     except Exception:
@@ -433,21 +529,10 @@ def get_product_image(game_slug: str, item_slug: str) -> Optional[str]:
 
 
 def prefetch_product_images(pairs: list) -> None:
-    """Scarica in PARALLELO (thread pool) tutte le immagini non ancora in
-    cache, prima dei loop di rendering che le richiedono una per una.
-
-    Trovato verificando "la dashboard continua a ricaricare": un caricamento
-    a cache fredda richiedeva ~66s (misurato) perché fino a ~50-60 immagini
-    (box BUY/uscite + singole BUY/evitare) venivano scaricate in SERIE, una
-    alla volta, ciascuna una richiesta HTTP sincrona (aggravato dai retry sul
-    429 aggiunti di recente, che a volte aggiungono secondi extra). Un
-    caricamento cosi' lento e' plausibilmente la causa del reload continuo
-    (timeout del browser/proxy -> refresh manuale -> cache di nuovo fredda ->
-    di nuovo lento -> ...). Il fetch di un'immagine è I/O-bound (attesa di
-    rete, non CPU) - parallelizzabile quasi linearmente con un thread pool,
-    a differenza del calcolo del segnale che resta sequenziale."""
+    """Carica da cache persistita o scarica in PARALLELO le immagini non ancora note."""
     to_fetch = []
     now = time.time()
+    p_cache = load_persistent_image_cache()
     for game_slug, item_slug in pairs:
         if not game_slug or not item_slug:
             continue
@@ -455,10 +540,14 @@ def prefetch_product_images(pairs: list) -> None:
         cached = _IMAGE_CACHE.get(key)
         if cached is not None and now - cached[1] < cached[2]:
             continue
+        p_key = f"{game_slug}:{item_slug}"
+        if p_key in p_cache and p_cache[p_key]:
+            _IMAGE_CACHE[key] = (p_cache[p_key], now, _IMAGE_SUCCESS_TTL)
+            continue
         to_fetch.append(key)
     if not to_fetch:
         return
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=5) as executor:
         futures = {executor.submit(fetch_pricecharting_cover_image_url, gs, isl): (gs, isl) for gs, isl in to_fetch}
         for future in as_completed(futures):
             key = futures[future]
@@ -1302,7 +1391,11 @@ def main():
             </div>
             """, unsafe_allow_html=True)
             usa_warn = " · **Nota Dogana**: Inserzione extra-UE attiva (applicata IVA 22% su oggetto+spedizione, dazio forfettario 3€ e oneri corriere)." if res.get("is_usa_import") else ""
-            st.caption(f"📝 **Logica**: {res['adj'].notes}. Sconto effettivo calcolato: **{res['discount_real_pct']:+.1f}%** rispetto al fair value di una slab {res['company_name']} {res['grade_input']} ({res['era_final'].upper()}){usa_warn}.")
+            if res['discount_real_pct'] >= 0:
+                disc_str = f"Sconto effettivo: **+{res['discount_real_pct']:.1f}%**"
+            else:
+                disc_str = f"🔴 Sovrapprezzo offerta: **+{abs(res['discount_real_pct']):.1f}%**"
+            st.caption(f"📝 **Logica**: {res['adj'].notes}. {disc_str} rispetto al fair value di una slab {res['company_name']} {res['grade_input']} ({res['era_final'].upper()}){usa_warn}.")
         else:
             st.caption("ℹ️ *Seleziona i parametri sopra e clicca su **'Calcola Valutazione Slab'** per vedere l'analisi istantanea senza ricaricare la pagina.*")
 
