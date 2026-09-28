@@ -777,26 +777,37 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
     start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)
     img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
     img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
-    rec = {
-        "target_badge": r.get("target_badge"),
-        "badge_color": r.get("badge_color"),
-        "short_advice": r.get("short_advice"),
-        "era_label": r.get("era_label"),
-        "target_grade": r.get("recommended_grade"),
-    }
-    if not rec["target_badge"]:
-        rel_year = int(str(full_meta.get("release_date", "2020"))[:4]) if full_meta.get("release_date") else 2020
-        rec = get_recommended_grade_for_card(rel_year=rel_year, era=r.get("era"))
+    card_era = r.get("era") or full_meta.get("era")
+    rel_year = int(str(full_meta.get("release_date", "2020"))[:4]) if full_meta.get("release_date") else 2020
+    rec = get_recommended_grade_for_card(rel_year=rel_year, era=card_era)
+
+    # Aggiorna con eventuali proprietà specifiche pre-calcolate nella riga r
+    if r.get("target_badge"):
+        rec["target_badge"] = r["target_badge"]
+    if r.get("badge_color"):
+        rec["badge_color"] = r["badge_color"]
+    if r.get("short_grade_advice"):
+        rec["short_advice"] = r["short_grade_advice"]
+    elif r.get("short_advice"):
+        rec["short_advice"] = r["short_advice"]
+    if r.get("era_label"):
+        rec["era_label"] = r["era_label"]
+    if r.get("is_grade9_viable") is not None:
+        rec["is_grade9_viable"] = r["is_grade9_viable"]
+    if r.get("warning_modern_g9") is not None:
+        rec["warning_modern_g9"] = r["warning_modern_g9"]
+    if r.get("recommended_grade"):
+        rec["target_grade"] = r["recommended_grade"]
 
     # Risoluzione Target Grade (PSA 10 vs PSA 9)
     is_target_psa10 = r.get("is_target_psa10")
     if is_target_psa10 is None:
         rec_target = r.get("recommended_grade") or rec.get("target_grade") or ""
-        is_target_psa10 = ("PSA 10" in rec_target) or (normalize_era(r.get("era", "modern")) == Era.MODERN)
+        is_target_psa10 = ("PSA 10" in rec_target) or (normalize_era(rec["era"]) == Era.MODERN)
 
     if is_target_psa10:
-        target_p = float(r.get("target_price_eur") or estimate_psa10_from_psa9(r["current_price_eur"], r.get("era", "modern")))
-        era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(r.get("era", "modern")), 2.80)
+        target_p = float(r.get("target_price_eur") or estimate_psa10_from_psa9(r["current_price_eur"], rec["era"]))
+        era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec["era"]), 2.80)
         target_max_edge = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(target_p * 1.05, 2)))
         target_grade_label = "PSA 10"
         price_tag_html = f'<span style="color:#10b981; font-weight:700;">~{target_p:.2f}€</span> <span style="color:#fbbf24;">[Target PSA 10]</span>'
@@ -823,7 +834,7 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
     # Scala benchmark gradi (10.0 fino a 7.0 con mezzi voti)
     ladder = get_grade_benchmarks_ladder(
         base_psa9_eur=float(r["current_price_eur"]),
-        era=r.get("era", "modern"),
+        era=rec["era"],
         item_id=r.get("item_id"),
         game_slug=full_meta.get("game_slug"),
         item_slug=full_meta.get("item_slug"),
