@@ -796,3 +796,67 @@ def fetch_pricecharting_grade_tier_price(
 
     return None
 
+
+def parse_pricecharting_url_or_slug(text: str) -> Optional[Tuple[str, str]]:
+    """
+    Estrae (game_slug, item_slug) da qualsiasi formato di URL o slug PriceCharting:
+    - https://www.pricecharting.com/game/pokemon-base-set/charizard-4
+    - http://pricecharting.com/game/pokemon-surging-sparks/pikachu-ex-238#graded
+    - /game/pokemon-team-up/gengar-&-mimikyu-gx-165?sort=price
+    - pokemon-base-set/charizard-4
+    Ritorna None se il testo non corrisponde a un formato PriceCharting valido.
+    """
+    if not text:
+        return None
+    s = text.strip().split("#")[0].split("?")[0].rstrip("/")
+    m = re.search(r"pricecharting\.com/game/([a-zA-Z0-9_\-%&]+)/([a-zA-Z0-9_\-%&]+)", s, re.IGNORECASE)
+    if m:
+        return m.group(1), m.group(2)
+    m2 = re.search(r"^([a-zA-Z0-9_\-%&]+)/([a-zA-Z0-9_\-%&]+)$", s)
+    if m2:
+        return m2.group(1), m2.group(2)
+    return None
+
+
+def search_metadata_card_by_query(query: str, metadata: dict) -> Optional[Tuple[str, dict]]:
+    """
+    Cerca nel catalogo metadata una carta singola che corrisponde al testo o alla query digitata dall'utente.
+    Supporta corrispondenza esatta per slug/item_id, oppure ricerca multi-parola con scoring su nome, slug e set.
+    Restituisce (item_id, item_info) oppure None.
+    """
+    q = query.lower().strip()
+    if not q or len(q) < 2:
+        return None
+    words = [w for w in re.split(r"[\s\-_#]+", q) if w]
+    if not words:
+        return None
+
+    clean_q = q.replace(" ", "-").replace("_", "-")
+    # 1. Corrispondenza esatta per slug o item_id
+    for item_id, info in metadata.items():
+        if info.get("type") != "single":
+            continue
+        if item_id.lower() == clean_q or info.get("item_slug", "").lower() == clean_q:
+            return item_id, info
+
+    # 2. Corrispondenza a parole chiave con scoring
+    best_match = None
+    best_score = 0.0
+    for item_id, info in metadata.items():
+        if info.get("type") != "single":
+            continue
+        name_lower = info.get("name", "").lower()
+        slug_lower = info.get("item_slug", "").lower()
+        game_lower = info.get("game_slug", "").lower()
+        full_text = f"{name_lower} {slug_lower} {game_lower}"
+        matched_words = sum(1 for w in words if w in full_text)
+        if matched_words > 0:
+            ratio = matched_words / len(words)
+            if ratio >= 0.5:
+                # Scoring: ratio elevato, numero di parole matchate e penalizzazione per nomi troppo lunghi
+                score = (ratio * 100.0) + (matched_words * 10.0) - (len(name_lower) * 0.05)
+                if score > best_score:
+                    best_score = score
+                    best_match = (item_id, info)
+
+    return best_match

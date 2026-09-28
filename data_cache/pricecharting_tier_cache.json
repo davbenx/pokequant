@@ -16,5 +16,23 @@
     "game_slug": "pokemon-evolutions",
     "item_slug": "dragonite-ex-106",
     "date": "2026-09-28"
+  },
+  "pokemon-surging-sparks:pikachu-ex-238:psa10": {
+    "eur": 802.24,
+    "usd": 932.0,
+    "url": "https://www.pricecharting.com/game/pokemon-surging-sparks/pikachu-ex-238",
+    "tier": "psa10",
+    "game_slug": "pokemon-surging-sparks",
+    "item_slug": "pikachu-ex-238",
+    "date": "2026-09-29"
+  },
+  "pokemon-surging-sparks:pikachu-ex-238:grade9": {
+    "eur": 219.5,
+    "usd": 255.0,
+    "url": "https://www.pricecharting.com/game/pokemon-surging-sparks/pikachu-ex-238",
+    "tier": "grade9",
+    "game_slug": "pokemon-surging-sparks",
+    "item_slug": "pikachu-ex-238",
+    "date": "2026-09-29"
   }
 }

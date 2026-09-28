@@ -54,6 +54,8 @@ from poke_quant.data.price_fetcher import (
     fetch_pricecharting_cover_image_url,
     fetch_pricecharting_variant_grade9,
     fetch_pricecharting_grade_tier_price,
+    parse_pricecharting_url_or_slug,
+    search_metadata_card_by_query,
 )
 from poke_quant.config import estimate_usa_import_landed_cost, IMPORT_FROM_USA
 from scripts.generate_singles_signal import (
@@ -1440,11 +1442,11 @@ def main():
             options=[
                 f"⭐ Segnali Modello ({len(singles_rows)} BUY + {len(calc_alt_rows)} Alternative)",
                 "🔍 Cerca tra tutte le 3.100+ carte del Database PokeQuant",
-                "✏️ Inserimento Libero / Manuale",
+                "✏️ Carta Personalizzata / Inserimento Libero (o Link PriceCharting)",
             ],
             horizontal=True,
             index=0,
-            help="Scegli se valutare una carta tra i segnali attuali, cercare una carta qualsiasi del database completo (3.100+ carte con storico e metadati automatici), oppure inserire manualmente nome e benchmark."
+            help="Scegli se valutare una carta tra i segnali attuali, cercare una carta qualsiasi del database completo (3.100+ carte con storico e metadati automatici), oppure inserire manualmente nome, benchmark o link PriceCharting."
         )
 
         card_options = []
@@ -1460,20 +1462,24 @@ def main():
                 lbl = f"🔄 [ALT] {r['name']} [{r.get('set_name') or '?'}] — {r['current_price_eur']:.2f}€"
                 card_options.append(lbl)
                 option_to_row[lbl] = r
-            card_options.append("✏️ Personalizzata / Inserimento manuale")
         elif calc_mode.startswith("🔍"):
             all_opts, all_map = get_all_database_card_options()
             card_options = all_opts
             option_to_row = all_map
-        else:
-            card_options = ["✏️ Personalizzata / Inserimento manuale"]
+
+        is_custom_mode = calc_mode.startswith("✏️")
 
         with st.form("slab_calculator_form"):
             calc_c1, calc_c2, calc_c3 = st.columns([2, 1, 1])
             with calc_c1:
-                if calc_mode.startswith("✏️"):
-                    chosen_option = "✏️ Personalizzata / Inserimento manuale"
-                    st.text_input("Carta da valutare", value="✏️ Personalizzata (completa i campi sotto)", disabled=True)
+                if is_custom_mode:
+                    custom_card_name = st.text_input(
+                        "Nome Carta Personalizzata",
+                        value="",
+                        placeholder="Es. Charizard Holo Base Set, Umbreon VMAX, Lugia V...",
+                        help="Scrivi il nome della carta. Se è presente nel database PokeQuant o inserisci il link PriceCharting, i dati vengono completati in automatico."
+                    )
+                    chosen_option = "✏️ Personalizzata"
                 else:
                     chosen_option = st.selectbox(
                         f"Carta da valutare ({len(card_options)} disponibili)",
@@ -1481,6 +1487,7 @@ def main():
                         index=0,
                         help="Seleziona o digita il nome per cercare istantaneamente tra le carte disponibili."
                     )
+                    custom_card_name = ""
             with calc_c2:
                 company_input = st.selectbox(
                     "Casa di Gradazione", 
@@ -1505,6 +1512,17 @@ def main():
                     help="Valuta qualsiasi grado dal 10.0 fino al 7.0 con mezzi voti. Privilegia i dati storici reali di PriceCharting per il grado esatto se disponibili."
                 )
 
+            # Riga opzionale per Link / Slug PriceCharting (visibile in modalità personalizzata)
+            if is_custom_mode:
+                custom_pc_url = st.text_input(
+                    "🔗 Link o Slug PriceCharting (Opzionale: scarica prezzi live di ogni voto e variante)",
+                    value="",
+                    placeholder="Es. https://www.pricecharting.com/game/pokemon-base-set/charizard-4 oppure pokemon-base-set/charizard-4",
+                    help="Incolla l'URL o lo slug della pagina PriceCharting per recuperare all'istante il prezzo reale per il grado e la variante selezionati."
+                )
+            else:
+                custom_pc_url = ""
+
             # Seconda riga: Variante Speciale, Benchmark PSA manuale e Era
             r2_c1, r2_c2, r2_c3 = st.columns([1.5, 1.2, 1.3])
             with r2_c1:
@@ -1522,12 +1540,14 @@ def main():
                     help="I prezzi del database PokeQuant sono su edizioni Unlimited. Se la slab in vendita è una 1st Edition o un errore noto (es. No Symbol Jungle), il tool interroga in automatico PriceCharting per recuperare l'esatto benchmark di mercato della variante (se disponibile) o scala con moltiplicatore set-aware."
                 )
             with r2_c2:
+                benchmark_label = "Benchmark PSA (€) [Opzionale se c'è Link o DB]" if is_custom_mode else "Benchmark PSA (€) [0 = auto da DB]"
+                benchmark_help = "Prezzo indicativo di mercato della carta in PSA 9 (o PSA 10). Se inserisci il link PriceCharting o la carta è nel database, puoi lasciare 0.0 per scaricarlo in automatico." if is_custom_mode else "Lascia 0.0 per usare il prezzo di mercato della carta selezionata sopra. Inserisci un valore > 0 per forzare un benchmark personalizzato."
                 manual_psa_override = st.number_input(
-                    "Benchmark PSA (€) [0 = auto da DB]", 
+                    benchmark_label, 
                     min_value=0.0, 
                     value=0.0, 
                     step=5.0,
-                    help="Lascia 0.0 per usare il prezzo di mercato della carta selezionata sopra. Inserisci un valore > 0 per forzare un benchmark personalizzato."
+                    help=benchmark_help,
                 )
             with r2_c3:
                 era_input = st.selectbox(
@@ -1537,15 +1557,13 @@ def main():
                     format_func=lambda x: "Auto (rileva dalla carta)" if x.startswith("Auto") else ("Vintage (1999–2003)" if x == "vintage" else ("Mid-Era (2004–2016)" if x == "mid_era" else "Moderno (2017+)"))
                 )
 
-            # Terza riga: Prezzo offerta, spedizione, nome personalizzato e toggle USA
-            inp_c1, inp_c2, inp_c3, inp_c4 = st.columns([1.2, 1.0, 1.3, 1.5])
+            # Terza riga: Prezzo offerta, spedizione e toggle USA
+            inp_c1, inp_c2, inp_c3 = st.columns([1.5, 1.2, 1.5])
             with inp_c1:
                 offer_price_eur = st.number_input("Prezzo Annuncio / Offerta (€)", min_value=1.0, value=75.0, step=5.0)
             with inp_c2:
                 shipping_eur = st.number_input("Spese Sped. (€)", min_value=0.0, value=6.0, step=1.0)
             with inp_c3:
-                custom_name_input = st.text_input("Nome (se personalizzata)", value="")
-            with inp_c4:
                 st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
                 is_usa_import = st.checkbox(
                     "🌍 Inserzione USA / Extra-UE", 
@@ -1589,26 +1607,61 @@ def main():
                 grade_tier = "grade9"
                 tier_label = "Grado 9.0"
 
-            # Risoluzione nome carta, prezzo base PSA ed era
+            # Risoluzione metadati, slug, era e prezzo base
             sel_meta = {}
             sel_row = None
-            if manual_psa_override > 0.0:
-                base_psa_raw = manual_psa_override
-                base_max_edge = base_psa_raw * 1.05
-                if custom_name_input.strip():
-                    card_name = custom_name_input.strip()
-                elif chosen_option in option_to_row:
-                    card_name = option_to_row[chosen_option]["name"]
-                    sel_meta = metadata.get(option_to_row[chosen_option]["item_id"], {})
+            matched_db_info = None
+            is_custom = is_custom_mode or (chosen_option == "✏️ Personalizzata")
+
+            # Se l'utente ha inserito un URL o slug PriceCharting
+            pc_slugs = parse_pricecharting_url_or_slug(custom_pc_url) if is_custom and custom_pc_url else None
+
+            if is_custom:
+                card_name = custom_card_name.strip() if custom_card_name.strip() else ""
+                if pc_slugs:
+                    g_slug, i_slug = pc_slugs
+                    sel_meta["game_slug"] = g_slug
+                    sel_meta["item_slug"] = i_slug
+                    if not card_name:
+                        card_name = f"{i_slug.replace('-', ' ').title()} [{g_slug.replace('pokemon-', '').replace('-', ' ').title()}]"
+                    slug_low = f"{g_slug} {i_slug}".lower()
+                    if any(v in slug_low for v in ["base-set", "fossil", "jungle", "rocket", "neo-", "gym-", "legendary-collection", "expedition", "aquapolis", "skyridge"]):
+                        era_detected = "vintage"
+                    elif any(m in slug_low for m in ["ex-", "diamond", "pearl", "platinum", "heartgold", "black-white", "xy-"]):
+                        era_detected = "mid_era"
+                    else:
+                        era_detected = "modern"
                 else:
-                    card_name = "Carta Personalizzata"
-                era_detected = "modern"
+                    # Tenta riconoscimento automatico nel database delle 3.600+ carte
+                    matched = search_metadata_card_by_query(card_name, metadata) if card_name else None
+                    if matched:
+                        matched_id, matched_info = matched
+                        matched_db_info = matched_info
+                        sel_meta = matched_info.copy()
+                        sel_meta["item_id"] = matched_id
+                        g_slug = sel_meta.get("game_slug", "")
+                        i_slug = sel_meta.get("item_slug", "")
+                        if not card_name or len(card_name) < 4:
+                            card_name = matched_info.get("name", card_name)
+                        rel_year = int(str(sel_meta.get("release_date", "2020"))[:4]) if sel_meta.get("release_date") else 2020
+                        if rel_year <= 2003:
+                            era_detected = "vintage"
+                        elif rel_year <= 2016:
+                            era_detected = "mid_era"
+                        else:
+                            era_detected = "modern"
+                    else:
+                        g_slug = ""
+                        i_slug = ""
+                        era_detected = "modern"
+                        if not card_name:
+                            card_name = "Carta Personalizzata"
             elif chosen_option in option_to_row:
                 sel_row = option_to_row[chosen_option]
                 card_name = sel_row["name"]
-                base_psa_raw = float(sel_row["current_price_eur"])
-                base_max_edge = float(sel_row.get("max_edge_price_eur") or (base_psa_raw * 1.05))
                 sel_meta = metadata.get(sel_row["item_id"], {})
+                g_slug = sel_meta.get("game_slug", "")
+                i_slug = sel_meta.get("item_slug", "")
                 rel_year = int(str(sel_meta.get("release_date", "2020"))[:4]) if sel_meta.get("release_date") else 2020
                 if rel_year <= 2003:
                     era_detected = "vintage"
@@ -1616,172 +1669,202 @@ def main():
                     era_detected = "mid_era"
                 else:
                     era_detected = "modern"
-            elif custom_name_input.strip():
-                card_name = custom_name_input.strip()
-                base_psa_raw = 100.0
-                base_max_edge = 105.0
-                era_detected = "vintage"
             else:
-                card_name = "Esempio (Seleziona una carta)"
-                base_psa_raw = 100.0
-                base_max_edge = 105.0
+                card_name = "Carta Non Selezionata"
                 era_detected = "vintage"
+                g_slug = ""
+                i_slug = ""
 
-            # Gestione variante speciale e PriceCharting live
+            # Determinazione del prezzo base e benchmark
+            base_psa_raw = 0.0
+            base_psa_final = 0.0
+            base_max_edge = 0.0
+            effective_max_edge = 0.0
+            benchmark_source = ""
+            is_pc_grade_resolved = False
             pc_live_info = None
-            is_special_variant = not variant_input.startswith("Standard")
 
+            # Priorità 1: Se l'utente ha inserito un override manuale > 0.0
             if manual_psa_override > 0.0:
+                base_psa_raw = manual_psa_override
                 base_psa_final = manual_psa_override
+                base_max_edge = base_psa_raw * 1.05
                 effective_max_edge = base_max_edge
-                v_mult = 1.0
-                v_desc = "Benchmark manuale inserito dall'utente"
-            elif is_special_variant:
-                v_key = variant_to_pricecharting_key(variant_input)
-                g_slug = sel_meta.get("game_slug", "")
-                i_slug = sel_meta.get("item_slug", "")
-                if g_slug and i_slug and v_key:
-                    pc_data = get_cached_pc_variant_grade9(g_slug, i_slug, v_key)
-                    if pc_data:
-                        pc_eur, pc_usd, pc_url = pc_data
-                        pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url}
-                        base_psa_final = pc_eur
-                        effective_max_edge = round(pc_eur * 1.05, 2)
-                        v_desc = f"PriceCharting Grado 9 reale (${pc_usd:.2f} USD)"
-                        v_mult = round(pc_eur / base_psa_raw, 2) if base_psa_raw > 0 else 1.0
+                benchmark_source = f"Benchmark Manuale ({manual_psa_override:.2f} €)"
+            # Priorità 2: Se abbiamo game_slug e item_slug (da link PriceCharting o da metadati/DB)
+            elif g_slug and i_slug:
+                is_special_variant = not variant_input.startswith("Standard")
+                if is_special_variant:
+                    v_key = variant_to_pricecharting_key(variant_input)
+                    if v_key:
+                        pc_data = get_cached_pc_variant_grade9(g_slug, i_slug, v_key)
+                        if pc_data:
+                            pc_eur, pc_usd, pc_url = pc_data
+                            pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": "PriceCharting Variante", "tier": "Grado 9"}
+                            base_psa_final = pc_eur
+                            base_psa_raw = pc_eur
+                            effective_max_edge = round(pc_eur * 1.05, 2)
+                            benchmark_source = f"PriceCharting Variante Reale (${pc_usd:.2f} USD)"
+                            is_pc_grade_resolved = True
 
-                if pc_live_info is None:
-                    # Fallback euristico set-aware
+                if not is_pc_grade_resolved:
+                    sel_item_id = sel_meta.get("item_id")
+                    pc_tier = fetch_pricecharting_grade_tier_price(g_slug, i_slug, tier=grade_tier, item_id=sel_item_id)
+                    if pc_tier:
+                        pc_eur, pc_usd, pc_url, pc_source = pc_tier
+                        base_psa_final = pc_eur
+                        base_psa_raw = pc_eur
+                        effective_max_edge = round(pc_eur * 1.05, 2)
+                        pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": pc_source, "tier": tier_label}
+                        benchmark_source = f"PriceCharting Reale {tier_label} (${pc_usd:.2f} USD)"
+                        is_pc_grade_resolved = True
+
+            # Priorità 3: Se non risolto con PriceCharting tier ma abbiamo il prezzo del DB / metadati
+            if not is_pc_grade_resolved and manual_psa_override == 0.0:
+                if sel_row:
+                    base_psa_raw = float(sel_row["current_price_eur"])
+                    base_max_edge = float(sel_row.get("max_edge_price_eur") or (base_psa_raw * 1.05))
+                    base_psa_final = base_psa_raw
+                    effective_max_edge = base_max_edge
+                    benchmark_source = f"Database PokeQuant (PSA 9: {base_psa_raw:.2f}€)"
+                elif matched_db_info:
+                    db_price = matched_db_info.get("last_psa_price") or matched_db_info.get("cardmarket_ref_price_eur") or 0.0
+                    if db_price > 0:
+                        base_psa_raw = float(db_price)
+                        base_max_edge = base_psa_raw * 1.05
+                        base_psa_final = base_psa_raw
+                        effective_max_edge = base_max_edge
+                        benchmark_source = f"Riconosciuta da DB ({matched_db_info.get('name')}: {base_psa_raw:.2f}€)"
+
+            # Gestione errore se benchmark è 0.0
+            if base_psa_final <= 0.0:
+                if "slab_eval_res" in st.session_state:
+                    del st.session_state["slab_eval_res"]
+                st.error(
+                    "⚠️ **Impossibile calcolare il Fair Value**: Non è stato possibile determinare un prezzo di riferimento per questa carta.\n\n"
+                    "👉 **Cosa fare**:\n"
+                    "- Inserisci il **Benchmark PSA (€)** nel campo dedicato (es. il valore indicativo di mercato della carta in PSA 9 o PSA 10).\n"
+                    "- Oppure incolla il **Link o Slug PriceCharting** (es. `https://www.pricecharting.com/game/...` o `pokemon-base-set/charizard-4`) per scaricare automaticamente i prezzi in tempo reale."
+                )
+            else:
+                # Gestione variante speciale (se non già risolta da PriceCharting)
+                is_special_variant = not variant_input.startswith("Standard")
+                if manual_psa_override > 0.0:
+                    v_mult = 1.0
+                    v_desc = "Benchmark manuale inserito dall'utente"
+                elif is_special_variant and not is_pc_grade_resolved:
                     v_mult, v_desc = get_variant_multiplier(variant_input, sel_meta.get("game_slug"))
                     base_psa_final = round(base_psa_raw * v_mult, 2)
                     effective_max_edge = round(base_max_edge * v_mult, 2)
-            else:
-                v_mult = 1.0
-                v_desc = "Versione Standard / Unlimited"
-                base_psa_final = base_psa_raw
-                effective_max_edge = base_max_edge
-
-            if is_special_variant and ("1st" in variant_input.lower() or "symbol" in variant_input.lower() or "shadowless" in variant_input.lower()):
-                era_detected = "vintage"
-
-            era_final = era_detected if era_input.startswith("Auto") else era_input
-            display_title = f"{card_name} [{variant_input.split('(')[0].strip()}]" if is_special_variant else card_name
-
-            # Risoluzione benchmark per il grado scelto (da 10.0 fino a 7.0 con mezzi voti)
-            is_grade_10 = "10" in grade_val
-            is_grade_95 = "9.5" in grade_val
-            g_slug = sel_meta.get("game_slug", "")
-            i_slug = sel_meta.get("item_slug", "")
-            sel_item_id = sel_row["item_id"] if sel_row else None
-            benchmark_source = "Database PokeQuant (PSA 9)"
-            is_pc_grade_resolved = False
-
-            if manual_psa_override > 0.0:
-                base_psa_final = manual_psa_override
-                effective_max_edge = base_max_edge
-                benchmark_source = f"Manuale ({manual_psa_override:.2f} €)"
-            elif g_slug and i_slug:
-                pc_tier = fetch_pricecharting_grade_tier_price(g_slug, i_slug, tier=grade_tier, item_id=sel_item_id)
-                if pc_tier:
-                    pc_eur, pc_usd, pc_url, pc_source = pc_tier
-                    base_psa_final = pc_eur
-                    effective_max_edge = round(pc_eur * 1.05, 2)
-                    pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": pc_source, "tier": tier_label}
-                    benchmark_source = f"PriceCharting Reale {tier_label} (${pc_usd:.2f} USD)"
-                    is_pc_grade_resolved = True
-
-            if not is_pc_grade_resolved and manual_psa_override == 0.0:
-                if is_grade_10:
-                    p10_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(era_final), 3.00)
-                    base_psa_final = round(base_psa_final * p10_ratio, 2)
-                    effective_max_edge = round(effective_max_edge * p10_ratio, 2)
-                    benchmark_source = f"Stima Algoritmica PSA 10 ({p10_ratio:.2f}x era)"
-                elif is_grade_95:
-                    g95_ratio = ERA_BGS95_TO_PSA9_RATIO.get(normalize_era(era_final), 1.65)
-                    base_psa_final = round(base_psa_final * g95_ratio, 2)
-                    effective_max_edge = round(effective_max_edge * g95_ratio, 2)
-                    benchmark_source = f"Stima Algoritmica Grado 9.5 ({g95_ratio:.2f}x era)"
-                elif pc_live_info:
-                    benchmark_source = f"PriceCharting Reale Grado 9 (${pc_live_info['usd']:.2f} USD)"
-                elif is_special_variant:
-                    benchmark_source = f"Stima Variante ({v_mult:.2f}x)"
                 else:
-                    benchmark_source = f"Database PokeQuant (PSA 9: {base_psa_final:.2f}€)"
+                    v_mult = 1.0
+                    v_desc = "Versione Standard / Unlimited"
 
-            rec_grade = get_recommended_grade_for_card(era=era_final)
-            is_modern_sub10 = (normalize_era(era_final) == Era.MODERN and ("10" not in grade_val and "9.5" not in grade_val))
+                if is_special_variant and ("1st" in variant_input.lower() or "symbol" in variant_input.lower() or "shadowless" in variant_input.lower()):
+                    era_detected = "vintage"
 
-            fair_value_calib, _, adj = adjust_price_for_grading(
-                base_psa_price_eur=base_psa_final,
-                company=company_input,
-                grade=grade_val,
-                era=era_final,
-                subgrades_black_label=is_black_label,
-                is_pristine=is_pristine,
-                is_grade_benchmark_price=is_pc_grade_resolved,
-            )
+                era_final = era_detected if era_input.startswith("Auto") else era_input
+                display_title = f"{card_name} [{variant_input.split('(')[0].strip()}]" if is_special_variant else card_name
 
-            # Il tetto dello sniper scala il max edge consentito dal modello per preservare alpha
-            sniper_ceiling_calib = round(effective_max_edge * adj.sniper_ceiling_factor, 2)
+                # Stima se non risolto da tier reale
+                if not is_pc_grade_resolved and manual_psa_override == 0.0:
+                    is_grade_10 = "10" in grade_val
+                    is_grade_95 = "9.5" in grade_val
+                    if is_grade_10:
+                        p10_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(era_final), 3.00)
+                        base_psa_final = round(base_psa_final * p10_ratio, 2)
+                        effective_max_edge = round(effective_max_edge * p10_ratio, 2)
+                        benchmark_source = f"Stima Algoritmica PSA 10 ({p10_ratio:.2f}x era)"
+                    elif is_grade_95:
+                        g95_ratio = ERA_BGS95_TO_PSA9_RATIO.get(normalize_era(era_final), 1.65)
+                        base_psa_final = round(base_psa_final * g95_ratio, 2)
+                        effective_max_edge = round(effective_max_edge * g95_ratio, 2)
+                        benchmark_source = f"Stima Algoritmica Grado 9.5 ({g95_ratio:.2f}x era)"
+                    elif pc_live_info:
+                        benchmark_source = f"PriceCharting Reale Grado 9 (${pc_live_info['usd']:.2f} USD)"
+                    elif is_special_variant:
+                        benchmark_source = f"Stima Variante ({v_mult:.2f}x)"
 
-            if is_usa_import:
-                landed_cost = estimate_usa_import_landed_cost(offer_price_eur, item_type="single")
-                total_offer = landed_cost
-                fixed_customs = (IMPORT_FROM_USA.intl_shipping_single_eur * (1.0 + IMPORT_FROM_USA.vat_rate)) + IMPORT_FROM_USA.eu_customs_duty_flat_eur + IMPORT_FROM_USA.courier_handling_fee_eur
-                sniper_net = max(0.0, round((sniper_ceiling_calib - fixed_customs) / (1.0 + IMPORT_FROM_USA.vat_rate), 2))
-            else:
-                total_offer = offer_price_eur + shipping_eur
-                sniper_net = max(0.0, round(sniper_ceiling_calib - shipping_eur, 2))
+                rec_grade = get_recommended_grade_for_card(era=era_final)
+                is_modern_sub10 = (normalize_era(era_final) == Era.MODERN and ("10" not in grade_val and "9.5" not in grade_val))
 
-            discount_real_pct = (1.0 - (total_offer / fair_value_calib)) * 100.0 if fair_value_calib > 0 else 0.0
+                fair_value_calib, _, adj = adjust_price_for_grading(
+                    base_psa_price_eur=base_psa_final,
+                    company=company_input,
+                    grade=grade_val,
+                    era=era_final,
+                    subgrades_black_label=is_black_label,
+                    is_pristine=is_pristine,
+                    is_grade_benchmark_price=is_pc_grade_resolved,
+                )
 
-            if total_offer <= fair_value_calib * 0.75:
-                v_badge = "🚨 DEEP VALUE / COLPACCIO (-25%+ di sconto)"
-                v_color = "#10b981"
-            elif total_offer <= fair_value_calib * 0.95:
-                v_badge = "🟢 BUY CONSIGLIATO (A Sconto)"
-                v_color = "#10b981"
-            elif total_offer <= sniper_ceiling_calib:
-                v_badge = "🟡 FAIR VALUE / AL LIMITE DELL'EDGE"
-                v_color = "#fbbf24"
-            else:
-                over_pct = ((total_offer / sniper_ceiling_calib) - 1.0) * 100.0
-                v_badge = f"🔴 OVERPRICED (+{over_pct:.1f}% sopra il tetto)"
-                v_color = "#f43f5e"
+                sniper_ceiling_calib = round(effective_max_edge * adj.sniper_ceiling_factor, 2)
 
-            st.session_state["slab_eval_res"] = {
-                "display_title": display_title,
-                "base_psa_raw": base_psa_raw,
-                "v_mult": v_mult,
-                "v_desc": v_desc,
-                "base_psa_final": base_psa_final,
-                "effective_max_edge": effective_max_edge,
-                "pc_live_info": pc_live_info,
-                "benchmark_source": benchmark_source,
-                "rec_grade": rec_grade,
-                "is_modern_sub10": is_modern_sub10,
-                "company_name": adj.company.value,
-                "grade_input": grade_input,
-                "is_black_label": is_black_label,
-                "is_pristine": is_pristine,
-                "is_usa_import": is_usa_import,
-                "era_final": era_final,
-                "fair_value_calib": fair_value_calib,
-                "sniper_ceiling_calib": sniper_ceiling_calib,
-                "sniper_net": sniper_net,
-                "total_offer": total_offer,
-                "offer_price_eur": offer_price_eur,
-                "shipping_eur": shipping_eur,
-                "discount_real_pct": discount_real_pct,
-                "v_badge": v_badge,
-                "v_color": v_color,
-                "adj": adj,
-            }
+                if is_usa_import:
+                    landed_cost = estimate_usa_import_landed_cost(offer_price_eur, item_type="single")
+                    total_offer = landed_cost
+                    fixed_customs = (IMPORT_FROM_USA.intl_shipping_single_eur * (1.0 + IMPORT_FROM_USA.vat_rate)) + IMPORT_FROM_USA.eu_customs_duty_flat_eur + IMPORT_FROM_USA.courier_handling_fee_eur
+                    sniper_net = max(0.0, round((sniper_ceiling_calib - fixed_customs) / (1.0 + IMPORT_FROM_USA.vat_rate), 2))
+                else:
+                    total_offer = offer_price_eur + shipping_eur
+                    sniper_net = max(0.0, round(sniper_ceiling_calib - shipping_eur, 2))
+
+                discount_real_pct = (1.0 - (total_offer / fair_value_calib)) * 100.0 if fair_value_calib > 0 else 0.0
+
+                if total_offer <= fair_value_calib * 0.75:
+                    v_badge = "🚨 DEEP VALUE / COLPACCIO (-25%+ di sconto)"
+                    v_color = "#10b981"
+                elif total_offer <= fair_value_calib * 0.95:
+                    v_badge = "🟢 BUY CONSIGLIATO (A Sconto)"
+                    v_color = "#10b981"
+                elif total_offer <= sniper_ceiling_calib:
+                    v_badge = "🟡 FAIR VALUE / AL LIMITE DELL'EDGE"
+                    v_color = "#fbbf24"
+                else:
+                    over_pct = ((total_offer / sniper_ceiling_calib) - 1.0) * 100.0
+                    v_badge = f"🔴 OVERPRICED (+{over_pct:.1f}% sopra il tetto)"
+                    v_color = "#f43f5e"
+
+                st.session_state["slab_eval_res"] = {
+                    "display_title": display_title,
+                    "base_psa_raw": base_psa_raw,
+                    "v_mult": v_mult,
+                    "v_desc": v_desc,
+                    "base_psa_final": base_psa_final,
+                    "effective_max_edge": effective_max_edge,
+                    "pc_live_info": pc_live_info,
+                    "benchmark_source": benchmark_source,
+                    "rec_grade": rec_grade,
+                    "is_modern_sub10": is_modern_sub10,
+                    "company_name": adj.company.value,
+                    "grade_input": grade_input,
+                    "is_black_label": is_black_label,
+                    "is_pristine": is_pristine,
+                    "is_usa_import": is_usa_import,
+                    "era_final": era_final,
+                    "fair_value_calib": fair_value_calib,
+                    "sniper_ceiling_calib": sniper_ceiling_calib,
+                    "sniper_net": sniper_net,
+                    "total_offer": total_offer,
+                    "offer_price_eur": offer_price_eur,
+                    "shipping_eur": shipping_eur,
+                    "discount_real_pct": discount_real_pct,
+                    "v_badge": v_badge,
+                    "v_color": v_color,
+                    "adj": adj,
+                    "matched_db_info": matched_db_info,
+                }
 
         # Mostra i risultati se calcolati
         if "slab_eval_res" in st.session_state:
             res = st.session_state["slab_eval_res"]
+            if res.get("matched_db_info"):
+                m_info = res["matched_db_info"]
+                st.info(f"💡 Carta riconosciuta automaticamente nel catalogo PokeQuant: **{m_info.get('name')}** [{m_info.get('game_slug')}]. Prezzo storico rilevato: **{res['base_psa_final']:.2f} €**.")
+
             pc_info = res.get("pc_live_info")
+            if pc_info and "live" in pc_info.get("source", "").lower():
+                st.success(f"🌐 Dati PriceCharting recuperati in tempo reale: **${pc_info['usd']:.2f} USD** ({pc_info['eur']:.2f} €) · Fonte: {pc_info.get('source')}")
             if pc_info and pc_info.get("url"):
                 sub_benchmark = f"<a href='{pc_info['url']}' target='_blank' style='color: #38bdf8; text-decoration: underline;'>{res.get('benchmark_source', 'PriceCharting ↗')}</a>"
                 variant_note = f" · Variante: <strong>{res['v_desc']} (<a href='{pc_info['url']}' target='_blank' style='color:#38bdf8;'>PriceCharting ↗</a>)</strong>"
