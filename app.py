@@ -81,6 +81,7 @@ from poke_quant.slabs.grading_multipliers import (
     get_recommended_grade_targets,
     get_grade_benchmarks_ladder,
     get_company_relative_factor_vs_psa,
+    get_card_pop_pressure,
 )
 
 # Soglie DAC7 (direttiva UE 2021/514): sopra queste soglie annue le piattaforme
@@ -1620,8 +1621,12 @@ def main():
                         era_detected = "modern"
                         if not card_name:
                             card_name = "Carta Personalizzata"
+                target_item_id = matched_db_info.get("item_id") if matched_db_info else None
+                if not target_item_id and i_slug:
+                    target_item_id = i_slug.replace("-", "_")
             elif chosen_option in option_to_row:
                 sel_row = option_to_row[chosen_option]
+                target_item_id = sel_row.get("item_id")
                 card_name = sel_row["name"]
                 sel_meta = metadata.get(sel_row["item_id"], {})
                 g_slug = sel_meta.get("game_slug", "")
@@ -1638,6 +1643,7 @@ def main():
                 era_detected = "vintage"
                 g_slug = ""
                 i_slug = ""
+                target_item_id = None
 
             # Determinazione del prezzo base e benchmark
             base_psa_raw = 0.0
@@ -1751,6 +1757,7 @@ def main():
 
                 rec_grade = get_recommended_grade_for_card(era=era_final)
                 is_modern_sub10 = (normalize_era(era_final) == Era.MODERN and ("10" not in grade_val and "9.5" not in grade_val))
+                pop_pressure = get_card_pop_pressure(target_item_id, era_final)
 
                 fair_value_calib, _, adj = adjust_price_for_grading(
                     base_psa_price_eur=base_psa_final,
@@ -1791,6 +1798,9 @@ def main():
 
                 st.session_state["slab_eval_res"] = {
                     "display_title": display_title,
+                    "target_item_id": target_item_id,
+                    "grade_val": grade_val,
+                    "pop_pressure": pop_pressure,
                     "base_psa_raw": base_psa_raw,
                     "v_mult": v_mult,
                     "v_desc": v_desc,
@@ -1845,6 +1855,34 @@ def main():
             rec_grade = res.get("rec_grade")
             rec_badge_html = f"<span style='background: {rec_grade['badge_color']}22; color: {rec_grade['badge_color']}; border: 1px solid {rec_grade['badge_color']}; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; margin-left: 8px;'>{rec_grade['target_badge']}</span>" if rec_grade else ""
 
+            pop_pressure = res.get("pop_pressure", {})
+            pop_badge = pop_pressure.get("badge_html", "")
+            pop_badge_html = f"<span style='margin-left: 6px;'>{pop_badge}</span>" if pop_badge else ""
+
+            # Striscia di analisi Pop Pressure
+            has_pop_data = pop_pressure.get("ratio_8_9") is not None
+            if has_pop_data:
+                p8 = int(pop_pressure.get("pop_8", 0))
+                p9 = int(pop_pressure.get("pop_9", 0))
+                p10 = pop_pressure.get("pop_10")
+                p10_str = f" · Pop(10): <strong style='color:#f8fafc;'>{int(p10):,}</strong>" if p10 is not None else ""
+                r89 = pop_pressure.get("ratio_8_9", 0.0)
+                pct = pop_pressure.get("percentile", 50.0)
+                pop_strip_html = (
+                    f'<div style="margin-top:10px; font-size:12px; line-height:1.4; color:#cbd5e1; background:rgba(30,41,59,0.6); border-radius:6px; padding:7px 12px; border:1px solid rgba(56,189,248,0.2);">'
+                    f'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">'
+                    f'<span>📊 <strong>PSA Population Report:</strong> Pop(9): <strong style="color:#f8fafc;">{p9:,}</strong> · Pop(8): <strong style="color:#f8fafc;">{p8:,}</strong>{p10_str}</span>'
+                    f'<span>Rapporto Pop(8)/Pop(9): <strong style="color:#38bdf8; font-family:\'JetBrains Mono\',monospace;">{r89:.2f}x</strong> &nbsp;·&nbsp; Posizione: <strong style="color:#f8fafc;">Top {100-pct:.0f}%</strong> (P{pct:.0f} nell\'era) &nbsp;{pop_badge}</span>'
+                    f'</div>'
+                    f'</div>'
+                )
+            else:
+                pop_strip_html = (
+                    '<div style="margin-top:10px; font-size:11px; color:#64748b; background:rgba(30,41,59,0.4); border-radius:6px; padding:6px 12px; border:1px solid rgba(255,255,255,0.05);">'
+                    '<span>📊 <strong>PSA Population Report:</strong> Dati di popolazione non censiti per questa referenza nel database locale.</span>'
+                    '</div>'
+                )
+
             if res.get("is_modern_sub10"):
                 st.warning(
                     f"⚠️ **Avviso Liquidità Moderno ({res['grade_input']})**: Nelle carte moderne (2017+), i gradi ≤ 9.0 soffrono di scarsa "
@@ -1852,23 +1890,39 @@ def main():
                     "Per il moderno si raccomanda di puntare a **PSA 10** (o BGS 9.5 / Pristine 10) per preservare la rivendibilità."
                 )
 
-            st.markdown(f"""
-            <div style="background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; margin-top: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-                    <div>
-                        <span style="font-weight: 700; font-size: 15px; color: #f8fafc;">Valutazione per <u>{res['display_title']}</u>: <span style="color: {res['v_color']};">{res['v_badge']}</span></span>
-                        {rec_badge_html}
-                    </div>
-                    <span style="font-size: 12px; color: #94a3b8;">Slab: <strong>{res['company_name']} {res['grade_input']}</strong>{variant_note} · Moltiplicatore: <strong>{res['adj'].multiplier:.3f}x</strong> · Penalità liquidità: <strong>-{res['adj'].liquidity_penalty_pct:.0f}%</strong></span>
-                </div>
-                <div class="kpi-grid" style="margin-bottom: 0;">
-                    <div class="kpi-card"><div class="kpi-label">Benchmark PSA ({res['adj'].benchmark_ref})</div><div class="kpi-value">{res['base_psa_final']:.2f} €</div><div class="kpi-sub">{sub_benchmark}</div></div>
-                    <div class="kpi-card"><div class="kpi-label">Fair Value {res['company_name']}</div><div class="kpi-value">{res['fair_value_calib']:.2f} €</div><div class="kpi-sub kpi-sub-emerald">Valore atteso reale</div></div>
-                    <div class="kpi-card"><div class="kpi-label">Tetto Max (All-in)</div><div class="kpi-value">{res['sniper_ceiling_calib']:.2f} €</div><div class="kpi-sub">Soffitto max per edge</div></div>
-                    <div class="kpi-card"><div class="kpi-label">{sub_offer_label}</div><div class="kpi-value" style="color: #38bdf8;">{res['sniper_net']:.2f} €</div><div class="kpi-sub">{sub_offer_desc}</div></div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            # Warning contestuale per sovraffollamento pop su gradi intermedi
+            g_val = str(res.get("grade_val", ""))
+            is_sub9 = ("8" in g_val) or ("7" in g_val)
+            if is_sub9 and pop_pressure.get("is_overcrowded"):
+                r_val = pop_pressure.get("ratio_8_9", 0.0)
+                pct_val = pop_pressure.get("percentile", 0.0)
+                st.warning(
+                    f"⚠️ **Avviso Sovraffollamento Pop ({res['company_name']} {res['grade_input']})**: "
+                    f"Questa carta registra un rapporto Pop(8)/Pop(9) di **{r_val:.2f}x** (Percentile {pct_val:.0f} nell'era {res['era_final']}). "
+                    "L'eccesso demografico sui gradi intermedi diluisce il valore collezionistico e crea una forte concorrenza tra venditori. "
+                    "Se decidi di acquistare questo grado, esigi uno sconto ben superiore al fair value o privilegia il target primario raccomandato."
+                )
+
+            eval_card_html = (
+                f'<div style="background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; margin-top: 10px;">'
+                f'<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">'
+                f'<div>'
+                f'<span style="font-weight: 700; font-size: 15px; color: #f8fafc;">Valutazione per <u>{res["display_title"]}</u>: <span style="color: {res["v_color"]};">{res["v_badge"]}</span></span>'
+                f'{rec_badge_html}'
+                f'{pop_badge_html}'
+                f'</div>'
+                f'<span style="font-size: 12px; color: #94a3b8;">Slab: <strong>{res["company_name"]} {res["grade_input"]}</strong>{variant_note} · Moltiplicatore: <strong>{res["adj"].multiplier:.3f}x</strong> · Penalità liquidità: <strong>-{res["adj"].liquidity_penalty_pct:.0f}%</strong></span>'
+                f'</div>'
+                f'<div class="kpi-grid" style="margin-bottom: 0;">'
+                f'<div class="kpi-card"><div class="kpi-label">Benchmark PSA ({res["adj"].benchmark_ref})</div><div class="kpi-value">{res["base_psa_final"]:.2f} €</div><div class="kpi-sub">{sub_benchmark}</div></div>'
+                f'<div class="kpi-card"><div class="kpi-label">Fair Value {res["company_name"]}</div><div class="kpi-value">{res["fair_value_calib"]:.2f} €</div><div class="kpi-sub kpi-sub-emerald">Valore atteso reale</div></div>'
+                f'<div class="kpi-card"><div class="kpi-label">Tetto Max (All-in)</div><div class="kpi-value">{res["sniper_ceiling_calib"]:.2f} €</div><div class="kpi-sub">Soffitto max per edge</div></div>'
+                f'<div class="kpi-card"><div class="kpi-label">{sub_offer_label}</div><div class="kpi-value" style="color: #38bdf8;">{res["sniper_net"]:.2f} €</div><div class="kpi-sub">{sub_offer_desc}</div></div>'
+                f'</div>'
+                f'{pop_strip_html}'
+                f'</div>'
+            )
+            st.markdown(eval_card_html, unsafe_allow_html=True)
             usa_warn = " · **Nota Dogana**: Inserzione extra-UE attiva (applicata IVA 22% su oggetto+spedizione, dazio forfettario 3€ e oneri corriere)." if res.get("is_usa_import") else ""
             if res['discount_real_pct'] >= 0:
                 disc_str = f"Sconto effettivo: **+{res['discount_real_pct']:.1f}%**"
