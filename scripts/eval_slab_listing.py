@@ -158,39 +158,54 @@ def evaluate_listing(
         base_max_edge_price = round(base_max_edge_price * v_mult, 2)
         benchmark_note = "Prezzo mercato PSA 9"
 
-    # Risoluzione benchmark per Grado 10 o Grado 9.5
-    grade_str = str(grade).strip()
-    is_grade_10 = "10" in grade_str
-    is_grade_95 = "9.5" in grade_str
+    # Risoluzione benchmark per il grado scelto (da 10.0 fino a 7.0)
+    grade_str = str(grade).strip().lower().replace("_", ".")
+    is_grade_benchmark_resolved = False
 
-    if is_grade_10:
-        pc_tier = fetch_pricecharting_grade_tier_price(
-            info.get("game_slug", ""), info.get("item_slug", ""), tier="psa10", item_id=item_id
-        )
-        if pc_tier:
-            pc_eur, pc_usd, pc_url, pc_source = pc_tier
-            base_psa_price = pc_eur
-            base_max_edge_price = round(pc_eur * 1.05, 2)
-            benchmark_note = f"Dato Reale {pc_source} (${pc_usd:.2f} USD)"
-        else:
-            p10_ratio = ERA_PSA10_TO_PSA9_RATIO.get(era, 3.00)
-            base_psa_price = round(base_psa_price * p10_ratio, 2)
-            base_max_edge_price = round(base_max_edge_price * p10_ratio, 2)
-            benchmark_note = f"Stima algoritmica Grado 10 (Base PSA 9 × {p10_ratio:.2f}x)"
-    elif is_grade_95:
-        pc_tier = fetch_pricecharting_grade_tier_price(
-            info.get("game_slug", ""), info.get("item_slug", ""), tier="grade9_5", item_id=item_id
-        )
-        if pc_tier:
-            pc_eur, pc_usd, pc_url, pc_source = pc_tier
-            base_psa_price = pc_eur
-            base_max_edge_price = round(pc_eur * 1.05, 2)
-            benchmark_note = f"Dato Reale {pc_source} (${pc_usd:.2f} USD)"
-        else:
-            g95_ratio = ERA_BGS95_TO_PSA9_RATIO.get(era, 1.65)
-            base_psa_price = round(base_psa_price * g95_ratio, 2)
-            base_max_edge_price = round(base_max_edge_price * g95_ratio, 2)
-            benchmark_note = f"Stima algoritmica Grado 9.5 (Base PSA 9 × {g95_ratio:.2f}x)"
+    if "10" in grade_str:
+        grade_tier = "psa10"
+        tier_label = "PSA 10"
+    elif "9.5" in grade_str or "95" in grade_str:
+        grade_tier = "grade9_5"
+        tier_label = "Grado 9.5"
+    elif "8.5" in grade_str or "85" in grade_str:
+        grade_tier = "grade8_5"
+        tier_label = "Grado 8.5"
+    elif "8" in grade_str:
+        grade_tier = "grade8"
+        tier_label = "Grado 8.0"
+    elif "7.5" in grade_str or "75" in grade_str:
+        grade_tier = "grade7_5"
+        tier_label = "Grado 7.5"
+    elif "7" in grade_str:
+        grade_tier = "grade7"
+        tier_label = "Grado 7.0"
+    else:
+        grade_tier = "grade9"
+        tier_label = "Grado 9.0"
+
+    # Tentativo di recuperare il dato reale di PriceCharting per il grado esatto
+    pc_tier = fetch_pricecharting_grade_tier_price(
+        info.get("game_slug", ""), info.get("item_slug", ""), tier=grade_tier, item_id=item_id
+    )
+    if pc_tier:
+        pc_eur, pc_usd, pc_url, pc_source = pc_tier
+        base_psa_price = pc_eur
+        base_max_edge_price = round(pc_eur * 1.05, 2)
+        benchmark_note = f"Dato Reale {pc_source} ({tier_label}: ${pc_usd:.2f} USD)"
+        is_grade_benchmark_resolved = True
+    elif "10" in grade_str:
+        p10_ratio = ERA_PSA10_TO_PSA9_RATIO.get(era, 3.00)
+        base_psa_price = round(base_psa_price * p10_ratio, 2)
+        base_max_edge_price = round(base_max_edge_price * p10_ratio, 2)
+        benchmark_note = f"Stima algoritmica Grado 10 (Base PSA 9 × {p10_ratio:.2f}x)"
+    elif "9.5" in grade_str or "95" in grade_str:
+        g95_ratio = ERA_BGS95_TO_PSA9_RATIO.get(era, 1.65)
+        base_psa_price = round(base_psa_price * g95_ratio, 2)
+        base_max_edge_price = round(base_max_edge_price * g95_ratio, 2)
+        benchmark_note = f"Stima algoritmica Grado 9.5 (Base PSA 9 × {g95_ratio:.2f}x)"
+    else:
+        benchmark_note = f"Benchmark PokeQuant Base PSA 9 ({base_psa_price:.2f} €)"
 
     # Ricalibrazione per la compagnia e grado scelti
     fair_value, sniper_ceiling_raw, adj = adjust_price_for_grading(
@@ -200,6 +215,7 @@ def evaluate_listing(
         era=era,
         subgrades_black_label=is_black_label,
         is_pristine=is_pristine,
+        is_grade_benchmark_price=is_grade_benchmark_resolved,
     )
 
     # Scala il tetto massimo del modello col coefficiente dello sniper

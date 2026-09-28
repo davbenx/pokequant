@@ -76,6 +76,8 @@ from poke_quant.slabs.grading_multipliers import (
     estimate_psa10_from_psa9,
     estimate_grade95_from_psa9,
     get_recommended_grade_for_card,
+    get_grade_benchmarks_ladder,
+    get_company_relative_factor_vs_psa,
 )
 
 # Soglie DAC7 (direttiva UE 2021/514): sopra queste soglie annue le piattaforme
@@ -816,6 +818,36 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
     qty_warn = ' ⚠️ <span style="color:#fbbf24;">assume più slab identici disponibili insieme — verifica quante ne trovi davvero</span>' if qty_est > 1 else ""
     qty_html = f' &nbsp; <span style="color:#94a3b8;">→ {qty_est} pz. {target_grade_label}{qty_warn}</span>'
 
+    # Scala benchmark gradi (10.0 fino a 7.0 con mezzi voti)
+    ladder = get_grade_benchmarks_ladder(
+        base_psa9_eur=float(r["current_price_eur"]),
+        era=r.get("era", "modern"),
+        item_id=r.get("item_id"),
+        game_slug=full_meta.get("game_slug"),
+        item_slug=full_meta.get("item_slug"),
+    )
+
+    if rec.get("is_grade9_viable"):
+        has_real_lower = ladder["8.0"]["is_real"] or ladder["7.0"]["is_real"]
+        data_badge = '<span style="color:#10b981; font-weight:600;">✨ Dati Reali PriceCharting</span>' if has_real_lower else '<span style="color:#94a3b8;">📊 Stima Algoritmica</span>'
+        accessible_strip_html = f"""
+        <div style="margin: 5px 0 3px 0; font-size: 11.5px; line-height: 1.4; color: #cbd5e1; background: rgba(30, 41, 59, 0.7); border-radius: 4px; padding: 4px 8px; border: 1px solid rgba(56, 189, 248, 0.25);">
+            🏷️ <strong>Gradi Accessibili (PSA):</strong> &nbsp;
+            <strong>8.5</strong> ~{ladder['8.5']['price_eur']:.2f}€ <span style="color:#38bdf8;">({ladder['8.5']['discount_vs_psa9_pct']:+.0f}%)</span> &nbsp;·&nbsp;
+            <strong>8.0</strong> ~{ladder['8.0']['price_eur']:.2f}€ <span style="color:#38bdf8;">({ladder['8.0']['discount_vs_psa9_pct']:+.0f}%)</span> &nbsp;·&nbsp;
+            <strong>7.5</strong> ~{ladder['7.5']['price_eur']:.2f}€ <span style="color:#38bdf8;">({ladder['7.5']['discount_vs_psa9_pct']:+.0f}%)</span> &nbsp;·&nbsp;
+            <strong>7.0</strong> ~{ladder['7.0']['price_eur']:.2f}€ <span style="color:#38bdf8;">({ladder['7.0']['discount_vs_psa9_pct']:+.0f}%)</span>
+            &nbsp;·&nbsp; {data_badge}
+        </div>
+        """
+    else:
+        accessible_strip_html = f"""
+        <div style="margin: 5px 0 3px 0; font-size: 11.5px; line-height: 1.4; color: #94a3b8; background: rgba(30, 41, 59, 0.5); border-radius: 4px; padding: 4px 8px; border: 1px solid rgba(245, 158, 11, 0.2);">
+            🏷️ <strong>Scala Gradi:</strong> PSA 10 ~{ladder['10.0']['price_eur']:.2f}€ &nbsp;·&nbsp; Base PSA 9 {ladder['9.0']['price_eur']:.2f}€ &nbsp;·&nbsp;
+            <span style="color:#f59e0b;">⚠️ Gradi ≤ 9.0 (8.5/8/7.5/7) sconsigliati su Moderno (scarsa liquidità vs Raw)</span>
+        </div>
+        """
+
     st.markdown(f"""
     <div class="signal-card signal-card-buy">
         {img_tag}
@@ -832,6 +864,7 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
         &nbsp;·&nbsp; {price_tag_html} &nbsp;·&nbsp; sconto vs. pari {r['discount_pct']:+.0f}%{base_g9_html}
         &nbsp;·&nbsp; <span style="color:#94a3b8;">segnale da {start_str} ({r.get('months_in_signal', 0)}m)</span>{max_price_html}{usa_import_html}
         <div style="margin: 6px 0 4px 0; font-size: 12px; line-height: 1.4; color: #cbd5e1; background: rgba(15,23,42,0.6); border-left: 3px solid {rec['badge_color']}; padding: 4px 8px; border-radius: 0 4px 4px 0;">💡 <strong>Consiglio Grado ({rec['era_label']}):</strong> {rec['short_advice']}</div>
+        {accessible_strip_html}
         <span style="font-family:'JetBrains Mono',monospace; font-size:15px; color:#f8fafc;">{alloc:,.0f}€</span>{qty_html}
         &nbsp; <a class="cm-btn" href="{link}" target="_blank">🛒 Verifica su Cardmarket</a>
         </div>
@@ -841,6 +874,27 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
     if chart is not None:
         st.plotly_chart(chart, use_container_width=True, config={"displayModeBar": False},
                          key=f"chart_{key_prefix}_{r['item_id']}")
+
+    v_10 = '🎯 Target consigliato su Moderno' if not rec.get('is_grade9_viable') else 'Rarità estrema, premi elevati'
+    v_95 = 'Ottimo compromesso tra grado 9 e 10'
+    v_90 = '🎯 Sweet Spot Istituzionale' if rec.get('is_grade9_viable') else '⚠️ Trappola liquidità su Moderno'
+    v_85 = 'Soglia di ingresso solida' if rec.get('is_grade9_viable') else 'Sconsigliato su Moderno'
+    v_80 = 'Ingresso accessibile ad alta liquidità' if rec.get('is_grade9_viable') else 'Sconsigliato su Moderno'
+    v_75 = 'Entry-level per carte rare WotC' if rec.get('is_grade9_viable') else 'Sconsigliato su Moderno'
+    v_70 = 'Minimo collezionistico consigliato' if rec.get('is_grade9_viable') else 'Sconsigliato su Moderno'
+
+    with st.expander(f"🪜 Scala Prezzi Dettagliata per Grado (PSA 10 fino a 7.0) — {r['name']}"):
+        st.markdown(f"""
+| Grado Slab | Benchmark PSA (€) | Sconto / Premio vs G9 | Fonte del Dato | Valutazione Istituzionale |
+| :--- | :--- | :--- | :--- | :--- |
+| **PSA 10 Gem Mint** | **{ladder['10.0']['price_eur']:.2f} €** | {ladder['10.0']['discount_vs_psa9_pct']:+.1f}% | {ladder['10.0']['source']} | {v_10} |
+| **PSA 9.5 Gem Mint** | **{ladder['9.5']['price_eur']:.2f} €** | {ladder['9.5']['discount_vs_psa9_pct']:+.1f}% | {ladder['9.5']['source']} | {v_95} |
+| **PSA 9.0 Mint** | **{ladder['9.0']['price_eur']:.2f} €** | 0.0% | {ladder['9.0']['source']} | {v_90} |
+| **PSA 8.5 NM-Mint+** | **{ladder['8.5']['price_eur']:.2f} €** | {ladder['8.5']['discount_vs_psa9_pct']:+.1f}% | {ladder['8.5']['source']} | {v_85} |
+| **PSA 8.0 NM-Mint** | **{ladder['8.0']['price_eur']:.2f} €** | {ladder['8.0']['discount_vs_psa9_pct']:+.1f}% | {ladder['8.0']['source']} | {v_80} |
+| **PSA 7.5 Near Mint+** | **{ladder['7.5']['price_eur']:.2f} €** | {ladder['7.5']['discount_vs_psa9_pct']:+.1f}% | {ladder['7.5']['source']} | {v_75} |
+| **PSA 7.0 Near Mint** | **{ladder['7.0']['price_eur']:.2f} €** | {ladder['7.0']['discount_vs_psa9_pct']:+.1f}% | {ladder['7.0']['source']} | {v_70} |
+        """)
 
 
 def main():
@@ -1436,8 +1490,19 @@ def main():
             with calc_c3:
                 grade_input = st.selectbox(
                     "Voto Slab", 
-                    options=["9.0 Mint", "9.5 Gem Mint", "10.0 Gem Mint", "10.0 Pristine", "10.0 Black Label (BGS Quad 10)"], 
-                    index=0
+                    options=[
+                        "10.0 Gem Mint", 
+                        "10.0 Pristine", 
+                        "10.0 Black Label (BGS Quad 10)", 
+                        "9.5 Gem Mint", 
+                        "9.0 Mint",
+                        "8.5 NM-Mint+",
+                        "8.0 NM-Mint",
+                        "7.5 Near Mint+",
+                        "7.0 Near Mint",
+                    ], 
+                    index=4,
+                    help="Valuta qualsiasi grado dal 10.0 fino al 7.0 con mezzi voti. Privilegia i dati storici reali di PriceCharting per il grado esatto se disponibili."
                 )
 
             # Seconda riga: Variante Speciale, Benchmark PSA manuale e Era
@@ -1494,7 +1559,35 @@ def main():
         if submit_calc:
             is_black_label = "black label" in grade_input.lower()
             is_pristine = "pristine" in grade_input.lower()
-            grade_val = "10.0" if "10" in grade_input else ("9.5" if "9.5" in grade_input else "9.0")
+            g_in = grade_input.lower()
+            if "10" in g_in:
+                grade_val = "10.0"
+                grade_tier = "psa10"
+                tier_label = "PSA 10"
+            elif "9.5" in g_in:
+                grade_val = "9.5"
+                grade_tier = "grade9_5"
+                tier_label = "Grado 9.5"
+            elif "8.5" in g_in:
+                grade_val = "8.5"
+                grade_tier = "grade8_5"
+                tier_label = "Grado 8.5"
+            elif "8.0" in g_in or "8" in g_in:
+                grade_val = "8.0"
+                grade_tier = "grade8"
+                tier_label = "Grado 8.0"
+            elif "7.5" in g_in:
+                grade_val = "7.5"
+                grade_tier = "grade7_5"
+                tier_label = "Grado 7.5"
+            elif "7.0" in g_in or "7" in g_in:
+                grade_val = "7.0"
+                grade_tier = "grade7"
+                tier_label = "Grado 7.0"
+            else:
+                grade_val = "9.0"
+                grade_tier = "grade9"
+                tier_label = "Grado 9.0"
 
             # Risoluzione nome carta, prezzo base PSA ed era
             sel_meta = {}
@@ -1574,49 +1667,49 @@ def main():
             era_final = era_detected if era_input.startswith("Auto") else era_input
             display_title = f"{card_name} [{variant_input.split('(')[0].strip()}]" if is_special_variant else card_name
 
-            # Risoluzione benchmark per Grado 10 o Grado 9.5
+            # Risoluzione benchmark per il grado scelto (da 10.0 fino a 7.0 con mezzi voti)
             is_grade_10 = "10" in grade_val
             is_grade_95 = "9.5" in grade_val
             g_slug = sel_meta.get("game_slug", "")
             i_slug = sel_meta.get("item_slug", "")
             sel_item_id = sel_row["item_id"] if sel_row else None
             benchmark_source = "Database PokeQuant (PSA 9)"
+            is_pc_grade_resolved = False
 
-            if is_grade_10 and manual_psa_override == 0.0:
-                pc_tier = fetch_pricecharting_grade_tier_price(g_slug, i_slug, tier="psa10", item_id=sel_item_id) if (g_slug and i_slug) else None
+            if manual_psa_override > 0.0:
+                base_psa_final = manual_psa_override
+                effective_max_edge = base_max_edge
+                benchmark_source = f"Manuale ({manual_psa_override:.2f} €)"
+            elif g_slug and i_slug:
+                pc_tier = fetch_pricecharting_grade_tier_price(g_slug, i_slug, tier=grade_tier, item_id=sel_item_id)
                 if pc_tier:
                     pc_eur, pc_usd, pc_url, pc_source = pc_tier
                     base_psa_final = pc_eur
                     effective_max_edge = round(pc_eur * 1.05, 2)
-                    pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": pc_source, "tier": "PSA 10"}
-                    benchmark_source = f"PriceCharting Reale PSA 10 (${pc_usd:.2f} USD)"
-                else:
+                    pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": pc_source, "tier": tier_label}
+                    benchmark_source = f"PriceCharting Reale {tier_label} (${pc_usd:.2f} USD)"
+                    is_pc_grade_resolved = True
+
+            if not is_pc_grade_resolved and manual_psa_override == 0.0:
+                if is_grade_10:
                     p10_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(era_final), 3.00)
                     base_psa_final = round(base_psa_final * p10_ratio, 2)
                     effective_max_edge = round(effective_max_edge * p10_ratio, 2)
                     benchmark_source = f"Stima Algoritmica PSA 10 ({p10_ratio:.2f}x era)"
-            elif is_grade_95 and manual_psa_override == 0.0:
-                pc_tier = fetch_pricecharting_grade_tier_price(g_slug, i_slug, tier="grade9_5", item_id=sel_item_id) if (g_slug and i_slug) else None
-                if pc_tier:
-                    pc_eur, pc_usd, pc_url, pc_source = pc_tier
-                    base_psa_final = pc_eur
-                    effective_max_edge = round(pc_eur * 1.05, 2)
-                    pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": pc_source, "tier": "Grado 9.5"}
-                    benchmark_source = f"PriceCharting Reale Grado 9.5 (${pc_usd:.2f} USD)"
-                else:
+                elif is_grade_95:
                     g95_ratio = ERA_BGS95_TO_PSA9_RATIO.get(normalize_era(era_final), 1.65)
                     base_psa_final = round(base_psa_final * g95_ratio, 2)
                     effective_max_edge = round(effective_max_edge * g95_ratio, 2)
                     benchmark_source = f"Stima Algoritmica Grado 9.5 ({g95_ratio:.2f}x era)"
-            elif pc_live_info:
-                benchmark_source = f"PriceCharting Reale Grado 9 (${pc_live_info['usd']:.2f} USD)"
-            elif is_special_variant:
-                benchmark_source = f"Stima Variante ({v_mult:.2f}x)"
-            elif manual_psa_override > 0.0:
-                benchmark_source = f"Manuale ({manual_psa_override:.2f} €)"
+                elif pc_live_info:
+                    benchmark_source = f"PriceCharting Reale Grado 9 (${pc_live_info['usd']:.2f} USD)"
+                elif is_special_variant:
+                    benchmark_source = f"Stima Variante ({v_mult:.2f}x)"
+                else:
+                    benchmark_source = f"Database PokeQuant (PSA 9: {base_psa_final:.2f}€)"
 
             rec_grade = get_recommended_grade_for_card(era=era_final)
-            is_modern_g9 = (normalize_era(era_final) == Era.MODERN and ("9.0" in grade_input or grade_input.strip() == "9"))
+            is_modern_sub10 = (normalize_era(era_final) == Era.MODERN and ("10" not in grade_val and "9.5" not in grade_val))
 
             fair_value_calib, _, adj = adjust_price_for_grading(
                 base_psa_price_eur=base_psa_final,
@@ -1625,6 +1718,7 @@ def main():
                 era=era_final,
                 subgrades_black_label=is_black_label,
                 is_pristine=is_pristine,
+                is_grade_benchmark_price=is_pc_grade_resolved,
             )
 
             # Il tetto dello sniper scala il max edge consentito dal modello per preservare alpha
@@ -1665,7 +1759,7 @@ def main():
                 "pc_live_info": pc_live_info,
                 "benchmark_source": benchmark_source,
                 "rec_grade": rec_grade,
-                "is_modern_g9": is_modern_g9,
+                "is_modern_sub10": is_modern_sub10,
                 "company_name": adj.company.value,
                 "grade_input": grade_input,
                 "is_black_label": is_black_label,
@@ -1704,11 +1798,11 @@ def main():
             rec_grade = res.get("rec_grade")
             rec_badge_html = f"<span style='background: {rec_grade['badge_color']}22; color: {rec_grade['badge_color']}; border: 1px solid {rec_grade['badge_color']}; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700; margin-left: 8px;'>{rec_grade['target_badge']}</span>" if rec_grade else ""
 
-            if res.get("is_modern_g9"):
+            if res.get("is_modern_sub10"):
                 st.warning(
-                    "⚠️ **Avviso Liquidità Moderno (Grado 9)**: Nelle carte moderne (2017+), il Grado 9 soffre di scarsa "
-                    "liquidità secondaria e scambia spesso a ridosso del valore della carta Raw perché i pop report sono dominati da PSA 10 (>70–80%). "
-                    "Per il moderno si raccomanda di puntare a **PSA 10** (o BGS 9.5) per preservare la rivendibilità."
+                    f"⚠️ **Avviso Liquidità Moderno ({res['grade_input']})**: Nelle carte moderne (2017+), i gradi ≤ 9.0 soffrono di scarsa "
+                    "liquidità secondaria e scambiano spesso a ridosso o sotto il valore della carta Raw perché i pop report sono dominati da PSA 10 (>70–80%). "
+                    "Per il moderno si raccomanda di puntare a **PSA 10** (o BGS 9.5 / Pristine 10) per preservare la rivendibilità."
                 )
 
             st.markdown(f"""

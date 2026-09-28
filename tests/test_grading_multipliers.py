@@ -215,3 +215,92 @@ def test_fetch_pricecharting_grade_tier_price():
     assert eur > 350.0
     assert "pricecharting.com" in url
 
+
+def test_lower_grades_monotonicity():
+    """Verifica che i moltiplicatori scendano monotonicamente da 9.0 a 7.0 per tutte le compagnie."""
+    from poke_quant.slabs.grading_multipliers import get_grading_adjustment, GradingCompany, Era
+
+    grades = ["9.0", "8.5", "8.0", "7.5", "7.0"]
+    for comp in GradingCompany:
+        for era in [Era.VINTAGE, Era.MID_ERA, Era.MODERN]:
+            multipliers = [get_grading_adjustment(comp, g, era).multiplier for g in grades]
+            for i in range(len(multipliers) - 1):
+                assert multipliers[i] > multipliers[i + 1], (
+                    f"Violazione monotonicità per {comp.value} in {era.value}: "
+                    f"{grades[i]} ({multipliers[i]}) <= {grades[i+1]} ({multipliers[i+1]})"
+                )
+
+
+def test_company_relative_factor_vs_psa():
+    from poke_quant.slabs.grading_multipliers import get_company_relative_factor_vs_psa, GradingCompany, Era
+
+    # PSA vs PSA è sempre 1.0
+    assert get_company_relative_factor_vs_psa(GradingCompany.PSA, "8.5", Era.VINTAGE) == 1.0
+    assert get_company_relative_factor_vs_psa("PSA", "7.0", Era.MID_ERA) == 1.0
+
+    # BGS e CGC tengono il valore meglio degli enti regionali su gradi inferiori
+    bgs_factor = get_company_relative_factor_vs_psa(GradingCompany.BGS, "8.0", Era.VINTAGE)
+    cgc_factor = get_company_relative_factor_vs_psa(GradingCompany.CGC, "8.0", Era.VINTAGE)
+    graad_factor = get_company_relative_factor_vs_psa(GradingCompany.GRAAD, "8.0", Era.VINTAGE)
+
+    assert bgs_factor >= 0.88
+    assert cgc_factor >= 0.85
+    assert graad_factor <= 0.70
+    assert bgs_factor > graad_factor
+    assert cgc_factor > graad_factor
+
+
+def test_get_grade_benchmarks_ladder():
+    from poke_quant.slabs.grading_multipliers import get_grade_benchmarks_ladder, Era
+
+    # 1. Test con carta reale presente in cache ladder (m_rayquaza_ex_105)
+    ladder_real = get_grade_benchmarks_ladder(base_psa9_eur=100.0, era=Era.MID_ERA, item_id="m_rayquaza_ex_105")
+    assert "10.0" in ladder_real
+    assert "9.5" in ladder_real
+    assert "9.0" in ladder_real
+    assert "8.5" in ladder_real
+    assert "8.0" in ladder_real
+    assert "7.5" in ladder_real
+    assert "7.0" in ladder_real
+
+    # Verifica monotonicità prezzi reali
+    assert ladder_real["10.0"]["price_eur"] > ladder_real["9.5"]["price_eur"]
+    assert ladder_real["9.5"]["price_eur"] > ladder_real["9.0"]["price_eur"]
+    assert ladder_real["9.0"]["price_eur"] > ladder_real["8.5"]["price_eur"]
+    assert ladder_real["8.5"]["price_eur"] > ladder_real["8.0"]["price_eur"]
+    assert ladder_real["8.0"]["price_eur"] > ladder_real["7.5"]["price_eur"]
+    assert ladder_real["7.5"]["price_eur"] > ladder_real["7.0"]["price_eur"]
+    assert ladder_real["8.0"]["is_real"] is True
+
+    # 2. Test fallback puramente algoritmico
+    ladder_algo = get_grade_benchmarks_ladder(base_psa9_eur=100.0, era=Era.VINTAGE)
+    assert ladder_algo["9.0"]["price_eur"] == 100.0
+    assert ladder_algo["8.5"]["price_eur"] == 78.0
+    assert ladder_algo["8.0"]["price_eur"] == 65.0
+    assert ladder_algo["7.5"]["price_eur"] == 55.0
+    assert ladder_algo["7.0"]["price_eur"] == 48.0
+    assert ladder_algo["8.0"]["is_real"] is False
+
+
+def test_fetch_pricecharting_grade_tier_price_lower_grades():
+    from poke_quant.data.price_fetcher import fetch_pricecharting_grade_tier_price
+
+    # m_rayquaza_ex_105 ha dati reali per grade8, grade7
+    res_g8 = fetch_pricecharting_grade_tier_price("pokemon-roaring-skies", "m-rayquaza-ex-105", tier="grade8", item_id="m_rayquaza_ex_105")
+    assert res_g8 is not None
+    eur8, usd8, url8, src8 = res_g8
+    assert eur8 == 680.01
+
+    res_g7 = fetch_pricecharting_grade_tier_price("pokemon-roaring-skies", "m-rayquaza-ex-105", tier="grade7", item_id="m_rayquaza_ex_105")
+    assert res_g7 is not None
+    eur7, usd7, url7, src7 = res_g7
+    assert eur7 == 448.9
+
+    # Mezzi voti interpolati
+    res_g85 = fetch_pricecharting_grade_tier_price("pokemon-roaring-skies", "m-rayquaza-ex-105", tier="grade8_5", item_id="m_rayquaza_ex_105")
+    assert res_g85 is not None
+    eur85, _, _, src85 = res_g85
+    assert eur8 < eur85 < 1955.26
+    assert "Interpolato" in src85
+
+

@@ -662,9 +662,70 @@ def fetch_pricecharting_grade_tier_price(
     elif "9_5" in normalized_tier or "95" in normalized_tier:
         tier_name = "grade9_5"
         raw_key = "boxonly"
+    elif "8_5" in normalized_tier or "85" in normalized_tier:
+        tier_name = "grade8_5"
+        raw_key = None
+    elif "8" in normalized_tier:
+        tier_name = "grade8"
+        raw_key = "new"
+    elif "7_5" in normalized_tier or "75" in normalized_tier:
+        tier_name = "grade7_5"
+        raw_key = None
+    elif "7" in normalized_tier:
+        tier_name = "grade7"
+        raw_key = "cib"
     else:
         tier_name = "grade9"
         raw_key = "graded"
+
+    # Gestione specifica per mezzi voti interpolati (8.5 e 7.5)
+    if tier_name == "grade8_5":
+        cache_key = f"{game_slug}:{item_slug}:grade8_5"
+        if tier_cache_file.exists():
+            try:
+                cached_tiers = json.loads(tier_cache_file.read_text(encoding="utf-8"))
+                if cache_key in cached_tiers:
+                    entry = cached_tiers[cache_key]
+                    usd = float(entry["usd"])
+                    eur = round(usd / fx_rate, 2)
+                    return eur, usd, entry.get("url", url), "PriceCharting Cache Reale (G8.5)"
+            except Exception:
+                pass
+        p8 = fetch_pricecharting_grade_tier_price(game_slug, item_slug, tier="grade8", item_id=item_id)
+        p9 = fetch_pricecharting_grade_tier_price(game_slug, item_slug, tier="grade9", item_id=item_id)
+        if p8 and p9:
+            eur = round((p8[0] + p9[0]) / 2, 2)
+            usd = round((p8[1] + p9[1]) / 2, 2)
+            url = p8[2]
+            return eur, usd, url, "PriceCharting Reale Interpolato (G8-G9)"
+        elif p8:
+            return round(p8[0] * 1.25, 2), round(p8[1] * 1.25, 2), p8[2], "PriceCharting G8 + Premio Mezzo Voto (+25%)"
+        elif p9:
+            return round(p9[0] * 0.78, 2), round(p9[1] * 0.78, 2), p9[2], "PriceCharting G9 Rettificato G8.5 (0.78x)"
+
+    if tier_name == "grade7_5":
+        cache_key = f"{game_slug}:{item_slug}:grade7_5"
+        if tier_cache_file.exists():
+            try:
+                cached_tiers = json.loads(tier_cache_file.read_text(encoding="utf-8"))
+                if cache_key in cached_tiers:
+                    entry = cached_tiers[cache_key]
+                    usd = float(entry["usd"])
+                    eur = round(usd / fx_rate, 2)
+                    return eur, usd, entry.get("url", url), "PriceCharting Cache Reale (G7.5)"
+            except Exception:
+                pass
+        p7 = fetch_pricecharting_grade_tier_price(game_slug, item_slug, tier="grade7", item_id=item_id)
+        p8 = fetch_pricecharting_grade_tier_price(game_slug, item_slug, tier="grade8", item_id=item_id)
+        if p7 and p8:
+            eur = round((p7[0] + p8[0]) / 2, 2)
+            usd = round((p7[1] + p8[1]) / 2, 2)
+            url = p7[2]
+            return eur, usd, url, "PriceCharting Reale Interpolato (G7-G8)"
+        elif p7:
+            return round(p7[0] * 1.18, 2), round(p7[1] * 1.18, 2), p7[2], "PriceCharting G7 + Premio Mezzo Voto (+18%)"
+        elif p8:
+            return round(p8[0] * 0.85, 2), round(p8[1] * 0.85, 2), p8[2], "PriceCharting G8 Rettificato G7.5 (0.85x)"
 
     # 1. Verifica in grade_ladder_prices.json
     if ladder_file.exists():
@@ -701,36 +762,37 @@ def fetch_pricecharting_grade_tier_price(
             pass
 
     # 3. Richiesta live e parsing VGPC.chart_data
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=6)
-        if resp.status_code == 200:
-            m = re.search(r'VGPC\.chart_data\s*=\s*(\{.*?\});', resp.text, re.DOTALL)
-            if m:
-                data = json.loads(m.group(1))
-                pts = data.get(raw_key, [])
-                if pts and len(pts[-1]) >= 2 and pts[-1][1] > 0:
-                    usd = round(pts[-1][1] / 100.0, 2)
-                    eur = round(usd / fx_rate, 2)
-                    # Salva in cache
-                    try:
-                        cached_tiers = {}
-                        if tier_cache_file.exists():
-                            cached_tiers = json.loads(tier_cache_file.read_text(encoding="utf-8"))
-                        cached_tiers[cache_key] = {
-                            "eur": eur,
-                            "usd": usd,
-                            "url": url,
-                            "tier": tier_name,
-                            "game_slug": game_slug,
-                            "item_slug": item_slug,
-                            "date": datetime.datetime.now().strftime("%Y-%m-%d"),
-                        }
-                        tier_cache_file.write_text(json.dumps(cached_tiers, indent=2), encoding="utf-8")
-                    except Exception:
-                        pass
-                    return eur, usd, url, "PriceCharting Live Reale"
-    except Exception:
-        pass
+    if raw_key:
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=6)
+            if resp.status_code == 200:
+                m = re.search(r'VGPC\.chart_data\s*=\s*(\{.*?\});', resp.text, re.DOTALL)
+                if m:
+                    data = json.loads(m.group(1))
+                    pts = data.get(raw_key, [])
+                    if pts and len(pts[-1]) >= 2 and pts[-1][1] > 0:
+                        usd = round(pts[-1][1] / 100.0, 2)
+                        eur = round(usd / fx_rate, 2)
+                        # Salva in cache
+                        try:
+                            cached_tiers = {}
+                            if tier_cache_file.exists():
+                                cached_tiers = json.loads(tier_cache_file.read_text(encoding="utf-8"))
+                            cached_tiers[cache_key] = {
+                                "eur": eur,
+                                "usd": usd,
+                                "url": url,
+                                "tier": tier_name,
+                                "game_slug": game_slug,
+                                "item_slug": item_slug,
+                                "date": datetime.datetime.now().strftime("%Y-%m-%d"),
+                            }
+                            tier_cache_file.write_text(json.dumps(cached_tiers, indent=2), encoding="utf-8")
+                        except Exception:
+                            pass
+                        return eur, usd, url, "PriceCharting Live Reale"
+        except Exception:
+            pass
 
     return None
 
