@@ -729,7 +729,7 @@ def render_box_card(r: dict, alloc: float | None, w: float | None, capital_box: 
             qty_est, spend_est, skip_reason = 0, 0.0, "troppo_grande"
 
         if skip_reason == "troppo_grande":
-            qty_html = (f' &nbsp; <span style="color:#f43f5e;">⚠️ salta a questo capitale — costa {box_price:,.0f}€, '
+            qty_html = (f' &nbsp; <span style="color:#f43f5e;">⚠️ non acquistabile a questo capitale — costa {box_price:,.0f}€, '
                         f'sopra il 35% dei {capital_box:,.0f}€ dedicati ai box</span>')
         elif skip_reason == "budget":
             qty_html = (f' &nbsp; <span style="color:#fbbf24;">→ 1 pz. ⚠️ richiede {spend_est:,.0f}€, più dei {alloc:,.0f}€ '
@@ -1134,38 +1134,65 @@ def main():
                 for r, _, _ in allocation
             ])
 
-            _total_real_spend, _n_skip = 0.0, 0
+            _total_real_spend = 0.0
+            executable_alloc = []
+            skipped_alloc = []
             for r, alloc, w in allocation:
                 p = r["current_price_eur"]
                 if p <= 0 or alloc >= p:
                     _total_real_spend += alloc
+                    executable_alloc.append((r, alloc, w))
                 elif p <= box_capital_half * 0.35:
                     _total_real_spend += p
+                    executable_alloc.append((r, alloc, w))
                 else:
-                    _n_skip += 1
+                    skipped_alloc.append((r, alloc, w))
 
-            st.markdown(f"""
-            <div class="kpi-grid">
-                <div class="kpi-card"><div class="kpi-label">Budget Box ({w_box*100:.0f}%)</div><div class="kpi-value">{box_capital_half:,.0f} €</div><div class="kpi-sub">Capitale risk-parity</div></div>
-                <div class="kpi-card"><div class="kpi-label">Spesa Reale Stimata</div><div class="kpi-value" style="color:#10b981;">{_total_real_spend:,.0f} €</div><div class="kpi-sub kpi-sub-emerald">{_total_real_spend/box_capital_half*100:.1f}% del budget box</div></div>
-                <div class="kpi-card"><div class="kpi-label">Box Core Coperti</div><div class="kpi-value">{len(allocation) - _n_skip} / {len(core_rows)}</div><div class="kpi-sub">Priorità momentum decrescente</div></div>
-                <div class="kpi-card"><div class="kpi-label">Liquidità Residua</div><div class="kpi-value">{max(0.0, box_capital_half - _total_real_spend):,.0f} €</div><div class="kpi-sub">Cassa pronta o per singole</div></div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            if _total_real_spend > box_capital_half * 1.10:
+            if not executable_alloc:
+                min_core_p = min(r["current_price_eur"] for r in core_rows)
+                min_req_budget = min_core_p / 0.35
                 st.warning(
-                    f"⚠️ A questo capitale, comprare per intero tutti i box Core costerebbe ~**{_total_real_spend:,.0f}€**, "
-                    f"contro i {box_capital_half:,.0f}€ dedicati (+{(_total_real_spend/box_capital_half-1)*100:.0f}%). "
-                    "I box sono lotti indivisibili: il modello reale spende la cassa in sequenza (priorità ai primi in lista)."
-                    + (f" {_n_skip} box sopra il 35% del capitale vengono saltati." if _n_skip else "")
+                    f"⚠️ **Capitale insufficiente per acquistare box in questo segmento** (Budget box attuale: **{box_capital_half:,.0f}€**).\n\n"
+                    f"Per proteggere il portafoglio dal rischio rovina, la regola quantitativa validata vieta di impiegare oltre il **35% del budget** "
+                    f"su un singolo pezzo (tetto massimo per singolo box oggi: **{box_capital_half*0.35:,.0f}€**).\n\n"
+                    f"Tutti i box Core di questo segmento superano questa soglia (il più economico costa **{min_core_p:,.0f}€**).\n\n"
+                    f"💡 **Azioni consigliate**:\n"
+                    f"- **Dirotta la liquidità sulle Singole Gradate**: Con {box_capital_half:,.0f}€ puoi comprare 3–5 slab PSA 9 a sconto (40–90€/pezzo) perfettamente diversificati.\n"
+                    f"- **Esplora Pokémon JP**: Nel selettore in alto scegli *Pokémon JP* (troverai box Core a 50–80€ compatibili col budget).\n"
+                    f"- **Aumenta il budget box**: Per acquistare il primo box rispettando il tetto del 35% serve un budget box di almeno **~{min_req_budget:,.0f}€** (capitale totale consigliato ~{min_req_budget/w_box:,.0f}€)."
                 )
+                with st.expander(f"🔍 Mostra comunque i {len(skipped_alloc)} box Core (richiedono budget > {box_capital_half:,.0f}€)"):
+                    st.caption("Questi box hanno momentum positivo ma a questo livello di capitale rappresenterebbero più del 35% del portafoglio box.")
+                    for r, alloc, w in skipped_alloc:
+                        render_box_card(r, alloc, w, box_capital_half, metadata, prices_full, show_usa_import, tier_type="core")
             else:
-                st.caption("✅ **Allocazione equilibrata**: I primi box a più alto momentum rientrano nel budget dedicato, "
-                           "rispettando la regola del lotto indivisibile e la diversificazione.")
+                st.markdown(f"""
+                <div class="kpi-grid">
+                    <div class="kpi-card"><div class="kpi-label">Budget Box ({w_box*100:.0f}%)</div><div class="kpi-value">{box_capital_half:,.0f} €</div><div class="kpi-sub">Capitale risk-parity</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Spesa Reale Stimata</div><div class="kpi-value" style="color:#10b981;">{_total_real_spend:,.0f} €</div><div class="kpi-sub kpi-sub-emerald">{_total_real_spend/box_capital_half*100:.1f}% del budget box</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Box Core Acquistabili</div><div class="kpi-value">{len(executable_alloc)} / {len(core_rows)}</div><div class="kpi-sub">Rispettano tetto 35%</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Liquidità Residua</div><div class="kpi-value">{max(0.0, box_capital_half - _total_real_spend):,.0f} €</div><div class="kpi-sub">Cassa pronta o per singole</div></div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            for r, alloc, w in allocation:
-                render_box_card(r, alloc, w, box_capital_half, metadata, prices_full, show_usa_import, tier_type="core")
+                if _total_real_spend > box_capital_half * 1.10:
+                    st.warning(
+                        f"⚠️ A questo capitale, comprare per intero i box Core selezionati costerebbe ~**{_total_real_spend:,.0f}€**, "
+                        f"contro i {box_capital_half:,.0f}€ dedicati (+{(_total_real_spend/box_capital_half-1)*100:.0f}%). "
+                        "I box sono lotti indivisibili: il modello reale spende la cassa in sequenza (priorità ai primi in lista)."
+                    )
+                else:
+                    st.caption("✅ **Allocazione equilibrata**: I box in elenco rientrano nel budget dedicato, "
+                               "rispettando la regola del lotto indivisibile e la diversificazione.")
+
+                for r, alloc, w in executable_alloc:
+                    render_box_card(r, alloc, w, box_capital_half, metadata, prices_full, show_usa_import, tier_type="core")
+
+                if skipped_alloc:
+                    with st.expander(f"⚠️ {len(skipped_alloc)} box Core esclusi per tetto di concentrazione (>35% del budget)"):
+                        st.caption("Questi box hanno momentum positivo ma a questo livello di capitale rappresenterebbero più del 35% del portafoglio box, violando il limite di concentrazione testato.")
+                        for r, alloc, w in skipped_alloc:
+                            render_box_card(r, alloc, w, box_capital_half, metadata, prices_full, show_usa_import, tier_type="core")
 
     with tab_bench:
         st.info("🛡️ **Panchina & Riserve Liquide**: Se possiedi già uno dei box Core o non riesci a trovarlo su Cardmarket "
