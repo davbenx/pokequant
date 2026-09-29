@@ -49,3 +49,33 @@ def test_scan_signals_structure():
     msg = format_telegram_alert(res)
     assert "*POKEQUANT · SEGNALI DI MERCATO*" in msg
     assert "Test New Booster Box" in msg
+
+
+def test_scan_signals_excludes_rejected_franchises_and_languages():
+    """BUG TROVATO (Fase 4, 2026-09-29): questo scanner alimenta un alert Telegram
+    settimanale REALE (poke_signals.yml) e non applicava mai le esclusioni di
+    produzione (Magic, Pokemon Cinese per franchise; Pokemon JP per lingua) - poteva
+    mandare un "COMPRA SUBITO" su un franchise che la dashboard ha rigettato."""
+    sample_prices = {"magic_test_bb": 100.0, "jp_test_bb": 100.0, "en_test_bb": 100.0}
+    sample_meta = {
+        "magic_test_bb": {
+            "name": "Magic Test Box", "type": "sealed", "product_type": "booster_box",
+            "franchise": "magic", "set_tier": "S", "release_date": "2026-03-01", "msrp": 140.0,
+        },
+        "jp_test_bb": {
+            "name": "JP Test Box", "type": "sealed", "product_type": "booster_box",
+            "franchise": "pokemon", "language": "jp", "set_tier": "S",
+            "release_date": "2026-03-01", "msrp": 140.0,
+        },
+        "en_test_bb": {
+            "name": "EN Test Box", "type": "sealed", "product_type": "booster_box",
+            "franchise": "pokemon", "language": "en", "set_tier": "S",
+            "release_date": "2026-03-01", "msrp": 140.0,
+        },
+    }
+    res = scan_signals(current_prices=sample_prices, metadata=sample_meta,
+                        today_dt=datetime.date(2026, 9, 1))
+    buy_ids = {b["item_id"] for b in res["buy_signals"]}
+    assert "magic_test_bb" not in buy_ids
+    assert "jp_test_bb" not in buy_ids
+    assert "en_test_bb" in buy_ids

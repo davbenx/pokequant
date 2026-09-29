@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from poke_quant.config import PLATFORM_FEES, DEFAULT_EUR_USD
 from poke_quant.data.storage import load_price_matrix, load_metadata
 from poke_quant.engine.friction import calculate_sale_friction
+from poke_quant.data.liquidity_filter import DEFAULT_EXCLUDED_FRANCHISES, DEFAULT_EXCLUDED_LANGUAGES
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +74,24 @@ def scan_signals(
     all_sealed_evaluations = []
 
     # 1. SCANSIONE SEGNALI BUY E MATRICE FINESTRE D'ACQUISTO DI MERCATO
+    # BUG TROVATO (Fase 4 del piano, 2026-09-29): questo scanner e' una
+    # strategia indipendente e MAI validata con DSR/PBO (finestra eta'/MSRP +
+    # tranche di rotazione, diversa da TimeSeriesMomentumStrategy usata dalla
+    # dashboard) e girava ogni lunedi' via GitHub Action (poke_signals.yml)
+    # mandando alert Telegram REALI senza mai applicare le esclusioni di
+    # produzione decise in Fase 1 - avrebbe potuto segnalare "COMPRA SUBITO"
+    # su un box Magic o Pokemon JP nello stesso momento in cui la dashboard
+    # (correttamente) non mostra nulla per quei franchise, un contraddizione
+    # diretta e attiva su un canale che l'utente osserva davvero. Non e' una
+    # riconciliazione completa delle due strategie (richiederebbe validare
+    # OptimalSealedStrategy con lo stesso rigore) - e' il fix minimo per
+    # smettere di contraddire la dashboard sui franchise gia' rigettati.
     for item_id, meta in metadata.items():
         if meta.get("type") != "sealed":
+            continue
+        if meta.get("franchise") in DEFAULT_EXCLUDED_FRANCHISES:
+            continue
+        if meta.get("language") in DEFAULT_EXCLUDED_LANGUAGES:
             continue
         p_type = meta.get("product_type", "booster_box")
         if p_type not in ["booster_box", "specialty_bundle"]:
