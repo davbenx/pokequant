@@ -82,6 +82,7 @@ from poke_quant.slabs.grading_multipliers import (
     get_grade_benchmarks_ladder,
     get_company_relative_factor_vs_psa,
     get_card_pop_pressure,
+    get_card_strategy_and_pop_details,
 )
 
 # Soglie DAC7 (direttiva UE 2021/514): sopra queste soglie annue le piattaforme
@@ -1761,7 +1762,19 @@ def main():
 
                 rec_grade = get_recommended_grade_for_card(era=era_final)
                 is_modern_sub10 = (normalize_era(era_final) == Era.MODERN and ("10" not in grade_val and "9.5" not in grade_val))
-                pop_pressure = get_card_pop_pressure(target_item_id, era_final)
+                card_rarity = sel_meta.get("rarity") if 'sel_meta' in locals() and sel_meta else (matched_db_info.get("rarity") if matched_db_info else None)
+                card_reldate = sel_meta.get("release_date") if 'sel_meta' in locals() and sel_meta else (matched_db_info.get("release_date") if matched_db_info else None)
+                strat_pop_details = get_card_strategy_and_pop_details(
+                    item_id=target_item_id,
+                    game_slug=g_slug,
+                    item_slug=i_slug,
+                    card_name=card_name,
+                    era=era_final,
+                    rarity=card_rarity,
+                    release_date=card_reldate,
+                    mode=singles_mode if 'singles_mode' in locals() else "production",
+                )
+                pop_pressure = strat_pop_details.get("pop_pressure") or get_card_pop_pressure(target_item_id, era_final)
 
                 fair_value_calib, sniper_ceiling_calib, adj = adjust_price_for_grading(
                     base_psa_price_eur=base_psa_final,
@@ -1816,6 +1829,7 @@ def main():
                     "grade_val": grade_val,
                     "bench_tier_label": bench_tier_label,
                     "pop_pressure": pop_pressure,
+                    "strat_pop_details": strat_pop_details,
                     "base_psa_raw": base_psa_raw,
                     "v_mult": v_mult,
                     "v_desc": v_desc,
@@ -1874,29 +1888,134 @@ def main():
             pop_badge = pop_pressure.get("badge_html", "")
             pop_badge_html = f"<span style='margin-left: 6px;'>{pop_badge}</span>" if pop_badge else ""
 
-            # Striscia di analisi Pop Pressure
-            has_pop_data = pop_pressure.get("ratio_8_9") is not None
-            if has_pop_data:
-                p8 = int(pop_pressure.get("pop_8", 0))
-                p9 = int(pop_pressure.get("pop_9", 0))
-                p10 = pop_pressure.get("pop_10")
-                p10_str = f" · Pop(10): <strong style='color:#f8fafc;'>{int(p10):,}</strong>" if p10 is not None else ""
-                r89 = pop_pressure.get("ratio_8_9", 0.0)
-                pct = pop_pressure.get("percentile", 50.0)
-                pop_strip_html = (
-                    f'<div style="margin-top:10px; font-size:12px; line-height:1.4; color:#cbd5e1; background:rgba(30,41,59,0.6); border-radius:6px; padding:7px 12px; border:1px solid rgba(56,189,248,0.2);">'
-                    f'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">'
-                    f'<span>📊 <strong>PSA Population Report:</strong> Pop(9): <strong style="color:#f8fafc;">{p9:,}</strong> · Pop(8): <strong style="color:#f8fafc;">{p8:,}</strong>{p10_str}</span>'
-                    f'<span>Rapporto Pop(8)/Pop(9): <strong style="color:#38bdf8; font-family:\'JetBrains Mono\',monospace;">{r89:.2f}x</strong> &nbsp;·&nbsp; Posizione: <strong style="color:#f8fafc;">Top {100-pct:.0f}%</strong> (P{pct:.0f} nell\'era) &nbsp;{pop_badge}</span>'
+            # Dettagli Pop Report Multi-Fonte e Strategia
+            strat = res.get("strat_pop_details") or {}
+            has_pop = strat.get("has_pop_report", False)
+            psa = strat.get("psa_census", {})
+            cgc = strat.get("cgc_census", {})
+            pc_pop_url = strat.get("pricecharting_pop_url")
+            psa_search_url = strat.get("psa_search_url")
+            gem_rate = strat.get("gem_rate_psa")
+            gem_rate_str = f"{gem_rate:.1f}%" if gem_rate is not None else "N/D"
+
+            r89 = pop_pressure.get("ratio_8_9", 0.0) or 0.0
+            pct = pop_pressure.get("percentile", 50.0) or 50.0
+
+            pc_link_btn = f"<a href='{pc_pop_url}' target='_blank' style='color:#38bdf8; text-decoration:none; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); padding:3px 8px; border-radius:5px; font-weight:600; font-size:11px;'>🌐 PriceCharting Pop ↗</a>" if pc_pop_url else ""
+            psa_link_btn = f"<a href='{psa_search_url}' target='_blank' style='color:#fbbf24; text-decoration:none; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); padding:3px 8px; border-radius:5px; font-weight:600; font-size:11px;'>🏛️ Cerca su PSA Pop ↗</a>" if psa_search_url else ""
+
+            if has_pop:
+                p10_val = psa.get('10', 0)
+                p9_val = psa.get('9', 0)
+                p8_val = psa.get('8', 0)
+                p7_val = psa.get('7', 0)
+                psa_tot_val = psa.get('total', 0)
+
+                c10_val = cgc.get('10', 0)
+                c95_val = cgc.get('9.5', 0)
+                c9_val = cgc.get('9', 0)
+                c85_val = cgc.get('8.5', 0)
+                cgc_tot_val = cgc.get('total', 0)
+                mkt_tot_val = strat.get('market_total', 0)
+
+                pop_report_html = (
+                    f'<div style="margin-top:12px; background:rgba(30,41,59,0.7); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:12px 14px;">'
+                    f'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.07); padding-bottom:8px;">'
+                    f'<div style="display:flex; align-items:center; gap:8px;">'
+                    f'<span style="font-weight:700; font-size:13px; color:#f8fafc;">📊 Population Report Multi-Fonte</span>'
+                    f'<span style="font-size:11px; color:#94a3b8;">(Fonti: PSA Census & PriceCharting)</span>'
+                    f'</div>'
+                    f'<div style="display:flex; gap:6px;">{pc_link_btn}{psa_link_btn}</div>'
+                    f'</div>'
+                    f'<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:12px; font-size:12px;">'
+                    f'<div>'
+                    f'<div style="font-weight:700; color:#38bdf8; margin-bottom:4px; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">Censimento PSA</div>'
+                    f'<div style="color:#cbd5e1; line-height:1.6;">'
+                    f'<div>• PSA 10 (Gem Mint): <strong style="color:#f8fafc;">{p10_val:,}</strong> <span style="font-size:10px; color:#94a3b8;">({gem_rate_str})</span></div>'
+                    f'<div>• PSA 9 (Mint): <strong style="color:#f8fafc;">{p9_val:,}</strong></div>'
+                    f'<div>• PSA 8 (NM-MT): <strong style="color:#f8fafc;">{p8_val:,}</strong></div>'
+                    f'<div>• PSA 7 (Near Mint): <strong style="color:#f8fafc;">{p7_val:,}</strong></div>'
+                    f'<div style="margin-top:2px; font-weight:600; color:#94a3b8;">Totale PSA: <strong style="color:#f8fafc;">{psa_tot_val:,}</strong> copie</div>'
+                    f'</div>'
+                    f'</div>'
+                    f'<div>'
+                    f'<div style="font-weight:700; color:#fbbf24; margin-bottom:4px; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">CGC & Mercato Totale</div>'
+                    f'<div style="color:#cbd5e1; line-height:1.6;">'
+                    f'<div>• CGC 10 Pristine: <strong style="color:#f8fafc;">{c10_val:,}</strong></div>'
+                    f'<div>• CGC 9.5 / Gem: <strong style="color:#f8fafc;">{c95_val:,}</strong></div>'
+                    f'<div>• CGC 9 (Mint): <strong style="color:#f8fafc;">{c9_val:,}</strong></div>'
+                    f'<div>• CGC 8.5 (NM-Mt+): <strong style="color:#f8fafc;">{c85_val:,}</strong></div>'
+                    f'<div style="margin-top:2px; font-weight:600; color:#94a3b8;">Totale Mercato: <strong style="color:#f8fafc;">{mkt_tot_val:,}</strong> copie</div>'
+                    f'</div>'
+                    f'</div>'
+                    f'<div>'
+                    f'<div style="font-weight:700; color:#a78bfa; margin-bottom:4px; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">Pressione Demografica</div>'
+                    f'<div style="color:#cbd5e1; line-height:1.6;">'
+                    f'<div>• Ratio Pop(8)/Pop(9): <strong style="color:#38bdf8; font-family:\'JetBrains Mono\',monospace;">{r89:.2f}x</strong></div>'
+                    f'<div>• Posizione Era: <strong style="color:#f8fafc;">Top {100-pct:.0f}%</strong> (P{pct:.0f})</div>'
+                    f'<div style="margin-top:4px;">{pop_badge}</div>'
+                    f'<div style="margin-top:4px; font-size:11px; color:#94a3b8;">{strat.get("census_verdict", "")}</div>'
+                    f'</div>'
+                    f'</div>'
                     f'</div>'
                     f'</div>'
                 )
             else:
-                pop_strip_html = (
-                    '<div style="margin-top:10px; font-size:11px; color:#64748b; background:rgba(30,41,59,0.4); border-radius:6px; padding:6px 12px; border:1px solid rgba(255,255,255,0.05);">'
-                    '<span>📊 <strong>PSA Population Report:</strong> Dati di popolazione non censiti per questa referenza nel database locale.</span>'
-                    '</div>'
+                pop_report_html = (
+                    f'<div style="margin-top:12px; background:rgba(30,41,59,0.4); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px 14px;">'
+                    f'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">'
+                    f'<span>📊 <strong>Population Report:</strong> Dati di censimento dettagliati non registrati in cache per questa referenza.</span>'
+                    f'<div style="display:flex; gap:6px;">{pc_link_btn}{psa_link_btn}</div>'
+                    f'</div>'
+                    f'</div>'
                 )
+
+            # Box Analisi Scarsità & Value
+            disc_pct = strat.get("discount_pct", 0.0)
+            res_val = strat.get("residual")
+            st_tier = strat.get("strategy_tier", "CUSTOM")
+            if st_tier in ["CORE_BUY", "BENCH_BUY", "ALT_BUY"]:
+                val_color = "#10b981"
+                val_disalign_str = f"Sconto Edonico: -{abs(disc_pct):.1f}% vs peers"
+                res_str = f" (Residuo ε = {res_val:.2f})" if res_val is not None else ""
+            elif st_tier == "AVOID":
+                val_color = "#f43f5e"
+                val_disalign_str = f"Sovrapprezzo Speculativo: +{abs(disc_pct):.1f}% vs peers"
+                res_str = f" (Residuo ε = {res_val:.2f})" if res_val is not None else ""
+            elif st_tier == "NEUTRAL":
+                val_color = "#94a3b8"
+                val_disalign_str = "Prezzo Coerente con il Fair Value"
+                res_str = ""
+            else:
+                val_color = "#64748b"
+                val_disalign_str = "Valutazione Parametrica Empirica"
+                res_str = ""
+
+            strat_factors_html = (
+                f'<div style="margin-top:10px; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">'
+                f'<div style="background:rgba(15,23,42,0.85); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:12px 14px;">'
+                f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:6px;">'
+                f'<span style="font-weight:700; font-size:13px; color:#10b981;">💎 Fattore Scarsità (Fisica & Temporale)</span>'
+                f'<span style="font-size:10px; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.4); border-radius:4px; padding:1px 6px; font-weight:700;">{strat.get("supply_status", "")}</span>'
+                f'</div>'
+                f'<div style="font-size:12px; color:#cbd5e1; line-height:1.6;">'
+                f'<div>• <strong>Rarità & Pull Rate:</strong> <span style="color:#f8fafc;">{strat.get("rarity_tier_label", "Standard")}</span> ({strat.get("pull_rate_desc", "")})</div>'
+                f'<div>• <strong>Tiratura & Anzianità:</strong> Anno <span style="color:#f8fafc;">{strat.get("release_year", 2020)}</span> ({strat.get("age_years", 0)} anni fa)</div>'
+                f'<div style="margin-top:4px; font-size:11px; color:#94a3b8; font-style:italic;">{strat.get("supply_elasticity", "")}</div>'
+                f'</div>'
+                f'</div>'
+                f'<div style="background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:12px 14px;">'
+                f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:6px;">'
+                f'<span style="font-weight:700; font-size:13px; color:#38bdf8;">⚖️ Fattore Value (Strategia PokeQuant)</span>'
+                f'<span style="font-size:10px; background:rgba(56,189,248,0.15); color:{strat.get("strategy_badge_color", "#38bdf8")}; border:1px solid {strat.get("strategy_badge_color", "#38bdf8")}55; border-radius:4px; padding:1px 6px; font-weight:700;">{strat.get("strategy_badge", "Fascia Neutra")}</span>'
+                f'</div>'
+                f'<div style="font-size:12px; color:#cbd5e1; line-height:1.6;">'
+                f'<div>• <strong>Disallineamento Edonico:</strong> <strong style="color:{val_color}; font-size:13px;">{val_disalign_str}</strong>{res_str}</div>'
+                f'<div style="margin-top:4px; font-size:11px; color:#94a3b8; line-height:1.4;">{strat.get("value_verdict", "")}</div>'
+                f'</div>'
+                f'</div>'
+                f'</div>'
+            )
 
             if res.get("is_modern_sub10"):
                 st.warning(
@@ -1935,7 +2054,8 @@ def main():
                 f'<div class="kpi-card"><div class="kpi-label">Tetto Max (All-in)</div><div class="kpi-value">{res["sniper_ceiling_calib"]:.2f} €</div><div class="kpi-sub">Soffitto max per edge</div></div>'
                 f'<div class="kpi-card"><div class="kpi-label">{sub_offer_label}</div><div class="kpi-value" style="color: #38bdf8;">{res["sniper_net"]:.2f} €</div><div class="kpi-sub">{sub_offer_desc}</div></div>'
                 f'</div>'
-                f'{pop_strip_html}'
+                f'{pop_report_html}'
+                f'{strat_factors_html}'
                 f'</div>'
             )
             st.markdown(eval_card_html, unsafe_allow_html=True)

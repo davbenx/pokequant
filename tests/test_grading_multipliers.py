@@ -387,5 +387,42 @@ def test_adjust_price_for_grading_grade_benchmark():
     assert sc >= fv
 
 
+def test_get_card_strategy_and_pop_details():
+    from poke_quant.slabs.grading_multipliers import get_card_strategy_and_pop_details
+
+    # 1. Test carta Core BUY (Dark Vileplume #13)
+    dv = get_card_strategy_and_pop_details(item_id="dark_vileplume_13")
+    assert dv["item_id"] == "dark_vileplume_13"
+    assert dv["strategy_tier"] == "CORE_BUY"
+    assert "Tier 1: Core Conviction" in dv["strategy_badge"]
+    assert dv["discount_pct"] < -70.0
+    assert dv["psa_census"]["total"] > 1000
+    assert dv["psa_census"]["10"] == 22
+    assert dv["psa_census"]["9"] == 434
+    assert dv["cgc_census"]["10"] >= 20
+    assert dv["pricecharting_pop_url"] is not None
+    assert "pricecharting.com/pop/item/pokemon-team-rocket/dark-vileplume-13" in dv["pricecharting_pop_url"]
+    assert "psacard.com/pop/search" in dv["psa_search_url"]
+    assert "copie a box" in dv["pull_rate_desc"]
+    assert "Fuori Stampa" in dv["supply_status"]
+
+    # 2. Test carta Alternativa BUY (Alakazam #1)
+    al = get_card_strategy_and_pop_details(item_id="alakazam_1")
+    assert al["strategy_tier"] == "ALT_BUY"
+    assert "Alternativa" in al["strategy_badge"]
+    assert al["discount_pct"] < -50.0
+
+    # 3. Test carta fuori catalogo / custom (graceful fallback)
+    custom = get_card_strategy_and_pop_details(
+        item_id=None,
+        game_slug="pokemon-custom-set",
+        item_slug="custom-card-99",
+        card_name="Pikachu Custom",
+    )
+    assert custom["strategy_tier"] in ["CUSTOM", "NEUTRAL"]
+    assert "psacard.com/pop/search" in custom["psa_search_url"]
+
+
+
 
 

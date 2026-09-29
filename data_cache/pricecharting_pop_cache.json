@@ -1,0 +1,452 @@
+{
+  "pokemon-team-rocket/dark-vileplume-13": {
+    "cached_at": 1790673164,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": 15,
+        "cgc_pop": null,
+        "total_pop": 15,
+        "price_usd": 50.0
+      },
+      {
+        "grade": "2",
+        "psa_pop": 13,
+        "cgc_pop": 1,
+        "total_pop": 14,
+        "price_usd": 6.0
+      },
+      {
+        "grade": "3",
+        "psa_pop": 31,
+        "cgc_pop": 6,
+        "total_pop": 37,
+        "price_usd": 6.5
+      },
+      {
+        "grade": "4",
+        "psa_pop": 75,
+        "cgc_pop": 26,
+        "total_pop": 101,
+        "price_usd": 21.83
+      },
+      {
+        "grade": "5",
+        "psa_pop": 201,
+        "cgc_pop": 66,
+        "total_pop": 267,
+        "price_usd": 32.0
+      },
+      {
+        "grade": "6",
+        "psa_pop": 392,
+        "cgc_pop": 106,
+        "total_pop": 498,
+        "price_usd": 33.25
+      },
+      {
+        "grade": "7",
+        "psa_pop": 543,
+        "cgc_pop": 174,
+        "total_pop": 717,
+        "price_usd": 61.34
+      },
+      {
+        "grade": "8",
+        "psa_pop": 834,
+        "cgc_pop": 383,
+        "total_pop": 1217,
+        "price_usd": 82.49
+      },
+      {
+        "grade": "9",
+        "psa_pop": 434,
+        "cgc_pop": 138,
+        "total_pop": 572,
+        "price_usd": 99.99
+      },
+      {
+        "grade": "10",
+        "psa_pop": 22,
+        "cgc_pop": 24,
+        "total_pop": 46,
+        "price_usd": 1587.34
+      }
+    ]
+  },
+  "dark_vileplume_13": {
+    "cached_at": 1790673164,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": 15,
+        "cgc_pop": null,
+        "total_pop": 15,
+        "price_usd": 50.0
+      },
+      {
+        "grade": "2",
+        "psa_pop": 13,
+        "cgc_pop": 1,
+        "total_pop": 14,
+        "price_usd": 6.0
+      },
+      {
+        "grade": "3",
+        "psa_pop": 31,
+        "cgc_pop": 6,
+        "total_pop": 37,
+        "price_usd": 6.5
+      },
+      {
+        "grade": "4",
+        "psa_pop": 75,
+        "cgc_pop": 26,
+        "total_pop": 101,
+        "price_usd": 21.83
+      },
+      {
+        "grade": "5",
+        "psa_pop": 201,
+        "cgc_pop": 66,
+        "total_pop": 267,
+        "price_usd": 32.0
+      },
+      {
+        "grade": "6",
+        "psa_pop": 392,
+        "cgc_pop": 106,
+        "total_pop": 498,
+        "price_usd": 33.25
+      },
+      {
+        "grade": "7",
+        "psa_pop": 543,
+        "cgc_pop": 174,
+        "total_pop": 717,
+        "price_usd": 61.34
+      },
+      {
+        "grade": "8",
+        "psa_pop": 834,
+        "cgc_pop": 383,
+        "total_pop": 1217,
+        "price_usd": 82.49
+      },
+      {
+        "grade": "9",
+        "psa_pop": 434,
+        "cgc_pop": 138,
+        "total_pop": 572,
+        "price_usd": 99.99
+      },
+      {
+        "grade": "10",
+        "psa_pop": 22,
+        "cgc_pop": 24,
+        "total_pop": 46,
+        "price_usd": 1587.34
+      }
+    ]
+  },
+  "pokemon-base-set-2/alakazam-1": {
+    "cached_at": 1790673264,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": 34,
+        "cgc_pop": 3,
+        "total_pop": 37,
+        "price_usd": 51.0
+      },
+      {
+        "grade": "2",
+        "psa_pop": 23,
+        "cgc_pop": 5,
+        "total_pop": 28,
+        "price_usd": 15.0
+      },
+      {
+        "grade": "3",
+        "psa_pop": 82,
+        "cgc_pop": 14,
+        "total_pop": 96,
+        "price_usd": 16.61
+      },
+      {
+        "grade": "4",
+        "psa_pop": 181,
+        "cgc_pop": 40,
+        "total_pop": 221,
+        "price_usd": 27.0
+      },
+      {
+        "grade": "5",
+        "psa_pop": 456,
+        "cgc_pop": 100,
+        "total_pop": 556,
+        "price_usd": 31.5
+      },
+      {
+        "grade": "6",
+        "psa_pop": 741,
+        "cgc_pop": 173,
+        "total_pop": 914,
+        "price_usd": 48.56
+      },
+      {
+        "grade": "7",
+        "psa_pop": 953,
+        "cgc_pop": 286,
+        "total_pop": 1239,
+        "price_usd": 50.0
+      },
+      {
+        "grade": "8",
+        "psa_pop": 1391,
+        "cgc_pop": 592,
+        "total_pop": 1983,
+        "price_usd": 92.25
+      },
+      {
+        "grade": "9",
+        "psa_pop": 815,
+        "cgc_pop": 227,
+        "total_pop": 1042,
+        "price_usd": 184.87
+      },
+      {
+        "grade": "10",
+        "psa_pop": 69,
+        "cgc_pop": 34,
+        "total_pop": 103,
+        "price_usd": 3365.57
+      }
+    ]
+  },
+  "alakazam_1": {
+    "cached_at": 1790673264,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": 34,
+        "cgc_pop": 3,
+        "total_pop": 37,
+        "price_usd": 51.0
+      },
+      {
+        "grade": "2",
+        "psa_pop": 23,
+        "cgc_pop": 5,
+        "total_pop": 28,
+        "price_usd": 15.0
+      },
+      {
+        "grade": "3",
+        "psa_pop": 82,
+        "cgc_pop": 14,
+        "total_pop": 96,
+        "price_usd": 16.61
+      },
+      {
+        "grade": "4",
+        "psa_pop": 181,
+        "cgc_pop": 40,
+        "total_pop": 221,
+        "price_usd": 27.0
+      },
+      {
+        "grade": "5",
+        "psa_pop": 456,
+        "cgc_pop": 100,
+        "total_pop": 556,
+        "price_usd": 31.5
+      },
+      {
+        "grade": "6",
+        "psa_pop": 741,
+        "cgc_pop": 173,
+        "total_pop": 914,
+        "price_usd": 48.56
+      },
+      {
+        "grade": "7",
+        "psa_pop": 953,
+        "cgc_pop": 286,
+        "total_pop": 1239,
+        "price_usd": 50.0
+      },
+      {
+        "grade": "8",
+        "psa_pop": 1391,
+        "cgc_pop": 592,
+        "total_pop": 1983,
+        "price_usd": 92.25
+      },
+      {
+        "grade": "9",
+        "psa_pop": 815,
+        "cgc_pop": 227,
+        "total_pop": 1042,
+        "price_usd": 184.87
+      },
+      {
+        "grade": "10",
+        "psa_pop": 69,
+        "cgc_pop": 34,
+        "total_pop": 103,
+        "price_usd": 3365.57
+      }
+    ]
+  },
+  "pokemon-base-set-2/charizard-4": {
+    "cached_at": 1790673359,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": 1080,
+        "cgc_pop": 39,
+        "total_pop": 1119,
+        "price_usd": 298.91
+      },
+      {
+        "grade": "2",
+        "psa_pop": 691,
+        "cgc_pop": 67,
+        "total_pop": 758,
+        "price_usd": 198.0
+      },
+      {
+        "grade": "3",
+        "psa_pop": 1098,
+        "cgc_pop": 144,
+        "total_pop": 1242,
+        "price_usd": 220.0
+      },
+      {
+        "grade": "4",
+        "psa_pop": 1877,
+        "cgc_pop": 317,
+        "total_pop": 2194,
+        "price_usd": 259.31
+      },
+      {
+        "grade": "5",
+        "psa_pop": 3511,
+        "cgc_pop": 514,
+        "total_pop": 4025,
+        "price_usd": 310.73
+      },
+      {
+        "grade": "6",
+        "psa_pop": 4149,
+        "cgc_pop": 595,
+        "total_pop": 4744,
+        "price_usd": 392.07
+      },
+      {
+        "grade": "7",
+        "psa_pop": 4059,
+        "cgc_pop": 838,
+        "total_pop": 4897,
+        "price_usd": 450.0
+      },
+      {
+        "grade": "8",
+        "psa_pop": 3828,
+        "cgc_pop": 1160,
+        "total_pop": 4988,
+        "price_usd": 719.0
+      },
+      {
+        "grade": "9",
+        "psa_pop": 1391,
+        "cgc_pop": 287,
+        "total_pop": 1678,
+        "price_usd": 1523.94
+      },
+      {
+        "grade": "10",
+        "psa_pop": 70,
+        "cgc_pop": 86,
+        "total_pop": 156,
+        "price_usd": 8632.37
+      }
+    ]
+  },
+  "charizard_4": {
+    "cached_at": 1790673359,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": 1080,
+        "cgc_pop": 39,
+        "total_pop": 1119,
+        "price_usd": 298.91
+      },
+      {
+        "grade": "2",
+        "psa_pop": 691,
+        "cgc_pop": 67,
+        "total_pop": 758,
+        "price_usd": 198.0
+      },
+      {
+        "grade": "3",
+        "psa_pop": 1098,
+        "cgc_pop": 144,
+        "total_pop": 1242,
+        "price_usd": 220.0
+      },
+      {
+        "grade": "4",
+        "psa_pop": 1877,
+        "cgc_pop": 317,
+        "total_pop": 2194,
+        "price_usd": 259.31
+      },
+      {
+        "grade": "5",
+        "psa_pop": 3511,
+        "cgc_pop": 514,
+        "total_pop": 4025,
+        "price_usd": 310.73
+      },
+      {
+        "grade": "6",
+        "psa_pop": 4149,
+        "cgc_pop": 595,
+        "total_pop": 4744,
+        "price_usd": 392.07
+      },
+      {
+        "grade": "7",
+        "psa_pop": 4059,
+        "cgc_pop": 838,
+        "total_pop": 4897,
+        "price_usd": 450.0
+      },
+      {
+        "grade": "8",
+        "psa_pop": 3828,
+        "cgc_pop": 1160,
+        "total_pop": 4988,
+        "price_usd": 719.0
+      },
+      {
+        "grade": "9",
+        "psa_pop": 1391,
+        "cgc_pop": 287,
+        "total_pop": 1678,
+        "price_usd": 1523.94
+      },
+      {
+        "grade": "10",
+        "psa_pop": 70,
+        "cgc_pop": 86,
+        "total_pop": 156,
+        "price_usd": 8632.37
+      }
+    ]
+  }
+}

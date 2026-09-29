@@ -11,10 +11,11 @@ Fornisce:
 
 from __future__ import annotations
 import json
+import urllib.parse
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 
 
 class GradingCompany(str, Enum):
@@ -1123,5 +1124,282 @@ def get_recommended_grade_targets(
         "ladder": ladder,
         "pop_pressure": pop_info,
     }
+
+
+def get_card_strategy_and_pop_details(
+    item_id: Optional[str] = None,
+    game_slug: Optional[str] = None,
+    item_slug: Optional[str] = None,
+    card_name: Optional[str] = None,
+    era: Optional[Era | str] = None,
+    rarity: Optional[str] = None,
+    release_date: Optional[str] = None,
+    mode: str = "production",
+) -> Dict[str, Any]:
+    """
+    Recupera i dati completi di popolazione multi-fonte (PSA, CGC, Totale),
+    i fattori di scarsità (pull rate atteso da box, rigidità offerta, età) e
+    il posizionamento Value nella strategia quantitativa PokeQuant (Core BUY,
+    Panchina, Alternativa, Neutra, AVOID, o Custom).
+    """
+    from poke_quant.data.population_fetcher import fetch_pricecharting_population_cached
+    from poke_quant.engine.strategies.scarcity_value_factor import EXPECTED_COPIES_PER_BOX
+    from poke_quant.data.storage import load_metadata
+
+    resolved_id = item_id
+    meta = {}
+    try:
+        meta = load_metadata()
+    except Exception:
+        pass
+
+    if not resolved_id and game_slug and item_slug:
+        for iid, info in meta.items():
+            if info.get("game_slug") == game_slug and info.get("item_slug") == item_slug:
+                resolved_id = iid
+                break
+
+    card_meta = meta.get(resolved_id, {}) if resolved_id else {}
+    final_card_name = card_name or card_meta.get("name") or (item_slug.replace("-", " ").title() if item_slug else "Carta")
+    final_game_slug = game_slug or card_meta.get("game_slug") or ""
+    final_item_slug = item_slug or card_meta.get("item_slug") or ""
+    final_rarity = rarity or card_meta.get("rarity")
+    final_rel_date = release_date or card_meta.get("release_date")
+    norm_era = normalize_era(era or card_meta.get("era") or "vintage")
+
+    # 1. Recupero Censimento Popolazione
+    pop_rows = fetch_pricecharting_population_cached(
+        game_slug=final_game_slug,
+        item_slug=final_item_slug,
+        item_id=resolved_id,
+    )
+
+    psa_by_grade: Dict[str, int] = {}
+    cgc_by_grade: Dict[str, int] = {}
+    total_by_grade: Dict[str, int] = {}
+    psa_total = 0
+    cgc_total = 0
+    market_total = 0
+
+    for r in pop_rows:
+        g = str(r.get("grade", "")).strip()
+        p = r.get("psa_pop")
+        c = r.get("cgc_pop")
+        t = r.get("total_pop")
+        if p is not None:
+            psa_by_grade[g] = int(p)
+            psa_total += int(p)
+        if c is not None:
+            cgc_by_grade[g] = int(c)
+            cgc_total += int(c)
+        if t is not None:
+            total_by_grade[g] = int(t)
+            market_total += int(t)
+
+    psa_10 = psa_by_grade.get("10", 0)
+    psa_9 = psa_by_grade.get("9", 0)
+    psa_8 = psa_by_grade.get("8", 0)
+    psa_7 = psa_by_grade.get("7", 0)
+
+    cgc_10 = cgc_by_grade.get("10", 0)
+    cgc_95 = cgc_by_grade.get("9.5", 0)
+    cgc_9 = cgc_by_grade.get("9", 0)
+    cgc_85 = cgc_by_grade.get("8.5", 0)
+
+    gem_rate_psa = round((psa_10 / psa_total) * 100.0, 1) if psa_total > 0 else None
+    has_pop_report = len(pop_rows) > 0 and (psa_total > 0 or market_total > 0)
+
+    pop_pressure = get_card_pop_pressure(resolved_id, norm_era)
+
+    pc_pop_url = f"https://www.pricecharting.com/pop/item/{final_game_slug}/{final_item_slug}" if (final_game_slug and final_item_slug) else None
+
+    search_q_parts = [final_card_name]
+    if final_game_slug:
+        clean_set = final_game_slug.replace("pokemon-", "").replace("-", " ")
+        search_q_parts.append(clean_set)
+    psa_search_url = f"https://www.psacard.com/pop/search?q={urllib.parse.quote_plus(' '.join(search_q_parts))}"
+
+    # 2. Fattore Scarsità
+    copies_per_box = EXPECTED_COPIES_PER_BOX.get(final_rarity) if final_rarity else None
+    if copies_per_box is not None:
+        if copies_per_box < 1.0:
+            boxes_per_copy = round(1.0 / copies_per_box, 1)
+            pull_rate_desc = f"~1 copia ogni {boxes_per_copy} booster box (~{round(36 * boxes_per_copy)} bustine)"
+            rarity_tier_label = "Rarità Estrema (Secret / Ultra Chase)"
+        elif copies_per_box <= 2.0:
+            packs_per_copy = round(36.0 / copies_per_box)
+            pull_rate_desc = f"~{copies_per_box:.1f} copie a box (~1 ogni {packs_per_copy} bustine)"
+            rarity_tier_label = "Molto Rara (Special Illustration / Alt Art)"
+        elif copies_per_box <= 9.0:
+            packs_per_copy = round(36.0 / copies_per_box, 1)
+            pull_rate_desc = f"~{copies_per_box:.0f} copie a box (~1 ogni {packs_per_copy} bustine)"
+            rarity_tier_label = "Rara (Illustration / Ultra Rare / EX)"
+        else:
+            packs_per_copy = round(36.0 / copies_per_box, 1)
+            pull_rate_desc = f"~{copies_per_box:.0f} copie a box (~1 ogni {packs_per_copy} bustine)"
+            rarity_tier_label = "Rara Olografica Regolare"
+    else:
+        pull_rate_desc = "Frequenza bustine non standardizzata da tabella booster"
+        rarity_tier_label = final_rarity or "Non catalogata"
+
+    # Età e offerta
+    if final_rel_date:
+        yr_str = str(final_rel_date)[:4]
+        rel_yr = int(yr_str) if yr_str.isdigit() else 2020
+    elif norm_era == Era.VINTAGE:
+        rel_yr = 2000
+    elif norm_era == Era.MID_ERA:
+        rel_yr = 2010
+    else:
+        rel_yr = 2022
+
+    age_years = max(0, 2026 - rel_yr)
+
+    if rel_yr <= 2003:
+        supply_status = "🔒 Fuori Stampa (Vintage 20+ anni)"
+        supply_elasticity = "Offerta rigidamente anelastica: produzione chiusa da oltre due decenni, stock sigillato esaurito. Il censimento delle copie mint è un tetto massimo invalicabile."
+    elif rel_yr <= 2016:
+        supply_status = "🔒 Fuori Stampa (Mid-Era)"
+        supply_elasticity = "Offerta anelastica: set archiviato da anni, aperture di box sigillati rare ed estremamente costose."
+    elif age_years >= 3:
+        supply_status = "📦 Fuori Stampa / Fine Ciclo"
+        supply_elasticity = "Offerta quasi-fissa: distribuzione primaria conclusa da oltre 2 anni, afflusso di nuove gradazioni in progressiva stabilizzazione."
+    else:
+        supply_status = "🔄 In Stampa / Distribuzione Attiva"
+        supply_elasticity = "Offerta elastica: set moderno ancora reperibile a scaffale. Rischio di espansione continua del censimento delle copie gradate."
+
+    # Scarsità di censimento
+    if psa_total > 0:
+        if psa_10 <= 50:
+            census_verdict = f"💎 Scarsità Assoluta: appena {psa_10} copie Gem Mint PSA 10 al mondo su {psa_total:,} censite complessivamente."
+        elif psa_10 <= 300:
+            census_verdict = f"🛡️ Popolazione Ristretta: {psa_10:,} copie PSA 10 al mondo ({gem_rate_psa:.1f}% di Gem Rate)."
+        elif psa_10 <= 2500:
+            census_verdict = f"📊 Popolazione Liquida: {psa_10:,} copie PSA 10 al mondo ({gem_rate_psa:.1f}% di Gem Rate)."
+        else:
+            census_verdict = f"🌊 Iper-Abbondanza Demografica: ben {psa_10:,} copie PSA 10 censite ({gem_rate_psa:.1f}% di Gem Rate, forte diluizione)."
+    else:
+        census_verdict = "Censimento di mercato non disponibile nel database locale."
+
+    # 3. Fattore Value (Modello Edonico PokeQuant)
+    dashboard_cache_file = Path(__file__).resolve().parent.parent.parent / "data_cache" / "precomputed_dashboard_data.json"
+    strat_key = "production" if mode == "production" else "dac7"
+    strategy_data: Dict[str, Any] = {}
+    if dashboard_cache_file.exists():
+        try:
+            with open(dashboard_cache_file, "r", encoding="utf-8") as f:
+                d_all = json.load(f)
+                strategy_data = d_all.get("singles_signals", {}).get(strat_key, {})
+        except Exception:
+            strategy_data = {}
+
+    buy_map = {r["item_id"]: r for r in strategy_data.get("buy_rows", [])}
+    alt_map = {r["item_id"]: r for r in strategy_data.get("alt_rows", [])}
+    avoid_map = {r["item_id"]: r for r in strategy_data.get("avoid_rows", [])}
+
+    if resolved_id and resolved_id in buy_map:
+        b_row = buy_map[resolved_id]
+        is_core = b_row.get("tier") == "core"
+        strat_tier = "CORE_BUY" if is_core else "BENCH_BUY"
+        strat_badge = "💎 Tier 1: Core Conviction (BUY)" if is_core else "🛡️ Tier 2: Panchina & Riserve (BUY)"
+        strat_badge_color = "#10b981"
+        res_val = b_row.get("residual")
+        disc_val = b_row.get("discount_pct", 0.0)
+        value_verdict = (
+            f"La carta è selezionata dal modello quantitativo istituzionale nel portafoglio BUY: "
+            f"scambia a uno sconto edonico del {abs(disc_val):.1f}% rispetto a carte comparabili con pari scarsità ed età (residuo ε={res_val:.2f}). "
+            f"Rappresenta un ingresso primario ad altissima asimmetria statistica."
+        )
+    elif resolved_id and resolved_id in alt_map:
+        a_row = alt_map[resolved_id]
+        strat_tier = "ALT_BUY"
+        strat_badge = "🔄 Alternativa Quantile BUY (Top 20%)"
+        strat_badge_color = "#38bdf8"
+        res_val = a_row.get("residual")
+        disc_val = a_row.get("discount_pct", 0.0)
+        value_verdict = (
+            f"La carta si colloca nel miglior 20% del mercato (Top Quantile per fattore Scarsità-Valore) "
+            f"con uno sconto del {abs(disc_val):.1f}% sui comparabili (residuo ε={res_val:.2f}). "
+            f"Ottima alternativa di ripiego per diversificare o superare vincoli di reperibilità del Core."
+        )
+    elif resolved_id and resolved_id in avoid_map:
+        av_row = avoid_map[resolved_id]
+        strat_tier = "AVOID"
+        strat_badge = "🚫 Quantile AVOID (Sopravvalutata vs Fondamentali)"
+        strat_badge_color = "#f43f5e"
+        res_val = av_row.get("residual")
+        disc_val = av_row.get("discount_pct", 0.0)
+        value_verdict = (
+            f"Attenzione: il modello rileva che il prezzo attuale incorpora un forte premio speculativo "
+            f"(+{abs(disc_val):.1f}% sopra i fondamentali, residuo ε={res_val:.2f}) rispetto a quanto giustificato dalla scarsità e tiratura. "
+            f"Alto rischio di contrazione o sottoperformance rispetto ai peer."
+        )
+    elif resolved_id and resolved_id in meta:
+        strat_tier = "NEUTRAL"
+        strat_badge = "⚖️ Fascia Neutra (Fair Value di Mercato)"
+        strat_badge_color = "#94a3b8"
+        res_val = None
+        disc_val = 0.0
+        value_verdict = (
+            "Il prezzo di mercato è perfettamente in linea con i fondamentali del modello edonico PokeQuant "
+            "(scarsità oggettiva per box, anzianità temporale e serie storica). Nessuna anomalia o disallineamento statistico rilevato."
+        )
+    else:
+        strat_tier = "CUSTOM"
+        strat_badge = "✏️ Carta Custom / Fuori Catalogo Quantitativo"
+        strat_badge_color = "#64748b"
+        res_val = None
+        disc_val = 0.0
+        value_verdict = (
+            "Carta personalizzata o fuori dal paniere dei 1.000+ asset monitorati in continuo. "
+            "Il Fair Value è calcolato empiricamente tramite la matrice cross-sezionale delle case di gradazione."
+        )
+
+    return {
+        "item_id": resolved_id,
+        "card_name": final_card_name,
+        "game_slug": final_game_slug,
+        "item_slug": final_item_slug,
+        "era": norm_era.value,
+        # Pop report
+        "has_pop_report": has_pop_report,
+        "psa_census": {
+            "10": psa_10,
+            "9": psa_9,
+            "8": psa_8,
+            "7": psa_7,
+            "total": psa_total,
+        },
+        "cgc_census": {
+            "10": cgc_10,
+            "9.5": cgc_95,
+            "9": cgc_9,
+            "8.5": cgc_85,
+            "total": cgc_total,
+        },
+        "market_total": market_total,
+        "gem_rate_psa": gem_rate_psa,
+        "pop_pressure": pop_pressure,
+        "pricecharting_pop_url": pc_pop_url,
+        "psa_search_url": psa_search_url,
+        "psa_portal_url": "https://www.psacard.com/pop",
+        # Scarcity factor
+        "rarity": final_rarity or "Standard",
+        "rarity_tier_label": rarity_tier_label,
+        "pull_rate_desc": pull_rate_desc,
+        "release_year": rel_yr,
+        "age_years": age_years,
+        "supply_status": supply_status,
+        "supply_elasticity": supply_elasticity,
+        "census_verdict": census_verdict,
+        # Value factor
+        "strategy_tier": strat_tier,
+        "strategy_badge": strat_badge,
+        "strategy_badge_color": strat_badge_color,
+        "residual": res_val,
+        "discount_pct": disc_val,
+        "value_verdict": value_verdict,
+    }
+
 
 

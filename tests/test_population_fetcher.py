@@ -104,3 +104,19 @@ def test_fetch_retries_after_429():
          patch("poke_quant.data.population_fetcher.time.sleep"):
         rows = fetch_pricecharting_population("pokemon-base-set", "charizard-4")
     assert len(rows) == 3
+
+
+def test_fetch_cached_returns_data_for_known_item():
+    from poke_quant.data.population_fetcher import fetch_pricecharting_population_cached
+    rows = fetch_pricecharting_population_cached("pokemon-team-rocket", "dark-vileplume-13", item_id="dark_vileplume_13")
+    assert len(rows) > 0
+    g10 = next((r for r in rows if str(r["grade"]) == "10"), None)
+    assert g10 is not None
+    assert g10["psa_pop"] is not None
+
+
+def test_fetch_cached_empty_on_invalid_slugs():
+    from poke_quant.data.population_fetcher import fetch_pricecharting_population_cached
+    rows = fetch_pricecharting_population_cached("", "", item_id=None)
+    assert rows == []
+
