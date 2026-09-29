@@ -16,6 +16,7 @@ sulla funzione di libreria sottostante.
 """
 
 from pathlib import Path
+import pytest
 from streamlit.testing.v1 import AppTest
 
 APP_PATH = str(Path(__file__).resolve().parent.parent / "app.py")
@@ -94,3 +95,52 @@ def test_thin_market_flagged_card_shows_warning():
     assert res["matched_db_info"].get("data_quality") == "thin_unreliable"
     warnings_text = " ".join(w.value for w in at.warning)
     assert "mercato sottile" in warnings_text.lower()
+
+
+def _submit_variant_calculator(card_name: str, variant: str, company: str, grade: str, offer_price: float):
+    at = AppTest.from_file(APP_PATH)
+    at.run(timeout=60)
+    assert not at.exception
+
+    at.radio[0].set_value("✏️ Carta Personalizzata / Inserimento Libero (o Link PriceCharting)")
+    at.run(timeout=60)
+    assert not at.exception
+
+    at.text_input[0].set_value(card_name)
+    at.selectbox[0].set_value(company)
+    at.selectbox[1].set_value(grade)
+    at.selectbox[2].set_value(variant)
+    at.number_input[1].set_value(offer_price)
+    at.run(timeout=60)
+    assert not at.exception
+
+    at.button[0].click()
+    at.run(timeout=60)
+    assert not at.exception
+    return at.session_state.get("slab_eval_res")
+
+
+def test_variant_with_real_grade9_price_scales_with_selected_grade():
+    """BUG TROVATO (l'utente stava valutando "Jolteon Holo No Symbol Error"
+    nel Valutatore Slab: "modificare il voto slab non modifica i prezzi
+    consigliati", 2026-09-29): quando una variante speciale aveva un prezzo
+    reale trovato su PriceCharting (sempre al Grado 9, l'unico dato che
+    fetch_pricecharting_variant_grade9 restituisce), is_pc_grade_resolved
+    restava True per QUALUNQUE voto scelto nel menu - il fair value restava
+    bloccato al valore Grado 9 indipendentemente dal voto. Sintomo piu'
+    grave riscontrato dal vivo: un CGC 10.0 dava un fair value piu' BASSO di
+    un CGC 9.0 sulla stessa identica carta (invertito). Richiede rete (dato
+    reale PriceCharting per Jolteon #4 No Symbol Error) - se la variante non
+    ha piu' un prezzo reale disponibile il test si salta invece di fallire
+    a causa di una carta terza non piu' raggiungibile, non del bug stesso."""
+    variant_opt = "No Symbol Error (Rileva reale da PriceCharting o ~1.4x)"
+    fair_values = {}
+    for grade in ["7.0 Near Mint", "8.5 NM-Mint+", "9.0 Mint", "9.5 Gem Mint", "10.0 Gem Mint"]:
+        res = _submit_variant_calculator("Jolteon Jungle", variant_opt, "CGC", grade, 100.0)
+        if res is None or "dato reale" not in res.get("v_desc", "").lower():
+            pytest.skip("Nessun prezzo reale PriceCharting disponibile per questa variante al momento del test")
+        fair_values[grade] = res["fair_value_calib"]
+
+    ordered = [fair_values[g] for g in ["7.0 Near Mint", "8.5 NM-Mint+", "9.0 Mint", "9.5 Gem Mint", "10.0 Gem Mint"]]
+    assert ordered == sorted(ordered), f"il fair value deve crescere col voto: {fair_values}"
+    assert len(set(ordered)) == len(ordered), f"ogni voto deve dare un fair value diverso: {fair_values}"

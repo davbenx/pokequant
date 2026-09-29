@@ -1877,6 +1877,7 @@ def main():
             effective_max_edge = 0.0
             benchmark_source = ""
             is_pc_grade_resolved = False
+            is_variant_grade9_only = False
             pc_live_info = None
 
             # Priorità 1: Se l'utente ha inserito un override manuale > 0.0
@@ -1901,6 +1902,22 @@ def main():
                             effective_max_edge = round(pc_eur * 1.05, 2)
                             benchmark_source = f"PriceCharting Variante Reale (${pc_usd:.2f} USD)"
                             is_pc_grade_resolved = True
+                            # BUG TROVATO (l'utente: "modificare il voto slab non
+                            # modifica i prezzi consigliati", 2026-09-29):
+                            # get_cached_pc_variant_grade9()/fetch_pricecharting_
+                            # variant_grade9() restituisce SEMPRE il prezzo reale
+                            # al grado 9.0 della variante (chiave "graded" del
+                            # JSON PriceCharting), indipendente dal voto scelto -
+                            # ma is_pc_grade_resolved=True disabilitava la
+                            # scalatura di grado sotto per QUALUNQUE voto,
+                            # lasciando il prezzo bloccato al valore Grado 9 pur
+                            # etichettato come benchmark del grado scelto.
+                            # Verificato: Jolteon #4 No Symbol Error, CGC 9.0 ->
+                            # 283,46€, CGC 10.0 -> 134,65€ (invertito, un voto
+                            # migliore valeva MENO). is_variant_grade9_only
+                            # marca questo caso specifico, usato sotto per capire
+                            # quando il prezzo NON e' davvero abbinato al voto.
+                            is_variant_grade9_only = True
 
                 if not is_pc_grade_resolved:
                     sel_item_id = sel_meta.get("item_id")
@@ -1944,6 +1961,13 @@ def main():
             else:
                 # Gestione variante speciale (se non già risolta da PriceCharting)
                 is_special_variant = not variant_input.startswith("Standard")
+                # is_pc_grade_resolved resta True anche quando il prezzo reale
+                # trovato e' quello Grado-9-soltanto della variante
+                # (is_variant_grade9_only) - qui invece serve sapere se il
+                # prezzo e' DAVVERO abbinato al voto selezionato nel menu, per
+                # decidere se scalarlo per grado sotto e se passarlo come
+                # benchmark "gia' del grado giusto" a adjust_price_for_grading.
+                is_price_grade_matched = is_pc_grade_resolved and not (is_variant_grade9_only and grade_val != "9.0")
                 if manual_psa_override > 0.0:
                     v_mult = 1.0
                     v_desc = "Benchmark manuale inserito dall'utente"
@@ -1951,6 +1975,16 @@ def main():
                     v_mult, v_desc = get_variant_multiplier(variant_input, sel_meta.get("game_slug"))
                     base_psa_final = round(base_psa_raw * v_mult, 2)
                     effective_max_edge = round(base_max_edge * v_mult, 2)
+                elif is_special_variant:
+                    # BUG TROVATO (trovato indagando il bug del voto slab, stessa
+                    # richiesta dell'utente): quando la variante aveva un prezzo
+                    # reale (is_pc_grade_resolved), v_desc cadeva sempre nel ramo
+                    # else sotto ("Versione Standard / Unlimited") - etichetta
+                    # sbagliata per una carta che e' invece proprio la variante
+                    # speciale scelta (es. "No Symbol Error"), solo perche' il
+                    # suo prezzo veniva da un dato reale invece che da una stima.
+                    v_mult = 1.0
+                    v_desc = f"{variant_input.split('(')[0].strip()} — dato reale PriceCharting"
                 else:
                     v_mult = 1.0
                     v_desc = "Versione Standard / Unlimited"
@@ -1961,20 +1995,34 @@ def main():
                 era_final = era_detected if era_input.startswith("Auto") else era_input
                 display_title = f"{card_name} [{variant_input.split('(')[0].strip()}]" if is_special_variant else card_name
 
-                # Stima se non risolto da tier reale
-                if not is_pc_grade_resolved and manual_psa_override == 0.0:
+                # Stima se non risolto da tier reale (o se risolto solo al Grado 9
+                # della variante ma il voto scelto e' un altro - vedi
+                # is_price_grade_matched sopra)
+                if not is_price_grade_matched and manual_psa_override == 0.0:
                     is_grade_10 = "10" in grade_val
-                    is_grade_95 = "9.5" in grade_val
                     if is_grade_10:
                         p10_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(era_final), 3.00)
                         base_psa_final = round(base_psa_final * p10_ratio, 2)
                         effective_max_edge = round(effective_max_edge * p10_ratio, 2)
                         benchmark_source = f"Stima Algoritmica PSA 10 ({p10_ratio:.2f}x era)"
-                    elif is_grade_95:
-                        g95_ratio = ERA_BGS95_TO_PSA9_RATIO.get(normalize_era(era_final), 1.65)
-                        base_psa_final = round(base_psa_final * g95_ratio, 2)
-                        effective_max_edge = round(effective_max_edge * g95_ratio, 2)
-                        benchmark_source = f"Stima Algoritmica Grado 9.5 ({g95_ratio:.2f}x era)"
+                    # BUG TROVATO (trovato indagando il bug del voto slab sopra,
+                    # stessa richiesta dell'utente): il grado 9.5 applicava QUI
+                    # una pre-scalatura (ERA_BGS95_TO_PSA9_RATIO) e POI
+                    # adjust_price_for_grading applicava DI NUOVO un
+                    # moltiplicatore gia' "vs PSA9" da EMPIRICAL_RATIOS_GRADE9
+                    # (get_grading_adjustment assegna benchmark_ref="PSA_9"
+                    # anche al grado 9.5, non "PSA_10" - verificato leggendo il
+                    # codice) - doppio conteggio che sovrastimava il fair value
+                    # di un fattore pari esattamente a ERA_BGS95_TO_PSA9_RATIO
+                    # (es. CGC 9.5 Moderno: 114,72€ corretto vs 184,69€ col
+                    # doppio conteggio, +61%). Il grado 10 ne ha davvero bisogno
+                    # (EMPIRICAL_RATIOS_GRADE10 e' "vs PSA10" - PSA/10.0=1.0x
+                    # esatto, "Benchmark base Grado 10"), ma 9.5/8.5/8.0/7.5/7.0
+                    # no: EMPIRICAL_RATIOS_GRADE9 e' gia' l'intero rapporto vs
+                    # PSA9, nessuna pre-scalatura va applicata qui (stesso
+                    # trattamento che 8.5/8.0/7.5/7.0 gia' ricevevano).
+                    elif is_variant_grade9_only:
+                        benchmark_source = f"PriceCharting Variante Reale, base Grado 9 ({base_psa_final:.2f}€)"
                     elif pc_live_info:
                         benchmark_source = f"PriceCharting Reale Grado 9 (${pc_live_info['usd']:.2f} USD)"
                     elif is_special_variant:
@@ -2003,15 +2051,15 @@ def main():
                     era=era_final,
                     subgrades_black_label=is_black_label,
                     is_pristine=is_pristine,
-                    is_grade_benchmark_price=is_pc_grade_resolved,
+                    is_grade_benchmark_price=is_price_grade_matched,
                 )
 
-                if not is_pc_grade_resolved:
+                if not is_price_grade_matched:
                     sniper_ceiling_calib = round(effective_max_edge * adj.sniper_ceiling_factor, 2)
 
-                if is_pc_grade_resolved and pc_live_info:
+                if is_price_grade_matched and pc_live_info:
                     bench_tier_label = pc_live_info.get("tier", f"Grado {grade_val}")
-                elif is_pc_grade_resolved:
+                elif is_price_grade_matched:
                     bench_tier_label = f"Grado {grade_val}"
                 elif "10" in grade_val:
                     bench_tier_label = "PSA 10"

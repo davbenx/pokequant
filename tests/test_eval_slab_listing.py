@@ -16,6 +16,7 @@ in realta' vicina al fair value ("BUY CONSIGLIATO" con il benchmark corretto).
 
 from unittest.mock import patch
 import io
+import re
 import contextlib
 
 from scripts.eval_slab_listing import evaluate_listing
@@ -26,6 +27,12 @@ def _run_and_capture(**kwargs) -> str:
     with contextlib.redirect_stdout(buf):
         evaluate_listing(**kwargs)
     return buf.getvalue()
+
+
+def _fair_value(out: str) -> float:
+    m = re.search(r"Fair Value Slab:\s*([\d.]+)\s*€", out)
+    assert m, f"Fair Value non trovato nell'output:\n{out}"
+    return float(m.group(1))
 
 
 @patch("scripts.eval_slab_listing.fetch_pricecharting_grade_tier_price")
@@ -48,3 +55,61 @@ def test_variant_price_not_overwritten_by_standard_print_price(mock_variant, moc
     assert "106.12" not in out
     assert "BUY CONSIGLIATO" in out or "DEEP VALUE" in out or "FAIR VALUE" in out
     assert "SCARTARE" not in out
+
+
+@patch("scripts.eval_slab_listing.fetch_pricecharting_grade_tier_price")
+@patch("scripts.eval_slab_listing.fetch_pricecharting_variant_grade9")
+def test_variant_price_scales_with_selected_grade(mock_variant, mock_tier):
+    """BUG TROVATO (l'utente: "modificare il voto slab non modifica i prezzi
+    consigliati", 2026-09-29, su Jolteon Holo No Symbol Error): quando la
+    variante aveva un prezzo reale (sempre al Grado 9, unico dato che
+    fetch_pricecharting_variant_grade9 restituisce), is_grade_benchmark_resolved
+    veniva fissato a True per QUALUNQUE voto scelto, bloccando il fair value
+    al valore Grado 9 indipendentemente dal voto - verificato: un 10.0 dava un
+    fair value piu' BASSO di un 9.0 sulla stessa carta (invertito). Nessuna
+    pagina standard deve mai essere interrogata per una variante gia' risolta
+    (mock_tier.return_value = None -> se venisse chiamata, il benchmark
+    sparirebbe e il test fallirebbe)."""
+    mock_variant.return_value = (314.61, 365.50, "https://pricecharting.com/fake-no-symbol")
+    mock_tier.return_value = None
+
+    fair_values = {}
+    for grade in ["7.0", "8.0", "8.5", "9.0", "9.5", "10.0"]:
+        out = _run_and_capture(
+            card_query="jolteon_4", company="CGC", grade=grade, price_eur=100.0, variant="no_symbol",
+        )
+        fair_values[grade] = _fair_value(out)
+        mock_tier.assert_not_called()
+
+    ordered = [fair_values[g] for g in ["7.0", "8.0", "8.5", "9.0", "9.5", "10.0"]]
+    assert ordered == sorted(ordered), f"il fair value deve crescere col voto: {fair_values}"
+    assert len(set(ordered)) == 6, f"ogni voto deve dare un fair value diverso: {fair_values}"
+
+
+def test_grade_95_algorithmic_path_not_double_counted():
+    """BUG TROVATO (trovato indagando il bug del voto slab sopra): il ramo
+    algoritmico (nessun dato reale PriceCharting) pre-scalava il benchmark
+    grado 9.5 con ERA_BGS95_TO_PSA9_RATIO e POI adjust_price_for_grading
+    applicava DI NUOVO un moltiplicatore gia' "vs PSA9" da
+    EMPIRICAL_RATIOS_GRADE9 - doppio conteggio (+61% su CGC Moderno). Usa una
+    carta senza dato reale (nessun mock di fetch = tutte le fetch live
+    tornano un valore plausibile o None; qui basta confrontare 9.5 con 9.0 e
+    verificare che il rapporto sia vicino al moltiplicatore CGC/9.5/MODERN
+    reale (1.18x), non al suo quadrato (1.18*1.61=1.90x)."""
+    from poke_quant.slabs.grading_multipliers import EMPIRICAL_RATIOS_GRADE9, GradingCompany, Era
+
+    with patch("scripts.eval_slab_listing.fetch_pricecharting_grade_tier_price", return_value=None), \
+         patch("scripts.eval_slab_listing.fetch_pricecharting_variant_grade9", return_value=None):
+        out_90 = _run_and_capture(card_query="jolteon_4", company="CGC", grade="9.0", price_eur=100.0)
+        out_95 = _run_and_capture(card_query="jolteon_4", company="CGC", grade="9.5", price_eur=100.0)
+
+    fv_90 = _fair_value(out_90)
+    fv_95 = _fair_value(out_95)
+    mult_90 = EMPIRICAL_RATIOS_GRADE9[(GradingCompany.CGC, "9.0", Era.VINTAGE)][0]
+    mult_95 = EMPIRICAL_RATIOS_GRADE9[(GradingCompany.CGC, "9.5", Era.VINTAGE)][0]
+    expected_ratio = mult_95 / mult_90  # entrambi i multipliers sono "vs PSA9", il base cancella
+    observed_ratio = fv_95 / fv_90
+    assert abs(observed_ratio - expected_ratio) < 0.05, (
+        f"rapporto 9.5/9.0 osservato {observed_ratio:.3f} vs atteso {expected_ratio:.3f} "
+        f"(un rapporto molto piu' alto indicherebbe doppio conteggio della pre-scalatura ERA_BGS95_TO_PSA9_RATIO)"
+    )

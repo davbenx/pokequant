@@ -748,5 +748,155 @@
         "price_usd": 2013.21
       }
     ]
+  },
+  "pokemon-jungle/jolteon-4": {
+    "cached_at": 1790724547,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": 77,
+        "cgc_pop": 1,
+        "total_pop": 78,
+        "price_usd": 70.0
+      },
+      {
+        "grade": "2",
+        "psa_pop": 53,
+        "cgc_pop": 7,
+        "total_pop": 60,
+        "price_usd": 27.99
+      },
+      {
+        "grade": "3",
+        "psa_pop": 129,
+        "cgc_pop": 24,
+        "total_pop": 153,
+        "price_usd": 31.64
+      },
+      {
+        "grade": "4",
+        "psa_pop": 384,
+        "cgc_pop": 92,
+        "total_pop": 476,
+        "price_usd": 37.0
+      },
+      {
+        "grade": "5",
+        "psa_pop": 1029,
+        "cgc_pop": 221,
+        "total_pop": 1250,
+        "price_usd": 42.94
+      },
+      {
+        "grade": "6",
+        "psa_pop": 1488,
+        "cgc_pop": 348,
+        "total_pop": 1836,
+        "price_usd": 50.52
+      },
+      {
+        "grade": "7",
+        "psa_pop": 1753,
+        "cgc_pop": 511,
+        "total_pop": 2264,
+        "price_usd": 78.41
+      },
+      {
+        "grade": "8",
+        "psa_pop": 2151,
+        "cgc_pop": 839,
+        "total_pop": 2990,
+        "price_usd": 128.54
+      },
+      {
+        "grade": "9",
+        "psa_pop": 1159,
+        "cgc_pop": 302,
+        "total_pop": 1461,
+        "price_usd": 215.34
+      },
+      {
+        "grade": "10",
+        "psa_pop": 81,
+        "cgc_pop": 59,
+        "total_pop": 140,
+        "price_usd": 2218.64
+      }
+    ]
+  },
+  "jolteon_4": {
+    "cached_at": 1790724547,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": 77,
+        "cgc_pop": 1,
+        "total_pop": 78,
+        "price_usd": 70.0
+      },
+      {
+        "grade": "2",
+        "psa_pop": 53,
+        "cgc_pop": 7,
+        "total_pop": 60,
+        "price_usd": 27.99
+      },
+      {
+        "grade": "3",
+        "psa_pop": 129,
+        "cgc_pop": 24,
+        "total_pop": 153,
+        "price_usd": 31.64
+      },
+      {
+        "grade": "4",
+        "psa_pop": 384,
+        "cgc_pop": 92,
+        "total_pop": 476,
+        "price_usd": 37.0
+      },
+      {
+        "grade": "5",
+        "psa_pop": 1029,
+        "cgc_pop": 221,
+        "total_pop": 1250,
+        "price_usd": 42.94
+      },
+      {
+        "grade": "6",
+        "psa_pop": 1488,
+        "cgc_pop": 348,
+        "total_pop": 1836,
+        "price_usd": 50.52
+      },
+      {
+        "grade": "7",
+        "psa_pop": 1753,
+        "cgc_pop": 511,
+        "total_pop": 2264,
+        "price_usd": 78.41
+      },
+      {
+        "grade": "8",
+        "psa_pop": 2151,
+        "cgc_pop": 839,
+        "total_pop": 2990,
+        "price_usd": 128.54
+      },
+      {
+        "grade": "9",
+        "psa_pop": 1159,
+        "cgc_pop": 302,
+        "total_pop": 1461,
+        "price_usd": 215.34
+      },
+      {
+        "grade": "10",
+        "psa_pop": 81,
+        "cgc_pop": 59,
+        "total_pop": 140,
+        "price_usd": 2218.64
+      }
+    ]
   }
 }

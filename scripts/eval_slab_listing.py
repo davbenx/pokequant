@@ -208,20 +208,50 @@ def evaluate_listing(
         benchmark_note = f"Dato Reale {pc_source} ({tier_label}: ${pc_usd:.2f} USD)"
         is_grade_benchmark_resolved = True
     elif pc_data:
-        # Prezzo reale della variante gia' risolto sopra (base_psa_price/base_max_edge_price
-        # gia' impostati) - trattato come benchmark risolto, stesso comportamento di app.py.
-        is_grade_benchmark_resolved = True
-    elif "10" in grade_str:
+        # BUG TROVATO (l'utente: "modificare il voto slab non modifica i prezzi
+        # consigliati", 2026-09-29): fetch_pricecharting_variant_grade9()
+        # restituisce SEMPRE il prezzo reale al grado 9.0 della variante
+        # (legge la chiave "graded" del JSON PriceCharting, indipendente dal
+        # voto scelto) - ma veniva trattato come benchmark GIA' risolto per
+        # QUALUNQUE voto (is_grade_benchmark_resolved=True incondizionato),
+        # saltando la scalatura di grado sotto e passando
+        # is_grade_benchmark_price=True anche per un 10.0: il prezzo restava
+        # bloccato al valore Grado 9 ma ETICHETTATO come "PSA_10", producendo
+        # per la STESSA carta un fair value PSA10 piu' BASSO del fair value
+        # PSA9 (verificato: Jolteon #4 No Symbol Error, CGC 9.0 -> 283,46€,
+        # CGC 10.0 -> 134,65€, invertito). Risolto SOLO se il voto scelto e'
+        # davvero 9.0 (l'unico che il fetch restituisce); per ogni altro voto
+        # si riusa questo prezzo reale come base PSA9 (un dato reale, non un
+        # fallback peggiore) e si applica sotto la stessa scalatura del ramo
+        # puramente algoritmico - senza rientrare nel fetch generico sopra
+        # (gia' saltato per costruzione quando pc_data esiste), che
+        # sovrascriverebbe il prezzo della variante con quello della stampa
+        # standard (bug distinto, gia' corretto in precedenza).
+        is_grade_benchmark_resolved = "9" in grade_str and "9.5" not in grade_str and "95" not in grade_str
+        if not is_grade_benchmark_resolved:
+            benchmark_note = f"PriceCharting Variante Reale, base Grado 9 ({base_psa_price:.2f} €)"
+
+    if not is_grade_benchmark_resolved and "10" in grade_str:
         p10_ratio = ERA_PSA10_TO_PSA9_RATIO.get(era, 3.00)
         base_psa_price = round(base_psa_price * p10_ratio, 2)
         base_max_edge_price = round(base_max_edge_price * p10_ratio, 2)
         benchmark_note = f"Stima algoritmica Grado 10 (Base PSA 9 × {p10_ratio:.2f}x)"
-    elif "9.5" in grade_str or "95" in grade_str:
-        g95_ratio = ERA_BGS95_TO_PSA9_RATIO.get(era, 1.65)
-        base_psa_price = round(base_psa_price * g95_ratio, 2)
-        base_max_edge_price = round(base_max_edge_price * g95_ratio, 2)
-        benchmark_note = f"Stima algoritmica Grado 9.5 (Base PSA 9 × {g95_ratio:.2f}x)"
-    else:
+    elif not is_grade_benchmark_resolved and not pc_data:
+        # BUG TROVATO (trovato indagando il bug sopra, stessa richiesta
+        # dell'utente): questo ramo applicava una pre-scalatura
+        # (ERA_BGS95_TO_PSA9_RATIO) per il grado 9.5 e POI
+        # adjust_price_for_grading applicava DI NUOVO un moltiplicatore gia'
+        # "vs PSA9" da EMPIRICAL_RATIOS_GRADE9 (get_grading_adjustment
+        # assegna benchmark_ref="PSA_9" anche al grado 9.5, non "PSA_10" -
+        # verificato leggendo il codice) - doppio conteggio che sovrastimava
+        # il fair value di un fattore pari esattamente a
+        # ERA_BGS95_TO_PSA9_RATIO (es. CGC 9.5 Moderno: 114,72€ corretto vs
+        # 184,69€ col doppio conteggio, +61%). Il grado 10 ne ha davvero
+        # bisogno (EMPIRICAL_RATIOS_GRADE10 e' "vs PSA10", non "vs PSA9" -
+        # PSA/10.0=1.0x esatto, "Benchmark base Grado 10"), ma 9.5/8.5/8.0/
+        # 7.5/7.0 no: EMPIRICAL_RATIOS_GRADE9 e' gia' l'intero rapporto vs
+        # PSA9, nessuna pre-scalatura va applicata qui (stesso trattamento
+        # gia' corretto che il grado 8.5/8.0/7.5/7.0 riceveva).
         benchmark_note = f"Benchmark PokeQuant Base PSA 9 ({base_psa_price:.2f} €)"
 
     # Ricalibrazione per la compagnia e grado scelti
