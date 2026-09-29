@@ -13,6 +13,21 @@ history di git - non riproducibile, un singolo punto scelto a mano, non un
 optimum verificato sotto vincolo. Questo script e' la ricerca reale, mai
 fatta prima.
 
+BUG TROVATO (2026-09-29, richiesta esplicita dell'utente "verifica che le
+variabili della strategia siano ottimizzate/corrette"): il DSR qui sotto
+usava n_trials = SOLA griglia locale (24 = 4 rebalance x 6 max_positions),
+non il conteggio CUMULATIVO di questa stessa linea di ricerca sulla
+ScarcityValueFactorStrategy (62 trial gia' accumulati prima di arrivare qui -
+vedi poke_quant/engine/strategies/scarcity_value_factor.py) - una violazione
+della disciplina "conteggio cumulativo per l'intera sessione" applicata
+ovunque altrove in questo progetto (es. scripts/dsr_session_audit.py sul lato
+box). PRIOR_SINGLES_TRIALS sotto rende esplicito il numero di trial gia'
+spesi PRIMA di questa griglia, sommato a len(REBALANCE_GRID)*len(MAX_POSITIONS_GRID)
+per il totale onesto (86). Verificato l'impatto pratico: con Sharpe 2,37 su
+68 osservazioni mensili il DSR e' quasi insensibile al conteggio (0,999 a
+n=24 -> 0,995 a n=86) - la conclusione (sopra soglia di comfort) non cambia,
+ma il numero va comunque corretto per coerenza con il resto del progetto.
+
 VINCOLO CONTROLLABILE DAL MODELLO: solo il numero di transazioni/anno (le
 vendite chiuse, portfolio.closed_trades) dipende dalla cadenza di
 ribilanciamento e dal numero di posizioni - la soglia dei 2.000EUR/anno
@@ -50,6 +65,13 @@ REBALANCE_GRID = [3, 6, 9, 12]
 MAX_POSITIONS_GRID = [10, 15, 20, 30, 40, 60]
 FIXED_PARAMS = dict(top_quantile=0.20, min_age_months=6, min_cross_section=20)
 
+# Trial gia' spesi su questa stessa linea di ricerca (ScarcityValueFactorStrategy)
+# PRIMA di questa griglia - vedi poke_quant/engine/strategies/scarcity_value_factor.py
+# ("62 prove totali sulle singole in questa sessione"). Il totale onesto per il
+# DSR e' PRIOR_SINGLES_TRIALS + questa griglia, non questa griglia da sola.
+PRIOR_SINGLES_TRIALS = 62
+N_TRIALS_TOTAL = PRIOR_SINGLES_TRIALS + len(REBALANCE_GRID) * len(MAX_POSITIONS_GRID)
+
 
 def run_config(prices_sub, meta_sub, rebalance_every_months: int, max_positions: int):
     strat = ScarcityValueFactorStrategy(rebalance_every_months=rebalance_every_months,
@@ -61,7 +83,7 @@ def run_config(prices_sub, meta_sub, rebalance_every_months: int, max_positions:
     n_sales = len(res.trades_df) if res.trades_df is not None else 0
     sales_per_year = n_sales / n_years if n_years > 0 else float("inf")
     dsr = deflated_sharpe_ratio(observed_sr=res.sharpe / np.sqrt(12),
-                                 n_trials=len(REBALANCE_GRID) * len(MAX_POSITIONS_GRID),
+                                 n_trials=N_TRIALS_TOTAL,
                                  n_obs=len(res.monthly_returns))
     return res, sales_per_year, dsr
 

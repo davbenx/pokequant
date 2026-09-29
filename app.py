@@ -188,7 +188,15 @@ VALIDATED_SINGLES = {
     # rebalance_every_months=3, max_positions=20.
     # Unifica la modalita' standard e la conformita' DAC7 (< 30 vendite annue):
     # Sharpe 2.39 (DSR 0.999), CAGR +67.68%, MaxDD -9.70%, 28.6 vendite/anno reali.
-    "dsr_own_grid": 1.000, "dsr_full_session": 0.999, "n_trials_full_session": 24,
+    # BUG TROVATO (2026-09-29, richiesta esplicita dell'utente "verifica che le
+    # variabili della strategia siano ottimizzate/corrette"): dac7_turnover_search.py
+    # calcolava il DSR con n_trials = sola griglia locale (24), non il conteggio
+    # CUMULATIVO di questa stessa linea di ricerca (62 trial gia' spesi prima -
+    # vedi poke_quant/engine/strategies/scarcity_value_factor.py). Corretto: 62+24=86
+    # trial totali. Impatto pratico minimo (Sharpe 2,37 su 68 mesi e' quasi
+    # insensibile al conteggio: DSR 0,999->0,995) - resta sopra la soglia di
+    # comfort 0,90-0,95, la conclusione non cambia.
+    "dsr_own_grid": 0.999, "dsr_full_session": 0.995, "n_trials_full_session": 86,
     "pbo": 0.014, "sharpe": 2.39, "cagr": 67.68, "max_dd": -9.70,
     "h1_sharpe": 1.15, "h2_sharpe": 4.10,
 }
