@@ -19,7 +19,6 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, load_price_matrix
-from poke_quant.data.liquidity_filter import liquid_sealed_ids
 from poke_quant.engine.backtester import Backtester
 from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentumStrategy
 from poke_quant.validation.statistical_validation import deflated_sharpe_ratio
@@ -41,17 +40,30 @@ def main():
 
     zh_ids_all = [k for k, v in metadata.items() if v.get("franchise") == "pokemon_chinese"]
     print(f"Prodotti sealed Pokemon Cinese scoperti: {len(zh_ids_all)}")
+    real_months = {}
     for item_id in zh_ids_all:
         if item_id in prices.columns:
             s = prices[item_id].dropna()
             s = s[s > 0]
+            real_months[item_id] = len(s)
             print(f"  {item_id:28s} {len(s):3d} mesi di storico reale (dal {s.index.min().strftime('%Y-%m') if len(s) else 'N/A'})")
 
     print("\n" + "=" * 100)
     print("BOX Pokemon Cinese (TS Momentum) - richiede >=13 mesi di storico per un trailing return")
     print("=" * 100)
-    liquid_all = liquid_sealed_ids(metadata, prices, exclude_franchises=frozenset())
-    zh_liquid = [k for k in liquid_all if metadata[k].get("franchise") == "pokemon_chinese"]
+    # BUG TROVATO (rifacendo il run dopo il rebuild della matrice prezzi,
+    # 2026-09-29): usare liquid_sealed_ids() qui e' SBAGLIATO - is_liquid_sealed
+    # ritorna True automaticamente per qualunque item "era moderna" (release_date
+    # >= 2019-01-01), e il release_date proxy di questi item cinesi (primo mese
+    # con prezzo reale, vedi discover_pokemon_chinese_sealed_universe.py) e'
+    # SEMPRE >= 2019 per costruzione - quindi liquid_sealed_ids includeva tutti
+    # e 15 i prodotti indipendentemente da quanti mesi di storico avessero
+    # davvero, bypassando esattamente il controllo che questo script dice di
+    # fare. Il vincolo reale (>=13 mesi per un trailing return TSMomentum) va
+    # verificato direttamente sui mesi di storico contati sopra, non tramite
+    # liquid_sealed_ids (che risponde a una domanda diversa: "e' un box moderno
+    # con prezzo/MSRP nel range validato", non "ha abbastanza storico").
+    zh_liquid = [k for k in zh_ids_all if real_months.get(k, 0) >= 13]
     print(f"Prodotti Cinesi con >=13 mesi di storico (requisito lookback_months=12): {len(zh_liquid)}")
 
     if len(zh_liquid) < 5:
