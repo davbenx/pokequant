@@ -4,13 +4,21 @@ scripts/discover_pokemon_chinese_sealed_universe.py — Progetto pilota Pokemon
 Cinese (richiesto dall'utente: "aggiungiamo... Pokémon chinese", stesso
 standard di rigore usato per il pilota MTG - vedi scripts/mtg_pilot_validation.py).
 
-Scoperta strutturale via la categoria REALE di PriceCharting (verificata dal
-vivo: curl su pricecharting.com/category/pokemon-cards, NON assunta) - 23
-console page con game_slug `pokemon-chinese-<set>`. Per ognuna, verifica REALE
+Scoperta strutturale via la categoria REALE di PriceCharting
+(pricecharting.com/category/pokemon-cards, ri-scaricata dal vivo A OGNI RUN,
+non piu' un elenco congelato al 2026-09-29 - AGGIORNATO 2026-09-29 per la
+riconciliazione del motore dati con signal_scanner.py, richiesta esplicita
+dell'utente "fai in modo che il motore scarichi dati gia' su... pokemon
+china": senza questo la lista dei game_slug sarebbe rimasta ferma allo
+snapshot iniziale, non vedendo mai nuovi set cinesi usciti dopo oggi, stesso
+principio dinamico di discover_sealed_universe.py che riscarica l'anagrafica
+pokemontcg.io a ogni run). Per ogni console page trovata, verifica REALE
 (fetch, non assunzione) se esiste un prodotto "Booster Box" o "Booster Pack"
 con storico prezzi utilizzabile, stesso metodo di discover_one_piece_singles.py
 (console page PriceCharting) e discover_mtg_sealed_universe.py (verifica prima
-di aggiungere, nessun MSRP inventato).
+di aggiungere, nessun MSRP inventato). Idempotente: gli item gia' in metadata
+(via existing_keys) vengono saltati, quindi rilanciarlo ogni mese aggiunge
+SOLO i nuovi set, non ritocca quelli gia' presenti.
 
 RELEASE_DATE: PriceCharting non espone una data di rilascio per questi
 prodotti (verificato: campo "Release Date" presente in pagina ma vuoto/"none").
@@ -47,21 +55,20 @@ from poke_quant.data.price_fetcher import fetch_pricecharting_series
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
 
-# Verificato dal vivo il 2026-09-29 (curl su pricecharting.com/category/pokemon-cards,
-# grep di href="/console/pokemon-chinese-*") - lista reale, non assunta.
-CHINESE_GAME_SLUGS = [
-    "pokemon-chinese-151-collect", "pokemon-chinese-30th-celebration",
-    "pokemon-chinese-cs4ac", "pokemon-chinese-cs4bc", "pokemon-chinese-cs5ac",
-    "pokemon-chinese-csm2ac", "pokemon-chinese-csm2bc", "pokemon-chinese-csm2cc",
-    "pokemon-chinese-csv10c", "pokemon-chinese-csv4c", "pokemon-chinese-csv5c",
-    "pokemon-chinese-csv6c", "pokemon-chinese-csv7c", "pokemon-chinese-csv8c",
-    "pokemon-chinese-csv95c", "pokemon-chinese-csv9c",
-    "pokemon-chinese-gem-pack", "pokemon-chinese-gem-pack-2", "pokemon-chinese-gem-pack-3",
-    "pokemon-chinese-gem-pack-4", "pokemon-chinese-gem-pack-5", "pokemon-chinese-gem-pack-6",
-    "pokemon-chinese-promo",
-]
-
+CATEGORY_URL = "https://www.pricecharting.com/category/pokemon-cards"
 SEALED_SLUGS = ["booster-box", "booster-pack"]
+
+
+def fetch_chinese_game_slugs() -> list:
+    """Ri-scarica dal vivo la categoria pokemon-cards di PriceCharting ed estrae
+    i console (game_slug) `pokemon-chinese-<set>` - stesso meccanismo di
+    scoperta strutturale usato per il resto del progetto (mai un elenco
+    congelato), cosi' un nuovo set cinese uscito dopo oggi viene visto dal
+    prossimo run senza bisogno di aggiornare questo file a mano."""
+    resp = requests.get(CATEGORY_URL, headers=HEADERS, timeout=20)
+    resp.raise_for_status()
+    slugs = sorted(set(re.findall(r'href="/console/(pokemon-chinese-[a-z0-9-]+)"', resp.text)))
+    return slugs
 
 
 def era_id(game_slug: str) -> str:
@@ -77,8 +84,11 @@ def main():
     eur_usd = load_eur_usd_series()
     existing_keys = {(v.get("game_slug"), v.get("item_slug")) for v in metadata.values()}
 
+    chinese_game_slugs = fetch_chinese_game_slugs()
+    print(f"Console 'pokemon-chinese-*' trovate in categoria: {len(chinese_game_slugs)}")
+
     added, failed = [], []
-    for game_slug in CHINESE_GAME_SLUGS:
+    for game_slug in chinese_game_slugs:
         for item_slug in SEALED_SLUGS:
             key = (game_slug, item_slug)
             if key in existing_keys:

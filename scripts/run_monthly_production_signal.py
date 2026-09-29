@@ -116,6 +116,15 @@ def build_message() -> str:
 
 def main():
     run_step("Scoperta nuovi set sealed", ["scripts/discover_sealed_universe.py"])
+    # Aggiunti 2026-09-29 (richiesta esplicita dell'utente: "fai in modo che il
+    # motore scarichi dati gia' su One piece e pokemon china"): fino a qui solo
+    # Pokemon EN aveva una scoperta ricorrente - One Piece era fermo a 2 anni fa
+    # (ultimo set curato a mano: 2024-03-15) e Pokemon Cinese non aveva alcuna
+    # scoperta automatica dopo la scansione una tantum di Fase 1.3. Entrambi gli
+    # script sotto ri-scaricano dal vivo la propria categoria PriceCharting a
+    # ogni run (non un elenco congelato) e sono idempotenti (solo nuovi item).
+    run_step("Scoperta nuovi box One Piece", ["scripts/discover_one_piece_sealed_universe.py"])
+    run_step("Scoperta nuovi box Pokemon Cinese", ["scripts/discover_pokemon_chinese_sealed_universe.py"])
     run_step("Scoperta nuove singole chase", ["scripts/discover_chase_cards.py"])
     run_step("Scoperta nuove singole di controllo", ["scripts/discover_random_control_singles.py"])
     run_step("Ricostruzione prezzi con FX reale (sealed + graded singles)", ["scripts/rebuild_prices_with_real_fx.py"])
