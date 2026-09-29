@@ -12,7 +12,7 @@ slippage 2.5% e vendite forzate al ribilanciamento trimestrale).
 Questo script testa una griglia di frazioni alpha in [0.0, 0.50] dove:
     P_buy = P_current + alpha * (P_cutoff_teorico - P_current)
 
-ESITO EMPIRICO (su 2.588 singole, 69 mesi con spedizione reale e frizioni):
+ESITO EMPIRICO ORIGINALE (su 2.588 singole, 69 mesi con spedizione reale e frizioni):
   - alpha = 0.00 (prezzo di mercato): Sharpe 2.21 | CAGR +36.21% | MaxDD -8.82%
   - alpha = 0.10 (SOGLIA ISTITUZIONALE): Sharpe 1.01 | CAGR +19.42% | MaxDD -15.81%
   - alpha = 0.15: Sharpe 0.56 | CAGR +11.84% | MaxDD -21.46%
@@ -20,8 +20,30 @@ ESITO EMPIRICO (su 2.588 singole, 69 mesi con spedizione reale e frizioni):
   - alpha = 0.25 (PAREGGIO ZERO-ALPHA): Sharpe 0.00 | CAGR +0.92% | MaxDD -36.21%
   - alpha >= 0.30: Sharpe NEGATIVO e CAGR NEGATIVO.
 
-ADOTTATO PRESERVE_EDGE_ALPHA = 0.10 in produzione: garantisce che il "prezzo massimo"
-mostrato all'utente preservi uno Sharpe >= 1.0 e un rendimento annuo di circa +20%.
+ADOTTATO PRESERVE_EDGE_ALPHA = 0.10 in produzione: al momento della calibrazione
+garantiva Sharpe >= 1.0 e un rendimento annuo di circa +20% nel caso peggiore
+(acquisto sempre al tetto massimo mostrato).
+
+RI-VERIFICATO (2026-09-29, richiesta esplicita dell'utente: "verifica che le
+valutazioni dei prezzi massimi sulle slab per avere edge siano corretti") su
+2.587 singole, 69 mesi, con la matrice prezzi rebuilded con FX reale (Fase 1.3):
+  - alpha = 0.00: Sharpe 2.02 | CAGR +42.08% | MaxDD  -9.16% | Trade 138
+  - alpha = 0.10 (PRODUZIONE): Sharpe 0.63 | CAGR +15.03% | MaxDD -16.57% | Trade 145
+  - alpha = 0.15: Sharpe 0.20 | CAGR  +5.07% | MaxDD -24.18% | Trade 147
+  - alpha = 0.20: Sharpe -0.09 | CAGR  -2.71% | MaxDD -39.90% | Trade 145
+  - alpha = 0.25: Sharpe -0.32 | CAGR  -9.45% | MaxDD -56.06% | Trade 145 (pareggio ora sotto 0.25, non piu' esattamente a 0.25)
+  - alpha >= 0.30: Sharpe NEGATIVO e CAGR NEGATIVO (invariato).
+
+La FORMULA resta corretta e monotona (verificato: sniper_ceiling/max_edge_price
+cresce sempre col prezzo di cutoff, nessun bug nel codice) - e' la SOGLIA
+0,63 < 1,0 che non rispetta piu' la garanzia originale "Sharpe >= 1.0" con cui
+PRESERVE_EDGE_ALPHA=0.10 fu adottato: drift naturale coi mesi di dati aggiunti
+dopo la calibrazione iniziale, non un bug. Resta positivo (0,63, non negativo)
+quindi non e' un rigetto - ma la soglia "garantisce Sharpe >= 1.0" nel commento
+sopra NON e' piu' vera oggi. Decisione se ricalibrare PRESERVE_EDGE_ALPHA
+lasciata esplicitamente all'utente (cambiare un parametro di produzione dopo
+averne visto il risultato aggiornato sarebbe overfitting in-sample, la stessa
+disciplina gia' applicata altrove in questa sessione) - non modificato qui.
 """
 
 import sys

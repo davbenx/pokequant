@@ -597,6 +597,26 @@ def get_grading_adjustment(
             lookup = EMPIRICAL_RATIOS_GRADE9.get((comp_enum, "9.0", era_enum), (0.85, 10.0, 0.88, "Fallback Grade 9"))
 
     mult, liq_pen, sniper_factor, notes = lookup
+    # BUG TROVATO (verifica richiesta dall'utente: "verifica che le valutazioni
+    # dei prezzi massimi sulle slab per avere edge siano corretti", 2026-09-29):
+    # sniper_ceiling_factor e' descritto come il fattore MASSIMO consentito per
+    # preservare l'edge - per costruzione deve sempre essere >= multiplier (il
+    # "tetto" non puo' stare sotto la stima di fair value che delimita). Vero
+    # per 90/90 celle a grado 9.0-7.0 (margine sniper/mult - 1 sempre positivo,
+    # +0,4%..+8,3%) ma INVERTITO per tutte le celle a grado 9.5 di PSA/BGS/CGC
+    # (es. BGS 9.5 vintage: mult=1,809 ma sniper_factor=1,250, -31% sotto fair
+    # value) e per le sotto-varianti premium di Grado 10 (BGS Pristine/Black
+    # Label, CGC Pristine Modern, TAG Pristine Modern) - con questi numeri
+    # eval_slab_listing.py mostrava "Fair Value: 180€, Tetto Max Edge: 125€",
+    # marcando come "SCARTARE / OVERPRICED" uno slab venduto esattamente al
+    # fair value del modello. Nessuna fonte verificata per un margine "corretto"
+    # a questi grado (la ricerca in grading_company_multiplier_research.py
+    # copre solo il multiplier, mai il sniper_ceiling_factor - vedi AVVISO DI
+    # ATTENDIBILITA' sopra) - invece di inventare un numero, il tetto minimo
+    # e' vincolato al multiplier stesso (margine 0%, coerente con PSA 9.0/10.0,
+    # gia' a margine 0% nella tabella esistente): mai un fair value non
+    # acquistabile per costruzione.
+    sniper_factor = max(sniper_factor, mult)
     return GradingAdjustment(
         company=comp_enum,
         grade_label=f"{comp_enum.value} {grade}",

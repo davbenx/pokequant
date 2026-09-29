@@ -11,6 +11,8 @@ from poke_quant.slabs.grading_multipliers import (
     normalize_era,
     get_grading_adjustment,
     adjust_price_for_grading,
+    EMPIRICAL_RATIOS_GRADE9,
+    EMPIRICAL_RATIOS_GRADE10,
 )
 
 
@@ -426,3 +428,38 @@ def test_get_card_strategy_and_pop_details():
 
 
 
+
+
+def test_sniper_ceiling_never_below_fair_value():
+    """BUG TROVATO (verifica richiesta dall'utente: "verifica che le
+    valutazioni dei prezzi massimi sulle slab per avere edge siano
+    corretti", 2026-09-29): sniper_ceiling_factor e' il fattore MASSIMO
+    consentito per preservare l'edge - per costruzione non puo' mai essere
+    sotto multiplier (il fair value che delimita), altrimenti
+    eval_slab_listing.py marca come "OVERPRICED" uno slab venduto esattamente
+    al fair value del modello. Vero per 90/90 celle a grado 9.0-7.0, ma era
+    rotto per le 9 celle a grado 9.5 (PSA/BGS/CGC) e per 8 sotto-varianti
+    premium di Grado 10 (BGS Pristine/Black Label, CGC/TAG Pristine Modern) -
+    es. BGS 9.5 vintage: mult=1.809 ma sniper_factor=1.250 (-31%). Corretto
+    con un floor in get_grading_adjustment(). Questo test verifica
+    l'invariante su OGNI cella delle due tabelle, non solo i casi trovati."""
+    for table in (EMPIRICAL_RATIOS_GRADE9, EMPIRICAL_RATIOS_GRADE10):
+        for (company, grade, era) in table.keys():
+            adj = get_grading_adjustment(
+                company=company, grade=grade, era=era,
+                subgrades_black_label=("black_label" in grade),
+                is_pristine=("pristine" in grade),
+            )
+            assert adj.sniper_ceiling_factor >= adj.multiplier - 1e-9, (
+                f"{company.value} {grade} {era.value}: sniper_ceiling_factor "
+                f"{adj.sniper_ceiling_factor} < multiplier {adj.multiplier}"
+            )
+
+
+def test_adjust_price_for_grading_sniper_ceiling_covers_fair_value():
+    """Caso concreto del bug: prima della correzione BGS 9.5 vintage produceva
+    fair_value=180.90 ma sniper_ceiling=125.00 (sotto il fair value stesso)."""
+    fair_value, sniper_ceiling, _ = adjust_price_for_grading(
+        base_psa_price_eur=100.0, company=GradingCompany.BGS, grade="9.5", era=Era.VINTAGE,
+    )
+    assert sniper_ceiling >= fair_value
