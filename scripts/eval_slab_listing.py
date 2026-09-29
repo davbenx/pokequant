@@ -184,8 +184,21 @@ def evaluate_listing(
         grade_tier = "grade9"
         tier_label = "Grado 9.0"
 
-    # Tentativo di recuperare il dato reale di PriceCharting per il grado esatto
-    pc_tier = fetch_pricecharting_grade_tier_price(
+    # BUG TROVATO (richiesta esplicita dell'utente: valutazione di acquisti reali,
+    # "e' importante mantenere edge", 2026-09-29): quando una variante speciale
+    # (1st Edition/No Symbol/Shadowless) aveva gia' un prezzo REALE trovato sopra
+    # (pc_data, da fetch_pricecharting_variant_grade9 - la pagina dedicata della
+    # variante), questo fetch successivo interrogava SEMPRE anche la pagina dello
+    # stampa STANDARD (game_slug/item_slug, senza variante) e - se trovava un
+    # prezzo - lo usava per SOVRASCRIVERE silenziosamente base_psa_price, buttando
+    # via il prezzo reale della variante gia' trovato. Risultato concreto: una CGC
+    # 9.0 1st Edition Gym Challenge Sabrina #20 (prezzo reale 1st Ed. $229.99)
+    # veniva valutata contro il benchmark della stampa Unlimited ($106.12),
+    # producendo un falso "SCARTARE / OVERPRICED +72.6%" su una carta che al
+    # benchmark corretto era vicina al fair value. Stessa guardia gia' presente in
+    # app.py (is_pc_grade_resolved) - qui mancava. Se pc_data era gia' risolto, il
+    # fetch generico va saltato, non eseguito e poi ignorato.
+    pc_tier = None if pc_data else fetch_pricecharting_grade_tier_price(
         info.get("game_slug", ""), info.get("item_slug", ""), tier=grade_tier, item_id=item_id
     )
     if pc_tier:
@@ -193,6 +206,10 @@ def evaluate_listing(
         base_psa_price = pc_eur
         base_max_edge_price = round(pc_eur * 1.05, 2)
         benchmark_note = f"Dato Reale {pc_source} ({tier_label}: ${pc_usd:.2f} USD)"
+        is_grade_benchmark_resolved = True
+    elif pc_data:
+        # Prezzo reale della variante gia' risolto sopra (base_psa_price/base_max_edge_price
+        # gia' impostati) - trattato come benchmark risolto, stesso comportamento di app.py.
         is_grade_benchmark_resolved = True
     elif "10" in grade_str:
         p10_ratio = ERA_PSA10_TO_PSA9_RATIO.get(era, 3.00)
