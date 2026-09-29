@@ -34,5 +34,14 @@
     "game_slug": "pokemon-surging-sparks",
     "item_slug": "pikachu-ex-238",
     "date": "2026-09-29"
+  },
+  "pokemon-evolving-skies:umbreon-vmax-215:grade9": {
+    "eur": 1827.38,
+    "usd": 2122.94,
+    "url": "https://www.pricecharting.com/game/pokemon-evolving-skies/umbreon-vmax-215",
+    "tier": "grade9",
+    "game_slug": "pokemon-evolving-skies",
+    "item_slug": "umbreon-vmax-215",
+    "date": "2026-09-29"
   }
 }

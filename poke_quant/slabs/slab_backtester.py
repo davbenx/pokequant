@@ -107,6 +107,21 @@ class SlabBacktester:
         if universe is None:
             universe = get_curated_grails()
 
+        # Guardia rumorosa (audit generale 2026-09-29): se questo flag viene
+        # mai acceso, il backtest usera' curve di prezzo INVENTATE (np.linspace)
+        # per le carte senza storico reale - garantendo un risultato positivo
+        # falso. Un warning silenzioso non basta per una metrica di performance:
+        # deve essere impossibile ignorarlo per errore.
+        if include_synthetic_demo_data:
+            import warnings
+            warnings.warn(
+                "include_synthetic_demo_data=True: il backtest includera' curve di prezzo "
+                "SINTETICHE (inventate, non osservate) per le carte senza storico reale. "
+                "Qualunque Sharpe/CAGR/drawdown calcolato NON e' evidenza di performance "
+                "reale - usare SOLO per una demo UI esplicitamente etichettata come tale.",
+                stacklevel=2,
+            )
+
         # Carica o costruisce la matrice storica dei prezzi delle lastre
         if price_matrix is None:
             price_matrix = self._load_or_build_historical_matrix(

@@ -32,6 +32,7 @@ from poke_quant.data.liquidity_filter import (
 from poke_quant.engine.backtester import Backtester
 from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentumStrategy
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
+from poke_quant.engine.position_sizing import inverse_vol_split
 from poke_quant.data.price_fetcher import fetch_pricecharting_cover_image_url
 from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTOFF
 from scripts.generate_singles_signal import (
@@ -297,15 +298,15 @@ def main():
     bt_singles_dac7_dict = serialize_backtest_res(res_singles_dac7, len(singles_ids))
     print(f"   Backtest Singole DAC7 completato: Sharpe {res_singles_dac7.sharpe:.2f}, CAGR +{res_singles_dac7.cagr*100:.1f}%, Trades {res_singles_dac7.total_trades}")
 
-    # Risk parity split
+    # Risk parity split - formula centralizzata in
+    # poke_quant.engine.position_sizing.inverse_vol_split (trovato in audit
+    # generale, 2026-09-29: questo script e app.py::get_box_singles_split()
+    # reimplementavano la stessa formula in due punti indipendenti, a rischio
+    # di divergere silenziosamente).
     common_idx = res_box.monthly_returns.index.intersection(res_singles_prod.monthly_returns.index)
     vol_box = float(res_box.monthly_returns.loc[common_idx].std())
     vol_singles = float(res_singles_prod.monthly_returns.loc[common_idx].std())
-    inv_box = 1.0 / max(1e-6, vol_box)
-    inv_singles = 1.0 / max(1e-6, vol_singles)
-    tot_inv = inv_box + inv_singles
-    w_box = round(inv_box / tot_inv, 2)
-    w_singles = round(1.0 - w_box, 2)
+    w_box, w_singles = inverse_vol_split(vol_box, vol_singles, round_to=2)
     print(f"   Risk-parity split calibrato: {w_box*100:.0f}% Box / {w_singles*100:.0f}% Singole")
 
     print("\n6. Identificazione prodotti e prefetch copertine...")

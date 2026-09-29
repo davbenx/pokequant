@@ -254,6 +254,13 @@ def evaluate_listing(
     print(f"   VALUTAZIONE QUANTITATIVA SLAB — POKEQUANT VALUATION DESK")
     print("=" * 76)
     print(f"• Carta:            {info.get('name')} [{info.get('game_slug')}]")
+    # BUG TROVATO IN AUDIT (2026-09-29): is_grade_10/is_grade_95 non erano mai
+    # definiti in questa funzione -> NameError certo ogni volta che si valuta
+    # una variante speciale (1st edition/no-symbol/shadowless, v_mult>1.0).
+    # Derivati qui da adj.benchmark_ref/grade, stesso parsing di
+    # get_grading_adjustment() in grading_multipliers.py.
+    is_grade_10 = adj.benchmark_ref == "PSA_10"
+    is_grade_95 = "9.5" in str(grade).replace("_", ".") or "95" in str(grade).replace("_", ".")
     if v_mult > 1.0 and not is_grade_10 and not is_grade_95:
         print(f"• Variante/Edizione:{v_desc} (Moltiplicatore: {v_mult:.2f}x)")
     rec_grade = get_recommended_grade_for_card(era=era)

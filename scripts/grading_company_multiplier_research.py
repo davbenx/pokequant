@@ -1,22 +1,45 @@
 #!/usr/bin/env python3
 """
-scripts/grading_company_multiplier_research.py — Ricerca quantitativa empirica
-sui moltiplicatori di prezzo e sconti di liquidità per le diverse case di gradazione.
+scripts/grading_company_multiplier_research.py — Statistiche descrittive su
+un dataset di CONFRONTI DI PREZZO STIMATI A MANO tra case di gradazione.
 
-Analizza i dati comparativi di mercato su un campione stratificato di carte
+AVVISO DI ATTENDIBILITA' (corretto durante l'audit generale del repo su
+richiesta esplicita dell'utente - "trova bug, inconsistenze... invalida"):
+il commento precedente affermava "Rilevazioni Reali di Venduto & Ask
+Comparativi - Fonti: PriceCharting Multi-Company Splits, eBay Completed/Sold
+Comps, Cardmarket Asks" per EMPIRICAL_COMP_DATA. FALSO: questo file non
+contiene NESSUNA chiamata di rete, NESSUN fetch, NESSUN caricamento da CSV/
+JSON - EMPIRICAL_COMP_DATA e' una lista Python scritta a mano, con prezzi
+digitati dalla conoscenza generale del mercato (grading arbitrage community,
+prezzi "tipici" per carte iconiche), NON misurati o verificati da questo
+codice. Le statistiche sotto (mediana/media/std/IQR) sono calcolate
+CORRETTAMENTE sul dataset, ma il dataset stesso e' una stima soggettiva, non
+un campione di vendite reali - la differenza tra "statistica corretta" e
+"input verificato" e' esattamente il tipo di errore che questa ricerca ha
+sempre trattato come squalificante altrove (vedi la storia respinta di
+popolazioni PSA "fabbricate" da un altro agente, stesso principio). Non
+cancellato (i numeri non sono assurdi, sono stime plausibili di chi conosce
+il mercato) ma NON deve essere presentato come dato empirico verificato in
+nessun punto downstream (grading_multipliers.py, la UI del calcolatore slab
+in app.py) senza un avviso "stima non verificata" visibile all'utente.
+
+Analizza il dataset stimato su un campione stratificato di carte
 rappresentative attraverso 3 macro-ere del collezionismo:
   1. Vintage (1999–2003: WotC Base Set, Jungle, Fossil, Rocket, Gym, Neo, e-Series)
   2. Mid-Era (2004–2016: EX Series, Diamond & Pearl, Platinum, HGSS, Black & White, XY)
   3. Moderno (2017–2026: Sun & Moon, Sword & Shield, Scarlet & Violet)
 
 Calcola:
-  - Distribuzioni empiriche (Mediana, Media, Dev.Std, IQR, Min, Max) dei rapporti di prezzo
-    rispetto al benchmark di riferimento:
+  - Distribuzioni statistiche (Mediana, Media, Dev.Std, IQR, Min, Max) dei rapporti di
+    prezzo rispetto al benchmark di riferimento:
       * Base Grado 9: Rapporto vs PSA 9 = 1.00x
       * Base Grado 10: Rapporto vs PSA 10 = 1.00x
   - Sconto di Liquidità e Frizione di Mercato Internazionale per le case regionali europee
     (GRAAD, PCA, ACE) rispetto alle major globali (PSA, BGS, CGC).
-  - Matrice di calibrazione raccomandata per poke_quant/slabs/grading_multipliers.py.
+  - Matrice di calibrazione PARZIALE per poke_quant/slabs/grading_multipliers.py - solo
+    grado 9/9.5/10, solo PSA/BGS/CGC/SGC/GRAAD/PCA: quel modulo estende questa matrice con
+    tabelle per TAG/AiGrading/CCC/ACE e per i gradi 7.0-8.5 che NON hanno alcun
+    riscontro qui - vedi l'avviso equivalente in grading_multipliers.py.
 """
 
 from __future__ import annotations
@@ -31,8 +54,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
 # =============================================================================
-# DATASET EMPIRICO STRATIFICATO: Rilevazioni Reali di Venduto & Ask Comparativi
-# Fonti: PriceCharting Multi-Company Splits, eBay Completed/Sold Comps, Cardmarket Asks
+# DATASET STIMATO A MANO (NON misurato, NON fetchato - vedi avviso in testa al
+# file): confronti di prezzo per carte iconiche tra case/gradi di gradazione,
+# scritti dalla conoscenza generale del mercato del collezionismo, non da
+# vendite reali raccolte da questo codice.
 # =============================================================================
 
 EMPIRICAL_COMP_DATA: List[Dict[str, Any]] = [

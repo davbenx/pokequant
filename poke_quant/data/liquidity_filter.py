@@ -98,10 +98,35 @@ def is_liquid_sealed(item_id: str, meta: dict, prices_df: pd.DataFrame,
     return ratio <= max_price_msrp_ratio
 
 
-def liquid_sealed_ids(metadata: dict, prices_df: pd.DataFrame, **kwargs) -> List[str]:
+# BUG TROVATO (2026-09-26, poi riconfermato nell'audit generale del 2026-09-29
+# dopo che l'utente ha chiesto di annullare il primo fix e poi ha chiesto un
+# audit completo "trova bug... invalida"): il pilota Magic: The Gathering e'
+# stato testato e RIGETTATO in modo decisivo (scripts/mtg_pilot_validation.py:
+# box Sharpe -0,09 DSR 0,006; singole Sharpe negativo a qualunque tetto di
+# quantita' realistico) con la conclusione esplicita di NON integrarlo in
+# produzione - ma nessuna funzione qui lo escludeva mai di default: ogni
+# chiamante (generate_monthly_signal.py, generate_singles_signal.py, le stesse
+# get_backtest_results()/get_singles_backtest_results() di app.py da cui
+# derivano i numeri di produzione mostrati all'utente, script di ricerca)
+# doveva ricordarsi di filtrare da solo - nessuno lo faceva. Default sicuro:
+# esclude "magic" a meno che il chiamante non lo chieda esplicitamente
+# (scripts/mtg_pilot_validation.py passa exclude_franchises=frozenset()
+# apposta, per poter testare MTG isolato). NOTA: dopo il primo fix, un'altra
+# sessione/l'utente ha aggiunto in app.py un selettore "Magic (MTG)" come
+# franchise scelta esplicitamente nella UI box - quella e' una scelta di
+# prodotto (mostrare MTG come opzione visibile), non in conflitto con QUESTO
+# default: il default protegge le STATISTICHE AGGREGATE (Sharpe/DSR/split), il
+# selettore resta libero di far vedere le righe MTG a chi lo seleziona
+# esplicitamente, con un caveat (vedi app.py).
+DEFAULT_EXCLUDED_FRANCHISES = frozenset({"magic"})
+
+
+def liquid_sealed_ids(metadata: dict, prices_df: pd.DataFrame,
+                       exclude_franchises: frozenset = DEFAULT_EXCLUDED_FRANCHISES, **kwargs) -> List[str]:
     return [
         k for k, v in metadata.items()
-        if v.get("type") == "sealed" and is_liquid_sealed(k, v, prices_df, **kwargs)
+        if v.get("type") == "sealed" and v.get("franchise") not in exclude_franchises
+        and is_liquid_sealed(k, v, prices_df, **kwargs)
     ]
 
 
@@ -170,6 +195,7 @@ def liquid_singles_ids(
     grade9_prices_df: pd.DataFrame,
     min_median_price_eur: float = MIN_SINGLES_MEDIAN_PRICE_EUR,
     price_window_months: int = MIN_SINGLES_PRICE_WINDOW_MONTHS,
+    exclude_franchises: frozenset = DEFAULT_EXCLUDED_FRANCHISES,
 ) -> List[str]:
     """Universo singole investibile: esclude le carte gia' flaggate
     data_quality="thin_unreliable" (compute_reliability_flags, gia' applicato
@@ -193,10 +219,20 @@ def liquid_singles_ids(
     il pavimento esiste solo perche' e' antieconomico gradare una carta che
     costa meno della gradazione stessa - un concetto che non si applica a
     una carta che non si intende gradare. Il controllo di attendibilita'
-    (salti di prezzo estremi) resta applicato a tutte le franchise."""
+    (salti di prezzo estremi) resta applicato a tutte le franchise.
+
+    BUG TROVATO (riconfermato nell'audit generale del 2026-09-29): il pilota
+    MTG e' stato RIGETTATO in modo decisivo con la conclusione esplicita di
+    non integrarlo - ma questa funzione lasciava sempre passare le carte
+    magic (skip del pavimento sopra), quindi ogni chiamante che non filtrava
+    da solo (nessuno lo faceva) le vedeva comunque nel segnale live.
+    exclude_franchises default esclude "magic" (vedi DEFAULT_EXCLUDED_FRANCHISES);
+    mtg_pilot_validation.py passa frozenset() apposta per testare MTG isolato."""
     ids = []
     for item_id, info in metadata.items():
         if info.get("type") != "single":
+            continue
+        if info.get("franchise") in exclude_franchises:
             continue
         if info.get("data_quality") == "thin_unreliable":
             continue

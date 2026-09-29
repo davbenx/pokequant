@@ -117,7 +117,10 @@ def main():
     print("=" * 100)
     print("1-2. BOX (TS Momentum)")
     print("=" * 100)
-    sealed_ids = liquid_sealed_ids(metadata, sealed_prices)
+    # exclude_franchises=frozenset(): il default di liquid_sealed_ids esclude
+    # "magic" (poke_quant/data/liquidity_filter.py::DEFAULT_EXCLUDED_FRANCHISES),
+    # ma QUESTO script esiste apposta per testare MTG isolato: deve includerlo.
+    sealed_ids = liquid_sealed_ids(metadata, sealed_prices, exclude_franchises=frozenset())
     mtg_box_ids = [k for k in sealed_ids if metadata[k].get("franchise") == "magic"]
     print(f"Box MTG liquidi: {len(mtg_box_ids)} | Box totali (Pokemon+OP+MTG): {len(sealed_ids)}")
 
@@ -136,7 +139,7 @@ def main():
     print("3-4. SINGOLE (Fattore Scarsita')")
     print("=" * 100)
     unified_panel = build_unified_singles_price_panel(grade9_prices, raw_prices)
-    singles_ids = liquid_singles_ids(metadata, unified_panel)
+    singles_ids = liquid_singles_ids(metadata, unified_panel, exclude_franchises=frozenset())
     mtg_singles_ids = [k for k in singles_ids if metadata[k].get("franchise") == "magic"]
     mtg_control_ids = [k for k in mtg_singles_ids if metadata[k].get("selection_method") == "random_control"]
     print(f"Singole MTG liquide: {len(mtg_singles_ids)} (di cui controllo puro: {len(mtg_control_ids)}) | "

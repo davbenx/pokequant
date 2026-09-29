@@ -1,11 +1,26 @@
 """
-poke_quant/slabs/grading_multipliers.py — Modulo di calibrazione empirica
-dei moltiplicatori di prezzo e sconti di liquidità per case di gradazione.
+poke_quant/slabs/grading_multipliers.py — Moltiplicatori di prezzo e sconti di
+liquidità per case di gradazione: PARZIALMENTE calibrati su ricerca reale,
+PARZIALMENTE stime a mano - vedi AVVISO DI ATTENDIBILITA' prima di
+EMPIRICAL_RATIOS_GRADE9/GRADE10 per la lista esatta di cosa e' cosa.
 
-Calibrato sui risultati della ricerca empirica cross-sezionale (scripts/grading_company_multiplier_research.py).
+Solo PSA/BGS/CGC/SGC/GRAAD/PCA a grado 9.0/9.5 (vs PSA 9) e PSA/BGS/CGC a
+grado 10.0 (vs PSA 10) tracciano davvero scripts/grading_company_multiplier_research.py.
+Tutto il resto (TAG/AiGrading/CCC/ACE a qualunque grado, qualunque compagnia
+a grado 7.0-8.5, SPECIAL_VARIANTS per 1st edition/no-symbol/shadowless) sono
+stime scritte a mano dalla conoscenza generale del mercato, non misurate da
+questo codice - ogni cella non verificata e' marcata automaticamente con un
+avviso nel proprio campo `notes` (vedi _mark_unverified_cells sotto), che
+arriva fino a GradingAdjustment.notes e quindi a qualunque UI che lo mostri.
+Non e' un motivo per ignorare questi numeri (sono stime plausibili di chi
+conosce il mercato, non rumore casuale) ma NON vanno presentati come dato
+verificato in una decisione di acquisto reale senza quell'avviso visibile.
+
 Fornisce:
-  - Rapporti empirici di prezzo vs benchmark PSA 9 (per gradi 8.5 - 9.5) e vs PSA 10 (per gradi 10).
-  - Penalità prudenziale di liquidità per enti regionali (GRAAD, PCA, ACE) vs major globali (PSA, BGS, CGC).
+  - Rapporti di prezzo (verificati o stimati, vedi sopra) vs benchmark PSA 9
+    (per gradi 7.0 - 9.5) e vs PSA 10 (per grado 10).
+  - Penalità prudenziale di liquidità per enti regionali (GRAAD, PCA, ACE, TAG,
+    CCC, AiGrading) vs major globali (PSA, BGS, CGC, SGC).
   - Fattore di tetto massimo per lo sniper di eBay/Cardmarket.
 """
 
@@ -50,16 +65,20 @@ class GradingAdjustment:
 
 
 # =============================================================================
-# MOLTIPLICATORI EMPIRICI PER VARIANTI SPECIALI (1st Edition, No Symbol, Shadowless)
+# MOLTIPLICATORI PER VARIANTI SPECIALI (1st Edition, No Symbol, Shadowless) -
+# STIME A MANO, zero riscontro in grading_company_multiplier_research.py (quello
+# script non ha alcun campo per edizione/variante) - vedi AVVISO DI ATTENDIBILITA'
+# in testa al modulo. Plausibili (ordini di grandezza noti nel collezionismo
+# WotC) ma non misurate da questo codice.
 # =============================================================================
 
 SPECIAL_VARIANTS: Dict[str, Tuple[float, str]] = {
     "standard": (1.00, "Versione Standard / Unlimited"),
-    "first_edition_wotc": (2.50, "1ª Edizione WotC (Jungle, Fossil, Rocket, Gym, Neo: premio ~2.5x vs Unlimited)"),
-    "first_edition_base": (6.00, "1ª Edizione Base Set (rarità estrema: premio ~6.0x vs Unlimited)"),
-    "no_symbol": (1.40, "No Symbol Error (Jungle Holo senza simbolo fiore: premio ~1.4x vs Unlimited)"),
-    "shadowless": (3.00, "Shadowless (Base Set senza ombra: premio ~3.0x vs Unlimited)"),
-    "reverse_holo_lc": (3.00, "Reverse Holo Legendary Collection (Fireworks: premio ~3.0x vs Unlimited)"),
+    "first_edition_wotc": (2.50, "1ª Edizione WotC (Jungle, Fossil, Rocket, Gym, Neo: premio ~2.5x vs Unlimited) — ⚠️ stima non verificata"),
+    "first_edition_base": (6.00, "1ª Edizione Base Set (rarità estrema: premio ~6.0x vs Unlimited) — ⚠️ stima non verificata"),
+    "no_symbol": (1.40, "No Symbol Error (Jungle Holo senza simbolo fiore: premio ~1.4x vs Unlimited) — ⚠️ stima non verificata"),
+    "shadowless": (3.00, "Shadowless (Base Set senza ombra: premio ~3.0x vs Unlimited) — ⚠️ stima non verificata"),
+    "reverse_holo_lc": (3.00, "Reverse Holo Legendary Collection (Fireworks: premio ~3.0x vs Unlimited) — ⚠️ stima non verificata"),
 }
 
 
@@ -342,6 +361,40 @@ EMPIRICAL_RATIOS_GRADE10: Dict[Tuple[GradingCompany, str, Era], Tuple[float, flo
     (GradingCompany.AIGRADING, "10.0", Era.MODERN): (0.550, 25.0, 0.600, "AiGrading 10 moderno"),
 }
 
+# AVVISO DI ATTENDIBILITA' (audit generale del repo su richiesta esplicita
+# dell'utente - "trova bug, inconsistenze... invalida"): le due tabelle sopra
+# NON sono tutte calibrate sulla "ricerca empirica" citata nel docstring del
+# modulo (scripts/grading_company_multiplier_research.py). Verificato cella
+# per cella: quello script calcola SOLO rapporti a grado 9.0/9.5 (vs PSA 9) e
+# 10.0 (vs PSA 10), SOLO per PSA/BGS/CGC/SGC/GRAAD/PCA - il resto (ogni riga a
+# grado 7.0/7.5/8.0/8.5 per QUALUNQUE compagnia, e ogni riga di TAG/AiGrading/
+# CCC/ACE a QUALUNQUE grado) non ha alcun riscontro in quello script: sono
+# stime scritte a mano, plausibili ma non verificate. Invece di riscrivere a
+# mano centinaia di celle, questo blocco marca automaticamente ogni cella non
+# tracciabile appendendo un avviso al campo `notes` (che flussa gia' fino a
+# GradingAdjustment.notes e quindi a qualunque UI che lo mostri) - una singola
+# fonte di verita' su quali celle sono verificate, non sparsa in commenti che
+# possono disallinearsi.
+UNVERIFIED_WARNING = "⚠️ STIMA NON VERIFICATA (nessun riscontro in grading_company_multiplier_research.py)"
+_VERIFIED_COMPANIES_GRADE9 = {GradingCompany.PSA, GradingCompany.BGS, GradingCompany.CGC,
+                              GradingCompany.SGC, GradingCompany.GRAAD, GradingCompany.PCA}
+_VERIFIED_GRADES_GRADE9 = {"9.0", "9.5"}
+_VERIFIED_COMPANIES_GRADE10 = {GradingCompany.PSA, GradingCompany.BGS, GradingCompany.CGC}
+
+
+def _mark_unverified_cells(table: dict, verified_companies: set, verified_grades: Optional[set] = None) -> dict:
+    marked = {}
+    for key, value in table.items():
+        company, grade = key[0], key[1]
+        is_verified = company in verified_companies and (verified_grades is None or grade in verified_grades)
+        mult, liq_pen, sniper_factor, notes = value
+        marked[key] = value if is_verified else (mult, liq_pen, sniper_factor, f"{notes} — {UNVERIFIED_WARNING}")
+    return marked
+
+
+EMPIRICAL_RATIOS_GRADE9 = _mark_unverified_cells(EMPIRICAL_RATIOS_GRADE9, _VERIFIED_COMPANIES_GRADE9, _VERIFIED_GRADES_GRADE9)
+EMPIRICAL_RATIOS_GRADE10 = _mark_unverified_cells(EMPIRICAL_RATIOS_GRADE10, _VERIFIED_COMPANIES_GRADE10)
+
 
 def normalize_company(comp: str | GradingCompany) -> GradingCompany:
     """Normalizza la stringa della compagnia all'Enum GradingCompany."""
@@ -380,8 +433,12 @@ def normalize_era(era: str | Era) -> Era:
     return Era.MODERN
 
 
-# Rapporti medi empirici PSA 10 / PSA 9 calibrati per Era collezionistica
-# Fonti: scripts/grading_company_multiplier_research.py e dataset PriceCharting
+# Rapporti PSA 10 / PSA 9 per Era collezionistica - arrotondati a mano dalla
+# mediana per-era di scripts/grading_company_multiplier_research.py (NON un
+# pass-through esatto: verificato in audit che vintage/moderno si scostano
+# dalla mediana calcolata dallo script di ~10-15%, solo mid-era è vicino -
+# vedi AVVISO DI ATTENDIBILITA' in testa al modulo). Direzione corretta
+# (vintage>mid-era>moderno), magnitudine approssimata.
 ERA_PSA10_TO_PSA9_RATIO: Dict[Era, float] = {
     Era.VINTAGE: 3.80,   # Vintage (1999–2003): rarità estrema delle gemme (~3.8x vs PSA 9)
     Era.MID_ERA: 3.40,   # Mid-Era (2004–2016): popolazioni contenute, premio solido (~3.4x vs PSA 9)

@@ -16,6 +16,18 @@ from poke_quant.slabs.models import GradingCompany, SlabGrade, EdgeType, Subgrad
 # di test_slab_edges.py. Per la calibrazione empirica scientifica su dati reali
 # cross-era (Vintage, Mid-Era, Moderno) vedi il nuovo modulo:
 # poke_quant/slabs/grading_multipliers.py e scripts/grading_company_multiplier_research.py.
+#
+# INCONSISTENZA TROVATA IN AUDIT (2026-09-29, richiesta utente "trova bug...
+# invalida"): BGS_9_5_GEM qui sotto = 0.78 (rapporto vs PSA 10) CONTRADDICE
+# grading_multipliers.py, che implica un rapporto BGS 9.5/PSA 10 di ~0.46-0.58
+# a seconda dell'era (EMPIRICAL_RATIOS_GRADE9 "9.5" diviso ERA_PSA10_TO_PSA9_RATIO).
+# Stesso fatto reale, due numeri diversi in due moduli diversi - NON riconciliato
+# qui perche' questo file (via poke_quant/slabs/slab_scanner.py, non importato
+# da app.py) non e' raggiungibile dalla dashboard Streamlit: il rischio reale
+# per l'utente e' basso, ma un futuro consumer di questo modulo (es. uno script
+# CLI) prenderebbe il numero SBAGLIATO se si fidasse di questo invece che di
+# grading_multipliers.py, che e' la fonte piu' recente e piu' trasparente sulla
+# propria attendibilita' (vedi il suo AVVISO). Preferire sempre quest'ultimo.
 HISTORICAL_GRADE_RATIOS: Dict[str, Dict[str, float]] = {
     "BGS_9_5_GEM": {"mean": 0.78, "std": 0.07, "crossover_prob": 0.80},
     "BGS_10_PRISTINE": {"mean": 2.10, "std": 0.25, "crossover_prob": 1.00},

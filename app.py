@@ -47,8 +47,8 @@ from poke_quant.data.cardmarket_bridge import get_cardmarket_deep_link
 from poke_quant.engine.backtester import Backtester
 from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentumStrategy
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
-from poke_quant.engine.position_sizing import age_weight
-from scripts.generate_monthly_signal import compute_signal_rows, MODERN_ERA_CUTOFF
+from poke_quant.engine.position_sizing import age_weight, inverse_vol_split
+from scripts.generate_monthly_signal import compute_signal_rows
 from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSRP_RATIO, liquid_singles_ids
 from poke_quant.data.price_fetcher import (
     fetch_pricecharting_cover_image_url,
@@ -64,23 +64,15 @@ from scripts.generate_singles_signal import (
     PRODUCTION_PARAMS as SINGLES_PARAMS, DAC7_SINGLES_PARAMS,
 )
 from poke_quant.slabs.grading_multipliers import (
-    GradingCompany,
     Era,
-    normalize_company,
     normalize_era,
-    get_grading_adjustment,
     adjust_price_for_grading,
     get_variant_multiplier,
     variant_to_pricecharting_key,
-    SPECIAL_VARIANTS,
     ERA_PSA10_TO_PSA9_RATIO,
     ERA_BGS95_TO_PSA9_RATIO,
-    estimate_psa10_from_psa9,
-    estimate_grade95_from_psa9,
     get_recommended_grade_for_card,
     get_recommended_grade_targets,
-    get_grade_benchmarks_ladder,
-    get_company_relative_factor_vs_psa,
     get_card_pop_pressure,
     get_card_strategy_and_pop_details,
 )
@@ -514,7 +506,12 @@ def get_cached_pc_variant_grade9(game_slug: str, item_slug: str, variant_key: st
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_box_singles_split():
     """Split di capitale box/singole per inverse-vol (risk parity).
-    Legge dai dati precomputati se disponibili, altrimenti calcola live."""
+    Legge dai dati precomputati se disponibili, altrimenti calcola live.
+
+    Formula centralizzata in poke_quant.engine.position_sizing.inverse_vol_split
+    (trovato in audit generale, 2026-09-29: questa funzione e' scripts/
+    update_monthly_cache.py reimplementavano la stessa formula in due punti
+    indipendenti, a rischio di divergere silenziosamente)."""
     cached = load_precomputed_dashboard_data()
     if cached and "risk_parity" in cached:
         rp = cached["risk_parity"]
@@ -525,10 +522,7 @@ def get_box_singles_split():
     common_idx = res_box.monthly_returns.index.intersection(res_singles.monthly_returns.index)
     vol_box = res_box.monthly_returns.loc[common_idx].std()
     vol_singles = res_singles.monthly_returns.loc[common_idx].std()
-    if vol_box <= 0 or vol_singles <= 0:
-        return 0.5, 0.5
-    w_box = (1.0 / vol_box) / (1.0 / vol_box + 1.0 / vol_singles)
-    return float(w_box), float(1.0 - w_box)
+    return inverse_vol_split(vol_box, vol_singles)
 
 
 # Cache in memoria con TTL
@@ -592,6 +586,23 @@ def prefetch_product_images(pairs: list) -> None:
             except Exception:
                 url = None
             _IMAGE_CACHE[key] = (url, time.time(), _IMAGE_SUCCESS_TTL if url else _IMAGE_FAILURE_TTL)
+
+
+def render_thumb_html(img_url: Optional[str]) -> str:
+    """Tag HTML per la miniatura prodotto (box o carta) - fattorizzato in audit
+    generale (2026-09-29): la stessa identica riga era copiata in 4 punti del
+    file, a rischio di divergere se una veniva aggiornata e le altre no."""
+    return f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
+
+
+def render_usa_import_html(price_eur: float, item_type: str) -> str:
+    """Frammento HTML per il costo sdoganato stimato da USA - fattorizzato in
+    audit generale (2026-09-29): esisteva copiato due volte (box e singole)
+    con formattazione GIA' divergente (.0f vs .2f, "sdoganato da USA" vs
+    "sdoganato USA") - lo stesso tipo di drift che questa sessione ha sempre
+    trattato come un problema, non un dettaglio estetico."""
+    landed = estimate_usa_import_landed_cost(price_eur, item_type=item_type)
+    return f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.2f}€</span>'
 
 
 def build_price_chart(item_id: str, name: str, prices_full: pd.DataFrame, months: int = 36):
@@ -696,7 +707,15 @@ def build_allocation(buy_rows: list, capital: float, metadata: dict, latest_date
 
 def build_equal_allocation(buy_rows: list, capital: float, max_allocation_pct: float = 0.12):
     """Come build_allocation, ma a peso uguale (nessun peso-età per le singole) -
-    stesso waterfall del tetto per posizione."""
+    stesso waterfall del tetto per posizione.
+
+    NOTA (audit generale, 2026-09-29): implementazione indipendente, non
+    parametrizzazione di build_allocation - le due funzioni duplicano lo
+    stesso algoritmo di waterfall invece di condividerlo. Non unificate qui
+    (rischio di introdurre una regressione in un meccanismo di allocazione
+    capitale gia' testato, per un guadagno di manutenibilita' non urgente) -
+    se in futuro build_allocation viene corretta di nuovo, controllare se la
+    stessa correzione serve anche qui."""
     n = len(buy_rows)
     if n == 0:
         return []
@@ -747,13 +766,10 @@ def render_box_card(r: dict, alloc: float | None, w: float | None, capital_box: 
     link = get_cardmarket_deep_link(r["name"], franchise=meta.get("franchise", "pokemon"),
                                      language=meta.get("language", "en"), game_slug=meta.get("game_slug"))
     img_url = get_product_image(meta.get("game_slug"), meta.get("item_slug"))
-    img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
+    img_tag = render_thumb_html(img_url)
     max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">massimo (tot.) '
                        f'{r["max_price_eur"]:.0f}€</span>') if r.get("max_price_eur") is not None else ""
-    usa_import_html = ""
-    if show_usa_import:
-        landed = estimate_usa_import_landed_cost(r["current_price_eur"], item_type="sealed")
-        usa_import_html = (f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato da USA ~{landed:.0f}€</span>')
+    usa_import_html = render_usa_import_html(r["current_price_eur"], "sealed") if show_usa_import else ""
     box_price = r["current_price_eur"]
 
     if tier_type == "core" and alloc is not None and w is not None:
@@ -813,7 +829,7 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
     start = r.get("signal_start_date")
     start_str = start.strftime("%Y-%m") if hasattr(start, "strftime") else str(start)
     img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
-    img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
+    img_tag = render_thumb_html(img_url)
     card_era = r.get("era") or full_meta.get("era")
     rel_year = int(str(full_meta.get("release_date", "2020"))[:4]) if full_meta.get("release_date") else 2020
     rec = get_recommended_grade_for_card(rel_year=rel_year, era=card_era)
@@ -850,10 +866,7 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
     max_price_html = (f' &nbsp;·&nbsp; <span style="color:#94a3b8;">max per edge '
                        f'<strong style="color:#f8fafc;">{target_max_edge:.2f}€</strong></span>') if target_max_edge is not None else ""
 
-    usa_import_html = ""
-    if show_usa_import:
-        landed = estimate_usa_import_landed_cost(target_p, item_type="single")
-        usa_import_html = f' &nbsp;·&nbsp; <span style="color:#fbbf24;">sdoganato USA ~{landed:.2f}€</span>'
+    usa_import_html = render_usa_import_html(target_p, "single") if show_usa_import else ""
 
     # Allocazione e quantità
     if alloc > 0:
@@ -929,6 +942,25 @@ def main():
     # vedi docstring di get_box_singles_split() e scripts/box_singles_split_optimization.py.
     w_box, w_singles = get_box_singles_split()
 
+    # Trovato in audit generale (2026-09-29, richiesto dall'utente "trova bug...
+    # invalida"): precomputed_dashboard_data.json ha un campo generated_at
+    # (scripts/update_monthly_cache.py) ma la dashboard non lo mostrava mai -
+    # i numeri potevano essere vecchi di settimane senza che l'utente lo sapesse.
+    # Nessuna GitHub Action rigenera questa cache automaticamente: serve un
+    # umano che ricordi di rilanciare update_monthly_cache.py.
+    _cache_data = load_precomputed_dashboard_data()
+    if _cache_data and _cache_data.get("generated_at"):
+        _gen_dt = pd.to_datetime(_cache_data["generated_at"])
+        _age_days = (pd.Timestamp.now() - _gen_dt).days
+        if _age_days <= 40:
+            _staleness_pill = f'<span class="pill-tag pill-blue">Cache: {_age_days}g fa</span>'
+        else:
+            _staleness_pill = (f'<span class="pill-tag" style="background:rgba(244,63,94,0.15); '
+                                f'color:#f43f5e; border:1px solid rgba(244,63,94,0.35);">⚠️ Cache: {_age_days}g fa — '
+                                f'rilancia scripts/update_monthly_cache.py</span>')
+    else:
+        _staleness_pill = '<span class="pill-tag pill-blue">Calcolo live (no cache)</span>'
+
     st.markdown(f"""
     <div class="nav-header">
         <div>
@@ -938,6 +970,7 @@ def main():
         <div>
             <span class="pill-tag pill-blue">Blend Sharpe {VALIDATED_BLEND['sharpe']:.2f}</span>
             <span class="pill-tag pill-blue">Segnale {latest_date[:7]}</span>
+            {_staleness_pill}
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -956,7 +989,8 @@ def main():
         st.markdown("### 💰 Capitale")
         capital = st.number_input("Capitale dedicato (€)", min_value=100.0, max_value=1_000_000.0,
                                    value=10000.0, step=500.0)
-        st.caption("50% box sigillati, 50% singole (fattore scarsità) — le due strategie hanno "
+        st.caption(f"{w_box*100:.0f}% box sigillati, {w_singles*100:.0f}% singole (fattore scarsità, risk "
+                   "parity — non più un 50/50 fisso) — le due strategie hanno "
                    "correlazione bassa (0,37): il blend porta Sharpe 1,38→1,90 e MaxDD -11,1%→-7,01% "
                    "rispetto al solo box (stesso periodo comune, frizioni incluse). Cap 12% del capitale per "
                    "singola posizione dentro ciascuna metà, box pesato per età (0,4x sotto i 18 mesi, 1,0x dopo).")
@@ -1012,6 +1046,16 @@ def main():
                                               "di 20 posizioni (~28 vendite/anno, Sharpe 2.39), rimanendo strutturalmente "
                                               "sotto le 30 vendite annue. Questo toggle limita il capitale allocato per restare "
                                               "anche sotto il tetto monetario dei 2.000€/anno di vendite stimate.")
+        # Verificato in audit generale (2026-09-29): NON un residuo morto - le
+        # config "produzione" e "DAC7" per le singole sono state unificate a
+        # monte (scripts/generate_singles_signal.py::DAC7_SINGLES_PARAMS =
+        # PRODUCTION_PARAMS, vedi commento li') perche' l'optimum vincolato
+        # verificato (rebalance=3, max_positions=20, Sharpe 2,39) e' ANCHE il
+        # miglior Sharpe assoluto - non serve piu' una seconda modalita' che
+        # sacrifichi Sharpe per la conformita', quindi singles_mode e' sempre
+        # "production" e la sola leva DAC7 rimasta (il tetto sul VOLUME in EUR,
+        # che dipende dal capitale scelto dall'utente, non dai parametri della
+        # strategia) e' il checkbox sopra.
         singles_mode = "production"
 
         res_box_dac7check, _ = get_backtest_results()
@@ -1162,6 +1206,20 @@ def main():
         default="Pokémon EN",
         help="Filtra i box per franchise e lingua. 'Pokémon EN' è il segmento principale validato istituzionalmente."
     )
+    if selected_box_franchise == "Magic (MTG)":
+        # Trovato in audit generale (richiesto dall'utente: "trova bug...
+        # invalida"): il pilota MTG (scripts/mtg_pilot_validation.py) e' stato
+        # RIGETTATO in modo decisivo - box Sharpe -0,09/DSR 0,006, singole
+        # Sharpe negativo a qualunque tetto di quantita' realistico - e per
+        # questo escluso di DEFAULT dalle statistiche di produzione
+        # (poke_quant/data/liquidity_filter.py::DEFAULT_EXCLUDED_FRANCHISES).
+        # Questa opzione resta selezionabile (scelta di prodotto di un'altra
+        # sessione/dell'utente) ma non mostrera' mai righe: nessuna
+        # raccomandazione MTG e' generata in produzione.
+        st.warning("⚠️ Magic (MTG) è stato testato come pilota separato ed è stato **rigettato** (Sharpe box "
+                   "-0,09, DSR 0,006; per le singole l'edge apparente crolla a qualsiasi tetto di quantità "
+                   "realistico — vedi scripts/mtg_pilot_validation.py). Per questo motivo non viene generata "
+                   "nessuna raccomandazione MTG in produzione: questa vista sarà sempre vuota.")
 
     with st.expander("ℹ️ Dettagli — gerarchia a 3 Tier, lotto indivisibile, capitale sequenziale"):
         st.caption("\"Massimo\" è la spesa TOTALE oltre la quale il modello considera il box fuori dal range "
@@ -1321,7 +1379,7 @@ def main():
         for r in sell_rows:
             meta_sell = metadata.get(r["item_id"], {})
             img_url = get_product_image(meta_sell.get("game_slug"), meta_sell.get("item_slug"))
-            img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
+            img_tag = render_thumb_html(img_url)
             st.markdown(f"""
             <div class="signal-card signal-card-sell">
                 {img_tag}
@@ -2066,6 +2124,17 @@ def main():
                 disc_str = f"🔴 Sovrapprezzo offerta: **+{abs(res['discount_real_pct']):.1f}%**"
             rec_advice_str = f" · 💡 {rec_grade['short_advice']}" if rec_grade else ""
             st.caption(f"📝 **Logica**: {res['adj'].notes}. {disc_str} rispetto al fair value di una slab {res['company_name']} {res['grade_input']} ({res['era_final'].upper()}){usa_warn}{rec_advice_str}.")
+            # Trovato in audit generale (richiesto dall'utente: "trova bug...
+            # invalida"): molte celle di grading_multipliers.py sono stime a
+            # mano senza riscontro nella ricerca empirica citata, non dati
+            # verificati - marcate nel campo notes (vedi _mark_unverified_cells).
+            # Qui il warning viene ripetuto in modo prominente, non solo
+            # sepolto a meta' della caption sopra, perche' guida una decisione
+            # di acquisto reale.
+            if "STIMA NON VERIFICATA" in res['adj'].notes:
+                st.warning("⚠️ Questo moltiplicatore è una stima non verificata (nessun riscontro in dati reali "
+                           "raccolti da questo codice) — trattalo come un'indicazione di massima, non come un "
+                           "fair value misurato. Verifica sempre con comparabili reali su PriceCharting/eBay prima di decidere.")
         else:
             st.caption("ℹ️ *Seleziona i parametri sopra e clicca su **'Calcola Valutazione Slab'** per vedere l'analisi istantanea senza ricaricare la pagina.*")
 
@@ -2236,7 +2305,7 @@ def main():
         for r in avoid_rows[:15]:
             full_meta = metadata.get(r["item_id"], {})
             img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
-            img_tag = f'<img class="signal-card-thumb" src="{img_url}" />' if img_url else '<div class="signal-card-thumb"></div>'
+            img_tag = render_thumb_html(img_url)
             st.markdown(f"""
             <div class="signal-card signal-card-sell">
                 {img_tag}

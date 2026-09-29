@@ -18,6 +18,8 @@ di margine di sicurezza esplicita e conservativa, documentata così com'è.
 
 from __future__ import annotations
 
+from typing import Optional
+
 FLOOR_MULTIPLIER = 0.4
 MATURITY_MONTHS = 18
 
@@ -29,3 +31,25 @@ def age_weight(age_months: float, floor: float = FLOOR_MULTIPLIER, maturity_mont
     if age_months >= maturity_months:
         return 1.0
     return floor + (1.0 - floor) * (age_months / maturity_months)
+
+
+def inverse_vol_split(vol_a: float, vol_b: float, round_to: Optional[int] = None) -> tuple[float, float]:
+    """Split di capitale per inverse-vol (risk parity) tra due sleeve: w_i ∝ 1/vol_i,
+    la stessa quota di RISCHIO da ciascuna sleeve, non di capitale.
+
+    Fonte unica: trovato in audit generale (2026-09-29) che app.py
+    (get_box_singles_split) e scripts/update_monthly_cache.py reimplementavano
+    questa stessa formula in due punti indipendenti - uno arrotondato a 2
+    decimali, l'altro no, con guardia div-by-zero diversa - a rischio di
+    divergere silenziosamente se uno viene modificato senza l'altro. Ora
+    entrambi chiamano questa funzione."""
+    if vol_a is None or vol_b is None or vol_a <= 0 or vol_b <= 0:
+        return 0.5, 0.5
+    inv_a = 1.0 / vol_a
+    inv_b = 1.0 / vol_b
+    w_a = inv_a / (inv_a + inv_b)
+    w_b = 1.0 - w_a
+    if round_to is not None:
+        w_a = round(w_a, round_to)
+        w_b = round(1.0 - w_a, round_to)
+    return float(w_a), float(w_b)

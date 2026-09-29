@@ -18,6 +18,7 @@ from typing import Dict, List, Any
 from poke_quant.slabs.models import SlabGrade
 from poke_quant.slabs.slab_backtester import SlabBacktester, SlabBacktestResult
 from poke_quant.slabs.slab_universe import get_curated_grails, get_failed_controls
+from poke_quant.validation.statistical_validation import deflated_sharpe_ratio as _canonical_dsr
 
 
 def calc_deflated_sharpe_ratio(
@@ -30,31 +31,25 @@ def calc_deflated_sharpe_ratio(
     """
     Calcola il Deflated Sharpe Ratio (DSR) secondo Bailey & López de Prado (2014).
     Corregge lo Sharpe per asimmetria (skewness), curtosi (kurtosis) e numero di test (data-snooping).
-    """
-    # Conversione Sharpe in frequenza mensile coerente
-    monthly_sharpe = observed_sharpe / math.sqrt(12.0) if observed_sharpe > 0 else 0.0
 
-    # Calcolo momenti statistici sulla serie mensile
+    Delega a poke_quant.validation.statistical_validation.deflated_sharpe_ratio
+    (trovato in audit generale, 2026-09-29: questo modulo reimplementava la
+    stessa formula da zero, indipendentemente dall'implementazione canonica
+    gia' usata in tutta la ricerca box/singole - due DSR nello stesso repo,
+    a rischio di divergere silenziosamente se uno viene modificato senza
+    l'altro). Firma pubblica invariata per compatibilita' con
+    run_popperian_falsification_suite e qualunque chiamante esterno.
+    """
+    monthly_sharpe = observed_sharpe / math.sqrt(12.0) if observed_sharpe > 0 else 0.0
     skew = float(returns_series.skew()) if not np.isnan(returns_series.skew()) else 0.0
     kurt = float(returns_series.kurtosis()) if not np.isnan(returns_series.kurtosis()) else 3.0
-
-    # Varianza asintotica dello Sharpe stimatore sotto H0
-    # V_0 = 1 / (T - 1)
-    sigma_0 = 1.0 / math.sqrt(max(2, sample_length_months - 1))
-
-    # Stima del massimo Sharpe mensile atteso sotto l'ipotesi nulla (E[max(SR_0)])
-    euler_mascheroni = 0.5772156649
-    z_n = (1.0 - euler_mascheroni) * stats.norm.ppf(1.0 - 1.0 / num_trials) + euler_mascheroni * stats.norm.ppf(1.0 - 1.0 / (num_trials * math.e))
-    expected_max_sr_monthly = max(0.0, sigma_0 * z_n)
-
-    # Varianza dello stimatore di Sharpe empirico
-    denominator_var = 1.0 - (skew * monthly_sharpe) + ((kurt - 1.0) / 4.0) * (monthly_sharpe ** 2)
-    denominator_var = max(0.001, denominator_var)
-    std_sr_monthly = math.sqrt(denominator_var / (sample_length_months - 1.0))
-
-    # Test statistico Z e DSR
-    z_stat = (monthly_sharpe - expected_max_sr_monthly) / std_sr_monthly
-    dsr = float(stats.norm.cdf(z_stat))
+    dsr = _canonical_dsr(
+        observed_sr=monthly_sharpe,
+        n_trials=num_trials,
+        n_obs=sample_length_months,
+        skew=skew,
+        kurtosis=kurt,
+    )
     return round(dsr, 4)
 
 
@@ -62,9 +57,16 @@ def calc_probability_of_backtest_overfitting(
     cagr_is_oos_matrix: np.ndarray
 ) -> float:
     """
-    Calcola la Probability of Backtest Overfitting (PBO) via CSCV.
-    Misura la frazione di combinazioni in cui la miglior strategia In-Sample (IS)
-    si colloca sotto la mediana delle strategie Out-Of-Sample (OOS).
+    Approssimazione NON-CSCV della Probability of Backtest Overfitting: guarda
+    ogni split una volta (IS = quella riga, OOS = mediana della stessa riga),
+    non le split combinatorie simmetriche vere (Bailey/Borwein/Lopez de Prado/
+    Zhu 2015). Per il vero CSCV vedi poke_quant.validation.statistical_
+    validation.pbo_cscv (usato in tutta la ricerca box/singole) - non
+    sostituito qui perche' l'unico chiamante (run_popperian_falsification_suite,
+    sotto) gli passa comunque rumore gaussiano sintetico, non una vera griglia
+    di configurazioni backtestate: cambiare la formula non renderebbe il
+    risultato piu' significativo finche' l'input resta sintetico (vedi
+    ATTENZIONE piu' sotto).
     """
     # Se la matrice ha forma (n_splits, n_configs)
     n_splits, n_configs = cagr_is_oos_matrix.shape

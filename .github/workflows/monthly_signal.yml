@@ -23,13 +23,20 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scripts/run_monthly_production_signal.py
+      - name: Rigenera la cache precomputata della dashboard
+        # Trovato in audit generale (2026-09-29): data_cache/precomputed_dashboard_data.json
+        # (letta preferenzialmente da app.py invece di ricalcolare live) non veniva MAI
+        # rigenerata automaticamente - serviva un umano che ricordasse di rilanciare
+        # questo script a mano, quindi la dashboard poteva mostrare numeri vecchi di
+        # settimane senza alcun avviso. Ora rigenerata subito dopo il refresh prezzi.
+        run: python scripts/update_monthly_cache.py
       - name: Esegui suite di test (sanity check post-refresh)
         run: python -m pytest -q
       - name: Commit e push dei dati aggiornati
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data_cache/historical_prices.csv data_cache/historical_prices_graded_singles_grade9.csv data_cache/historical_prices_graded_singles_raw.csv data_cache/items_metadata.json
-          git commit -m "Aggiornamento mensile automatico prezzi e segnali" || echo "Nessuna modifica da pushare"
+          git add data_cache/historical_prices.csv data_cache/historical_prices_graded_singles_grade9.csv data_cache/historical_prices_graded_singles_raw.csv data_cache/items_metadata.json data_cache/precomputed_dashboard_data.json data_cache/product_image_cache.json
+          git commit -m "Aggiornamento mensile automatico prezzi, segnali e cache dashboard" || echo "Nessuna modifica da pushare"
           git pull --rebase origin main || true
           git push

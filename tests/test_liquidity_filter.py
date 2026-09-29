@@ -241,6 +241,44 @@ def test_liquid_singles_ids_skips_grading_floor_for_magic_franchise():
         "cheap_mtg_raw": {"type": "single", "franchise": "magic"},
         "cheap_pokemon": {"type": "single", "franchise": "pokemon"},
     }
-    ids = liquid_singles_ids(metadata, prices, min_median_price_eur=20.0, price_window_months=3)
+    # exclude_franchises=frozenset(): il default esclude "magic" (vedi
+    # test_liquid_singles_ids_excludes_magic_by_default) - qui si isola
+    # esplicitamente il comportamento del pavimento di gradazione per MTG,
+    # a prescindere dall'esclusione di default.
+    ids = liquid_singles_ids(metadata, prices, min_median_price_eur=20.0, price_window_months=3,
+                              exclude_franchises=frozenset())
     assert "cheap_mtg_raw" in ids
     assert "cheap_pokemon" not in ids
+
+
+def test_liquid_singles_ids_excludes_magic_by_default():
+    """Il pilota MTG e' stato rigettato (scripts/mtg_pilot_validation.py) - il
+    default deve escludere franchise="magic" senza che il chiamante debba
+    ricordarsi di filtrarlo (bug trovato: nessun chiamante lo faceva, box e
+    singole MTG finivano nel segnale live di produzione)."""
+    idx = pd.date_range("2024-01-01", periods=3, freq="MS")
+    prices = pd.DataFrame({
+        "cheap_mtg_raw": pd.Series([2.0, 2.0, 2.0], index=idx),
+        "cheap_pokemon": pd.Series([2.0, 2.0, 2.0], index=idx),
+    })
+    metadata = {
+        "cheap_mtg_raw": {"type": "single", "franchise": "magic"},
+        "cheap_pokemon": {"type": "single", "franchise": "pokemon"},
+    }
+    ids = liquid_singles_ids(metadata, prices, min_median_price_eur=0.0)
+    assert "cheap_mtg_raw" not in ids
+
+
+def test_liquid_sealed_ids_excludes_magic_by_default():
+    idx = pd.date_range("2024-01-01", periods=3, freq="MS")
+    prices = pd.DataFrame({
+        "mtg_box": pd.Series([100.0, 110.0, 120.0], index=idx),
+        "pokemon_box": pd.Series([100.0, 110.0, 120.0], index=idx),
+    })
+    metadata = {
+        "mtg_box": {"type": "sealed", "franchise": "magic", "msrp": 40.0, "release_date": "2024-01-01"},
+        "pokemon_box": {"type": "sealed", "franchise": "pokemon", "msrp": 40.0, "release_date": "2024-01-01"},
+    }
+    ids = liquid_sealed_ids(metadata, prices, max_price_msrp_ratio=10.0)
+    assert "mtg_box" not in ids
+    assert "pokemon_box" in ids
