@@ -1759,7 +1759,7 @@ def main():
                 is_modern_sub10 = (normalize_era(era_final) == Era.MODERN and ("10" not in grade_val and "9.5" not in grade_val))
                 pop_pressure = get_card_pop_pressure(target_item_id, era_final)
 
-                fair_value_calib, _, adj = adjust_price_for_grading(
+                fair_value_calib, sniper_ceiling_calib, adj = adjust_price_for_grading(
                     base_psa_price_eur=base_psa_final,
                     company=company_input,
                     grade=grade_val,
@@ -1769,7 +1769,17 @@ def main():
                     is_grade_benchmark_price=is_pc_grade_resolved,
                 )
 
-                sniper_ceiling_calib = round(effective_max_edge * adj.sniper_ceiling_factor, 2)
+                if not is_pc_grade_resolved:
+                    sniper_ceiling_calib = round(effective_max_edge * adj.sniper_ceiling_factor, 2)
+
+                if is_pc_grade_resolved and pc_live_info:
+                    bench_tier_label = pc_live_info.get("tier", f"Grado {grade_val}")
+                elif is_pc_grade_resolved:
+                    bench_tier_label = f"Grado {grade_val}"
+                elif "10" in grade_val:
+                    bench_tier_label = "PSA 10"
+                else:
+                    bench_tier_label = "PSA 9"
 
                 if is_usa_import:
                     landed_cost = estimate_usa_import_landed_cost(offer_price_eur, item_type="single")
@@ -1800,6 +1810,7 @@ def main():
                     "display_title": display_title,
                     "target_item_id": target_item_id,
                     "grade_val": grade_val,
+                    "bench_tier_label": bench_tier_label,
                     "pop_pressure": pop_pressure,
                     "base_psa_raw": base_psa_raw,
                     "v_mult": v_mult,
@@ -1903,6 +1914,7 @@ def main():
                     "Se decidi di acquistare questo grado, esigi uno sconto ben superiore al fair value o privilegia il target primario raccomandato."
                 )
 
+            bench_ref_display = res.get("bench_tier_label") or ("PSA 10" if "10" in str(res.get("grade_val", "")) else "PSA 9")
             eval_card_html = (
                 f'<div style="background: rgba(15,23,42,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; margin-top: 10px;">'
                 f'<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">'
@@ -1914,7 +1926,7 @@ def main():
                 f'<span style="font-size: 12px; color: #94a3b8;">Slab: <strong>{res["company_name"]} {res["grade_input"]}</strong>{variant_note} · Moltiplicatore: <strong>{res["adj"].multiplier:.3f}x</strong> · Penalità liquidità: <strong>-{res["adj"].liquidity_penalty_pct:.0f}%</strong></span>'
                 f'</div>'
                 f'<div class="kpi-grid" style="margin-bottom: 0;">'
-                f'<div class="kpi-card"><div class="kpi-label">Benchmark PSA ({res["adj"].benchmark_ref})</div><div class="kpi-value">{res["base_psa_final"]:.2f} €</div><div class="kpi-sub">{sub_benchmark}</div></div>'
+                f'<div class="kpi-card"><div class="kpi-label">Benchmark PSA ({bench_ref_display})</div><div class="kpi-value">{res["base_psa_final"]:.2f} €</div><div class="kpi-sub">{sub_benchmark}</div></div>'
                 f'<div class="kpi-card"><div class="kpi-label">Fair Value {res["company_name"]}</div><div class="kpi-value">{res["fair_value_calib"]:.2f} €</div><div class="kpi-sub kpi-sub-emerald">Valore atteso reale</div></div>'
                 f'<div class="kpi-card"><div class="kpi-label">Tetto Max (All-in)</div><div class="kpi-value">{res["sniper_ceiling_calib"]:.2f} €</div><div class="kpi-sub">Soffitto max per edge</div></div>'
                 f'<div class="kpi-card"><div class="kpi-label">{sub_offer_label}</div><div class="kpi-value" style="color: #38bdf8;">{res["sniper_net"]:.2f} €</div><div class="kpi-sub">{sub_offer_desc}</div></div>'

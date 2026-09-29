@@ -822,7 +822,7 @@ def adjust_price_for_grading(
             is_pristine=is_pristine,
         )
         fair_value = effective_base_psa * comp_rel
-        sniper_ceiling = (effective_base_psa * 1.05) * adj.sniper_ceiling_factor
+        sniper_ceiling = round(round(fair_value, 2) * 1.05, 2)
     else:
         fair_value = effective_base_psa * adj.multiplier
         sniper_ceiling = effective_base_psa * adj.sniper_ceiling_factor

@@ -369,4 +369,23 @@ def test_get_card_pop_pressure():
     assert unknown["is_overcrowded"] is False
 
 
+def test_adjust_price_for_grading_grade_benchmark():
+    from poke_quant.slabs.grading_multipliers import adjust_price_for_grading, Era
+
+    # Caso Dark Vileplume: PriceCharting restituisce il prezzo reale del grado 8.5 (78.54 €)
+    fv, sc, adj = adjust_price_for_grading(
+        base_psa_price_eur=78.54,
+        company="BGS",
+        grade="8.5",
+        era=Era.VINTAGE,
+        is_grade_benchmark_price=True,
+    )
+    # Fair Value BGS 8.5 deve essere calibrato con comp_rel vs PSA 8.5 (0.921x -> 72.34 €)
+    assert fv == 72.34
+    # Lo sniper ceiling deve essere 72.34 * 1.05 = 75.96 € e NON collassare a 60.20 € per doppio sconto
+    assert sc == 75.96
+    assert sc >= fv
+
+
+
 
