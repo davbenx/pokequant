@@ -863,9 +863,13 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
     else:
         alloc_display = f'<span style="font-family:\'JetBrains Mono\',monospace; font-size:13px; color:#94a3b8;">Alternativa &nbsp;→ 1 pz. {target_grade_label}</span>'
 
-    # Badge fonte dati reale vs stima
+    # Badge fonte dati reale vs stima per la scala delle alternative minori
     has_real_lower = ladder["8.0"]["is_real"] or ladder["7.0"]["is_real"]
-    data_badge = '<span style="color:#10b981; font-size:11px; font-weight:600;">✨ Dati Reali PC</span>' if has_real_lower else '<span style="color:#64748b; font-size:11px;">📊 Stima Algoritmica</span>'
+    data_badge = (
+        '<span style="color:#10b981; font-size:11px; font-weight:600;" title="Prezzi dei gradi minori (8 e 7) basati su vendite reali PriceCharting">✨ Prezzi Alt: Reali PC</span>'
+        if has_real_lower else
+        '<span style="color:#64748b; font-size:11px;" title="Prezzi dei gradi minori stimati con moltiplicatori quantitativi">📊 Prezzi Alt: Stima</span>'
+    )
 
     # Lean strip: alternative minori + pop pressure + data badge (costruito senza spazi bianchi multipli per evitare bug markdown <div>)
     strip_html = (

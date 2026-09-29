@@ -908,19 +908,19 @@ def load_pop_pressure_cache() -> Dict[str, Dict[str, Any]]:
 
             if pct <= 50.0:
                 tier = "low"
-                badge_html = f'<span style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid #10b981; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🟢 Pop Equilibrata (P{pct:.0f})</span>'
+                badge_html = f'<span title="Percentile P{pct:.0f}: Popolazione equilibrata (il rapporto Pop8/Pop9 è inferiore alla media dell\'era)" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid #10b981; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🟢 Pop Equilibrata (P{pct:.0f})</span>'
                 is_overcrowded = False
             elif pct <= 75.0:
                 tier = "fisiologica"
-                badge_html = f'<span style="background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid #fbbf24; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🟡 Pop Fisiologica (P{pct:.0f})</span>'
+                badge_html = f'<span title="Percentile P{pct:.0f}: Distribuzione fisiologica rispetto all\'era" style="background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid #fbbf24; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🟡 Pop Fisiologica (P{pct:.0f})</span>'
                 is_overcrowded = False
             elif pct <= 90.0:
                 tier = "moderata"
-                badge_html = f'<span style="background:rgba(249,115,22,0.15); color:#fb923c; border:1px solid #fb923c; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🟠 Diluizione Moderata (P{pct:.0f})</span>'
+                badge_html = f'<span title="Percentile P{pct:.0f}: Diluizione moderata (rapporto Pop8/Pop9 superiore al 75% delle carte dell\'era)" style="background:rgba(249,115,22,0.15); color:#fb923c; border:1px solid #fb923c; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🟠 Diluizione Moderata (P{pct:.0f})</span>'
                 is_overcrowded = False
             else:
                 tier = "overcrowded"
-                badge_html = f'<span style="background:rgba(244,63,94,0.15); color:#f43f5e; border:1px solid #f43f5e; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🔴 Sovraffollamento Pop (P{pct:.0f})</span>'
+                badge_html = f'<span title="Percentile P{pct:.0f}: Sovraffollamento (Top {100-pct:.0f}% per accumulo di grado 8 rispetto a 9 nell\'era)" style="background:rgba(244,63,94,0.15); color:#f43f5e; border:1px solid #f43f5e; border-radius:4px; padding:1px 6px; font-size:11px; font-weight:600;">🔴 Sovraffollamento Pop (P{pct:.0f})</span>'
                 is_overcrowded = True
 
             cache[iid] = {
