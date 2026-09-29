@@ -305,6 +305,11 @@ def load_persistent_image_cache() -> dict:
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
+def get_metadata():
+    return load_metadata()
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
 def get_signal():
     cached = load_precomputed_dashboard_data()
     if cached and "box_signals" in cached:
@@ -336,7 +341,7 @@ def get_market_indices():
         breadth = pd.Series({pd.to_datetime(k): float(v) for k, v in idx_data.get("breadth_series", {}).items()}).sort_index()
         return overall, segments, counts, breadth
 
-    metadata = load_metadata()
+    metadata = get_metadata()
     prices_full = load_price_matrix()
     sealed_ids = liquid_sealed_ids(metadata, prices_full)
 
@@ -393,7 +398,7 @@ def get_backtest_results():
         data = cached["backtest_results"]["box"]
         return PrecomputedBacktestResult(data), data.get("n_universe", 52)
 
-    metadata = load_metadata()
+    metadata = get_metadata()
     prices_full = load_price_matrix()
     sealed_ids = liquid_sealed_ids(metadata, prices_full)
     meta_sub = {k: v for k, v in metadata.items() if k in sealed_ids}
@@ -462,7 +467,7 @@ def get_singles_prices_full():
 
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_all_database_card_options():
-    metadata = load_metadata()
+    metadata = get_metadata()
     prices_full = get_singles_prices_full()
     if prices_full.empty:
         return [], {}
@@ -494,7 +499,7 @@ def get_singles_backtest_results(mode: str = "production"):
         return PrecomputedBacktestResult(data), data.get("n_universe", 3105)
 
     params = SINGLES_PARAMS if mode == "production" else DAC7_SINGLES_PARAMS
-    metadata = load_metadata()
+    metadata = get_metadata()
     prices_full = get_singles_prices_full()
     singles_ids = liquid_singles_ids(metadata, prices_full)
     meta_sub = {k: v for k, v in metadata.items() if k in singles_ids}
@@ -939,7 +944,7 @@ def render_single_card(r: dict, alloc: float, metadata: dict, singles_prices_ful
 
 
 def main():
-    metadata = load_metadata()
+    metadata = get_metadata()
     prices_full = get_prices_full()
     sig_rows, latest_date = get_signal()
     n_buy = sum(1 for r in sig_rows if r["signal"] == "BUY/HOLD")
