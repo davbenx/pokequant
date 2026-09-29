@@ -1396,11 +1396,11 @@ def main():
 
     # --- AZIONE: SINGOLE — FATTORE SCARSITÀ (50% del capitale) ---
     st.markdown(f'<div class="section-title">🃏 Singole da comprare — Fattore Scarsità, {w_singles*100:.0f}% del capitale ({capital*w_singles:,.0f}€)</div>', unsafe_allow_html=True)
-    st.info("💎 **Strategia Quantitativa Unificata**: optimum a **20 posizioni** (Sharpe 2.39, CAGR +67.7%, MaxDD -9.7%), "
-            "con target di gradazione calibrato per era (PSA 10 su Moderno, PSA 9 su Vintage/Mid-Era) e indicatore di pressione demografica.")
     st.caption("Verifica sempre set e lingua esatti su Cardmarket (**[Set]** nel badge). Resta sotto il prezzo **massimo per edge**. "
                "Preferisci slab **PSA** (o BGS/CGC). Per alternative minori, controlla il Pop Pressure badge.")
-    with st.expander("ℹ️ Note su edge, compagnie di gradazione e limiti di modello"):
+    with st.expander("ℹ️ Strategia, edge, compagnie di gradazione e limiti di modello"):
+        st.caption("**Strategia**: optimum validato a 20 posizioni (Sharpe 2.39, CAGR +67.7%, MaxDD -9.7%), "
+                   "target di gradazione calibrato per era (PSA 10 su Moderno, PSA 9 su Vintage/Mid-Era).")
         st.caption("• **Massimo per Edge**: spesa totale massima (inclusa spedizione) oltre la quale l'edge netto statistico viene eroso dalle fee.\n\n"
                    "• **Compagnie di Gradazione**: consigliate PSA, poi BGS, CGC e SGC (alta liquidità internazionale). Evita enti regionali senza riconoscimento globale (GRAAD, TAG, ACE) salvo forti sconti.\n\n"
                    "• **Pressione Popolazione (Pop Pressure)**: calcolata sul percentile di diluizione dell'era. Se segnalato sovraffollamento (P > 90), punta esclusivamente al Target primario.")
@@ -1451,11 +1451,6 @@ def main():
         alloc_full_dist = singles_budget_half / max(1, len(singles_allocation))
 
         with tab_s_core:
-            st.markdown(
-                "**Massima Convinzione Quantitativa**: Le 8 posizioni di assoluta eccellenza con il maggior sconto statistico rispetto alla rarità. "
-                "Concentra prioritariamente qui la liquidità mensile. Per ciascuna carta è indicato il **Target Grade** ottimale "
-                "(**PSA 9** su Vintage/Mid-Era vs **PSA 10** su Moderno)."
-            )
             st.markdown(f"""
             <div class="kpi-grid">
                 <div class="kpi-card"><div class="kpi-label">Budget Singole ({w_singles*100:.0f}%)</div><div class="kpi-value">{singles_budget_half:,.0f} €</div><div class="kpi-sub">Capitale risk-parity</div></div>
@@ -2281,8 +2276,6 @@ def main():
                 f'<div class="kpi-card"><div class="kpi-label">Tetto Max (All-in)</div><div class="kpi-value">{res["sniper_ceiling_calib"]:.2f} €</div><div class="kpi-sub">Soffitto max per edge</div></div>'
                 f'<div class="kpi-card"><div class="kpi-label">{sub_offer_label}</div><div class="kpi-value" style="color: #38bdf8;">{res["sniper_net"]:.2f} €</div><div class="kpi-sub">{sub_offer_desc}</div></div>'
                 f'</div>'
-                f'{pop_report_html}'
-                f'{strat_factors_html}'
                 f'</div>'
             )
             st.markdown(eval_card_html, unsafe_allow_html=True)
@@ -2293,6 +2286,9 @@ def main():
                 disc_str = f"🔴 Sovrapprezzo offerta: **+{abs(res['discount_real_pct']):.1f}%**"
             rec_advice_str = f" · 💡 {rec_grade['short_advice']}" if rec_grade else ""
             st.caption(f"📝 **Logica**: {res['adj'].notes}. {disc_str} rispetto al fair value di una slab {res['company_name']} {res['grade_input']} ({res['era_final'].upper()}){usa_warn}{rec_advice_str}.")
+            with st.expander("🔍 Perché questo fair value — popolazione, scarsità e modello"):
+                st.markdown(pop_report_html, unsafe_allow_html=True)
+                st.markdown(strat_factors_html, unsafe_allow_html=True)
             # Trovato in audit generale (richiesto dall'utente: "trova bug...
             # invalida"): molte celle di grading_multipliers.py sono stime a
             # mano senza riscontro nella ricerca empirica citata, non dati
