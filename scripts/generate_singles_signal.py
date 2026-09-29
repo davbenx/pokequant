@@ -456,10 +456,17 @@ def filter_singles_rows(
     max_price: float = 0.0,
     only_holo: bool = False,
     pokemon_only: bool = True,
+    franchise: str | None = None,
     retag_tiers: bool = True,
 ) -> list[dict]:
     """Filtra una lista di segnali singole per rimuovere frizione di spedizione,
-    carte bulk/non-holo poco liquide ed eventuali TCG non desiderati."""
+    carte bulk/non-holo poco liquide ed eventuali TCG non desiderati.
+
+    franchise (Fase 3, selettore pills singole in app.py — stesso pattern del
+    selettore box): se specificato ("pokemon"/"magic"), prevale su pokemon_only
+    e filtra esattamente su quel franchise. pokemon_only resta il default per
+    compatibilita' con i chiamanti esistenti (script di ricerca, test) che non
+    usano il selettore."""
     filtered = []
     for r in rows:
         p = float(r.get("target_price_eur") or r.get("current_price_eur", 0.0))
@@ -467,7 +474,10 @@ def filter_singles_rows(
             continue
         if max_price > 0 and p > max_price:
             continue
-        if pokemon_only and r.get("franchise") != "pokemon":
+        if franchise is not None:
+            if r.get("franchise") != franchise:
+                continue
+        elif pokemon_only and r.get("franchise") != "pokemon":
             continue
         if only_holo and str(r.get("rarity")) in NON_HOLO_BULK_RARITIES:
             continue

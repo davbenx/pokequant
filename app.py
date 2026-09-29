@@ -994,58 +994,38 @@ def main():
                    "correlazione bassa (0,37): il blend porta Sharpe 1,38→1,90 e MaxDD -11,1%→-7,01% "
                    "rispetto al solo box (stesso periodo comune, frizioni incluse). Cap 12% del capitale per "
                    "singola posizione dentro ciascuna metà, box pesato per età (0,4x sotto i 18 mesi, 1,0x dopo).")
+
+        # --- COMPLIANCE (Fase 3: raggruppati - Import USA e DAC7 sono entrambi
+        # "costi/limiti esterni al modello", prima separati da due blocchi di
+        # filtri nel mezzo senza un motivo di ordinamento) ---
         st.markdown("---")
-        st.markdown("### 📦 Budget Box")
-        max_box_price = st.number_input(
-            "Prezzo massimo per box (€, 0 = nessun limite)", min_value=0.0, max_value=100_000.0,
-            value=0.0, step=50.0,
-            help="Filtra i box in acquisto sopra questa soglia (0 = nessun limite)."
-        )
-        st.markdown("---")
-        st.markdown("### 🃏 Filtri Singole (Fattore Scarsità)")
-        min_card_price = st.number_input(
-            "Prezzo minimo per carta (€)", min_value=0.0, max_value=10_000.0,
-            value=40.0, step=5.0,
-            help="Filtra le carte troppo economiche (sotto 40-50€ l'incidenza di spedizione e la non-convenienza di gradazione distruggono l'edge operativo)."
-        )
-        max_card_price = st.number_input(
-            "Prezzo massimo per singola carta (€, 0 = nessun limite)", min_value=0.0, max_value=100_000.0,
-            value=0.0, step=50.0,
-            help="Filtra le carte in acquisto sopra questa soglia - indipendentemente da quanto il modello le "
-                 "ritenga sottovalutate. Utile per restare su acquisti pratici/gestibili, non è un giudizio di "
-                 "convenienza: una carta esclusa qui può comunque essere un'ottima occasione, solo fuori budget."
-        )
-        only_holo_specials = st.checkbox(
-            "Solo Holo & Rarità Speciali", value=True,
-            help="Esclude carte Common, Uncommon e Non-Holo ordinarie, focalizzandosi su Rare Holo vintage, Secret, Ultra Rare, Rainbow, Illustration Rare (SIR/SAR)."
-        )
-        pokemon_only = st.checkbox(
-            "Solo carte Pokémon", value=True,
-            help="Mostra esclusivamente carte del franchise Pokémon (esclude Magic: The Gathering o altri giochi sperimentali)."
-        )
-        st.markdown("---")
-        st.markdown("### 🛃 Import da venditore USA")
+        st.markdown("### 🛃🇪🇺 Compliance & Costi Esterni")
         show_usa_import = st.checkbox(
             "Mostra costo sdoganato stimato (TCGplayer/eBay.com)", value=False,
-            help="Il prezzo PriceCharting è quello USA — per comprarlo davvero a quel livello serve un venditore "
-                 "USA, non Cardmarket EU. Dal 1° luglio 2026 (Reg. UE 382/2026) è stata abolita la soglia di "
-                 "franchigia doganale a 150€: OGNI spedizione extra-UE paga dazio, qualsiasi valore. Stima: "
-                 "oggetto + spedizione internazionale + IVA 22% + dazio forfettario UE 3€ + commissione di "
-                 "sdoganamento del corriere (~15€, indicativa — varia per corriere). Alta confidenza su IVA/dazio "
-                 "(normativa verificata), bassa sulla commissione corriere — non è un preventivo vincolante. "
-                 "⚠️ TESTATO (scripts/usa_landed_cost_edge_test.py): comprare SEMPRE a questo costo pieno "
-                 "distrugge l'edge — singole Sharpe 1,57→-0,33 (perdita netta), box Sharpe 1,18→0,58 con MaxDD "
-                 "triplicato. Usa questo numero solo come soglia informativa (EU è comunque meglio o peggio "
-                 "di importare), non come canale di acquisto regolare.")
-        st.markdown("---")
-        st.markdown("### 🇪🇺 Protezione Fiscale & Limiti DAC7")
+            help="Prezzo oggetto + spedizione + IVA 22% + dazio UE, stimato — comprare SEMPRE a questo costo "
+                 "pieno distrugge l'edge (testato). Vedi 'ℹ️ Dettagli' qui sotto per i numeri.")
+        with st.expander("ℹ️ Dettagli — import USA"):
+            st.caption("Il prezzo PriceCharting è quello USA — per comprarlo davvero a quel livello serve un venditore "
+                       "USA, non Cardmarket EU. Dal 1° luglio 2026 (Reg. UE 382/2026) è stata abolita la soglia di "
+                       "franchigia doganale a 150€: OGNI spedizione extra-UE paga dazio, qualsiasi valore. Stima: "
+                       "oggetto + spedizione internazionale + IVA 22% + dazio forfettario UE 3€ + commissione di "
+                       "sdoganamento del corriere (~15€, indicativa — varia per corriere). Alta confidenza su IVA/dazio "
+                       "(normativa verificata), bassa sulla commissione corriere — non è un preventivo vincolante. "
+                       "⚠️ TESTATO (scripts/usa_landed_cost_edge_test.py): comprare SEMPRE a questo costo pieno "
+                       "distrugge l'edge — singole Sharpe 1,57→-0,33 (perdita netta), box Sharpe 1,18→0,58 con MaxDD "
+                       "triplicato. Usa questo numero solo come soglia informativa (EU è comunque meglio o peggio "
+                       "di importare), non come canale di acquisto regolare.")
         limit_capital_dac7 = st.checkbox("Limita capitale al volume sicuro DAC7 (2.000€/anno)", value=False,
-                                         help="Direttiva UE DAC7: sopra 2.000€ di incasso lordo o 30 vendite annue, "
-                                              "le piattaforme come Cardmarket/eBay segnalano il profilo alle autorità fiscali. "
-                                              "La strategia PokeQuant sulle singole opera già nativamente all'optimum vincolato "
-                                              "di 20 posizioni (~28 vendite/anno, Sharpe 2.39), rimanendo strutturalmente "
-                                              "sotto le 30 vendite annue. Questo toggle limita il capitale allocato per restare "
-                                              "anche sotto il tetto monetario dei 2.000€/anno di vendite stimate.")
+                                         help="Direttiva UE DAC7: sopra 2.000€/anno o 30 vendite, le piattaforme "
+                                              "segnalano il profilo al fisco. Limita il capitale per restare sotto "
+                                              "soglia. Vedi 'ℹ️ Dettagli' qui sotto.")
+        with st.expander("ℹ️ Dettagli — DAC7"):
+            st.caption("Direttiva UE DAC7: sopra 2.000€ di incasso lordo o 30 vendite annue, "
+                       "le piattaforme come Cardmarket/eBay segnalano il profilo alle autorità fiscali. "
+                       "La strategia PokeQuant sulle singole opera già nativamente all'optimum vincolato "
+                       "di 20 posizioni (~28 vendite/anno, Sharpe 2.39), rimanendo strutturalmente "
+                       "sotto le 30 vendite annue. Questo toggle limita il capitale allocato per restare "
+                       "anche sotto il tetto monetario dei 2.000€/anno di vendite stimate.")
         # Verificato in audit generale (2026-09-29): NON un residuo morto - le
         # config "produzione" e "DAC7" per le singole sono state unificate a
         # monte (scripts/generate_singles_signal.py::DAC7_SINGLES_PARAMS =
@@ -1096,6 +1076,59 @@ def main():
             else:
                 st.success(f"✅ ~{total_trades_yr:.0f} vendite/anno, ~{eur_yr_at_capital:,.0f}€/anno stimati — sotto soglia.")
 
+        # --- FILTRI BOX (Fase 3: min+max simmetrico alle singole - prima
+        # esisteva solo il massimo) ---
+        st.markdown("---")
+        st.markdown("### 📦 Filtri Box")
+        min_box_price = st.number_input(
+            "Prezzo minimo per box (€)", min_value=0.0, max_value=100_000.0,
+            value=0.0, step=50.0,
+            help="Filtra i box in acquisto sotto questa soglia (0 = nessun limite)."
+        )
+        max_box_price = st.number_input(
+            "Prezzo massimo per box (€, 0 = nessun limite)", min_value=0.0, max_value=100_000.0,
+            value=0.0, step=50.0,
+            help="Filtra i box in acquisto sopra questa soglia (0 = nessun limite)."
+        )
+
+        # --- FILTRI SINGOLE ---
+        st.markdown("---")
+        st.markdown("### 🃏 Filtri Singole (Fattore Scarsità)")
+        min_card_price = st.number_input(
+            "Prezzo minimo per carta (€)", min_value=0.0, max_value=10_000.0,
+            value=40.0, step=5.0,
+            help="Filtra le carte troppo economiche (sotto 40-50€ l'incidenza di spedizione e la non-convenienza di gradazione distruggono l'edge operativo)."
+        )
+        max_card_price = st.number_input(
+            "Prezzo massimo per singola carta (€, 0 = nessun limite)", min_value=0.0, max_value=100_000.0,
+            value=0.0, step=50.0,
+            help="Filtra le carte in acquisto sopra questa soglia - indipendentemente da quanto il modello le "
+                 "ritenga sottovalutate. Utile per restare su acquisti pratici/gestibili, non è un giudizio di "
+                 "convenienza: una carta esclusa qui può comunque essere un'ottima occasione, solo fuori budget."
+        )
+        only_holo_specials = st.checkbox(
+            "Solo Holo & Rarità Speciali", value=True,
+            help="Esclude carte Common, Uncommon e Non-Holo ordinarie, focalizzandosi su Rare Holo vintage, Secret, Ultra Rare, Rainbow, Illustration Rare (SIR/SAR)."
+        )
+        # Fase 3: stesso pattern pills del selettore franchise box (prima un
+        # checkbox binario "Solo carte Pokémon") - le opzioni riflettono
+        # esattamente i franchise con singole nell'universo dopo la Fase 1
+        # (One Piece non ha mai avuto singole valide - rarity assente per
+        # tutte le 119 carte, vedi scripts/one_piece_pilot_validation.py;
+        # Pokémon JP non ha singole nell'universo; Pokémon Cinese non ancora
+        # adottato). Magic resta selezionabile con lo stesso caveat del box:
+        # e' stato rigettato, la vista sara' sempre vuota.
+        selected_singles_franchise = st.pills(
+            "Segmento / Franchise (Singole):",
+            options=["Pokémon EN", "Magic (MTG)", "Tutti i Segmenti"],
+            default="Pokémon EN",
+            help="Filtra le singole per franchise. 'Pokémon EN' è il segmento principale validato istituzionalmente."
+        )
+        if selected_singles_franchise == "Magic (MTG)":
+            st.warning("⚠️ Magic (MTG) è stato testato come pilota separato ed è stato **rigettato** (per le "
+                       "singole l'edge apparente crolla a qualsiasi tetto di quantità realistico — vedi "
+                       "scripts/mtg_pilot_validation.py). Questa vista sarà sempre vuota.")
+
         st.markdown("---")
         st.markdown("### 🇮🇹 Esecuzione dall'Italia")
         st.caption("1. Cardmarket — priorità assoluta (fee 5%, no dogana intra-UE)\n\n"
@@ -1107,91 +1140,6 @@ def main():
                    "`log_execution_price.py` (acquisto) o `log_sell_outcome.py` (vendita), non ignorarlo.")
 
     capital = effective_capital
-
-    # --- METRICHE VALIDATE (box, singole, blend) — contesto/audit, non un'azione settimanale: chiuso di default ---
-    with st.expander(
-        f"📊 Metriche di validazione — Blend Sharpe {VALIDATED_BLEND['sharpe']:.2f} · "
-        f"Box Sharpe {VALIDATED_BOX['sharpe']:.2f} (DSR sotto soglia) · Singole Sharpe {VALIDATED_SINGLES['sharpe']:.2f} (DSR nominale sopra soglia — ⚠️ vedi caveat quantità)"
-    ):
-        st.caption("Numeri fissi da `scripts/optimize_and_falsify.py` e `scripts/dac7_turnover_search.py` — "
-                   "non ricalcolati a ogni refresh. Rivalidare ogni 6 mesi.")
-        st.warning(
-            f"**Box**: DSR corretto per l'intera sessione **sotto** la soglia di comfort 0,90-0,95 — "
-            f"{VALIDATED_BOX['dsr_full_session']:.3f} (griglia originale: {VALIDATED_BOX['dsr_own_grid']:.3f}, "
-            f"{VALIDATED_BOX['n_trials_full_session']} trial), walk-forward positivo in entrambe le metà. "
-            f"**Singole**: DSR {VALIDATED_SINGLES['dsr_full_session']:.3f} ({VALIDATED_SINGLES['n_trials_full_session']} "
-            f"trial) è nominalmente **sopra** soglia con la metodologia standard (nessun tetto di quantità) — ma "
-            f"verificato (2026-09-25) che il numero è gonfiato dall'assunzione di comprare molte copie identiche "
-            f"per trade: a un tetto realistico (1-2 copie) il DSR scende a 0,028-0,346, **sotto** soglia come il "
-            f"box. Non trattare 0,981 come una validazione pulita — vedi il caveat \"→ N pz.\" nella sezione "
-            f"singole BUY sotto per i numeri realistici. Storico completo: "
-            f"`scripts/dsr_session_audit.py`, `scripts/max_quantity_retest_expanded_universe.py`."
-        )
-        st.markdown('<div class="section-desc"><strong>📦 Box sigillati — TS Momentum</strong></div>', unsafe_allow_html=True)
-        st.markdown(f"""
-        <div class="kpi-grid">
-            <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_BOX['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">Sotto soglia · griglia propria: {VALIDATED_BOX['dsr_own_grid']:.3f}</div></div>
-            <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED_BOX['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED_BOX['cagr']:.1f}%</div></div>
-            <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED_BOX['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-amber">Sopra fascia comfort (&lt;20-25%)</div></div>
-            <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED_BOX['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Bootstrap P(&gt;0)={VALIDATED_BOX['bootstrap_cagr_p_pos']}%</div></div>
-            <div class="kpi-card"><div class="kpi-label">Walk-forward H1</div><div class="kpi-value">{VALIDATED_BOX['h1_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-amber">Sharpe 2020-12→2023-10</div></div>
-            <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_BOX['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown('<div class="section-desc"><strong>🃏 Singole — Fattore Scarsità (log-prezzo ~ scarsità continua + controlli)</strong></div>', unsafe_allow_html=True)
-        st.markdown(f"""
-        <div class="kpi-grid">
-            <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_SINGLES['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">⚠️ Gonfiato dal tetto di quantità — a 1-2 copie: 0,03-0,35</div></div>
-            <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED_SINGLES['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED_SINGLES['cagr']:.1f}%</div></div>
-            <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED_SINGLES['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Molto stabile</div></div>
-            <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED_SINGLES['max_dd']:.1f}%</div></div>
-            <div class="kpi-card"><div class="kpi-label">Walk-forward H1</div><div class="kpi-value">{VALIDATED_SINGLES['h1_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2021-01→2023-10</div></div>
-            <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_SINGLES['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown('<div class="section-desc"><strong>🔗 Blend risk-parity — correlazione 0,37 tra le due strategie</strong></div>', unsafe_allow_html=True)
-        st.markdown(f"""
-        <div class="kpi-grid">
-            <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,38 box da solo (stesso periodo)</div></div>
-            <div class="kpi-card"><div class="kpi-label">CAGR blend</div><div class="kpi-value">+{VALIDATED_BLEND['cagr']:.1f}%</div></div>
-            <div class="kpi-card"><div class="kpi-label">Max Drawdown blend</div><div class="kpi-value">{VALIDATED_BLEND['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">vs -11,1% solo box</div></div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # --- INDICI DI MERCATO (contesto, non segnale d'ingresso) — chiuso di default ---
-    with st.expander("📉 Indici di mercato (contesto)"):
-        st.caption("Indici equal-weight buy&hold (nessun timing, nessuna strategia) sull'universo sealed "
-                   "validato — la 'beta' del mercato da confrontare con l'alfa della strategia. Segmenti JP "
-                   "e One Piece hanno pochi titoli (5 e 4): direzionali, non statisticamente robusti da soli.")
-        overall_index, segment_indices, segment_counts, breadth_series = get_market_indices()
-
-        idx_fig = go.Figure()
-        idx_fig.add_trace(go.Scatter(x=overall_index.index, y=overall_index.values, mode="lines",
-                                      name=f"Sealed complessivo (n={sum(segment_counts.values())})",
-                                      line=dict(color="#f8fafc", width=2.5)))
-        seg_colors = {"Pokémon EN": "#38bdf8", "Pokémon JP": "#f43f5e", "One Piece TCG": "#fbbf24"}
-        for name, series in segment_indices.items():
-            idx_fig.add_trace(go.Scatter(x=series.index, y=series.values, mode="lines",
-                                          name=f"{name} (n={segment_counts[name]})",
-                                          line=dict(color=seg_colors.get(name, "#94a3b8"), width=1.5, dash="dot")))
-        idx_fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
-                               height=320, margin=dict(l=20, r=20, t=30, b=20),
-                               legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
-                               yaxis_title="Indice (base 100)")
-        st.plotly_chart(idx_fig, use_container_width=True)
-
-        breadth_fig = go.Figure()
-        breadth_fig.add_trace(go.Scatter(x=breadth_series.index, y=breadth_series.values, mode="lines",
-                                          fill="tozeroy", line=dict(color="#10b981", width=1.8),
-                                          fillcolor="rgba(16,185,129,0.12)", name="Ampiezza"))
-        breadth_fig.add_hline(y=50, line_dash="dot", line_color="rgba(255,255,255,0.25)")
-        breadth_fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
-                                   height=180, margin=dict(l=20, r=20, t=10, b=20), showlegend=False,
-                                   yaxis=dict(range=[0, 100], title="% con momentum 12m positivo"))
-        st.plotly_chart(breadth_fig, use_container_width=True, config={"displayModeBar": False})
-        st.caption(f"Ampiezza di mercato: quota dell'universo con momentum trailing 12m positivo — stessa regola "
-                   f"della strategia, aggregata. Oggi: {breadth_series.iloc[-1]:.0f}%. Un calo ampio e prolungato "
-                   "sotto il 50% è un segnale di regime, non di un singolo box.")
 
     # --- AZIONE: BUY/HOLD con allocazione e link Cardmarket (quota box, risk parity) ---
     st.markdown(f'<div class="section-title">📦 Box da comprare/mantenere — {w_box*100:.0f}% del capitale ({capital*w_box:,.0f}€)</div>', unsafe_allow_html=True)
@@ -1241,6 +1189,8 @@ def main():
                    "solo con cassa dedicata di livello Vault.")
 
     all_buy_rows = [r for r in sig_rows if r["signal"] == "BUY/HOLD"]
+    if min_box_price > 0:
+        all_buy_rows = [r for r in all_buy_rows if r["current_price_eur"] >= min_box_price]
     if max_box_price > 0:
         all_buy_rows = [r for r in all_buy_rows if r["current_price_eur"] <= max_box_price]
 
@@ -1449,13 +1399,15 @@ def main():
     singles_rows, singles_latest_date = get_singles_signal(singles_mode)
     alt_rows, _ = get_singles_alternatives(singles_mode)
     singles_prices_full = get_singles_prices_full()
+    # Selettore pills -> filtro franchise esatto (None = "Tutti i Segmenti", nessun filtro).
+    singles_franchise_filter = {"Pokémon EN": "pokemon", "Magic (MTG)": "magic"}.get(selected_singles_franchise)
     # Applica i filtri qualitativi e di prezzo alle singole (rimuove rumore a basso prezzo / bulk non-holo / altri TCG)
     singles_rows = filter_singles_rows(
         singles_rows,
         min_price=min_card_price,
         max_price=max_card_price,
         only_holo=only_holo_specials,
-        pokemon_only=pokemon_only,
+        franchise=singles_franchise_filter,
         retag_tiers=True,
     )
     alt_rows = filter_singles_rows(
@@ -1463,12 +1415,206 @@ def main():
         min_price=min_card_price,
         max_price=max_card_price,
         only_holo=only_holo_specials,
-        pokemon_only=pokemon_only,
+        franchise=singles_franchise_filter,
         retag_tiers=False,
     )
     calc_alt_rows = alt_rows[:30]
     singles_allocation = build_equal_allocation(singles_rows, capital * w_singles)
 
+
+    if not singles_allocation:
+        st.info("Nessuna carta nel quantile BUY questo mese.")
+    else:
+        core_singles = [item for item in singles_allocation if item[0].get("tier") == "core"]
+        if not core_singles and singles_allocation:
+            core_singles = singles_allocation[:8]
+            bench_singles = singles_allocation[8:]
+        else:
+            bench_singles = [item for item in singles_allocation if item[0].get("tier") != "core"]
+
+        tab_s_core, tab_s_bench, tab_s_alt = st.tabs([
+            f"💎 Tier 1: Core Conviction ({len(core_singles)})",
+            f"🛡️ Tier 2: Panchina & Riserve ({len(bench_singles)})",
+            f"🔄 Alternative Stesso Quantile ({len(alt_rows)})",
+        ])
+
+        singles_budget_half = capital * w_singles
+        alloc_core_focus = singles_budget_half / max(1, len(core_singles))
+        alloc_full_dist = singles_budget_half / max(1, len(singles_allocation))
+
+        with tab_s_core:
+            st.markdown(
+                "**Massima Convinzione Quantitativa**: Le 8 posizioni di assoluta eccellenza con il maggior sconto statistico rispetto alla rarità. "
+                "Concentra prioritariamente qui la liquidità mensile. Per ciascuna carta è indicato il **Target Grade** ottimale "
+                "(**PSA 9** su Vintage/Mid-Era vs **PSA 10** su Moderno)."
+            )
+            st.markdown(f"""
+            <div class="kpi-grid">
+                <div class="kpi-card"><div class="kpi-label">Budget Singole ({w_singles*100:.0f}%)</div><div class="kpi-value">{singles_budget_half:,.0f} €</div><div class="kpi-sub">Capitale risk-parity</div></div>
+                <div class="kpi-card"><div class="kpi-label">Quota Focus (Top 8)</div><div class="kpi-value" style="color:#10b981;">{alloc_core_focus:,.0f} € / carta</div><div class="kpi-sub kpi-sub-emerald">Concentrazione raccomandata</div></div>
+                <div class="kpi-card"><div class="kpi-label">Quota Standard ({len(singles_allocation)} pos.)</div><div class="kpi-value">{alloc_full_dist:,.0f} € / carta</div><div class="kpi-sub">Distribuzione uniforme</div></div>
+                <div class="kpi-card"><div class="kpi-label">Carte Core</div><div class="kpi-value">{len(core_singles)}</div><div class="kpi-sub">Top decile residui</div></div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            prefetch_product_images([
+                (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+                for r, _ in core_singles
+            ])
+            for r, alloc in core_singles:
+                render_single_card(r, alloc, metadata, singles_prices_full, show_usa_import, key_prefix="single_core")
+
+        with tab_s_bench:
+            st.info("🛡️ **Panchina & Posizioni Secondarie**: Carte validate dal modello di scarsità (dalla 9ª in poi). "
+                    "Usale se una carta della Top 8 Core non è reperibile su Cardmarket al di sotto del 'Massimo per Edge'.")
+            if not bench_singles:
+                st.caption("Nessuna carta in panchina (tutte le posizioni rientrano nella Top 8 Core).")
+            else:
+                prefetch_product_images([
+                    (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+                    for r, _ in bench_singles[:8]
+                ])
+                for r, alloc in bench_singles[:8]:
+                    render_single_card(r, alloc, metadata, singles_prices_full, show_usa_import, key_prefix="single_bench")
+
+                if len(bench_singles) > 8:
+                    with st.expander(f"Altre {len(bench_singles) - 8} carte in panchina"):
+                        bench_table_rows = []
+                        for r, alloc in bench_singles[8:]:
+                            full_meta_b = metadata.get(r["item_id"], {})
+                            rec_t = get_recommended_grade_targets(
+                                base_psa9_eur=float(r["current_price_eur"]),
+                                era=r.get("era") or full_meta_b.get("era", "modern"),
+                                item_id=r.get("item_id"),
+                                game_slug=full_meta_b.get("game_slug"),
+                                item_slug=full_meta_b.get("item_slug"),
+                            )
+                            is_p10 = (rec_t["target_grade"] == "PSA 10")
+                            p_target = float(r.get("target_price_eur") or rec_t["target_price_eur"])
+                            era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec_t["era"]), 2.80) if is_p10 else 1.0
+                            max_edge_target = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(p_target * 1.05, 2)))
+                            target_grade_lbl = rec_t["target_grade"]
+                            qty_est = max(1, int(alloc // p_target)) if p_target > 0 and alloc > 0 else 1
+                            bench_table_rows.append({
+                                "Carta": r["name"],
+                                "Set": r.get("set_name") or "?",
+                                "Rarità": r["rarity"],
+                                "Grado Target": target_grade_lbl,
+                                "Alternative Minori Consigliate": rec_t["minor_alternatives_str"],
+                                "Prezzo Target (€)": p_target,
+                                "Massimo per Edge (€)": max_edge_target,
+                                "Base G9 (€)": r["current_price_eur"],
+                                "Sconto vs. pari (%)": r["discount_pct"],
+                                "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
+                                "Allocazione (€)": alloc,
+                                "Quantità Target": qty_est,
+                            })
+                        rest_df = pd.DataFrame(bench_table_rows)
+                        st.dataframe(rest_df, use_container_width=True, hide_index=True,
+                                     column_config={
+                                         "Prezzo Target (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                         "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                         "Base G9 (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                         "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                                         "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
+                                     })
+
+        with tab_s_alt:
+            st.caption("Ripiego, non un secondo BUY: usa il budget non speso qui invece di lasciarlo fermo o "
+                       "forzare più copie di una carta — recupera parte dell'edge perso ma non tutto. "
+                       "Ancora nel quantile 20% più sottovalutato, solo fuori dalle prime posizioni per rank.")
+            if not alt_rows:
+                st.caption("Nessuna alternativa disponibile con i filtri attuali.")
+            else:
+                alt_table_rows = []
+                for r in alt_rows[:60]:
+                    full_meta_a = metadata.get(r["item_id"], {})
+                    rec_t = get_recommended_grade_targets(
+                        base_psa9_eur=float(r["current_price_eur"]),
+                        era=r.get("era") or full_meta_a.get("era", "modern"),
+                        item_id=r.get("item_id"),
+                        game_slug=full_meta_a.get("game_slug"),
+                        item_slug=full_meta_a.get("item_slug"),
+                    )
+                    is_p10 = (rec_t["target_grade"] == "PSA 10")
+                    p_target = float(r.get("target_price_eur") or rec_t["target_price_eur"])
+                    era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec_t["era"]), 2.80) if is_p10 else 1.0
+                    max_edge_target = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(p_target * 1.05, 2)))
+                    target_grade_lbl = rec_t["target_grade"]
+                    alt_table_rows.append({
+                        "Carta": r["name"],
+                        "Set": r.get("set_name") or "?",
+                        "Rarità": r["rarity"],
+                        "Grado Target": target_grade_lbl,
+                        "Alternative Minori Consigliate": rec_t["minor_alternatives_str"],
+                        "Prezzo Target (€)": p_target,
+                        "Massimo per Edge (€)": max_edge_target,
+                        "Base G9 (€)": r["current_price_eur"],
+                        "Sconto vs. pari (%)": r["discount_pct"],
+                    })
+                alt_df = pd.DataFrame(alt_table_rows)
+                st.dataframe(alt_df, use_container_width=True, hide_index=True,
+                             column_config={
+                                 "Prezzo Target (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                 "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                 "Base G9 (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                 "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                             })
+
+                with st.expander("🔍 Mostra le Prime 10 Alternative in formato scheda"):
+                    st.caption("Visualizza le prime 10 carte alternative come schede singole con prezzi target, pop pressure, grafici e link Cardmarket.")
+                    prefetch_product_images([
+                        (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+                        for r in alt_rows[:10]
+                    ])
+                    for r in alt_rows[:10]:
+                        render_single_card(r, 0.0, metadata, singles_prices_full, show_usa_import, key_prefix="single_alt")
+
+    # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---
+    avoid_rows, _ = get_singles_avoid_signal(singles_mode)
+    if singles_franchise_filter is not None:
+        avoid_rows = [r for r in avoid_rows if r.get("franchise") == singles_franchise_filter]
+    if avoid_rows:
+        st.markdown('<div class="section-title">🔴 Singole da evitare/vendere — sopravvalutate vs pari</div>', unsafe_allow_html=True)
+        st.caption("⚠️ Specchio del quantile BUY (stesso modello, residuo più positivo): la carta costa più di "
+                   "quanto la sua rarità/età/set implicherebbero rispetto alle pari. Molte di queste sono chase "
+                   "iconiche (Charizard, Lugia, carte ★) — il modello non cattura il premio da fama/desiderabilità, "
+                   "solo rarità/età/franchise, quindi un sovrapprezzo enorme spesso riflette un premio reale, non "
+                   "un errore di prezzo. A differenza del quantile BUY, qui NON è stato validato un backtest di "
+                   "vendita/short — è informativo (come le Uscite dei box), non una strategia a sé testata.")
+        prefetch_product_images([
+            (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
+            for r in avoid_rows[:15]
+        ])
+        for r in avoid_rows[:15]:
+            full_meta = metadata.get(r["item_id"], {})
+            img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
+            img_tag = render_thumb_html(img_url)
+            st.markdown(f"""
+            <div class="signal-card signal-card-sell">
+                {img_tag}
+                <div class="signal-card-body">
+                <strong>{r['name']}</strong> &nbsp; <span style="color:#38bdf8; font-weight:600;">[{r.get('set_name') or '?'}]</span>
+                &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
+                &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting)
+                &nbsp;·&nbsp; sovrapprezzo vs. pari {r['discount_pct']:+.0f}%
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        if len(avoid_rows) > 15:
+            with st.expander(f"Altre {len(avoid_rows) - 15} carte sopravvalutate"):
+                avoid_df = pd.DataFrame([
+                    {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
+                     "Prezzo (€)": r["current_price_eur"], "Sovrapprezzo vs. pari (%)": r["discount_pct"]}
+                    for r in avoid_rows[15:]
+                ])
+                st.dataframe(avoid_df, use_container_width=True, hide_index=True,
+                             column_config={
+                                 "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
+                                 "Sovrapprezzo vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                             })
+
+    st.markdown('<div class="section-title">⚖️ Valutatore Slab</div>', unsafe_allow_html=True)
     # --- CALCOLATORE RAPIDO SLAB & CORREZIONI CASE DI GRADAZIONE ---
     with st.expander("⚖️ Calcolatore Inserzioni Slab & Moltiplicatori Case di Gradazione (BGS, CGC, PSA, SGC, TAG, PCA, GRAAD, CCC, AiGrading, ACE)", expanded=True):
         st.markdown("**Valutatore Rapido Inserzioni**: Seleziona una carta dai segnali BUY, cercala nell'intero database (3.100+ carte) o inseriscine una personalizzata. Indica la casa di gradazione, il voto e l'eventuale variante speciale (1st Edition, No Symbol, Shadowless). Il modello recupera il benchmark reale ed applica i correttivi quantitativi per preservare l'edge.")
@@ -2146,197 +2292,90 @@ def main():
         else:
             st.caption("ℹ️ *Seleziona i parametri sopra e clicca su **'Calcola Valutazione Slab'** per vedere l'analisi istantanea senza ricaricare la pagina.*")
 
-    if not singles_allocation:
-        st.info("Nessuna carta nel quantile BUY questo mese.")
-    else:
-        core_singles = [item for item in singles_allocation if item[0].get("tier") == "core"]
-        if not core_singles and singles_allocation:
-            core_singles = singles_allocation[:8]
-            bench_singles = singles_allocation[8:]
-        else:
-            bench_singles = [item for item in singles_allocation if item[0].get("tier") != "core"]
+    st.markdown('<div class="section-title">📊 Validazione & Storico</div>', unsafe_allow_html=True)
+    st.caption("Metriche di validazione, indici di mercato e giornale trade completo — contesto/audit, non un'azione da compiere ora. Tutto qui sotto è chiuso di default.")
+    # --- METRICHE VALIDATE (box, singole, blend) — contesto/audit, non un'azione settimanale: chiuso di default ---
+    with st.expander(
+        f"📊 Metriche di validazione — Blend Sharpe {VALIDATED_BLEND['sharpe']:.2f} · "
+        f"Box Sharpe {VALIDATED_BOX['sharpe']:.2f} (DSR sotto soglia) · Singole Sharpe {VALIDATED_SINGLES['sharpe']:.2f} (DSR nominale sopra soglia — ⚠️ vedi caveat quantità)"
+    ):
+        st.caption("Numeri fissi da `scripts/optimize_and_falsify.py` e `scripts/dac7_turnover_search.py` — "
+                   "non ricalcolati a ogni refresh. Rivalidare ogni 6 mesi.")
+        st.warning(
+            f"**Box**: DSR {VALIDATED_BOX['dsr_full_session']:.3f} — **sotto** soglia comfort 0,90-0,95. "
+            f"**Singole**: DSR {VALIDATED_SINGLES['dsr_full_session']:.3f} è nominale **sopra** soglia, ma gonfiato "
+            f"dall'assunzione di molte copie/trade — a un tetto realistico (1-2 copie) scende a 0,028-0,346, "
+            f"**sotto** soglia come il box. Non trattare 0,981 come validazione pulita — vedi caveat \"→ N pz.\" "
+            f"nella sezione singole BUY."
+        )
+        st.caption(f"Griglia originale box: {VALIDATED_BOX['dsr_own_grid']:.3f} ({VALIDATED_BOX['n_trials_full_session']} trial). "
+                   f"Singole: {VALIDATED_SINGLES['n_trials_full_session']} trial. Storico completo: "
+                   "`scripts/dsr_session_audit.py`, `scripts/max_quantity_retest_expanded_universe.py`.")
+        st.markdown('<div class="section-desc"><strong>📦 Box sigillati — TS Momentum</strong></div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_BOX['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">Sotto soglia · griglia propria: {VALIDATED_BOX['dsr_own_grid']:.3f}</div></div>
+            <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED_BOX['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED_BOX['cagr']:.1f}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED_BOX['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-amber">Sopra fascia comfort (&lt;20-25%)</div></div>
+            <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED_BOX['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Bootstrap P(&gt;0)={VALIDATED_BOX['bootstrap_cagr_p_pos']}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Walk-forward H1</div><div class="kpi-value">{VALIDATED_BOX['h1_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-amber">Sharpe 2020-12→2023-10</div></div>
+            <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_BOX['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('<div class="section-desc"><strong>🃏 Singole — Fattore Scarsità (log-prezzo ~ scarsità continua + controlli)</strong></div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">DSR (sessione intera)</div><div class="kpi-value">{VALIDATED_SINGLES['dsr_full_session']:.3f}</div><div class="kpi-sub kpi-sub-amber">⚠️ Gonfiato dal tetto di quantità — a 1-2 copie: 0,03-0,35</div></div>
+            <div class="kpi-card"><div class="kpi-label">Sharpe</div><div class="kpi-value">{VALIDATED_SINGLES['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">CAGR +{VALIDATED_SINGLES['cagr']:.1f}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">PBO (8 split)</div><div class="kpi-value">{VALIDATED_SINGLES['pbo']*100:.1f}%</div><div class="kpi-sub kpi-sub-emerald">Molto stabile</div></div>
+            <div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value">{VALIDATED_SINGLES['max_dd']:.1f}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Walk-forward H1</div><div class="kpi-value">{VALIDATED_SINGLES['h1_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2021-01→2023-10</div></div>
+            <div class="kpi-card"><div class="kpi-label">Walk-forward H2</div><div class="kpi-value">{VALIDATED_SINGLES['h2_sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">Sharpe 2023-11→2026-09</div></div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('<div class="section-desc"><strong>🔗 Blend risk-parity — correlazione 0,37 tra le due strategie</strong></div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Sharpe blend</div><div class="kpi-value">{VALIDATED_BLEND['sharpe']:.2f}</div><div class="kpi-sub kpi-sub-emerald">vs 1,38 box da solo (stesso periodo)</div></div>
+            <div class="kpi-card"><div class="kpi-label">CAGR blend</div><div class="kpi-value">+{VALIDATED_BLEND['cagr']:.1f}%</div></div>
+            <div class="kpi-card"><div class="kpi-label">Max Drawdown blend</div><div class="kpi-value">{VALIDATED_BLEND['max_dd']:.1f}%</div><div class="kpi-sub kpi-sub-emerald">vs -11,1% solo box</div></div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        tab_s_core, tab_s_bench, tab_s_alt = st.tabs([
-            f"💎 Tier 1: Core Conviction ({len(core_singles)})",
-            f"🛡️ Tier 2: Panchina & Riserve ({len(bench_singles)})",
-            f"🔄 Alternative Stesso Quantile ({len(alt_rows)})",
-        ])
+    # --- INDICI DI MERCATO (contesto, non segnale d'ingresso) — chiuso di default ---
+    with st.expander("📉 Indici di mercato (contesto)"):
+        st.caption("Indici equal-weight buy&hold (nessun timing, nessuna strategia) sull'universo sealed "
+                   "validato — la 'beta' del mercato da confrontare con l'alfa della strategia. Segmenti JP "
+                   "e One Piece hanno pochi titoli (5 e 4): direzionali, non statisticamente robusti da soli.")
+        overall_index, segment_indices, segment_counts, breadth_series = get_market_indices()
 
-        singles_budget_half = capital * w_singles
-        alloc_core_focus = singles_budget_half / max(1, len(core_singles))
-        alloc_full_dist = singles_budget_half / max(1, len(singles_allocation))
+        idx_fig = go.Figure()
+        idx_fig.add_trace(go.Scatter(x=overall_index.index, y=overall_index.values, mode="lines",
+                                      name=f"Sealed complessivo (n={sum(segment_counts.values())})",
+                                      line=dict(color="#f8fafc", width=2.5)))
+        seg_colors = {"Pokémon EN": "#38bdf8", "Pokémon JP": "#f43f5e", "One Piece TCG": "#fbbf24"}
+        for name, series in segment_indices.items():
+            idx_fig.add_trace(go.Scatter(x=series.index, y=series.values, mode="lines",
+                                          name=f"{name} (n={segment_counts[name]})",
+                                          line=dict(color=seg_colors.get(name, "#94a3b8"), width=1.5, dash="dot")))
+        idx_fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
+                               height=320, margin=dict(l=20, r=20, t=30, b=20),
+                               legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+                               yaxis_title="Indice (base 100)")
+        st.plotly_chart(idx_fig, use_container_width=True)
 
-        with tab_s_core:
-            st.markdown(
-                "**Massima Convinzione Quantitativa**: Le 8 posizioni di assoluta eccellenza con il maggior sconto statistico rispetto alla rarità. "
-                "Concentra prioritariamente qui la liquidità mensile. Per ciascuna carta è indicato il **Target Grade** ottimale "
-                "(**PSA 9** su Vintage/Mid-Era vs **PSA 10** su Moderno)."
-            )
-            st.markdown(f"""
-            <div class="kpi-grid">
-                <div class="kpi-card"><div class="kpi-label">Budget Singole ({w_singles*100:.0f}%)</div><div class="kpi-value">{singles_budget_half:,.0f} €</div><div class="kpi-sub">Capitale risk-parity</div></div>
-                <div class="kpi-card"><div class="kpi-label">Quota Focus (Top 8)</div><div class="kpi-value" style="color:#10b981;">{alloc_core_focus:,.0f} € / carta</div><div class="kpi-sub kpi-sub-emerald">Concentrazione raccomandata</div></div>
-                <div class="kpi-card"><div class="kpi-label">Quota Standard ({len(singles_allocation)} pos.)</div><div class="kpi-value">{alloc_full_dist:,.0f} € / carta</div><div class="kpi-sub">Distribuzione uniforme</div></div>
-                <div class="kpi-card"><div class="kpi-label">Carte Core</div><div class="kpi-value">{len(core_singles)}</div><div class="kpi-sub">Top decile residui</div></div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            prefetch_product_images([
-                (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
-                for r, _ in core_singles
-            ])
-            for r, alloc in core_singles:
-                render_single_card(r, alloc, metadata, singles_prices_full, show_usa_import, key_prefix="single_core")
-
-        with tab_s_bench:
-            st.info("🛡️ **Panchina & Posizioni Secondarie**: Carte validate dal modello di scarsità (dalla 9ª in poi). "
-                    "Usale se una carta della Top 8 Core non è reperibile su Cardmarket al di sotto del 'Massimo per Edge'.")
-            if not bench_singles:
-                st.caption("Nessuna carta in panchina (tutte le posizioni rientrano nella Top 8 Core).")
-            else:
-                prefetch_product_images([
-                    (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
-                    for r, _ in bench_singles[:8]
-                ])
-                for r, alloc in bench_singles[:8]:
-                    render_single_card(r, alloc, metadata, singles_prices_full, show_usa_import, key_prefix="single_bench")
-
-                if len(bench_singles) > 8:
-                    with st.expander(f"Altre {len(bench_singles) - 8} carte in panchina"):
-                        bench_table_rows = []
-                        for r, alloc in bench_singles[8:]:
-                            full_meta_b = metadata.get(r["item_id"], {})
-                            rec_t = get_recommended_grade_targets(
-                                base_psa9_eur=float(r["current_price_eur"]),
-                                era=r.get("era") or full_meta_b.get("era", "modern"),
-                                item_id=r.get("item_id"),
-                                game_slug=full_meta_b.get("game_slug"),
-                                item_slug=full_meta_b.get("item_slug"),
-                            )
-                            is_p10 = (rec_t["target_grade"] == "PSA 10")
-                            p_target = float(r.get("target_price_eur") or rec_t["target_price_eur"])
-                            era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec_t["era"]), 2.80) if is_p10 else 1.0
-                            max_edge_target = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(p_target * 1.05, 2)))
-                            target_grade_lbl = rec_t["target_grade"]
-                            qty_est = max(1, int(alloc // p_target)) if p_target > 0 and alloc > 0 else 1
-                            bench_table_rows.append({
-                                "Carta": r["name"],
-                                "Set": r.get("set_name") or "?",
-                                "Rarità": r["rarity"],
-                                "Grado Target": target_grade_lbl,
-                                "Alternative Minori Consigliate": rec_t["minor_alternatives_str"],
-                                "Prezzo Target (€)": p_target,
-                                "Massimo per Edge (€)": max_edge_target,
-                                "Base G9 (€)": r["current_price_eur"],
-                                "Sconto vs. pari (%)": r["discount_pct"],
-                                "Segnale da": r["signal_start_date"].strftime("%Y-%m") if hasattr(r["signal_start_date"], "strftime") else str(r["signal_start_date"]),
-                                "Allocazione (€)": alloc,
-                                "Quantità Target": qty_est,
-                            })
-                        rest_df = pd.DataFrame(bench_table_rows)
-                        st.dataframe(rest_df, use_container_width=True, hide_index=True,
-                                     column_config={
-                                         "Prezzo Target (€)": st.column_config.NumberColumn(format="%.2f €"),
-                                         "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
-                                         "Base G9 (€)": st.column_config.NumberColumn(format="%.2f €"),
-                                         "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-                                         "Allocazione (€)": st.column_config.NumberColumn(format="%.0f €"),
-                                     })
-
-        with tab_s_alt:
-            st.caption("Ripiego, non un secondo BUY: usa il budget non speso qui invece di lasciarlo fermo o "
-                       "forzare più copie di una carta — recupera parte dell'edge perso ma non tutto. "
-                       "Ancora nel quantile 20% più sottovalutato, solo fuori dalle prime posizioni per rank.")
-            if not alt_rows:
-                st.caption("Nessuna alternativa disponibile con i filtri attuali.")
-            else:
-                alt_table_rows = []
-                for r in alt_rows[:60]:
-                    full_meta_a = metadata.get(r["item_id"], {})
-                    rec_t = get_recommended_grade_targets(
-                        base_psa9_eur=float(r["current_price_eur"]),
-                        era=r.get("era") or full_meta_a.get("era", "modern"),
-                        item_id=r.get("item_id"),
-                        game_slug=full_meta_a.get("game_slug"),
-                        item_slug=full_meta_a.get("item_slug"),
-                    )
-                    is_p10 = (rec_t["target_grade"] == "PSA 10")
-                    p_target = float(r.get("target_price_eur") or rec_t["target_price_eur"])
-                    era_ratio = ERA_PSA10_TO_PSA9_RATIO.get(normalize_era(rec_t["era"]), 2.80) if is_p10 else 1.0
-                    max_edge_target = float(r.get("target_max_edge_price_eur") or (round(r["max_edge_price_eur"] * era_ratio, 2) if r.get("max_edge_price_eur") else round(p_target * 1.05, 2)))
-                    target_grade_lbl = rec_t["target_grade"]
-                    alt_table_rows.append({
-                        "Carta": r["name"],
-                        "Set": r.get("set_name") or "?",
-                        "Rarità": r["rarity"],
-                        "Grado Target": target_grade_lbl,
-                        "Alternative Minori Consigliate": rec_t["minor_alternatives_str"],
-                        "Prezzo Target (€)": p_target,
-                        "Massimo per Edge (€)": max_edge_target,
-                        "Base G9 (€)": r["current_price_eur"],
-                        "Sconto vs. pari (%)": r["discount_pct"],
-                    })
-                alt_df = pd.DataFrame(alt_table_rows)
-                st.dataframe(alt_df, use_container_width=True, hide_index=True,
-                             column_config={
-                                 "Prezzo Target (€)": st.column_config.NumberColumn(format="%.2f €"),
-                                 "Massimo per Edge (€)": st.column_config.NumberColumn(format="%.2f €"),
-                                 "Base G9 (€)": st.column_config.NumberColumn(format="%.2f €"),
-                                 "Sconto vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-                             })
-
-                with st.expander("🔍 Mostra le Prime 10 Alternative in formato scheda"):
-                    st.caption("Visualizza le prime 10 carte alternative come schede singole con prezzi target, pop pressure, grafici e link Cardmarket.")
-                    prefetch_product_images([
-                        (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
-                        for r in alt_rows[:10]
-                    ])
-                    for r in alt_rows[:10]:
-                        render_single_card(r, 0.0, metadata, singles_prices_full, show_usa_import, key_prefix="single_alt")
-
-    # --- USCITE/AVOID: SINGOLE SOPRAVVALUTATE (specchio del BUY) ---
-    avoid_rows, _ = get_singles_avoid_signal(singles_mode)
-    if pokemon_only:
-        avoid_rows = [r for r in avoid_rows if r.get("franchise") == "pokemon"]
-    if avoid_rows:
-        st.markdown('<div class="section-title">🔴 Singole da evitare/vendere — sopravvalutate vs pari</div>', unsafe_allow_html=True)
-        st.caption("⚠️ Specchio del quantile BUY (stesso modello, residuo più positivo): la carta costa più di "
-                   "quanto la sua rarità/età/set implicherebbero rispetto alle pari. Molte di queste sono chase "
-                   "iconiche (Charizard, Lugia, carte ★) — il modello non cattura il premio da fama/desiderabilità, "
-                   "solo rarità/età/franchise, quindi un sovrapprezzo enorme spesso riflette un premio reale, non "
-                   "un errore di prezzo. A differenza del quantile BUY, qui NON è stato validato un backtest di "
-                   "vendita/short — è informativo (come le Uscite dei box), non una strategia a sé testata.")
-        prefetch_product_images([
-            (metadata.get(r["item_id"], {}).get("game_slug"), metadata.get(r["item_id"], {}).get("item_slug"))
-            for r in avoid_rows[:15]
-        ])
-        for r in avoid_rows[:15]:
-            full_meta = metadata.get(r["item_id"], {})
-            img_url = get_product_image(full_meta.get("game_slug"), full_meta.get("item_slug"))
-            img_tag = render_thumb_html(img_url)
-            st.markdown(f"""
-            <div class="signal-card signal-card-sell">
-                {img_tag}
-                <div class="signal-card-body">
-                <strong>{r['name']}</strong> &nbsp; <span style="color:#38bdf8; font-weight:600;">[{r.get('set_name') or '?'}]</span>
-                &nbsp; <span style="color:#94a3b8;">{r['rarity']}</span>
-                &nbsp;·&nbsp; {r['current_price_eur']:.2f}€ <span style="color:#fbbf24;">[Grade 9]</span> (PriceCharting)
-                &nbsp;·&nbsp; sovrapprezzo vs. pari {r['discount_pct']:+.0f}%
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        if len(avoid_rows) > 15:
-            with st.expander(f"Altre {len(avoid_rows) - 15} carte sopravvalutate"):
-                avoid_df = pd.DataFrame([
-                    {"Carta": r["name"], "Set": r.get("set_name") or "?", "Rarità": r["rarity"], "Grado": "Grade 9",
-                     "Prezzo (€)": r["current_price_eur"], "Sovrapprezzo vs. pari (%)": r["discount_pct"]}
-                    for r in avoid_rows[15:]
-                ])
-                st.dataframe(avoid_df, use_container_width=True, hide_index=True,
-                             column_config={
-                                 "Prezzo (€)": st.column_config.NumberColumn(format="%.2f €"),
-                                 "Sovrapprezzo vs. pari (%)": st.column_config.NumberColumn(format="%+.1f%%"),
-                             })
+        breadth_fig = go.Figure()
+        breadth_fig.add_trace(go.Scatter(x=breadth_series.index, y=breadth_series.values, mode="lines",
+                                          fill="tozeroy", line=dict(color="#10b981", width=1.8),
+                                          fillcolor="rgba(16,185,129,0.12)", name="Ampiezza"))
+        breadth_fig.add_hline(y=50, line_dash="dot", line_color="rgba(255,255,255,0.25)")
+        breadth_fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(15,23,42,0.4)", plot_bgcolor="rgba(15,23,42,0.4)",
+                                   height=180, margin=dict(l=20, r=20, t=10, b=20), showlegend=False,
+                                   yaxis=dict(range=[0, 100], title="% con momentum 12m positivo"))
+        st.plotly_chart(breadth_fig, use_container_width=True, config={"displayModeBar": False})
+        st.caption(f"Ampiezza di mercato: quota dell'universo con momentum trailing 12m positivo — stessa regola "
+                   f"della strategia, aggregata. Oggi: {breadth_series.iloc[-1]:.0f}%. Un calo ampio e prolungato "
+                   "sotto il 50% è un segnale di regime, non di un singolo box.")
 
     # --- BACKTEST + GIORNALE TRADE (box, singole, blend) — audit, non un'azione settimanale: chiuso di default ---
     res, n_universe = get_backtest_results()
