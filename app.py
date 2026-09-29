@@ -1220,6 +1220,14 @@ def main():
                    "-0,09, DSR 0,006; per le singole l'edge apparente crolla a qualsiasi tetto di quantità "
                    "realistico — vedi scripts/mtg_pilot_validation.py). Per questo motivo non viene generata "
                    "nessuna raccomandazione MTG in produzione: questa vista sarà sempre vuota.")
+    elif selected_box_franchise == "Pokémon JP":
+        # Stesso pattern del caveat MTG sopra: scripts/jp_pilot_validation.py
+        # (2026-09-29) ha trovato DSR(51) 0,015 e i 4 UNICI trade storici tutti
+        # in perdita - eliminato dalla produzione (DEFAULT_EXCLUDED_LANGUAGES
+        # in poke_quant/data/liquidity_filter.py). Vista sempre vuota.
+        st.warning("⚠️ Pokémon JP è stato testato in isolamento ed è stato **eliminato dalla produzione** "
+                   "(DSR 0,015, i 4 unici trade storici tutti in perdita da -18% a -34% — vedi "
+                   "scripts/jp_pilot_validation.py). Questa vista sarà sempre vuota.")
 
     with st.expander("ℹ️ Dettagli — gerarchia a 3 Tier, lotto indivisibile, capitale sequenziale"):
         st.caption("\"Massimo\" è la spesa TOTALE oltre la quale il modello considera il box fuori dal range "

@@ -282,3 +282,58 @@ def test_liquid_sealed_ids_excludes_magic_by_default():
     ids = liquid_sealed_ids(metadata, prices, max_price_msrp_ratio=10.0)
     assert "mtg_box" not in ids
     assert "pokemon_box" in ids
+
+
+def test_liquid_sealed_ids_excludes_pokemon_chinese_by_default():
+    """Progetto pilota Pokemon Cinese (2026-09-29): scoperto e testato ma il
+    mercato secondario e' troppo giovane (0/15 prodotti con storico
+    sufficiente per un trailing return a 12 mesi) - escluso di default finche'
+    non ci sara' storico sufficiente per un test vero."""
+    idx = pd.date_range("2024-01-01", periods=3, freq="MS")
+    prices = pd.DataFrame({
+        "zh_box": pd.Series([100.0, 110.0, 120.0], index=idx),
+        "pokemon_box": pd.Series([100.0, 110.0, 120.0], index=idx),
+    })
+    metadata = {
+        "zh_box": {"type": "sealed", "franchise": "pokemon_chinese", "msrp": 40.0, "release_date": "2024-01-01"},
+        "pokemon_box": {"type": "sealed", "franchise": "pokemon", "msrp": 40.0, "release_date": "2024-01-01"},
+    }
+    ids = liquid_sealed_ids(metadata, prices, max_price_msrp_ratio=10.0)
+    assert "zh_box" not in ids
+    assert "pokemon_box" in ids
+
+
+def test_liquid_sealed_ids_excludes_jp_language_by_default():
+    """Pokemon JP eliminato dalla produzione (scripts/jp_pilot_validation.py,
+    2026-09-29): DSR(51) 0,015, 4/4 trade storici in perdita. Esclusione per
+    LINGUA (non franchise, "pokemon" EN resta valido)."""
+    idx = pd.date_range("2024-01-01", periods=3, freq="MS")
+    prices = pd.DataFrame({
+        "jp_box": pd.Series([100.0, 110.0, 120.0], index=idx),
+        "en_box": pd.Series([100.0, 110.0, 120.0], index=idx),
+    })
+    metadata = {
+        "jp_box": {"type": "sealed", "franchise": "pokemon", "language": "jp", "msrp": 40.0, "release_date": "2024-01-01"},
+        "en_box": {"type": "sealed", "franchise": "pokemon", "language": "en", "msrp": 40.0, "release_date": "2024-01-01"},
+    }
+    ids = liquid_sealed_ids(metadata, prices, max_price_msrp_ratio=10.0)
+    assert "jp_box" not in ids
+    assert "en_box" in ids
+
+
+def test_liquid_sealed_ids_can_include_jp_and_chinese_explicitly():
+    """I pilota devono poter isolare cio' che e' escluso di default - stesso
+    pattern gia' usato per MTG in scripts/mtg_pilot_validation.py."""
+    idx = pd.date_range("2024-01-01", periods=3, freq="MS")
+    prices = pd.DataFrame({
+        "jp_box": pd.Series([100.0, 110.0, 120.0], index=idx),
+        "zh_box": pd.Series([100.0, 110.0, 120.0], index=idx),
+    })
+    metadata = {
+        "jp_box": {"type": "sealed", "franchise": "pokemon", "language": "jp", "msrp": 40.0, "release_date": "2024-01-01"},
+        "zh_box": {"type": "sealed", "franchise": "pokemon_chinese", "msrp": 40.0, "release_date": "2024-01-01"},
+    }
+    ids = liquid_sealed_ids(metadata, prices, max_price_msrp_ratio=10.0,
+                             exclude_franchises=frozenset(), exclude_languages=frozenset())
+    assert "jp_box" in ids
+    assert "zh_box" in ids

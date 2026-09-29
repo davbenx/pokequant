@@ -118,14 +118,41 @@ def is_liquid_sealed(item_id: str, meta: dict, prices_df: pd.DataFrame,
 # default: il default protegge le STATISTICHE AGGREGATE (Sharpe/DSR/split), il
 # selettore resta libero di far vedere le righe MTG a chi lo seleziona
 # esplicitamente, con un caveat (vedi app.py).
-DEFAULT_EXCLUDED_FRANCHISES = frozenset({"magic"})
+#
+# AGGIORNATO (2026-09-29, "valutiamo quantitativamente di eliminare franchise
+# deboli tra mtg, Pokemon Jap, One piece e di aggiungere Pokémon chinese"):
+#   - "magic": confermato escluso (pilota rigettato, vedi sopra).
+#   - "pokemon_chinese": NON ancora adottato - scoperto e testato
+#     (scripts/discover_pokemon_chinese_sealed_universe.py,
+#     scripts/pokemon_chinese_pilot_validation.py) ma il mercato secondario su
+#     PriceCharting e' troppo giovane (0 prodotti con >=13 mesi di storico
+#     reale su 15 scoperti - la maggior parte ne ha 1-8) per calcolare anche
+#     un solo rendimento trailing a 12 mesi, figuriamoci un DSR. Escluso per
+#     DATO MANCANTE, non per esito negativo - rivalutare in 6-12 mesi.
+#   - "one_piece": NON escluso - testato in isolamento (scripts/
+#     one_piece_pilot_validation.py): campione minuscolo (4 box, 1 trade),
+#     nessuna evidenza di danno al blend (Sharpe pooled 1,23 vs 1,22 senza -
+#     differenza nulla), nessuna prova sufficiente per eliminarlo. Tenuto con
+#     confidenza bassa dichiarata, non validato come Pokemon EN.
+DEFAULT_EXCLUDED_FRANCHISES = frozenset({"magic", "pokemon_chinese"})
+
+# Pokemon JP: eliminato dalla produzione (scripts/jp_pilot_validation.py,
+# 2026-09-29) - DSR(51) 0,015, 4/4 trade storici tutti in perdita
+# (-19,2%/-33,7%/-29,8%/-18,0%), pattern negativo consistente non un campione
+# insufficiente. L'esclusione e' per LINGUA (language=="jp"), non per
+# franchise ("pokemon" EN resta l'universo core validato) - richiede un
+# meccanismo separato da DEFAULT_EXCLUDED_FRANCHISES perche' filtra sullo
+# stesso franchise "pokemon" degli asset EN che restano validi.
+DEFAULT_EXCLUDED_LANGUAGES = frozenset({"jp"})
 
 
 def liquid_sealed_ids(metadata: dict, prices_df: pd.DataFrame,
-                       exclude_franchises: frozenset = DEFAULT_EXCLUDED_FRANCHISES, **kwargs) -> List[str]:
+                       exclude_franchises: frozenset = DEFAULT_EXCLUDED_FRANCHISES,
+                       exclude_languages: frozenset = DEFAULT_EXCLUDED_LANGUAGES, **kwargs) -> List[str]:
     return [
         k for k, v in metadata.items()
         if v.get("type") == "sealed" and v.get("franchise") not in exclude_franchises
+        and v.get("language") not in exclude_languages
         and is_liquid_sealed(k, v, prices_df, **kwargs)
     ]
 
@@ -196,6 +223,7 @@ def liquid_singles_ids(
     min_median_price_eur: float = MIN_SINGLES_MEDIAN_PRICE_EUR,
     price_window_months: int = MIN_SINGLES_PRICE_WINDOW_MONTHS,
     exclude_franchises: frozenset = DEFAULT_EXCLUDED_FRANCHISES,
+    exclude_languages: frozenset = DEFAULT_EXCLUDED_LANGUAGES,
 ) -> List[str]:
     """Universo singole investibile: esclude le carte gia' flaggate
     data_quality="thin_unreliable" (compute_reliability_flags, gia' applicato
@@ -233,6 +261,8 @@ def liquid_singles_ids(
         if info.get("type") != "single":
             continue
         if info.get("franchise") in exclude_franchises:
+            continue
+        if info.get("language") in exclude_languages:
             continue
         if info.get("data_quality") == "thin_unreliable":
             continue
