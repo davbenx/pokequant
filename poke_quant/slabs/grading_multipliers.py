@@ -445,10 +445,21 @@ ERA_PSA10_TO_PSA9_RATIO: Dict[Era, float] = {
     Era.MODERN: 2.80,    # Moderno (2017+): gem rate elevato, premio più compresso (~2.8x vs PSA 9)
 }
 
+# BUG TROVATO (l'utente ha chiesto di verificare questo rapporto dopo una
+# valutazione reale, 2026-09-29): Vintage (1.81) e Mid-Era (1.55) coincidono
+# con la mediana per-era di scripts/grading_company_multiplier_research.py
+# (1.809 e 1.552), ma Moderno era rimasto a 1.70 mentre lo script calcola
+# 1.611 (mediana su 5 carte, [1.923, 1.789, 1.611, 1.478, 1.269]) - stessa
+# grandezza di EMPIRICAL_RATIOS_GRADE9[(BGS, "9.5", MODERN)]=1.611 poco sotto
+# in questo file, che invece era gia' sincronizzato. Nessun commento
+# giustificava lo scostamento (a differenza di ERA_PSA10_TO_PSA9_RATIO sopra,
+# che DICHIARA esplicitamente di scostarsi apposta dalla mediana) - sovrastima
+# di ~5,5% il fair value algoritmico grado 9.5 su ogni carta Moderna senza
+# dato reale PriceCharting per quel grado (vedi get_grade_benchmarks_ladder).
 ERA_BGS95_TO_PSA9_RATIO: Dict[Era, float] = {
     Era.VINTAGE: 1.81,   # BGS 9.5 nel Vintage
     Era.MID_ERA: 1.55,   # BGS 9.5 nel Mid-Era
-    Era.MODERN: 1.70,    # BGS 9.5 nel Moderno
+    Era.MODERN: 1.61,    # BGS 9.5 nel Moderno
 }
 
 

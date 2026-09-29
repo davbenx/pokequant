@@ -164,7 +164,13 @@ def test_era_ratios_and_estimation():
 
     assert ERA_BGS95_TO_PSA9_RATIO[Era.VINTAGE] == 1.81
     assert ERA_BGS95_TO_PSA9_RATIO[Era.MID_ERA] == 1.55
-    assert ERA_BGS95_TO_PSA9_RATIO[Era.MODERN] == 1.70
+    # BUG TROVATO (l'utente ha chiesto di verificare questo rapporto,
+    # 2026-09-29): era 1.70, ma scripts/grading_company_multiplier_research.py
+    # calcola una mediana Moderno di 1.611 (stessa cifra gia' usata in
+    # EMPIRICAL_RATIOS_GRADE9[(BGS,"9.5",MODERN)]) - nessun commento
+    # giustificava lo scostamento, a differenza di Vintage/Mid-Era che erano
+    # gia' sincronizzati con lo script.
+    assert ERA_BGS95_TO_PSA9_RATIO[Era.MODERN] == 1.61
 
     # Test stima da PSA 9
     psa9_price = 100.0
@@ -174,7 +180,27 @@ def test_era_ratios_and_estimation():
 
     assert estimate_grade95_from_psa9(psa9_price, Era.VINTAGE) == 181.0
     assert estimate_grade95_from_psa9(psa9_price, Era.MID_ERA) == 155.0
-    assert estimate_grade95_from_psa9(psa9_price, Era.MODERN) == 170.0
+    assert estimate_grade95_from_psa9(psa9_price, Era.MODERN) == 161.0
+
+
+def test_era_bgs95_ratio_matches_research_script_median():
+    """Anti-regressione per il bug trovato il 2026-09-29 (ERA_BGS95_TO_PSA9_RATIO
+    Moderno disallineato dalla mediana dello script sottostante per anni, senza
+    che nessun test lo confrontasse direttamente): verifica che i tre valori
+    per-era in grading_multipliers.py restino sincronizzati con la mediana
+    calcolata da scripts/grading_company_multiplier_research.py sullo stesso
+    identico dataset, non solo con un numero hardcoded ricopiato a mano."""
+    import statistics
+    from poke_quant.slabs.grading_multipliers import ERA_BGS95_TO_PSA9_RATIO
+    from scripts.grading_company_multiplier_research import EMPIRICAL_COMP_DATA
+
+    for era_enum, era_key in [(Era.VINTAGE, "vintage"), (Era.MID_ERA, "mid_era"), (Era.MODERN, "modern")]:
+        rows = [d for d in EMPIRICAL_COMP_DATA if d["era"] == era_key]
+        ratios = [d["bgs_9_5"] / d["psa_9"] for d in rows if d.get("bgs_9_5") and d.get("psa_9")]
+        median_ratio = statistics.median(ratios)
+        assert abs(ERA_BGS95_TO_PSA9_RATIO[era_enum] - median_ratio) < 0.02, (
+            f"{era_key}: costante={ERA_BGS95_TO_PSA9_RATIO[era_enum]} vs mediana script={median_ratio:.3f}"
+        )
 
 
 def test_get_recommended_grade_for_card():
