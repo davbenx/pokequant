@@ -1,16 +1,43 @@
 """
-poke_quant/signal_scanner.py — Scanner automatico dei segnali BUY / SELL su dati di mercato live.
-Monitora le finestre d'acquisto (Mesi 4-14, Prezzo <= 1.15x MSRP su Tier S/A) e i target di vendita
-(+150% netto a 30+ mesi) per le posizioni possedute in portfolio_holdings.json.
-Invia notifiche push via Telegram (se configurato) o stampa report da riga di comando.
+poke_quant/signal_scanner.py — Scanner settimanale dei segnali BUY/AVOID di
+mercato + segnali SELL sulle posizioni possedute (portfolio_holdings.json).
+Invia notifiche push via Telegram (se configurato) o stampa report da riga
+di comando.
+
+RICONCILIATO (2026-09-29, richiesta esplicita dell'utente "Riconcilia
+signal_scanner.py con la strategia validata"): fino a questa versione questo
+scanner girava ogni lunedi' (poke_signals.yml) con una strategia INDIPENDENTE
+e MAI validata con DSR/PBO (finestra eta' 4-14 mesi + prezzo <= 1.15x MSRP su
+Tier S/A/B, poi rigettata come baseline in poke_quant/falsification_suite.py)
+- poteva mandare un "COMPRA SUBITO" reale su Telegram che contraddiceva la
+dashboard nella STESSA settimana. Ora i segnali BUY/AVOID di mercato vengono
+dalle stesse identiche funzioni gia' usate da run_monthly_production_signal.py
+(l'orchestratore mensile autoritativo) e da app.py (la dashboard):
+compute_signal_rows() per i box (TS Momentum, DSR 0,778 sull'universo
+liquido) e compute_singles_signal_rows()/compute_singles_avoid_rows() per le
+singole (Fattore Scarsita', DSR 0,980). Una sola fonte di verita' - questo
+scanner e' ora solo un CHECK PIU' FREQUENTE (settimanale) sugli stessi
+segnali, non una seconda strategia.
+
+NOTA sulla cadenza: i prezzi PriceCharting si aggiornano una volta al mese
+(rebuild_prices_with_real_fx.py gira dentro l'orchestratore mensile, non
+qui) - un run settimanale di questo scanner ricalcola quindi lo STESSO
+segnale sugli STESSI prezzi per ~3 settimane su 4, e cambia solo quando il
+refresh mensile e' passato. E' un comportamento corretto (nessun dato nuovo
+= nessun segnale nuovo), non un bug: il valore di girare ogni settimana è
+un promemoria/backup del canale Telegram, non una fonte di dati piu' fresca.
+
+Il tracking delle posizioni POSSEDUTE (tranche di rotazione +70%/+150%/
+time-stop 48 mesi) resta un blocco distinto e INFORMATIVO, come "Singole da
+evitare/vendere" in app.py: nessun backtest valida quelle soglie di uscita,
+sono euristiche operative sul portafoglio reale dell'utente, non sostituiscono
+i segnali AVOID/SELL validati (box, momentum invertito) o l'informativo
+"sopravvalutate" (singole) inclusi qui sopra.
 """
 
 from __future__ import annotations
-import os
 import json
 import logging
-import urllib.request
-import urllib.parse
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 import datetime
@@ -19,10 +46,11 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from poke_quant.config import PLATFORM_FEES, DEFAULT_EUR_USD
 from poke_quant.data.storage import load_price_matrix, load_metadata
 from poke_quant.engine.friction import calculate_sale_friction
-from poke_quant.data.liquidity_filter import DEFAULT_EXCLUDED_FRANCHISES, DEFAULT_EXCLUDED_LANGUAGES
+from poke_quant.notify.telegram import send_telegram_message
+from scripts.generate_monthly_signal import compute_signal_rows
+from scripts.generate_singles_signal import compute_singles_signal_rows, compute_singles_avoid_rows
 
 logger = logging.getLogger(__name__)
 
@@ -42,24 +70,31 @@ def load_user_holdings() -> List[Dict[str, Any]]:
 
 def scan_signals(
     current_prices: Optional[Dict[str, float]] = None,
-    metadata: Optional[Dict[str, Any]] = None,
     today_dt: Optional[datetime.date] = None,
-    allowed_tiers: Optional[List[str]] = None
+    box_rows: Optional[List[Dict[str, Any]]] = None,
+    singles_buy_rows: Optional[List[Dict[str, Any]]] = None,
+    singles_avoid_rows: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """
-    Esegue la scansione completa di mercato per generare:
-      - Segnali BUY di mercato (prodotti Tier S/A/B in finestra Mesi 4-14 a sconto)
-      - Segnali SELL di portafoglio (Tranche 1 a 18m/+70%, Tranche 2 a 30m/+150%, Time-Stop 48m)
-      - Alert di watchlist (prodotti prossimi all'ingresso nella finestra d'acquisto)
+    Esegue la scansione completa per generare:
+      - Segnali BUY/AVOID di mercato su box e singole, dalla stessa fonte
+        validata della dashboard e dell'orchestratore mensile (compute_signal_rows,
+        compute_singles_signal_rows, compute_singles_avoid_rows - vedi docstring
+        del modulo). box_rows/singles_buy_rows/singles_avoid_rows sono
+        iniettabili (usati dai test) e per default vengono calcolati per davvero.
+      - Segnali SELL di portafoglio (Tranche 1 a 18m/+70%, Tranche 2 a 30m/+150%,
+        Time-Stop 48m) sulle posizioni in portfolio_holdings.json - INFORMATIVO,
+        non validato con un backtest (vedi docstring del modulo).
     """
     if today_dt is None:
         today_dt = datetime.date.today()
 
-    if metadata is None:
-        metadata = load_metadata() or {}
-
-    if allowed_tiers is None:
-        allowed_tiers = ["S", "A", "B"]
+    if box_rows is None:
+        box_rows, _ = compute_signal_rows()
+    if singles_buy_rows is None:
+        singles_buy_rows, _ = compute_singles_signal_rows()
+    if singles_avoid_rows is None:
+        singles_avoid_rows, _ = compute_singles_avoid_rows()
 
     if current_prices is None:
         prices_df = load_price_matrix()
@@ -68,145 +103,16 @@ def scan_signals(
         else:
             current_prices = {}
 
-    buy_signals = []
-    watchlist_items = []
-    sell_signals = []
-    all_sealed_evaluations = []
-
-    # 1. SCANSIONE SEGNALI BUY E MATRICE FINESTRE D'ACQUISTO DI MERCATO
-    # BUG TROVATO (Fase 4 del piano, 2026-09-29): questo scanner e' una
-    # strategia indipendente e MAI validata con DSR/PBO (finestra eta'/MSRP +
-    # tranche di rotazione, diversa da TimeSeriesMomentumStrategy usata dalla
-    # dashboard) e girava ogni lunedi' via GitHub Action (poke_signals.yml)
-    # mandando alert Telegram REALI senza mai applicare le esclusioni di
-    # produzione decise in Fase 1 - avrebbe potuto segnalare "COMPRA SUBITO"
-    # su un box Magic o Pokemon JP nello stesso momento in cui la dashboard
-    # (correttamente) non mostra nulla per quei franchise, un contraddizione
-    # diretta e attiva su un canale che l'utente osserva davvero. Non e' una
-    # riconciliazione completa delle due strategie (richiederebbe validare
-    # OptimalSealedStrategy con lo stesso rigore) - e' il fix minimo per
-    # smettere di contraddire la dashboard sui franchise gia' rigettati.
-    for item_id, meta in metadata.items():
-        if meta.get("type") != "sealed":
-            continue
-        if meta.get("franchise") in DEFAULT_EXCLUDED_FRANCHISES:
-            continue
-        if meta.get("language") in DEFAULT_EXCLUDED_LANGUAGES:
-            continue
-        p_type = meta.get("product_type", "booster_box")
-        if p_type not in ["booster_box", "specialty_bundle"]:
-            continue
-
-        tier = meta.get("set_tier", "B")
-        rel_str = meta.get("release_date")
-        if not rel_str:
-            continue
-
-        try:
-            rel_dt = pd.to_datetime(rel_str).date()
-            age_months = (today_dt.year - rel_dt.year) * 12 + (today_dt.month - rel_dt.month)
-        except Exception:
-            continue
-
-        cur_px = float(current_prices.get(item_id, 0.0))
-        msrp = float(meta.get("msrp", 140.0) or 140.0)
-        max_allowed_buy_px = round(msrp * 1.15, 2)
-        margin_vs_max = round(max_allowed_buy_px - cur_px, 2)
-        margin_vs_max_pct = round(((max_allowed_buy_px - cur_px) / max_allowed_buy_px) * 100, 1) if max_allowed_buy_px > 0 else 0.0
-        diff_vs_msrp = round(((cur_px - msrp) / msrp) * 100, 1) if msrp > 0 else 0.0
-        months_left = max(0, 14 - age_months)
-
-        # Determinazione Stato Finestra e Azione Operativa
-        if 4 <= age_months <= 11 and cur_px > 0 and cur_px <= max_allowed_buy_px:
-            w_status = "🟢 IN FINESTRA OTTIMALE"
-            w_action = "COMPRA SUBITO (Accumulo Dip)"
-            w_desc = f"Mese {age_months}/14 ({months_left}m rimasti). Prezzo a sconto vs Prezzo Max {max_allowed_buy_px:.1f}€."
-        elif 12 <= age_months <= 14 and cur_px > 0 and cur_px <= max_allowed_buy_px:
-            w_status = "⏳ FINESTRA IN CHIUSURA"
-            w_action = "ULTIMA CHIAMATA (Pre-OOP)"
-            w_desc = f"Mese {age_months}/14 ({months_left}m rimasto). Ultime scorte a prezzo accessibile prima del phase-out."
-        elif 1 <= age_months < 4:
-            w_status = "🟡 IN AVVICINAMENTO"
-            w_action = f"ATTENDERE (Tra {4 - age_months}m reprint)"
-            w_desc = f"Set recente ({age_months}m). Attendere la prima ondata di ristampe/sconti distributore."
-        elif 4 <= age_months <= 14 and cur_px > max_allowed_buy_px:
-            w_status = "⚠️ SOPRA PREZZO MAX"
-            w_action = "NON COMPRARE (Prezzo Gonfio)"
-            w_desc = f"In finestra temporale ({age_months}m) ma prezzo {cur_px:.1f}€ supera il cap max {max_allowed_buy_px:.1f}€ (+15% MSRP)."
-        else:
-            w_status = "🔒 FINESTRA CHIUSA (OOP)"
-            w_action = "SOLO CUSTODIA (Holding OOP)"
-            w_desc = f"Età {age_months}m > 14m: Set ufficialmente Out-of-Print. Non inseguire il prezzo a mercato."
-
-        all_sealed_evaluations.append({
-            "item_id": item_id,
-            "name": meta.get("name", item_id),
-            "tier": tier,
-            "release_date": rel_str,
-            "age_months": age_months,
-            "months_left": months_left,
-            "current_price": cur_px,
-            "msrp": msrp,
-            "max_buy_price": max_allowed_buy_px,
-            "margin_vs_max": margin_vs_max,
-            "margin_vs_max_pct": margin_vs_max_pct,
-            "diff_vs_msrp_pct": diff_vs_msrp,
-            "window_status": w_status,
-            "action": w_action,
-            "description": w_desc,
-            "is_in_buy_window": (4 <= age_months <= 14) and (cur_px > 0) and (cur_px <= max_allowed_buy_px)
-        })
-
-        # Filtraggio sui soli tier autorizzati per i segnali live di alert
-        if tier not in allowed_tiers:
-            continue
-
-        # Caso A: Prodotto nella finestra ottimale di acquisto (Mesi 4-14, Prezzo <= Max Buy Price)
-        if 4 <= age_months <= 14:
-            if cur_px > 0 and cur_px <= max_allowed_buy_px:
-                buy_signals.append({
-                    "item_id": item_id,
-                    "name": meta.get("name", item_id),
-                    "tier": tier,
-                    "age_months": age_months,
-                    "months_left_in_window": months_left,
-                    "current_price": cur_px,
-                    "msrp": msrp,
-                    "max_buy_price": max_allowed_buy_px,
-                    "margin_vs_max": margin_vs_max,
-                    "margin_vs_max_pct": margin_vs_max_pct,
-                    "diff_vs_msrp_pct": diff_vs_msrp,
-                    "window_status": w_status,
-                    "action_badge": "🟢 COMPRA SUBITO" if age_months <= 11 else "⏳ ULTIMA CHIAMATA",
-                    "reason": f"Tier {tier} in finestra ({age_months} mesi, {months_left}m residui). Prezzo {cur_px:.1f}€ vs Prezzo Max {max_allowed_buy_px:.1f}€ (Margine {margin_vs_max:+.1f}€, MSRP {msrp:.1f}€)"
-                })
-            else:
-                watchlist_items.append({
-                    "item_id": item_id,
-                    "name": meta.get("name", item_id),
-                    "tier": tier,
-                    "age_months": age_months,
-                    "months_left": months_left,
-                    "current_price": cur_px,
-                    "msrp": msrp,
-                    "max_buy_price": max_allowed_buy_px,
-                    "status": f"In finestra ({age_months}m) ma prezzo {cur_px:.1f}€ supera il cap max {max_allowed_buy_px:.1f}€ (+15% MSRP)"
-                })
-        # Caso B: Prodotto in avvicinamento alla finestra (Mesi 1-3)
-        elif 1 <= age_months < 4:
-            watchlist_items.append({
-                "item_id": item_id,
-                "name": meta.get("name", item_id),
-                "tier": tier,
-                "age_months": age_months,
-                "months_left": months_left,
-                "current_price": cur_px,
-                "msrp": msrp,
-                "max_buy_price": max_allowed_buy_px,
-                "status": f"Nuovo set in avvicinamento (tra {4 - age_months} mesi inizia finestra ristampa, cap {max_allowed_buy_px:.1f}€)"
-            })
+    # SEGNALI DI MERCATO (stessa fonte validata di app.py e run_monthly_production_signal.py)
+    box_buy_signals = [r for r in box_rows if r["signal"] == "BUY/HOLD"]
+    box_reversal_signals = [r for r in box_rows if r["signal"] == "AVOID/SELL"]
+    box_watchlist = [
+        r for r in box_rows
+        if r["signal"] in ("PREZZO ECCESSIVO (oltre tetto MSRP)", "VERIFICARE A MANO (rendimento implausibile)")
+    ]
 
     # 2. SCANSIONE SEGNALI SELL SU POSIZIONI POSSEDUTE (ROTAZIONE TRANCHE 1 & 2)
+    sell_signals = []
     holdings = load_user_holdings()
     for h in holdings:
         item_id = h.get("item_id")
@@ -276,12 +182,13 @@ def scan_signals(
 
     return {
         "timestamp": today_dt.strftime("%Y-%m-%d"),
-        "buy_signals": buy_signals,
-        "sell_signals": sell_signals,
-        "watchlist": watchlist_items,
-        "all_evaluations": all_sealed_evaluations,
-        "total_monitored_items": len(metadata),
-        "user_holdings_count": len(holdings)
+        "box_buy_signals": box_buy_signals,
+        "box_reversal_signals": box_reversal_signals,
+        "box_watchlist": box_watchlist,
+        "singles_buy_signals": singles_buy_rows,
+        "singles_avoid_signals": singles_avoid_rows,
+        "holdings_sell_signals": sell_signals,
+        "user_holdings_count": len(holdings),
     }
 
 
@@ -293,8 +200,11 @@ def scan_historical_signals(
     enable_rotation: bool = True
 ) -> pd.DataFrame:
     """
-    Esegue la simulazione dell'Optimal Sealed Strategy su tutta la timeline storica
-    e restituisce la cronologia completa di tutti i segnali operativi (2021-2026).
+    Esegue la simulazione della VECCHIA euristica OptimalSealedStrategy (finestra
+    eta'/MSRP) su tutta la timeline storica - SUPERSEDUTA dalla riconciliazione
+    del 2026-09-29 (vedi docstring del modulo), mai usata dal path live
+    (scan_signals/run_scanner_cli). Resta qui solo per confronto/ricerca
+    storica - non e' la strategia che genera gli alert Telegram.
     """
     from poke_quant.engine.strategies.optimal_sealed_strategy import OptimalSealedStrategy
     from poke_quant.engine.backtester import Backtester
@@ -323,34 +233,51 @@ def scan_historical_signals(
 
 
 def format_telegram_alert(scan_results: Dict[str, Any]) -> str:
-    """Formatta il messaggio markdown per Telegram in stile sintetico e istituzionale."""
+    """Formatta il messaggio markdown per Telegram in stile sintetico e istituzionale.
+    Stessi campi/fonte dati di app.py e run_monthly_production_signal.py (vedi
+    docstring del modulo) - un lettore che confronta questo messaggio con la
+    dashboard vede sempre gli stessi segnali BUY, non due strategie diverse."""
     date_str = scan_results.get("timestamp", datetime.date.today().strftime("%d/%m/%Y"))
-    buys = scan_results.get("buy_signals", [])
-    sells = scan_results.get("sell_signals", [])
+    box_buys = scan_results.get("box_buy_signals", [])
+    singles_buys = scan_results.get("singles_buy_signals", [])
+    singles_avoid = scan_results.get("singles_avoid_signals", [])
+    holdings_sells = scan_results.get("holdings_sell_signals", [])
 
     lines = [f"*POKEQUANT · SEGNALI DI MERCATO* ({date_str})\n"]
 
-    if not buys and not sells:
+    if not box_buys and not singles_buys and not holdings_sells:
         lines.append("Nessun segnale operativo attivo oggi.")
         lines.append("Tutti i parametri monitorati rimangono in fase di attesa.")
         return "\n".join(lines)
 
-    if buys:
-        lines.append(f"🟢 *SEGNALI DI ACQUISTO (BUY)* [{len(buys)}]")
-        for b in buys:
-            max_px = b.get('max_buy_price', b['msrp'] * 1.15)
-            rem_m = b.get('months_left_in_window', max(0, 14 - b['age_months']))
+    if box_buys:
+        lines.append(f"🟢 *BOX SIGILLATI — BUY/HOLD (TS Momentum)* [{len(box_buys)}]")
+        for b in box_buys:
+            max_px = b.get("max_price_eur")
+            max_px_str = f" | Max: *{max_px:.0f} €*" if max_px else ""
             lines.append(
-                f"• *{b['name']}* (Tier {b['tier']})\n"
-                f"  Prezzo Corrente: *{b['current_price']:.1f} €* | Prezzo Max Acquisto: *{max_px:.1f} €* (MSRP: {b['msrp']:.1f} €)\n"
-                f"  Margine di Sicurezza: *{b.get('margin_vs_max', max_px - b['current_price']):+.1f} €* ({b.get('margin_vs_max_pct', 0.0):+.1f}% sotto limite)\n"
-                f"  Finestra di Acquisto: *Mese {b['age_months']}/14* ({rem_m} mesi residui prima di Out-of-Print)\n"
-                f"  Azione Consigliata: *{b.get('action_badge', 'COMPRA SUBITO')}* (Allocazione max 10-12% portafoglio)\n"
+                f"• *{b['name']}* ({b.get('tier', '?')})\n"
+                f"  Prezzo: *{b['current_price_eur']:.0f} €*{max_px_str} · Momentum 12m: *{b['trailing_12m_return_pct']:+.0f}%*\n"
             )
 
-    if sells:
-        lines.append(f"🔴 *SEGNALI DI VENDITA (SELL)* [{len(sells)}]")
-        for s in sells:
+    if singles_buys:
+        lines.append(f"🟢 *SINGOLE — BUY (Fattore Scarsità, Grade 9)* [{len(singles_buys)}]")
+        for s in singles_buys[:15]:
+            lines.append(
+                f"• *{s['name']}* [{s.get('set_name') or '?'}]\n"
+                f"  Prezzo: *{s['current_price_eur']:.2f} €* · Sconto vs. pari: *{s['discount_pct']:+.0f}%* · Target: {s.get('target_grade', '?')}\n"
+            )
+        if len(singles_buys) > 15:
+            lines.append(f"  … e altre {len(singles_buys) - 15}")
+
+    if singles_avoid:
+        lines.append(f"🔴 *SINGOLE SOPRAVVALUTATE (informativo, non un segnale di vendita validato)* [{len(singles_avoid)}]")
+        for s in singles_avoid[:5]:
+            lines.append(f"• {s['name']}: sovrapprezzo {s['discount_pct']:+.0f}% @ {s['current_price_eur']:.2f}€")
+
+    if holdings_sells:
+        lines.append(f"🔴 *POSIZIONI POSSEDUTE — SELL (tranche di rotazione, informativo)* [{len(holdings_sells)}]")
+        for s in holdings_sells:
             lines.append(
                 f"• *{s['name']}* (Q.tà: {s['quantity']})\n"
                 f"  Prezzo Vendita: *{s['current_price']:.1f} €* (Carico: {s['buy_price']:.1f} €)\n"
@@ -362,34 +289,9 @@ def format_telegram_alert(scan_results: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def send_telegram_message(message: str, token: Optional[str] = None, chat_id: Optional[str] = None) -> bool:
-    """Invia notifica Telegram se token e chat_id sono configurati."""
-    bot_token = token or os.environ.get("TELEGRAM_TOKEN")
-    target_chat = chat_id or os.environ.get("TELEGRAM_CHAT_ID")
-
-    if not bot_token or not target_chat:
-        logger.info("Credenziali Telegram non presenti. Salto invio notifica.")
-        return False
-
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = urllib.parse.urlencode({
-        "chat_id": target_chat,
-        "text": message,
-        "parse_mode": "Markdown"
-    }).encode("utf-8")
-
-    req = urllib.request.Request(url, data=payload)
-    try:
-        urllib.request.urlopen(req, timeout=15)
-        return True
-    except Exception as e:
-        logger.error(f"Errore invio messaggio Telegram: {e}")
-        return False
-
-
 def run_scanner_cli():
     print("\n" + "=" * 70)
-    print("  POKEQUANT — SCANNER AUTOMATICO SEGNALI DI INVESTIMENTO")
+    print("  POKEQUANT — SCANNER SETTIMANALE SEGNALI DI INVESTIMENTO")
     print("=" * 70)
 
     res = scan_signals()
@@ -397,13 +299,11 @@ def run_scanner_cli():
     print(msg)
     print("=" * 70 + "\n")
 
-    # Invia su Telegram se configurato
-    if os.environ.get("TELEGRAM_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"):
-        sent = send_telegram_message(msg)
-        if sent:
-            print("✅ Notifica inviata con successo su Telegram.")
-        else:
-            print("❌ Errore durante l'invio su Telegram.")
+    sent = send_telegram_message(msg)
+    if sent:
+        print("✅ Notifica inviata con successo su Telegram.")
+    else:
+        print("❌ Notifica non inviata (vedi log sopra: credenziali mancanti o errore di invio).")
 
 
 if __name__ == "__main__":
