@@ -306,6 +306,12 @@ def evaluate_listing(
         print("⚠️  ATTENZIONE LIQUIDITÀ MODERNO: Sulle carte moderne (2017+) il mercato assorbe")
         print("   quasi esclusivamente copie PSA 10 o Raw. Le slab Grado 9 moderne hanno turnover")
         print("   lento e scarso premio rispetto al Raw. Si raccomanda di puntare a PSA 10 o BGS 9.5.")
+    if info.get("data_quality") == "thin_unreliable":
+        print("-" * 76)
+        print("🚩 ATTENZIONE MERCATO SOTTILE: questa carta è flaggata come dato inaffidabile")
+        print(f"   (scripts/flag_unreliable_assets.py): {info.get('data_quality_reason', '')}")
+        print("   Il benchmark sopra può essere gonfiato da poche vendite reali al grado.")
+        print("   Verificare a mano prima di procedere (es. comp reali recenti sulla stessa carta).")
     print("=" * 76 + "\n")
 
 

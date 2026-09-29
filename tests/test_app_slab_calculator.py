@@ -62,3 +62,35 @@ def test_verdict_well_above_ceiling_is_overpriced():
     ceiling = probe["sniper_ceiling_calib"]
     res = _submit_calculator(company="BGS", grade="9.5 Gem Mint", offer_price=round(ceiling * 1.2, 2))
     assert "OVERPRICED" in res["v_badge"]
+
+
+def test_thin_market_flagged_card_shows_warning():
+    """Trovato indagando 'e' possibile aggiungere un controllo per mercato
+    sottile?' (2026-09-29): una carta con data_quality=='thin_unreliable'
+    (scripts/flag_unreliable_assets.py) deve mostrare un avviso live nel
+    calcolatore, non solo finire silenziosamente esclusa dai segnali BUY."""
+    at = AppTest.from_file(APP_PATH)
+    at.run(timeout=60)
+    assert not at.exception
+
+    at.radio[0].set_value("✏️ Carta Personalizzata / Inserimento Libero (o Link PriceCharting)")
+    at.run(timeout=60)
+    assert not at.exception
+
+    at.text_input[0].set_value("Clefable Call of Legends")
+    at.selectbox[0].set_value("CGC")
+    at.selectbox[1].set_value("9.0 Mint")
+    at.number_input[1].set_value(50.0)
+    at.run(timeout=60)
+    assert not at.exception
+
+    at.button[0].click()
+    at.run(timeout=60)
+    assert not at.exception
+
+    res = at.session_state.get("slab_eval_res")
+    assert res is not None
+    assert res["matched_db_info"] is not None
+    assert res["matched_db_info"].get("data_quality") == "thin_unreliable"
+    warnings_text = " ".join(w.value for w in at.warning)
+    assert "mercato sottile" in warnings_text.lower()

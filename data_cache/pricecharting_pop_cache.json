@@ -448,5 +448,305 @@
         "price_usd": 8632.37
       }
     ]
+  },
+  "pokemon-call-of-legends/clefable-1": {
+    "cached_at": 1790715402,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": 24,
+        "cgc_pop": 2,
+        "total_pop": 26,
+        "price_usd": 49.56
+      },
+      {
+        "grade": "2",
+        "psa_pop": 30,
+        "cgc_pop": 5,
+        "total_pop": 35,
+        "price_usd": 14.0
+      },
+      {
+        "grade": "3",
+        "psa_pop": 80,
+        "cgc_pop": 24,
+        "total_pop": 104,
+        "price_usd": 16.0
+      },
+      {
+        "grade": "4",
+        "psa_pop": 214,
+        "cgc_pop": 80,
+        "total_pop": 294,
+        "price_usd": 18.95
+      },
+      {
+        "grade": "5",
+        "psa_pop": 639,
+        "cgc_pop": 141,
+        "total_pop": 780,
+        "price_usd": 24.15
+      },
+      {
+        "grade": "6",
+        "psa_pop": 877,
+        "cgc_pop": 283,
+        "total_pop": 1160,
+        "price_usd": 29.05
+      },
+      {
+        "grade": "7",
+        "psa_pop": 1115,
+        "cgc_pop": 411,
+        "total_pop": 1526,
+        "price_usd": 36.5
+      },
+      {
+        "grade": "8",
+        "psa_pop": 1406,
+        "cgc_pop": 672,
+        "total_pop": 2078,
+        "price_usd": 70.01
+      },
+      {
+        "grade": "9",
+        "psa_pop": 670,
+        "cgc_pop": 244,
+        "total_pop": 914,
+        "price_usd": 149.69
+      },
+      {
+        "grade": "10",
+        "psa_pop": 35,
+        "cgc_pop": 44,
+        "total_pop": 79,
+        "price_usd": 2175.47
+      }
+    ]
+  },
+  "clefable_1": {
+    "cached_at": 1790715402,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": 24,
+        "cgc_pop": 2,
+        "total_pop": 26,
+        "price_usd": 49.56
+      },
+      {
+        "grade": "2",
+        "psa_pop": 30,
+        "cgc_pop": 5,
+        "total_pop": 35,
+        "price_usd": 14.0
+      },
+      {
+        "grade": "3",
+        "psa_pop": 80,
+        "cgc_pop": 24,
+        "total_pop": 104,
+        "price_usd": 16.0
+      },
+      {
+        "grade": "4",
+        "psa_pop": 214,
+        "cgc_pop": 80,
+        "total_pop": 294,
+        "price_usd": 18.95
+      },
+      {
+        "grade": "5",
+        "psa_pop": 639,
+        "cgc_pop": 141,
+        "total_pop": 780,
+        "price_usd": 24.15
+      },
+      {
+        "grade": "6",
+        "psa_pop": 877,
+        "cgc_pop": 283,
+        "total_pop": 1160,
+        "price_usd": 29.05
+      },
+      {
+        "grade": "7",
+        "psa_pop": 1115,
+        "cgc_pop": 411,
+        "total_pop": 1526,
+        "price_usd": 36.5
+      },
+      {
+        "grade": "8",
+        "psa_pop": 1406,
+        "cgc_pop": 672,
+        "total_pop": 2078,
+        "price_usd": 70.01
+      },
+      {
+        "grade": "9",
+        "psa_pop": 670,
+        "cgc_pop": 244,
+        "total_pop": 914,
+        "price_usd": 149.69
+      },
+      {
+        "grade": "10",
+        "psa_pop": 35,
+        "cgc_pop": 44,
+        "total_pop": 79,
+        "price_usd": 2175.47
+      }
+    ]
+  },
+  "pokemon-fossil/kabutops-9": {
+    "cached_at": 1790715491,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": null,
+        "cgc_pop": 1,
+        "total_pop": 1,
+        "price_usd": 44.61
+      },
+      {
+        "grade": "2",
+        "psa_pop": null,
+        "cgc_pop": 3,
+        "total_pop": 3,
+        "price_usd": 17.28
+      },
+      {
+        "grade": "3",
+        "psa_pop": null,
+        "cgc_pop": 30,
+        "total_pop": 30,
+        "price_usd": 20.0
+      },
+      {
+        "grade": "4",
+        "psa_pop": null,
+        "cgc_pop": 83,
+        "total_pop": 83,
+        "price_usd": 23.0
+      },
+      {
+        "grade": "5",
+        "psa_pop": null,
+        "cgc_pop": 183,
+        "total_pop": 183,
+        "price_usd": 24.0
+      },
+      {
+        "grade": "6",
+        "psa_pop": null,
+        "cgc_pop": 308,
+        "total_pop": 308,
+        "price_usd": 29.99
+      },
+      {
+        "grade": "7",
+        "psa_pop": 1,
+        "cgc_pop": 520,
+        "total_pop": 521,
+        "price_usd": 37.0
+      },
+      {
+        "grade": "8",
+        "psa_pop": null,
+        "cgc_pop": 839,
+        "total_pop": 839,
+        "price_usd": 74.0
+      },
+      {
+        "grade": "9",
+        "psa_pop": null,
+        "cgc_pop": 275,
+        "total_pop": 275,
+        "price_usd": 119.5
+      },
+      {
+        "grade": "10",
+        "psa_pop": null,
+        "cgc_pop": 51,
+        "total_pop": 51,
+        "price_usd": 2013.21
+      }
+    ]
+  },
+  "kabutops_9": {
+    "cached_at": 1790715491,
+    "rows": [
+      {
+        "grade": "1",
+        "psa_pop": null,
+        "cgc_pop": 1,
+        "total_pop": 1,
+        "price_usd": 44.61
+      },
+      {
+        "grade": "2",
+        "psa_pop": null,
+        "cgc_pop": 3,
+        "total_pop": 3,
+        "price_usd": 17.28
+      },
+      {
+        "grade": "3",
+        "psa_pop": null,
+        "cgc_pop": 30,
+        "total_pop": 30,
+        "price_usd": 20.0
+      },
+      {
+        "grade": "4",
+        "psa_pop": null,
+        "cgc_pop": 83,
+        "total_pop": 83,
+        "price_usd": 23.0
+      },
+      {
+        "grade": "5",
+        "psa_pop": null,
+        "cgc_pop": 183,
+        "total_pop": 183,
+        "price_usd": 24.0
+      },
+      {
+        "grade": "6",
+        "psa_pop": null,
+        "cgc_pop": 308,
+        "total_pop": 308,
+        "price_usd": 29.99
+      },
+      {
+        "grade": "7",
+        "psa_pop": 1,
+        "cgc_pop": 520,
+        "total_pop": 521,
+        "price_usd": 37.0
+      },
+      {
+        "grade": "8",
+        "psa_pop": null,
+        "cgc_pop": 839,
+        "total_pop": 839,
+        "price_usd": 74.0
+      },
+      {
+        "grade": "9",
+        "psa_pop": null,
+        "cgc_pop": 275,
+        "total_pop": 275,
+        "price_usd": 119.5
+      },
+      {
+        "grade": "10",
+        "psa_pop": null,
+        "cgc_pop": 51,
+        "total_pop": 51,
+        "price_usd": 2013.21
+      }
+    ]
   }
 }

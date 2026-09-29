@@ -6,7 +6,7 @@ import pandas as pd
 
 from poke_quant.data.liquidity_filter import (
     compute_reliability_flags, filter_reliable, is_liquid_sealed, liquid_sealed_ids,
-    compute_grade_raw_ratio_flags, liquid_singles_ids,
+    compute_grade_raw_ratio_flags, liquid_singles_ids, compute_thin_market_drift_flags,
 )
 
 
@@ -337,3 +337,62 @@ def test_liquid_sealed_ids_can_include_jp_and_chinese_explicitly():
                              exclude_franchises=frozenset(), exclude_languages=frozenset())
     assert "jp_box" in ids
     assert "zh_box" in ids
+
+
+def _thin_drift_universe():
+    """Finestra a 7 mesi (window_months=6 default + 1): il rapporto grade9/raw
+    di 'drift_card' triplica esattamente tra il primo e l'ultimo mese, mentre
+    'stable_card' resta costante - stesso schema del caso reale (vedi
+    scripts/thin_market_ratio_drift_test.py), non i valori esatti di
+    Azumarill/Clefable (vedi scripts/thin_market_drift_window_sensitivity_test.py
+    sul perche' quei due casi specifici NON superano la soglia col design
+    attuale a finestra fissa - restano da verificare a mano, non da filtro)."""
+    idx = pd.date_range("2024-01-01", periods=7, freq="MS")
+    grade9 = pd.DataFrame({
+        "drift_card": [10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0],
+        "stable_card": [20.0] * 7,
+        "a_sealed_box": [10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0],  # stesso salto - deve restare escluso per type
+    }, index=idx)
+    grade9["too_short"] = pd.Series([10.0, 30.0], index=idx[:2])
+    raw = pd.DataFrame({
+        "drift_card": [10.0] * 7,
+        "stable_card": [10.0] * 7,
+        "a_sealed_box": [10.0] * 7,
+    }, index=idx)
+    raw["too_short"] = pd.Series([10.0, 10.0], index=idx[:2])
+    metadata = {
+        "drift_card": {"type": "single"},
+        "stable_card": {"type": "single"},
+        "too_short": {"type": "single"},
+        "a_sealed_box": {"type": "sealed"},
+    }
+    return metadata, grade9, raw
+
+
+def test_thin_market_drift_flags_sustained_ramp_flagged():
+    metadata, grade9, raw = _thin_drift_universe()
+    flags = compute_thin_market_drift_flags(metadata, grade9, raw)
+    assert "drift_card" in flags
+    ok, reason = flags["drift_card"]
+    assert ok is False
+    assert "mercato sottile" in reason
+
+
+def test_thin_market_drift_flags_stable_ratio_not_flagged():
+    metadata, grade9, raw = _thin_drift_universe()
+    flags = compute_thin_market_drift_flags(metadata, grade9, raw)
+    assert "stable_card" not in flags
+
+
+def test_thin_market_drift_flags_too_short_history_not_flagged():
+    """Dato insufficiente (< window_months+1 mesi in comune) - nessun giudizio,
+    non si flagga alla cieca."""
+    metadata, grade9, raw = _thin_drift_universe()
+    flags = compute_thin_market_drift_flags(metadata, grade9, raw)
+    assert "too_short" not in flags
+
+
+def test_thin_market_drift_flags_ignores_sealed_items():
+    metadata, grade9, raw = _thin_drift_universe()
+    flags = compute_thin_market_drift_flags(metadata, grade9, raw)
+    assert "a_sealed_box" not in flags

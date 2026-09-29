@@ -2084,6 +2084,13 @@ def main():
             if res.get("matched_db_info"):
                 m_info = res["matched_db_info"]
                 st.info(f"💡 Carta riconosciuta automaticamente nel catalogo PokeQuant: **{m_info.get('name')}** [{m_info.get('game_slug')}]. Prezzo storico rilevato: **{res['base_psa_final']:.2f} €**.")
+                if m_info.get("data_quality") == "thin_unreliable":
+                    st.warning(
+                        f"🚩 **Mercato sottile**: questa carta è flaggata come dato inaffidabile "
+                        f"(scripts/flag_unreliable_assets.py). {m_info.get('data_quality_reason', '')} "
+                        f"Il benchmark sopra può essere gonfiato da poche vendite reali al grado — "
+                        f"verificare a mano prima di procedere."
+                    )
 
             pc_info = res.get("pc_live_info")
             if pc_info and "live" in pc_info.get("source", "").lower():

@@ -1011,7 +1011,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Shigenori Negishi",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.82 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.82 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "charizard_ex_199": {
     "name": "Charizard ex #199",
@@ -1057,7 +1057,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Shibuzoh.",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.80 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.80 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "charmander_4": {
     "name": "Charmander #4",
@@ -1115,7 +1115,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 117.17,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 0.77 sotto il 10° percentile della coorte d'eta' (soglia 0.77)"
   },
   "bulbasaur_1": {
     "name": "Bulbasaur #1",
@@ -1164,7 +1166,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Teeziro",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.78 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.82 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "zapdos_ex_202": {
     "name": "Zapdos ex #202",
@@ -1226,7 +1228,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Atsushi Furusawa",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.89 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.89 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "shadow_rider_calyrex_vmax_205": {
     "name": "Shadow Rider Calyrex VMAX #205",
@@ -1243,7 +1245,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.54 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.55 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "groudon_199": {
     "name": "Groudon #199",
@@ -1290,7 +1292,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Uta",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.83 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.83 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "ice_rider_calyrex_vmax_203": {
     "name": "Ice Rider Calyrex VMAX #203",
@@ -1307,7 +1309,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Oswaldo KATO",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.63 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.63 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "raging_bolt_ex_208": {
     "name": "Raging Bolt ex #208",
@@ -1383,7 +1385,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "tetsuya koizumi",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.47 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.48 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "galarian_zapdos_v_174": {
     "name": "Galarian Zapdos V #174",
@@ -1400,7 +1402,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Akira Komayama",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.84 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.84 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "arceus_v_166": {
     "name": "Arceus V #166",
@@ -1565,7 +1567,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "rika",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.62 sotto il 10° percentile della coorte d'eta' (soglia 0.77)"
+    "data_quality_reason": "rapporto grade9/raw 0.63 sotto il 10° percentile della coorte d'eta' (soglia 0.77)"
   },
   "iron_crown_ex_206": {
     "name": "Iron Crown ex #206",
@@ -1683,9 +1685,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 42.54,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.74 sotto il 10° percentile della coorte d'eta' (soglia 0.76)"
+    "selection_method": "chase_price_filter_survivorship_biased"
   },
   "raging_bolt_111": {
     "name": "Raging Bolt #111",
@@ -1701,7 +1701,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.30 sotto il 10° percentile della coorte d'eta' (soglia 0.76)"
+    "data_quality_reason": "rapporto grade9/raw 0.30 sotto il 10° percentile della coorte d'eta' (soglia 0.77)"
   },
   "mortys_conviction_211": {
     "name": "Morty's Conviction #211",
@@ -1748,7 +1748,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "You Iribi",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.71 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.76 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "glaceon_v_174": {
     "name": "Glaceon V #174",
@@ -1765,7 +1765,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.66 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.66 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "glaceon_v_175": {
     "name": "Glaceon V #175",
@@ -1782,7 +1782,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Narumi Sato",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.75 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.75 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "espeon_v_180": {
     "name": "Espeon V #180",
@@ -1814,7 +1814,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Yuu Nishida",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.89 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.89 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "umbreon_v_189": {
     "name": "Umbreon V #189",
@@ -1921,7 +1921,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "kirisAki",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.86 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.86 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "umbreon_vmax_214": {
     "name": "Umbreon VMAX #214",
@@ -1938,7 +1938,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "AKIRA EGAWA",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.94 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.94 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "rayquaza_vmax_217": {
     "name": "Rayquaza VMAX #217",
@@ -2000,7 +2000,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.79 sotto il 10° percentile della coorte d'eta' (soglia 0.82)"
+    "data_quality_reason": "rapporto grade9/raw 0.79 sotto il 10° percentile della coorte d'eta' (soglia 0.83)"
   },
   "gyarados_21": {
     "name": "Gyarados #21",
@@ -2032,7 +2032,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.07 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
+    "data_quality_reason": "rapporto grade9/raw 1.07 sotto il 10° percentile della coorte d'eta' (soglia 1.45)"
   },
   "m_sceptile_ex_85": {
     "name": "M Sceptile-EX #85",
@@ -2064,7 +2064,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.21 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
+    "data_quality_reason": "rapporto grade9/raw 1.21 sotto il 10° percentile della coorte d'eta' (soglia 1.45)"
   },
   "tyranitar_ex_91": {
     "name": "Tyranitar-EX #91",
@@ -2171,7 +2171,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "You Iribi",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.12 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
+    "data_quality_reason": "rapporto grade9/raw 1.12 sotto il 10° percentile della coorte d'eta' (soglia 1.45)"
   },
   "empoleon_v_146": {
     "name": "Empoleon V #146",
@@ -2218,7 +2218,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "KIYOTAKA OSHIYAMA",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.66 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.66 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "charizard_gx_150": {
     "name": "Charizard-GX #150",
@@ -2235,7 +2235,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.24 sotto il 10° percentile della coorte d'eta' (soglia 1.29)"
+    "data_quality_reason": "rapporto grade9/raw 1.19 sotto il 10° percentile della coorte d'eta' (soglia 1.30)"
   },
   "fairy_energy_169": {
     "name": "Fairy Energy #169",
@@ -2266,7 +2266,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Saki Hayashiro",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.85 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.85 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "gyarados_gx_18": {
     "name": "Gyarados-GX #18",
@@ -2283,7 +2283,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.99 sotto il 10° percentile della coorte d'eta' (soglia 1.29)"
+    "data_quality_reason": "rapporto grade9/raw 0.99 sotto il 10° percentile della coorte d'eta' (soglia 1.30)"
   },
   "gyarados_gx_112": {
     "name": "Gyarados-GX #112",
@@ -2313,7 +2313,9 @@
     "cardmarket_ref_price_eur": 44.68,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "aky CG Works"
+    "artist": "aky CG Works",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.02 sotto il 10° percentile della coorte d'eta' (soglia 1.02)"
   },
   "charizard_11": {
     "name": "Charizard #11",
@@ -2330,7 +2332,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.12 sotto il 10° percentile della coorte d'eta' (soglia 1.31)"
+    "data_quality_reason": "rapporto grade9/raw 1.14 sotto il 10° percentile della coorte d'eta' (soglia 1.34)"
   },
   "m_charizard_ex_13": {
     "name": "M Charizard-EX #13",
@@ -2362,7 +2364,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.32 sotto il 10° percentile della coorte d'eta' (soglia 1.31)"
+    "data_quality_reason": "rapporto grade9/raw 0.33 sotto il 10° percentile della coorte d'eta' (soglia 1.34)"
   },
   "m_charizard_ex_101": {
     "name": "M Charizard-EX #101",
@@ -2379,7 +2381,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.15 sotto il 10° percentile della coorte d'eta' (soglia 1.31)"
+    "data_quality_reason": "rapporto grade9/raw 1.08 sotto il 10° percentile della coorte d'eta' (soglia 1.34)"
   },
   "m_blastoise_ex_102": {
     "name": "M Blastoise-EX #102",
@@ -2396,7 +2398,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.92 sotto il 10° percentile della coorte d'eta' (soglia 1.31)"
+    "data_quality_reason": "rapporto grade9/raw 0.92 sotto il 10° percentile della coorte d'eta' (soglia 1.34)"
   },
   "dragonite_ex_106": {
     "name": "Dragonite-EX #106",
@@ -2503,7 +2505,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.19 sotto il 10° percentile della coorte d'eta' (soglia 1.82)"
+    "data_quality_reason": "rapporto grade9/raw 1.19 sotto il 10° percentile della coorte d'eta' (soglia 1.79)"
   },
   "jessie_james_68": {
     "name": "Jessie & James #68",
@@ -2535,7 +2537,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "nagimiso",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.92 sotto il 10° percentile della coorte d'eta' (soglia 1.02)"
+    "data_quality_reason": "rapporto grade9/raw 0.98 sotto il 10° percentile della coorte d'eta' (soglia 1.02)"
   },
   "m_rayquaza_ex_61": {
     "name": "M Rayquaza-EX #61",
@@ -2616,7 +2618,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ryo Ueda",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 17.3x (soglia 15.0x)"
+    "data_quality_reason": "range max/min 18.7x (soglia 15.0x)"
   },
   "m_rayquaza_ex_105": {
     "name": "M Rayquaza-EX #105",
@@ -2633,7 +2635,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 27.1x (soglia 15.0x)"
+    "data_quality_reason": "range max/min 29.1x (soglia 15.0x)"
   },
   "winona_108": {
     "name": "Winona #108",
@@ -2834,7 +2836,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Sanosuke Sakuma",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.99 sotto il 10° percentile della coorte d'eta' (soglia 1.10)"
+    "data_quality_reason": "rapporto grade9/raw 0.99 sotto il 10° percentile della coorte d'eta' (soglia 1.09)"
   },
   "ingo_emmet_176": {
     "name": "Ingo & Emmet #176",
@@ -2851,7 +2853,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Megumi Mizutani",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.79 sotto il 10° percentile della coorte d'eta' (soglia 1.10)"
+    "data_quality_reason": "rapporto grade9/raw 0.79 sotto il 10° percentile della coorte d'eta' (soglia 1.09)"
   },
   "jasmine_177": {
     "name": "Jasmine #177",
@@ -4309,7 +4311,7 @@
     "pricecharting_ref_price_usd": 1226.37,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 403% (soglia 200%)",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.5x in 6 mesi (0.25 -> 0.87) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_romance-dawn_yamato_top_64_op01_121": {
@@ -4496,7 +4498,7 @@
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 234% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.9x in 6 mesi (0.23 -> 0.89) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "op_wings-of-the-captain_o_nami_sp_op06_101": {
     "name": "O-Nami [SP] OP06-101",
@@ -4606,7 +4608,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 255.43,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.8x in 6 mesi (0.18 -> 0.70) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "op_romance-dawn_tony_tonychopper_offline_regionals_finalist_": {
     "name": "Tony Tony.Chopper [Offline Regionals Finalist] OP01-015",
@@ -4685,7 +4689,7 @@
     "pricecharting_ref_price_usd": 215.16,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 400% (soglia 200%)",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.4x in 6 mesi (0.23 -> 1.02) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'",
     "selection_method": "chase_price_filter_survivorship_biased"
   },
   "op_romance-dawn_trafalgar_law_sp_op01_047": {
@@ -4714,7 +4718,7 @@
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 293% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.7x in 6 mesi (0.21 -> 0.78) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "op_romance-dawn_sanji_1st_anniversary_op01_013": {
     "name": "Sanji [1st Anniversary] OP01-013",
@@ -5074,7 +5078,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 119.29,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.3x in 6 mesi (0.46 -> 2.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "op_paramount-war_monkeydgarp_alternate_art_op02_002": {
     "name": "Monkey.D.Garp [Alternate Art] OP02-002",
@@ -5130,7 +5136,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 100.5,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.8x in 6 mesi (0.35 -> 1.33) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "op_romance-dawn_nami_gift_collection_op01_016": {
     "name": "Nami [Gift Collection] OP01-016",
@@ -5567,7 +5575,7 @@
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 314% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.3x in 6 mesi (0.46 -> 2.46) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "op_pillars-of-strength_kuroobi_online_finalist_op03_026": {
     "name": "Kuroobi [Online Finalist] OP03-026",
@@ -5688,7 +5696,9 @@
     "language": "en",
     "pricecharting_ref_price_usd": 52.98,
     "source_note": "Scoperta via console page PriceCharting, storico verificato via fetch reale",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (0.50 -> 1.64) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "op_awakening-of-the-new-era_donquixote_doflamingo_1st_annive": {
     "name": "Donquixote Doflamingo [1st Anniversary] OP05-029",
@@ -5837,7 +5847,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "0313",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.67 sotto il 10° percentile della coorte d'eta' (soglia 1.10)"
+    "data_quality_reason": "rapporto grade9/raw 0.67 sotto il 10° percentile della coorte d'eta' (soglia 1.09)"
   },
   "reshiram_zekrom_gx_157": {
     "name": "Reshiram & Zekrom-GX #157",
@@ -6019,7 +6029,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Megumi Mizutani",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.89 sotto il 10° percentile della coorte d'eta' (soglia 1.10)"
+    "data_quality_reason": "rapporto grade9/raw 0.89 sotto il 10° percentile della coorte d'eta' (soglia 1.09)"
   },
   "cynthia_caitlin_228": {
     "name": "Cynthia & Caitlin #228",
@@ -6051,7 +6061,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Noriko Uono",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.02 sotto il 10° percentile della coorte d'eta' (soglia 1.10)"
+    "data_quality_reason": "rapporto grade9/raw 0.98 sotto il 10° percentile della coorte d'eta' (soglia 1.09)"
   },
   "mallow_lana_231": {
     "name": "Mallow & Lana #231",
@@ -6068,7 +6078,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "kirisAki",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.08 sotto il 10° percentile della coorte d'eta' (soglia 1.10)"
+    "data_quality_reason": "rapporto grade9/raw 1.08 sotto il 10° percentile della coorte d'eta' (soglia 1.09)"
   },
   "ns_resolve_232": {
     "name": "N's Resolve #232",
@@ -6218,9 +6228,7 @@
     "cardmarket_ref_price_eur": 78.5,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "5ban Graphics",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.13 sotto il 10° percentile della coorte d'eta' (soglia 1.13)"
+    "artist": "5ban Graphics"
   },
   "zeraora_gx_221": {
     "name": "Zeraora-GX #221",
@@ -6314,7 +6322,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Masakazu Fukuda",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.50 sotto il 10° percentile della coorte d'eta' (soglia 1.10)"
+    "data_quality_reason": "rapporto grade9/raw 0.53 sotto il 10° percentile della coorte d'eta' (soglia 1.09)"
   },
   "marshadow_machamp_gx_199": {
     "name": "Marshadow & Machamp-GX #199",
@@ -6770,7 +6778,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.18 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
+    "data_quality_reason": "rapporto grade9/raw 1.18 sotto il 10° percentile della coorte d'eta' (soglia 1.89)"
   },
   "dark_charizard_4": {
     "name": "Dark Charizard #4",
@@ -6787,7 +6795,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ken Sugimori",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.43 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
+    "data_quality_reason": "rapporto grade9/raw 1.42 sotto il 10° percentile della coorte d'eta' (soglia 1.89)"
   },
   "dark_dragonite_5": {
     "name": "Dark Dragonite #5",
@@ -6819,7 +6827,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Kagemaru Himeno",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.59 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
+    "data_quality_reason": "rapporto grade9/raw 1.59 sotto il 10° percentile della coorte d'eta' (soglia 1.89)"
   },
   "dark_gyarados_8": {
     "name": "Dark Gyarados #8",
@@ -6896,7 +6904,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ken Sugimori",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.14 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
+    "data_quality_reason": "rapporto grade9/raw 1.27 sotto il 10° percentile della coorte d'eta' (soglia 1.89)"
   },
   "dark_charizard_21": {
     "name": "Dark Charizard #21",
@@ -6943,7 +6951,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ken Sugimori",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.53 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
+    "data_quality_reason": "rapporto grade9/raw 1.49 sotto il 10° percentile della coorte d'eta' (soglia 1.89)"
   },
   "giovanni_18": {
     "name": "Giovanni #18",
@@ -6960,7 +6968,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ken Sugimori",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.34 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
+    "data_quality_reason": "rapporto grade9/raw 1.20 sotto il 10° percentile della coorte d'eta' (soglia 1.89)"
   },
   "koga_19": {
     "name": "Koga #19",
@@ -6977,7 +6985,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ken Sugimori",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.60 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
+    "data_quality_reason": "rapporto grade9/raw 1.73 sotto il 10° percentile della coorte d'eta' (soglia 1.89)"
   },
   "sabrina_20": {
     "name": "Sabrina #20",
@@ -7052,7 +7060,9 @@
     "cardmarket_ref_price_eur": 56.12,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Shin-ichi Yoshida"
+    "artist": "Shin-ichi Yoshida",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.92 sotto il 10° percentile della coorte d'eta' (soglia 1.92)"
   },
   "entei_6": {
     "name": "Entei #6",
@@ -7174,7 +7184,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Kagemaru Himeno",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.91 sotto il 10° percentile della coorte d'eta' (soglia 1.95)"
+    "data_quality_reason": "rapporto grade9/raw 1.91 sotto il 10° percentile della coorte d'eta' (soglia 2.03)"
   },
   "dark_crobat_2": {
     "name": "Dark Crobat #2",
@@ -7221,7 +7231,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Atsuko Nishida",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.72 sotto il 10° percentile della coorte d'eta' (soglia 1.95)"
+    "data_quality_reason": "rapporto grade9/raw 1.73 sotto il 10° percentile della coorte d'eta' (soglia 2.03)"
   },
   "dark_gengar_6": {
     "name": "Dark Gengar #6",
@@ -7283,7 +7293,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.53 sotto il 10° percentile della coorte d'eta' (soglia 1.95)"
+    "data_quality_reason": "rapporto grade9/raw 1.79 sotto il 10° percentile della coorte d'eta' (soglia 2.03)"
   },
   "dark_typhlosion_10": {
     "name": "Dark Typhlosion #10",
@@ -7375,7 +7385,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Hironobu Yoshida",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.95 sotto il 10° percentile della coorte d'eta' (soglia 1.95)"
+    "data_quality_reason": "rapporto grade9/raw 1.95 sotto il 10° percentile della coorte d'eta' (soglia 2.03)"
   },
   "shining_charizard_107": {
     "name": "Shining Charizard #107",
@@ -7495,7 +7505,9 @@
     "cardmarket_ref_price_eur": 70.47,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ken Sugimori"
+    "artist": "Ken Sugimori",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.1x in 6 mesi (2.58 -> 8.10) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "charizard_3": {
     "name": "Charizard #3",
@@ -7605,7 +7617,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.85 sotto il 10° percentile della coorte d'eta' (soglia 1.95)",
+    "data_quality_reason": "rapporto grade9/raw 0.85 sotto il 10° percentile della coorte d'eta' (soglia 2.03)",
     "artist": "Kagemaru Himeno"
   },
   "full_heal_energy_100": {
@@ -7820,7 +7832,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Yuka Morii",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.79 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 0.82 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "kingdra_H14": {
     "name": "Kingdra #H14",
@@ -7910,7 +7922,9 @@
     "cardmarket_ref_price_eur": 188.04,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Kagemaru Himeno"
+    "artist": "Kagemaru Himeno",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.0x in 6 mesi (2.50 -> 7.58) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "octillery_H20": {
     "name": "Octillery #H20",
@@ -7985,7 +7999,9 @@
     "cardmarket_ref_price_eur": 53.69,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Kagemaru Himeno"
+    "artist": "Kagemaru Himeno",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.0x in 6 mesi (1.90 -> 7.51) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "suicune_H25": {
     "name": "Suicune #H25",
@@ -8107,7 +8123,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Hisao Nakamura",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.36 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 1.36 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "umbreon_41": {
     "name": "Umbreon #41",
@@ -8183,7 +8199,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.56 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 1.56 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "arcanine_H2_skyridge": {
     "name": "Arcanine #H2",
@@ -8227,7 +8243,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.50 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 1.50 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "crobat_H5": {
     "name": "Crobat #H5",
@@ -8299,7 +8315,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.10 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 2.10 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "gyarados_H10": {
     "name": "Gyarados #H10",
@@ -8343,7 +8359,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.02 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 2.02 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "ledian_H14": {
     "name": "Ledian #H14",
@@ -8429,7 +8445,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.59 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 0.70 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "moltres_H20": {
     "name": "Moltres #H20",
@@ -8515,7 +8531,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.12 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 1.12 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "raikou_H26": {
     "name": "Raikou #H26",
@@ -8529,7 +8545,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 584.62,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 2.42 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "rhydon_H27": {
     "name": "Rhydon #H27",
@@ -8601,7 +8619,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.08 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 2.43 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "xatu_H32": {
     "name": "Xatu #H32",
@@ -8615,7 +8633,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 197.78,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.1x in 6 mesi (1.88 -> 5.80) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "gengar_10": {
     "name": "Gengar #10",
@@ -8659,7 +8679,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.62 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 1.62 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "umbreon_32": {
     "name": "Umbreon #32",
@@ -8689,7 +8709,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.22 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 1.28 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "charizard_146": {
     "name": "Charizard #146",
@@ -8958,7 +8978,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ken Sugimori",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.60 sotto il 10° percentile della coorte d'eta' (soglia 2.99)"
+    "data_quality_reason": "rapporto grade9/raw 0.60 sotto il 10° percentile della coorte d'eta' (soglia 3.20)"
   },
   "altaria_ex_90": {
     "name": "Altaria ex #90",
@@ -9005,7 +9025,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ryo Ueda",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.16 sotto il 10° percentile della coorte d'eta' (soglia 2.99)"
+    "data_quality_reason": "rapporto grade9/raw 2.16 sotto il 10° percentile della coorte d'eta' (soglia 3.20)"
   },
   "deoxys_ex_93": {
     "name": "Deoxys ex #93",
@@ -9487,7 +9507,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ryo Ueda",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.80 sotto il 10° percentile della coorte d'eta' (soglia 2.99)"
+    "data_quality_reason": "rapporto grade9/raw 1.80 sotto il 10° percentile della coorte d'eta' (soglia 3.20)"
   },
   "jolteon_ex_109": {
     "name": "Jolteon ex #109",
@@ -9519,7 +9539,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Hikaru Koike",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.86 sotto il 10° percentile della coorte d'eta' (soglia 2.99)"
+    "data_quality_reason": "rapporto grade9/raw 1.86 sotto il 10° percentile della coorte d'eta' (soglia 3.20)"
   },
   "groudon_111": {
     "name": "Groudon ★ #111",
@@ -9670,7 +9690,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 19.8x (soglia 15.0x)",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.2x in 6 mesi (5.98 -> 24.89) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'",
     "artist": "Ryo Ueda"
   },
   "regice_90": {
@@ -9731,7 +9751,9 @@
     "cardmarket_ref_price_eur": 77.62,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ryo Ueda"
+    "artist": "Ryo Ueda",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 16.0x (soglia 15.0x)"
   },
   "gyarados_8_holon_phantoms": {
     "name": "Gyarados δ #8",
@@ -9793,7 +9815,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ryo Ueda",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 19.3x (soglia 15.0x)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.4x in 6 mesi (7.41 -> 25.19) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "mightyena_ex_101": {
     "name": "Mightyena ex #101",
@@ -9840,7 +9862,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ken Sugimori",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 3.42 sotto il 10° percentile della coorte d'eta' (soglia 3.79)"
+    "data_quality_reason": "rapporto grade9/raw 3.42 sotto il 10° percentile della coorte d'eta' (soglia 3.78)"
   },
   "blastoise_2_crystal_guardians": {
     "name": "Blastoise δ #2",
@@ -9887,7 +9909,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.72 sotto il 10° percentile della coorte d'eta' (soglia 3.79)"
+    "data_quality_reason": "rapporto grade9/raw 1.72 sotto il 10° percentile della coorte d'eta' (soglia 3.78)"
   },
   "groudon_ex_93": {
     "name": "Groudon ex #93",
@@ -9979,7 +10001,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Shizurow",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 3.39 sotto il 10° percentile della coorte d'eta' (soglia 3.79)"
+    "data_quality_reason": "rapporto grade9/raw 3.39 sotto il 10° percentile della coorte d'eta' (soglia 3.78)"
   },
   "dragonite_ex_91": {
     "name": "Dragonite ex δ #91",
@@ -10069,7 +10091,9 @@
     "cardmarket_ref_price_eur": 108.33,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Ryo Ueda"
+    "artist": "Ryo Ueda",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 16.0x (soglia 15.0x)"
   },
   "salamence_ex_98": {
     "name": "Salamence ex δ #98",
@@ -10206,7 +10230,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Shizurow",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 3.23 sotto il 10° percentile della coorte d'eta' (soglia 4.53)"
+    "data_quality_reason": "rapporto grade9/raw 3.23 sotto il 10° percentile della coorte d'eta' (soglia 4.48)"
   },
   "mesprit_lvx_143": {
     "name": "Mesprit LV.X #143",
@@ -10367,7 +10391,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Mitsuhiro Arita",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 230% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.8x in 6 mesi (2.37 -> 9.11) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "flying_pikachu_113": {
     "name": "Flying Pikachu #113",
@@ -10498,7 +10522,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ryo Ueda",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 27.8x (soglia 15.0x)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.6x in 6 mesi (3.66 -> 13.05) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "articuno_ex_132": {
     "name": "Articuno-EX #132",
@@ -10513,7 +10537,9 @@
     "cardmarket_ref_price_eur": 54.28,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "artist": "Toyste Beach"
+    "artist": "Toyste Beach",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "range max/min 16.4x (soglia 15.0x)"
   },
   "lugia_ex_134": {
     "name": "Lugia-EX #134",
@@ -10851,7 +10877,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.51 sotto il 10° percentile della coorte d'eta' (soglia 1.82)"
+    "data_quality_reason": "rapporto grade9/raw 0.51 sotto il 10° percentile della coorte d'eta' (soglia 1.79)"
   },
   "m_gengar_ex_35": {
     "name": "M Gengar-EX #35",
@@ -10882,7 +10908,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 22.7x (soglia 15.0x)",
+    "data_quality_reason": "range max/min 24.2x (soglia 15.0x)",
     "artist": "Ryo Ueda"
   },
   "m_gengar_ex_121": {
@@ -10987,7 +11013,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 58.91,
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
-    "selection_method": "chase_price_filter_survivorship_biased"
+    "selection_method": "chase_price_filter_survivorship_biased",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (2.65 -> 8.81) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "m_gardevoir_ex_156": {
     "name": "M Gardevoir-EX #156",
@@ -11065,7 +11093,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.90 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
+    "data_quality_reason": "rapporto grade9/raw 0.90 sotto il 10° percentile della coorte d'eta' (soglia 1.45)"
   },
   "m_mewtwo_ex_160": {
     "name": "M Mewtwo-EX #160",
@@ -11082,7 +11110,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.26 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
+    "data_quality_reason": "rapporto grade9/raw 1.28 sotto il 10° percentile della coorte d'eta' (soglia 1.45)"
   },
   "mewtwo_ex_163": {
     "name": "Mewtwo-EX #163",
@@ -11129,7 +11157,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Ayaka Yoshida",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.17 sotto il 10° percentile della coorte d'eta' (soglia 1.31)"
+    "data_quality_reason": "rapporto grade9/raw 1.17 sotto il 10° percentile della coorte d'eta' (soglia 1.34)"
   },
   "delinquent_98b": {
     "name": "Delinquent #98b",
@@ -11236,7 +11264,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.83 sotto il 10° percentile della coorte d'eta' (soglia 1.31)"
+    "data_quality_reason": "rapporto grade9/raw 0.84 sotto il 10° percentile della coorte d'eta' (soglia 1.34)"
   },
   "umbreon_ex_55": {
     "name": "Umbreon-EX #55",
@@ -11268,7 +11296,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "Megumi Mizutani",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.86 sotto il 10° percentile della coorte d'eta' (soglia 1.31)"
+    "data_quality_reason": "rapporto grade9/raw 0.86 sotto il 10° percentile della coorte d'eta' (soglia 1.34)"
   },
   "shauna_111a": {
     "name": "Shauna #111a",
@@ -11454,7 +11482,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.88 sotto il 10° percentile della coorte d'eta' (soglia 1.13)"
+    "data_quality_reason": "rapporto grade9/raw 0.87 sotto il 10° percentile della coorte d'eta' (soglia 1.13)"
   },
   "ionos_bellibolt_ex_183": {
     "name": "Iono's Bellibolt ex #183",
@@ -11516,7 +11544,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "artist": "DOM",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.61 sotto il 10° percentile della coorte d'eta' (soglia 0.73)"
+    "data_quality_reason": "rapporto grade9/raw 0.63 sotto il 10° percentile della coorte d'eta' (soglia 0.73)"
   },
   "salamence_ex_187": {
     "name": "Salamence ex #187",
@@ -11577,7 +11605,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.57 sotto il 10° percentile della coorte d'eta' (soglia 0.73)"
+    "data_quality_reason": "rapporto grade9/raw 0.55 sotto il 10° percentile della coorte d'eta' (soglia 0.73)"
   },
   "cynthias_garchomp_ex_232": {
     "name": "Cynthia's Garchomp ex #232",
@@ -11625,7 +11653,7 @@
     "source_note": "Scoperta via pokemontcg.io (rarity/prezzo), storico da PriceCharting (raw+grade9)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.62 sotto il 10° percentile della coorte d'eta' (soglia 0.73)"
+    "data_quality_reason": "rapporto grade9/raw 0.63 sotto il 10° percentile della coorte d'eta' (soglia 0.73)"
   },
   "arvens_mabosstiff_ex_235": {
     "name": "Arven's Mabosstiff ex #235",
@@ -11822,7 +11850,9 @@
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Atsuko Nishida"
+    "artist": "Atsuko Nishida",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 7.0x in 6 mesi (125.43 -> 878.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "claydol_145": {
     "name": "Claydol #145",
@@ -11852,7 +11882,9 @@
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "OKACHEKE"
+    "artist": "OKACHEKE",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.0x in 6 mesi (53.82 -> 216.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "farewell_bell_234": {
     "name": "Farewell Bell #234",
@@ -11867,7 +11899,9 @@
     "cardmarket_ref_price_eur": 0.02,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "AYUMI ODASHIMA"
+    "artist": "AYUMI ODASHIMA",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 6.5x in 6 mesi (68.23 -> 442.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "drakloak_129": {
     "name": "Drakloak #129",
@@ -12214,7 +12248,7 @@
     "selection_method": "random_control",
     "artist": "Fujimoto Gold",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 4659% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 29.5x in 6 mesi (12.19 -> 359.09) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "shaymin_13": {
     "name": "Shaymin #13",
@@ -12551,7 +12585,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 371% (soglia 200%)",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.1x in 6 mesi (5.03 -> 15.58) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'",
     "artist": "Mina Nakai"
   },
   "sawsbuck_16": {
@@ -12661,7 +12695,7 @@
     "selection_method": "random_control",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.30 sotto il 10° percentile della coorte d'eta' (soglia 1.31)"
+    "data_quality_reason": "rapporto grade9/raw 1.30 sotto il 10° percentile della coorte d'eta' (soglia 1.34)"
   },
   "electabuzz_41": {
     "name": "Electabuzz #41",
@@ -12736,7 +12770,9 @@
     "cardmarket_ref_price_eur": 0.67,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Sumiyoshi Kizuki"
+    "artist": "Sumiyoshi Kizuki",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.4x in 6 mesi (12.21 -> 41.65) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "dusclops_39": {
     "name": "Dusclops #39",
@@ -13008,7 +13044,9 @@
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "ryoma uratsuka"
+    "artist": "ryoma uratsuka",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.1x in 6 mesi (42.10 -> 174.60) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "crobat_v_44": {
     "name": "Crobat V #44",
@@ -13221,7 +13259,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 20.1x (soglia 15.0x)",
+    "data_quality_reason": "range max/min 18.3x (soglia 15.0x)",
     "artist": "Atsuko Nishida"
   },
   "lucario_117": {
@@ -13327,7 +13365,9 @@
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Anesaki Dynamic"
+    "artist": "Anesaki Dynamic",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 9.7x in 6 mesi (88.70 -> 862.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "allister_179": {
     "name": "Allister #179",
@@ -13597,7 +13637,9 @@
     "cardmarket_ref_price_eur": 38.89,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Ken Sugimori"
+    "artist": "Ken Sugimori",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.88 sotto il 10° percentile della coorte d'eta' (soglia 1.89)"
   },
   "croconaw_32": {
     "name": "Croconaw #32",
@@ -14088,7 +14130,9 @@
     "cardmarket_ref_price_eur": 0.78,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Ken Sugimori"
+    "artist": "Ken Sugimori",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.5x in 6 mesi (10.36 -> 36.03) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "makuhita_54": {
     "name": "Makuhita #54",
@@ -14105,7 +14149,7 @@
     "selection_method": "random_control",
     "artist": "Kouki Saitou",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 592% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 9.7x in 6 mesi (17.22 -> 167.68) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "torchic_69": {
     "name": "Torchic #69",
@@ -14121,7 +14165,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 294% (soglia 200%)",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 10.4x in 6 mesi (33.00 -> 343.29) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'",
     "artist": "Midori Harada"
   },
   "electrike_48": {
@@ -14184,7 +14228,7 @@
     "selection_method": "random_control",
     "artist": "Yuka Morii",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.77 sotto il 10° percentile della coorte d'eta' (soglia 2.99)"
+    "data_quality_reason": "rapporto grade9/raw 1.77 sotto il 10° percentile della coorte d'eta' (soglia 3.20)"
   },
   "unown_O": {
     "name": "Unown #O",
@@ -14319,7 +14363,9 @@
     "cardmarket_ref_price_eur": 9.9,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Kouki Saitou"
+    "artist": "Kouki Saitou",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.8x in 6 mesi (2.93 -> 11.07) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "sentret_62": {
     "name": "Sentret #62",
@@ -14591,7 +14637,7 @@
     "selection_method": "random_control",
     "artist": "Atsuko Nishida",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 402% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (3.30 -> 10.76) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "suicune_19": {
     "name": "Suicune #19",
@@ -14818,7 +14864,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 4.47,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.1x in 6 mesi (4.72 -> 14.82) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "gyarados_19": {
     "name": "Gyarados #19",
@@ -15710,7 +15758,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 860% (soglia 200%)",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 6.3x in 6 mesi (68.92 -> 432.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'",
     "artist": "Satoshi Shirai"
   },
   "potion_106": {
@@ -15726,7 +15774,9 @@
     "cardmarket_ref_price_eur": 0.13,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "5ban Graphics"
+    "artist": "5ban Graphics",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 16.3x in 6 mesi (52.94 -> 864.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "shuckle_1": {
     "name": "Shuckle #1",
@@ -15863,7 +15913,7 @@
     "selection_method": "random_control",
     "artist": "5ban Graphics",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.16 sotto il 10° percentile della coorte d'eta' (soglia 1.31)"
+    "data_quality_reason": "rapporto grade9/raw 1.16 sotto il 10° percentile della coorte d'eta' (soglia 1.34)"
   },
   "altar_of_the_sunne_118": {
     "name": "Altar of the Sunne #118",
@@ -16059,7 +16109,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 2269% (soglia 200%)",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 14.1x in 6 mesi (31.52 -> 443.84) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'",
     "artist": "tetsuya koizumi"
   },
   "pelipper_39": {
@@ -16075,7 +16125,9 @@
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
-    "artist": "Nelnal"
+    "artist": "Nelnal",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (88.00 -> 287.67) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "dunsparce_120": {
     "name": "Dunsparce #120",
@@ -16190,7 +16242,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (41.45 -> 136.65) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "clawitzer_141": {
     "name": "Clawitzer #141",
@@ -16490,7 +16544,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.42 sotto il 10° percentile della coorte d'eta' (soglia 1.83)"
+    "data_quality_reason": "rapporto grade9/raw 1.40 sotto il 10° percentile della coorte d'eta' (soglia 1.85)"
   },
   "eevee_11_promo": {
     "name": "Eevee #11 (Promo)",
@@ -16524,7 +16578,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.35 sotto il 10° percentile della coorte d'eta' (soglia 1.83)"
+    "data_quality_reason": "rapporto grade9/raw 0.35 sotto il 10° percentile della coorte d'eta' (soglia 1.85)"
   },
   "venusaur_13_promo": {
     "name": "Venusaur #13 (Promo)",
@@ -16574,7 +16628,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.77 sotto il 10° percentile della coorte d'eta' (soglia 1.83)"
+    "data_quality_reason": "rapporto grade9/raw 1.77 sotto il 10° percentile della coorte d'eta' (soglia 1.85)"
   },
   "flying_pikachu_25_promo": {
     "name": "Flying Pikachu #25 (Promo)",
@@ -16640,7 +16694,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.65 sotto il 10° percentile della coorte d'eta' (soglia 1.83)"
+    "data_quality_reason": "rapporto grade9/raw 1.65 sotto il 10° percentile della coorte d'eta' (soglia 1.85)"
   },
   "machamp_43_promo": {
     "name": "Machamp #43 (Promo)",
@@ -16656,7 +16710,9 @@
     "cardmarket_ref_price_eur": 45.83,
     "source_note": "Promo (SVP/Black Star ecc.) - slug risolto via ricerca PriceCharting, non prevedibile",
     "selection_method": "chase_price_filter_survivorship_biased",
-    "is_promo": true
+    "is_promo": true,
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.82 sotto il 10° percentile della coorte d'eta' (soglia 1.85)"
   },
   "scyther_45_promo": {
     "name": "Scyther #45 (Promo)",
@@ -16674,7 +16730,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.48 sotto il 10° percentile della coorte d'eta' (soglia 1.83)"
+    "data_quality_reason": "rapporto grade9/raw 1.52 sotto il 10° percentile della coorte d'eta' (soglia 1.85)"
   },
   "electabuzz_46_promo": {
     "name": "Electabuzz #46 (Promo)",
@@ -16692,7 +16748,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.04 sotto il 10° percentile della coorte d'eta' (soglia 1.83)"
+    "data_quality_reason": "rapporto grade9/raw 1.04 sotto il 10° percentile della coorte d'eta' (soglia 1.85)"
   },
   "articuno_48_promo": {
     "name": "Articuno #48 (Promo)",
@@ -16710,7 +16766,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.04 sotto il 10° percentile della coorte d'eta' (soglia 1.83)"
+    "data_quality_reason": "rapporto grade9/raw 1.05 sotto il 10° percentile della coorte d'eta' (soglia 1.85)"
   },
   "snorlax_49_promo": {
     "name": "Snorlax #49 (Promo)",
@@ -16744,7 +16800,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.37 sotto il 10° percentile della coorte d'eta' (soglia 1.83)"
+    "data_quality_reason": "rapporto grade9/raw 1.37 sotto il 10° percentile della coorte d'eta' (soglia 1.85)"
   },
   "ho_oh_52_promo": {
     "name": "Ho-oh #52 (Promo)",
@@ -16762,7 +16818,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.47 sotto il 10° percentile della coorte d'eta' (soglia 1.83)"
+    "data_quality_reason": "rapporto grade9/raw 0.45 sotto il 10° percentile della coorte d'eta' (soglia 1.85)"
   },
   "suicune_53_promo": {
     "name": "Suicune #53 (Promo)",
@@ -16830,7 +16886,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "serie troppo corta (2 osservazioni)"
+    "data_quality_reason": "serie troppo corta (1 osservazioni)"
   },
   "torchic_6_promo": {
     "name": "Torchic #6 (Promo)",
@@ -16884,7 +16940,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.76 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 1.76 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "marshtomp_11_promo": {
     "name": "Marshtomp #11 (Promo)",
@@ -16902,7 +16958,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.66 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 1.66 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "pikachu_12_promo": {
     "name": "Pikachu #12 (Promo)",
@@ -16920,7 +16976,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.27 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 2.26 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "meowth_13_promo": {
     "name": "Meowth #13 (Promo)",
@@ -17004,7 +17060,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.15 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 1.15 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "championship_arena_28_promo": {
     "name": "Championship Arena #28 (Promo)",
@@ -17022,7 +17078,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.88 sotto il 10° percentile della coorte d'eta' (soglia 2.36)"
+    "data_quality_reason": "rapporto grade9/raw 0.88 sotto il 10° percentile della coorte d'eta' (soglia 2.48)"
   },
   "moltres_ex_31_promo": {
     "name": "Moltres ex #31 (Promo)",
@@ -17106,7 +17162,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.65 sotto il 10° percentile della coorte d'eta' (soglia 2.70)"
+    "data_quality_reason": "rapporto grade9/raw 0.65 sotto il 10° percentile della coorte d'eta' (soglia 2.67)"
   },
   "pidove_BW15_promo": {
     "name": "Pidove #BW15 (Promo)",
@@ -17190,7 +17246,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 852% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (11.00 -> 36.24) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "lucario_BW85_promo": {
     "name": "Lucario #BW85 (Promo)",
@@ -17208,7 +17264,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.46 sotto il 10° percentile della coorte d'eta' (soglia 2.70)"
+    "data_quality_reason": "rapporto grade9/raw 0.44 sotto il 10° percentile della coorte d'eta' (soglia 2.67)"
   },
   "champions_festival_BW95_promo": {
     "name": "Champions Festival #BW95 (Promo)",
@@ -17226,7 +17282,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.14 sotto il 10° percentile della coorte d'eta' (soglia 2.70)"
+    "data_quality_reason": "rapporto grade9/raw 1.40 sotto il 10° percentile della coorte d'eta' (soglia 2.67)"
   },
   "genesect_BW101_promo": {
     "name": "Genesect #BW101 (Promo)",
@@ -17244,7 +17300,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.99 sotto il 10° percentile della coorte d'eta' (soglia 2.70)"
+    "data_quality_reason": "rapporto grade9/raw 1.99 sotto il 10° percentile della coorte d'eta' (soglia 2.67)"
   },
   "greninja_XY24_promo": {
     "name": "Greninja #XY24 (Promo)",
@@ -17262,7 +17318,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.57 sotto il 10° percentile della coorte d'eta' (soglia 1.82)"
+    "data_quality_reason": "rapporto grade9/raw 1.53 sotto il 10° percentile della coorte d'eta' (soglia 1.79)"
   },
   "fearow_XY57_promo": {
     "name": "Fearow #XY57 (Promo)",
@@ -17280,7 +17336,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 209% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.4x in 6 mesi (0.88 -> 4.77) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "gyarados_XY60_promo": {
     "name": "Gyarados #XY60 (Promo)",
@@ -17384,7 +17440,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.90 sotto il 10° percentile della coorte d'eta' (soglia 1.82)"
+    "data_quality_reason": "rapporto grade9/raw 0.90 sotto il 10° percentile della coorte d'eta' (soglia 1.79)"
   },
   "m_blaziken_ex_XY86_promo": {
     "name": "M Blaziken-EX #XY86 (Promo)",
@@ -17402,7 +17458,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1497% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 14.9x in 6 mesi (1.79 -> 26.79) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "m_mawile_ex_XY104_promo": {
     "name": "M Mawile-EX #XY104 (Promo)",
@@ -17436,7 +17492,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.56 sotto il 10° percentile della coorte d'eta' (soglia 1.82)"
+    "data_quality_reason": "rapporto grade9/raw 0.56 sotto il 10° percentile della coorte d'eta' (soglia 1.79)"
   },
   "blastoise_ex_XY122_promo": {
     "name": "Blastoise-EX #XY122 (Promo)",
@@ -17470,7 +17526,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 26.1x (soglia 15.0x)"
+    "data_quality_reason": "range max/min 28.1x (soglia 15.0x)"
   },
   "mewtwo_ex_XY125_promo": {
     "name": "Mewtwo-EX #XY125 (Promo)",
@@ -17488,7 +17544,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.63 sotto il 10° percentile della coorte d'eta' (soglia 1.82)"
+    "data_quality_reason": "rapporto grade9/raw 0.63 sotto il 10° percentile della coorte d'eta' (soglia 1.79)"
   },
   "white_kyurem_XY128_promo": {
     "name": "White Kyurem #XY128 (Promo)",
@@ -17506,7 +17562,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 458% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 6.1x in 6 mesi (4.00 -> 24.42) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "shaymin_ex_XY148_promo": {
     "name": "Shaymin-EX #XY148 (Promo)",
@@ -17572,7 +17628,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.44 sotto il 10° percentile della coorte d'eta' (soglia 1.82)"
+    "data_quality_reason": "rapporto grade9/raw 1.45 sotto il 10° percentile della coorte d'eta' (soglia 1.79)"
   },
   "m_camerupt_ex_XY198a_promo": {
     "name": "M Camerupt-EX #XY198a (Promo)",
@@ -17606,7 +17662,7 @@
     "selection_method": "chase_price_filter_survivorship_biased",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.56 sotto il 10° percentile della coorte d'eta' (soglia 1.82)"
+    "data_quality_reason": "rapporto grade9/raw 0.56 sotto il 10° percentile della coorte d'eta' (soglia 1.79)"
   },
   "paradise_resort_45_promo": {
     "name": "Paradise Resort #45 (Promo)",
@@ -17776,7 +17832,7 @@
     "selection_method": "random_control",
     "is_promo": true,
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 344% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 10.5x in 6 mesi (6.31 -> 66.25) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "heatran_lvx_DP31_promo": {
     "name": "Heatran LV.X #DP31 (Promo)",
@@ -18534,7 +18590,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.61 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
+    "data_quality_reason": "rapporto grade9/raw 1.61 sotto il 10° percentile della coorte d'eta' (soglia 1.89)"
   },
   "porygon_48": {
     "name": "Porygon #48",
@@ -18810,7 +18866,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.78 sotto il 10° percentile della coorte d'eta' (soglia 1.86)"
+    "data_quality_reason": "rapporto grade9/raw 1.78 sotto il 10° percentile della coorte d'eta' (soglia 1.89)"
   },
   "super_scoop_up_98": {
     "name": "Super Scoop Up #98",
@@ -19322,9 +19378,7 @@
     "language": "en",
     "cardmarket_ref_price_eur": 39.36,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control",
-    "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.66 sotto il 10° percentile della coorte d'eta' (soglia 1.92)"
+    "selection_method": "random_control"
   },
   "magnemite_26": {
     "name": "Magnemite #26",
@@ -19736,7 +19790,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 12.88,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw 1.92 sotto il 10° percentile della coorte d'eta' (soglia 1.92)"
   },
   "unown_k_58": {
     "name": "Unown [K] #58",
@@ -19920,7 +19976,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 1.93,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.9x in 6 mesi (3.16 -> 15.60) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "light_slowbro_51": {
     "name": "Light Slowbro #51",
@@ -19992,7 +20050,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.53 sotto il 10° percentile della coorte d'eta' (soglia 1.95)"
+    "data_quality_reason": "rapporto grade9/raw 1.53 sotto il 10° percentile della coorte d'eta' (soglia 2.03)"
   },
   "unown_c_57": {
     "name": "Unown [C] #57",
@@ -20008,7 +20066,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.06 sotto il 10° percentile della coorte d'eta' (soglia 1.95)"
+    "data_quality_reason": "rapporto grade9/raw 1.06 sotto il 10° percentile della coorte d'eta' (soglia 2.03)"
   },
   "dark_ursaring_21": {
     "name": "Dark Ursaring #21",
@@ -20294,7 +20352,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1726% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 12.0x in 6 mesi (16.60 -> 198.85) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "ivysaur_47": {
     "name": "Ivysaur #47",
@@ -20310,7 +20368,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.77 sotto il 10° percentile della coorte d'eta' (soglia 1.95)"
+    "data_quality_reason": "rapporto grade9/raw 1.77 sotto il 10° percentile della coorte d'eta' (soglia 2.03)"
   },
   "raticate_61": {
     "name": "Raticate #61",
@@ -20400,7 +20458,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 973% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.1x in 6 mesi (68.89 -> 216.24) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "slowpoke_93": {
     "name": "Slowpoke #93",
@@ -20506,7 +20564,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 27.9x (soglia 15.0x)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.3x in 6 mesi (5.35 -> 22.78) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "butterfree_21": {
     "name": "Butterfree #21",
@@ -20754,7 +20812,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.98,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.6x in 6 mesi (6.50 -> 23.57) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "sentret_107": {
     "name": "Sentret #107",
@@ -20912,7 +20972,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 2.89,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.0x in 6 mesi (1.39 -> 4.21) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "mr_mime_95": {
     "name": "Mr. Mime #95",
@@ -21014,7 +21076,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 354% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.1x in 6 mesi (1.23 -> 6.32) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "gastly_57": {
     "name": "Gastly #57",
@@ -21188,7 +21250,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 1.69,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.0x in 6 mesi (2.42 -> 7.30) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "jigglypuff_68": {
     "name": "Jigglypuff #68",
@@ -21278,7 +21342,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 405% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.2x in 6 mesi (6.87 -> 35.97) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "milotic_12": {
     "name": "Milotic #12",
@@ -21348,7 +21412,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.44,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.1x in 6 mesi (4.25 -> 21.53) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "metang_21": {
     "name": "Metang #21",
@@ -21394,7 +21460,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 225% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.5x in 6 mesi (8.45 -> 29.40) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "dark_celebi_4": {
     "name": "Dark Celebi #4",
@@ -21424,7 +21490,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 302% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.5x in 6 mesi (17.06 -> 76.72) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "metagross_ex_95_hidden_legends_ctrl": {
     "name": "Metagross ex #95",
@@ -21634,7 +21700,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.36,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.1x in 6 mesi (20.35 -> 62.60) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "relicanth_18": {
     "name": "Relicanth #18",
@@ -21662,7 +21730,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 2.98,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.5x in 6 mesi (7.11 -> 31.83) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "combusken_25": {
     "name": "Combusken #25",
@@ -21752,7 +21822,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 898% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 7.4x in 6 mesi (16.69 -> 123.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "spoink_65": {
     "name": "Spoink #65",
@@ -21884,7 +21954,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 253% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 6.1x in 6 mesi (8.70 -> 53.34) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "pichu_59": {
     "name": "Pichu #59",
@@ -21986,7 +22056,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.35 sotto il 10° percentile della coorte d'eta' (soglia 2.99)"
+    "data_quality_reason": "rapporto grade9/raw 1.35 sotto il 10° percentile della coorte d'eta' (soglia 3.20)"
   },
   "granbull_39": {
     "name": "Granbull #39",
@@ -22046,7 +22116,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.16 sotto il 10° percentile della coorte d'eta' (soglia 2.99)"
+    "data_quality_reason": "rapporto grade9/raw 2.16 sotto il 10° percentile della coorte d'eta' (soglia 3.20)"
   },
   "smoochum_31": {
     "name": "Smoochum #31",
@@ -22062,7 +22132,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 309% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.2x in 6 mesi (2.12 -> 8.93) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "sunflora_16": {
     "name": "Sunflora #16",
@@ -22210,7 +22280,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.92 sotto il 10° percentile della coorte d'eta' (soglia 2.99)"
+    "data_quality_reason": "rapporto grade9/raw 2.91 sotto il 10° percentile della coorte d'eta' (soglia 3.20)"
   },
   "cyclone_energy_99": {
     "name": "Cyclone Energy #99",
@@ -22410,7 +22480,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 239% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.7x in 6 mesi (21.79 -> 79.86) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "rain_castform_26": {
     "name": "Rain Castform #26",
@@ -22702,7 +22772,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 1.0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.0x in 6 mesi (18.45 -> 74.64) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "girafarig_16": {
     "name": "Girafarig #16",
@@ -22758,7 +22830,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 2.42,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.2x in 6 mesi (9.85 -> 31.25) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "furret_33": {
     "name": "Furret #33",
@@ -22802,7 +22876,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 30.7x (soglia 15.0x)"
+    "data_quality_reason": "range max/min 16.3x (soglia 15.0x)"
   },
   "anorith_29": {
     "name": "Anorith #29",
@@ -22874,7 +22948,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.55,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.4x in 6 mesi (6.02 -> 32.35) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "giant_stump_75": {
     "name": "Giant Stump #75",
@@ -23210,7 +23286,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.64 sotto il 10° percentile della coorte d'eta' (soglia 3.79)"
+    "data_quality_reason": "rapporto grade9/raw 2.66 sotto il 10° percentile della coorte d'eta' (soglia 3.78)"
   },
   "swalot_11": {
     "name": "Swalot #11",
@@ -23356,7 +23432,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1101% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.9x in 6 mesi (8.70 -> 42.71) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "grumpig_20": {
     "name": "Grumpig #20",
@@ -23400,7 +23476,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 251% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.8x in 6 mesi (7.04 -> 33.75) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "holon_legacy_74": {
     "name": "Holon Legacy #74",
@@ -23490,7 +23566,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.55 sotto il 10° percentile della coorte d'eta' (soglia 3.79)"
+    "data_quality_reason": "rapporto grade9/raw 2.55 sotto il 10° percentile della coorte d'eta' (soglia 3.78)"
   },
   "vibrava_24": {
     "name": "Vibrava δ #24",
@@ -23876,7 +23952,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 257% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.1x in 6 mesi (20.44 -> 62.92) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "cradily_7": {
     "name": "Cradily #7",
@@ -23904,7 +23980,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 1.01,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.1x in 6 mesi (2.15 -> 6.71) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "anorith_26": {
     "name": "Anorith #26",
@@ -24048,7 +24126,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 371% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.9x in 6 mesi (4.96 -> 29.25) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "beldum_45": {
     "name": "Beldum #45",
@@ -24244,7 +24322,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 7.3,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.6x in 6 mesi (3.75 -> 13.67) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "gible_85": {
     "name": "Gible #85",
@@ -24516,7 +24596,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 265% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.2x in 6 mesi (4.27 -> 13.78) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "happiny_52": {
     "name": "Happiny #52",
@@ -24560,7 +24640,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 337% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.9x in 6 mesi (5.63 -> 21.78) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "nidoking_34": {
     "name": "Nidoking #34",
@@ -24576,7 +24656,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1191% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 26.0x in 6 mesi (10.49 -> 272.16) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "entei_4": {
     "name": "Entei #4",
@@ -24620,7 +24700,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 336% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.4x in 6 mesi (15.09 -> 66.06) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "absol_21": {
     "name": "Absol #21",
@@ -24666,7 +24746,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 206% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.4x in 6 mesi (7.09 -> 38.25) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "duskull_86": {
     "name": "Duskull #86",
@@ -24752,7 +24832,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 264% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.9x in 6 mesi (9.92 -> 38.91) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "bulbasaur_77": {
     "name": "Bulbasaur #77",
@@ -24880,7 +24960,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 600% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 6.3x in 6 mesi (11.74 -> 73.55) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "pidgeotto_58": {
     "name": "Pidgeotto #58",
@@ -25064,7 +25144,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 3.98 sotto il 10° percentile della coorte d'eta' (soglia 4.12)"
+    "data_quality_reason": "rapporto grade9/raw 3.98 sotto il 10° percentile della coorte d'eta' (soglia 4.15)"
   },
   "blaziken_1": {
     "name": "Blaziken #1",
@@ -25466,7 +25546,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.42 sotto il 10° percentile della coorte d'eta' (soglia 4.12)"
+    "data_quality_reason": "rapporto grade9/raw 1.42 sotto il 10° percentile della coorte d'eta' (soglia 4.15)"
   },
   "turtwig_77": {
     "name": "Turtwig #77",
@@ -25510,7 +25590,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 3.50 sotto il 10° percentile della coorte d'eta' (soglia 4.12)"
+    "data_quality_reason": "rapporto grade9/raw 3.50 sotto il 10° percentile della coorte d'eta' (soglia 4.15)"
   },
   "electrike_64": {
     "name": "Electrike #64",
@@ -26498,7 +26578,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 4.81,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (4.58 -> 15.27) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "sandshrew_124": {
     "name": "Sandshrew #124",
@@ -26688,7 +26770,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 3359% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 22.5x in 6 mesi (1.06 -> 23.78) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "breloom_52": {
     "name": "Breloom #52",
@@ -26816,7 +26898,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.22,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.2x in 6 mesi (10.03 -> 32.07) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "articuno_148": {
     "name": "Articuno #148",
@@ -26964,7 +27048,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 20.3x (soglia 15.0x)"
+    "data_quality_reason": "range max/min 20.8x (soglia 15.0x)"
   },
   "pineco_68": {
     "name": "Pineco #68",
@@ -27076,7 +27160,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 57.25,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.6x in 6 mesi (4.86 -> 27.41) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "lightning_energy_91": {
     "name": "Lightning Energy #91",
@@ -27092,7 +27178,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.61 sotto il 10° percentile della coorte d'eta' (soglia 2.70)"
+    "data_quality_reason": "rapporto grade9/raw 1.61 sotto il 10° percentile della coorte d'eta' (soglia 2.67)"
   },
   "entei_SL3": {
     "name": "Entei #SL3",
@@ -27122,7 +27208,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 2.61 sotto il 10° percentile della coorte d'eta' (soglia 2.70)"
+    "data_quality_reason": "rapporto grade9/raw 2.61 sotto il 10° percentile della coorte d'eta' (soglia 2.67)"
   },
   "mawile_64": {
     "name": "Mawile #64",
@@ -27178,7 +27264,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 7.2,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.5x in 6 mesi (3.57 -> 12.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "clefable_1_call_of_legends_ctrl": {
     "name": "Clefable #1",
@@ -27194,7 +27282,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1436% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.1x in 6 mesi (10.20 -> 42.24) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "metal_energy_87": {
     "name": "Metal Energy #87",
@@ -27238,7 +27326,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.90 sotto il 10° percentile della coorte d'eta' (soglia 2.70)"
+    "data_quality_reason": "rapporto grade9/raw 1.90 sotto il 10° percentile della coorte d'eta' (soglia 2.67)"
   },
   "zangoose_39": {
     "name": "Zangoose #39",
@@ -27268,7 +27356,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 24.3x (soglia 15.0x)"
+    "data_quality_reason": "range max/min 24.2x (soglia 15.0x)"
   },
   "clefairy_54": {
     "name": "Clefairy #54",
@@ -28202,7 +28290,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 1.13,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (3.84 -> 12.54) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "darkrai_ex_107": {
     "name": "Darkrai-EX #107",
@@ -28716,7 +28806,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.1,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.6x in 6 mesi (7.64 -> 42.48) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "electivire_54": {
     "name": "Electivire #54",
@@ -29254,7 +29346,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.12,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (10.25 -> 33.77) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "patrat_110": {
     "name": "Patrat #110",
@@ -29556,7 +29650,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.17,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.5x in 6 mesi (10.28 -> 36.47) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "weedle_1": {
     "name": "Weedle #1",
@@ -29880,7 +29976,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.13,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.7x in 6 mesi (10.94 -> 40.58) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "yveltal_78": {
     "name": "Yveltal #78",
@@ -29924,7 +30022,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.09,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.8x in 6 mesi (6.94 -> 40.38) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "lunatone_63": {
     "name": "Lunatone #63",
@@ -30458,7 +30558,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 1.43 sotto il 10° percentile della coorte d'eta' (soglia 1.82)"
+    "data_quality_reason": "rapporto grade9/raw 1.43 sotto il 10° percentile della coorte d'eta' (soglia 1.79)"
   },
   "dusknoir_40": {
     "name": "Dusknoir #40",
@@ -30600,7 +30700,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 660% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 6.5x in 6 mesi (15.01 -> 96.92) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "lickilicky_79": {
     "name": "Lickilicky #79",
@@ -30672,7 +30772,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.85 sotto il 10° percentile della coorte d'eta' (soglia 1.82)"
+    "data_quality_reason": "rapporto grade9/raw 0.85 sotto il 10° percentile della coorte d'eta' (soglia 1.79)"
   },
   "lucario_ex_54": {
     "name": "Lucario-EX #54",
@@ -30826,7 +30926,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.16,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.2x in 6 mesi (8.47 -> 43.68) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "seismitoad_ex_106": {
     "name": "Seismitoad-EX #106",
@@ -31682,7 +31784,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.71 sotto il 10° percentile della coorte d'eta' (soglia 1.46)"
+    "data_quality_reason": "rapporto grade9/raw 0.71 sotto il 10° percentile della coorte d'eta' (soglia 1.45)"
   },
   "ralts_52": {
     "name": "Ralts #52",
@@ -31738,7 +31840,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.9x in 6 mesi (24.90 -> 97.22) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "goodra_60": {
     "name": "Goodra #60",
@@ -31922,7 +32026,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 8.8x in 6 mesi (49.16 -> 434.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "hoopa_ex_36": {
     "name": "Hoopa-EX #36",
@@ -32150,7 +32256,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 502% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.5x in 6 mesi (14.15 -> 49.44) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "snover_39": {
     "name": "Snover #39",
@@ -32462,7 +32568,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.39,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.5x in 6 mesi (28.29 -> 98.56) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "drapion_54": {
     "name": "Drapion #54",
@@ -32504,7 +32612,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.11,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 10.8x in 6 mesi (26.94 -> 291.33) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "espurr_58": {
     "name": "Espurr #58",
@@ -32520,7 +32630,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1000% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 12.2x in 6 mesi (1.76 -> 21.51) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "shellder_23": {
     "name": "Shellder #23",
@@ -32534,7 +32644,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.18,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.0x in 6 mesi (44.00 -> 219.25) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "suicune_30": {
     "name": "Suicune #30",
@@ -32662,7 +32774,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 593% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.8x in 6 mesi (43.73 -> 167.46) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "psyduck_16": {
     "name": "Psyduck #16",
@@ -32760,7 +32872,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.39,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.2x in 6 mesi (21.13 -> 88.78) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "genesect_ex_64": {
     "name": "Genesect-EX #64",
@@ -33466,7 +33580,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 5.92,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.4x in 6 mesi (4.70 -> 20.52) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "gothorita_53": {
     "name": "Gothorita #53",
@@ -33902,7 +34018,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 8.0x in 6 mesi (54.12 -> 433.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "noivern_gx_160": {
     "name": "Noivern-GX #160",
@@ -34030,7 +34148,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.07,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 10.4x in 6 mesi (41.82 -> 433.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "mudsdale_78": {
     "name": "Mudsdale #78",
@@ -34514,7 +34634,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.5x in 6 mesi (30.81 -> 107.60) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "oranguru_48": {
     "name": "Oranguru #48",
@@ -34640,7 +34762,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.13,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 10.2x in 6 mesi (43.59 -> 443.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "nihilego_gx_103": {
     "name": "Nihilego-GX #103",
@@ -34766,7 +34890,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.0x in 6 mesi (58.12 -> 289.67) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "escape_board_122a": {
     "name": "Escape Board #122a",
@@ -34950,7 +35076,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.07,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.9x in 6 mesi (45.85 -> 180.20) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "luxio_47": {
     "name": "Luxio #47",
@@ -34992,7 +35120,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.07,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 11.6x in 6 mesi (37.20 -> 433.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "cherrim_11": {
     "name": "Cherrim #11",
@@ -37246,7 +37376,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.13,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 8.4x in 6 mesi (26.37 -> 222.25) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "phantump_14": {
     "name": "Phantump #14",
@@ -37558,7 +37690,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.5x in 6 mesi (64.21 -> 290.67) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "toxtricity_v_182": {
     "name": "Toxtricity V #182",
@@ -37588,7 +37722,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 1178% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 16.2x in 6 mesi (3.21 -> 52.13) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "spiritomb_116": {
     "name": "Spiritomb #116",
@@ -37658,7 +37792,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 18.3x in 6 mesi (47.42 -> 869.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "snubbull_70": {
     "name": "Snubbull #70",
@@ -37714,7 +37850,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 8.9x in 6 mesi (98.33 -> 871.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "steenee_15": {
     "name": "Steenee #15",
@@ -37728,7 +37866,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (88.50 -> 289.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "salamence_vmax_144": {
     "name": "Salamence VMAX #144",
@@ -37786,7 +37926,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 322% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.3x in 6 mesi (332.69 -> 1434.33) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "grimmsnarl_v_114": {
     "name": "Grimmsnarl V #114",
@@ -37814,7 +37954,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.4x in 6 mesi (98.33 -> 434.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "kangaskhan_133": {
     "name": "Kangaskhan #133",
@@ -37870,7 +38012,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.9x in 6 mesi (59.20 -> 289.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "butterfree_v_1": {
     "name": "Butterfree V #1",
@@ -37898,7 +38042,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.07,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.5x in 6 mesi (80.45 -> 439.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "tsareena_16": {
     "name": "Tsareena #16",
@@ -37926,7 +38072,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.1x in 6 mesi (53.65 -> 218.75) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "crobat_v_104": {
     "name": "Crobat V #104",
@@ -37996,7 +38144,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.5x in 6 mesi (64.36 -> 290.33) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "parasect_4": {
     "name": "Parasect #4",
@@ -38038,7 +38188,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.17,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.4x in 6 mesi (10.54 -> 35.54) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "galarian_darmanitan_v_169": {
     "name": "Galarian Darmanitan V #169",
@@ -38280,7 +38432,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 7.1x in 6 mesi (41.14 -> 293.33) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "ferroseed_123": {
     "name": "Ferroseed #123",
@@ -38322,7 +38476,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.1,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 6.3x in 6 mesi (45.70 -> 289.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "mudsdale_97": {
     "name": "Mudsdale #97",
@@ -38552,7 +38708,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.7x in 6 mesi (58.93 -> 217.75) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "cinderace_v_18": {
     "name": "Cinderace V #18",
@@ -39102,7 +39260,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.02,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.0x in 6 mesi (73.17 -> 290.33) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "korrinas_focus_160": {
     "name": "Korrina's Focus #160",
@@ -39270,7 +39430,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 6.4x in 6 mesi (44.75 -> 287.33) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "seismitoad_90": {
     "name": "Seismitoad #90",
@@ -39438,7 +39600,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.9x in 6 mesi (74.17 -> 435.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "dwebble_11": {
     "name": "Dwebble #11",
@@ -39522,7 +39686,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 17.0x in 6 mesi (51.47 -> 876.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "volcarona_v_170": {
     "name": "Volcarona V #170",
@@ -39920,7 +40086,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.2x in 6 mesi (88.10 -> 366.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "goomy_195": {
     "name": "Goomy #195",
@@ -40088,7 +40256,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 8.6x in 6 mesi (99.89 -> 862.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "simisage_8": {
     "name": "Simisage #8",
@@ -40102,7 +40272,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.05,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 11.2x in 6 mesi (25.77 -> 288.67) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "chansey_202": {
     "name": "Chansey #202",
@@ -40172,7 +40344,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 9.1x in 6 mesi (33.67 -> 306.67) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "persian_200": {
     "name": "Persian #200",
@@ -40678,7 +40852,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.0x in 6 mesi (54.56 -> 216.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "bronzong_126": {
     "name": "Bronzong #126",
@@ -41016,7 +41192,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 265% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.2x in 6 mesi (27.55 -> 143.47) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "relicanth_44": {
     "name": "Relicanth #44",
@@ -41086,7 +41262,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.04,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.2x in 6 mesi (68.15 -> 289.33) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "alolan_vulpix_v_33": {
     "name": "Alolan Vulpix V #33",
@@ -41508,7 +41686,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.06,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.2x in 6 mesi (45.10 -> 146.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "friends_in_hisui_130": {
     "name": "Friends in Hisui #130",
@@ -41536,7 +41716,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.08,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 7.2x in 6 mesi (41.09 -> 294.67) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "solrock_69": {
     "name": "Solrock #69",
@@ -42946,7 +43128,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 257% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 33.8x in 6 mesi (1.70 -> 57.38) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "seedot_3": {
     "name": "Seedot #3",
@@ -43622,7 +43804,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.9x in 6 mesi (88.50 -> 436.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "orthworm_ex_162": {
     "name": "Orthworm ex #162",
@@ -43804,7 +43988,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.03,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 5.9x in 6 mesi (49.33 -> 293.00) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "drednaw_44": {
     "name": "Drednaw #44",
@@ -44168,7 +44354,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0.07,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 10.3x in 6 mesi (11.88 -> 122.08) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "charcadet_33": {
     "name": "Charcadet #33",
@@ -44226,7 +44414,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.69 sotto il 10° percentile della coorte d'eta' (soglia 0.76)"
+    "data_quality_reason": "rapporto grade9/raw 0.72 sotto il 10° percentile della coorte d'eta' (soglia 0.77)"
   },
   "cetitan_201": {
     "name": "Cetitan #201",
@@ -44820,7 +45008,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.73 sotto il 10° percentile della coorte d'eta' (soglia 0.73)"
+    "data_quality_reason": "rapporto grade9/raw 0.72 sotto il 10° percentile della coorte d'eta' (soglia 0.73)"
   },
   "mega_kangaskhan_ex_104": {
     "name": "Mega Kangaskhan ex #104",
@@ -44932,7 +45120,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.0x in 6 mesi (3.41 -> 10.27) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "acerolas_mischief_165": {
     "name": "Acerola's Mischief #165",
@@ -45044,7 +45234,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 4.9x in 6 mesi (87.80 -> 433.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "helioptile_143": {
     "name": "Helioptile #143",
@@ -45380,7 +45572,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.2x in 6 mesi (7.15 -> 22.59) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "carvanha_60": {
     "name": "Carvanha #60",
@@ -45450,7 +45644,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.3x in 6 mesi (40.64 -> 132.64) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "firebreather_119": {
     "name": "Firebreather #119",
@@ -45464,7 +45660,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.9x in 6 mesi (2.38 -> 9.16) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "blowtorch_117": {
     "name": "Blowtorch #117",
@@ -45480,7 +45678,7 @@
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
     "selection_method": "random_control",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "salto mensile 233% (soglia 200%)"
+    "data_quality_reason": "rapporto grade9/raw cresciuto 6.8x in 6 mesi (1.82 -> 12.34) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "paldean_tauros_48": {
     "name": "Paldean Tauros #48",
@@ -45592,7 +45790,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 8.4x in 6 mesi (26.03 -> 219.50) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "toxtricity_103": {
     "name": "Toxtricity #103",
@@ -45860,7 +46060,9 @@
     "language": "en",
     "cardmarket_ref_price_eur": 0,
     "source_note": "Campione di controllo casuale (nessun filtro di prezzo/rarita) per stima survivorship bias",
-    "selection_method": "random_control"
+    "selection_method": "random_control",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "rapporto grade9/raw cresciuto 3.1x in 6 mesi (2.32 -> 7.11) - possibile mercato sottile sul grado, il raw non conferma la stessa velocita'"
   },
   "chien_pao_54": {
     "name": "Chien-Pao #54",
@@ -47445,7 +47647,7 @@
     "source_note": "Progetto pilota MTG - campione selezionato sul prezzo corrente (survivorship bias PER COSTRUZIONE, vedi discover_random_control_mtg_singles.py per il campione di controllo non biased)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.53 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.53 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "mtg_old-gnawbone_197": {
     "name": "Old Gnawbone #197",
@@ -47461,7 +47663,7 @@
     "source_note": "Progetto pilota MTG - campione selezionato sul prezzo corrente (survivorship bias PER COSTRUZIONE, vedi discover_random_control_mtg_singles.py per il campione di controllo non biased)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.86 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.86 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "mtg_the-tarrasque_207": {
     "name": "The Tarrasque #207",
@@ -47775,7 +47977,7 @@
     "source_note": "Progetto pilota MTG - campione selezionato sul prezzo corrente (survivorship bias PER COSTRUZIONE, vedi discover_random_control_mtg_singles.py per il campione di controllo non biased)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "range max/min 15.1x (soglia 15.0x)"
+    "data_quality_reason": "salto mensile 289% (soglia 200%)"
   },
   "mtg_liliana-of-the-veil_97": {
     "name": "Liliana of the Veil #97",
@@ -48807,7 +49009,7 @@
     "source_note": "Progetto pilota MTG - campione selezionato sul prezzo corrente (survivorship bias PER COSTRUZIONE, vedi discover_random_control_mtg_singles.py per il campione di controllo non biased)",
     "selection_method": "chase_price_filter_survivorship_biased",
     "data_quality": "thin_unreliable",
-    "data_quality_reason": "rapporto grade9/raw 0.88 sotto il 10° percentile della coorte d'eta' (soglia 0.95)"
+    "data_quality_reason": "rapporto grade9/raw 0.88 sotto il 10° percentile della coorte d'eta' (soglia 0.97)"
   },
   "mtg_sundown-pass_266": {
     "name": "Sundown Pass #266",
@@ -55458,7 +55660,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon_chinese",
     "language": "zh",
-    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione."
+    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (1 osservazioni)"
   },
   "pkzh_csv6c_pack": {
     "name": "Csv6C Booster Pack",
@@ -55471,7 +55675,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon_chinese",
     "language": "zh",
-    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione."
+    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (4 osservazioni)"
   },
   "pkzh_csv8c_pack": {
     "name": "Csv8C Booster Pack",
@@ -55484,7 +55690,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon_chinese",
     "language": "zh",
-    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione."
+    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (1 osservazioni)"
   },
   "pkzh_csv9c_pack": {
     "name": "Csv9C Booster Pack",
@@ -55497,7 +55705,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon_chinese",
     "language": "zh",
-    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione."
+    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (4 osservazioni)"
   },
   "pkzh_gem_pack_2_box": {
     "name": "Gem Pack 2 Booster Box",
@@ -55523,7 +55733,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon_chinese",
     "language": "zh",
-    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione."
+    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "salto mensile 14793% (soglia 200%)"
   },
   "pkzh_gem_pack_3_box": {
     "name": "Gem Pack 3 Booster Box",
@@ -55588,7 +55800,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon_chinese",
     "language": "zh",
-    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione."
+    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "pkzh_gem_pack_5_pack": {
     "name": "Gem Pack 5 Booster Pack",
@@ -55601,7 +55815,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon_chinese",
     "language": "zh",
-    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione."
+    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (5 osservazioni)"
   },
   "pkzh_gem_pack_6_pack": {
     "name": "Gem Pack 6 Booster Pack",
@@ -55614,7 +55830,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon_chinese",
     "language": "zh",
-    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione."
+    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (1 osservazioni)"
   },
   "op_500_years_in_the_future_bb": {
     "name": "500 Years In The Future Booster Box",
@@ -55768,7 +55986,9 @@
     "era": "one_piece",
     "franchise": "one_piece",
     "language": "en",
-    "source_note": "Scoperta automatica (discover_one_piece_sealed_universe.py) - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, PriceCharting non espone una release date verificata). MSRP 100 USD: valore ufficiale Bandai, costante sui set EN gia' in produzione, non stimato per questo set specifico. Numerazione OP-XX ufficiale non nota, item_id derivato dallo slug."
+    "source_note": "Scoperta automatica (discover_one_piece_sealed_universe.py) - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, PriceCharting non espone una release date verificata). MSRP 100 USD: valore ufficiale Bandai, costante sui set EN gia' in produzione, non stimato per questo set specifico. Numerazione OP-XX ufficiale non nota, item_id derivato dallo slug.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (2 osservazioni)"
   },
   "op_the_time_of_battle_bb": {
     "name": "The Time Of Battle Booster Box",
@@ -55782,7 +56002,9 @@
     "era": "one_piece",
     "franchise": "one_piece",
     "language": "en",
-    "source_note": "Scoperta automatica (discover_one_piece_sealed_universe.py) - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, PriceCharting non espone una release date verificata). MSRP 100 USD: valore ufficiale Bandai, costante sui set EN gia' in produzione, non stimato per questo set specifico. Numerazione OP-XX ufficiale non nota, item_id derivato dallo slug."
+    "source_note": "Scoperta automatica (discover_one_piece_sealed_universe.py) - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, PriceCharting non espone una release date verificata). MSRP 100 USD: valore ufficiale Bandai, costante sui set EN gia' in produzione, non stimato per questo set specifico. Numerazione OP-XX ufficiale non nota, item_id derivato dallo slug.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (4 osservazioni)"
   },
   "op_two_legends_bb": {
     "name": "Two Legends Booster Box",
@@ -55809,7 +56031,9 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon_chinese",
     "language": "zh",
-    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione."
+    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (4 osservazioni)"
   },
   "pkzh_gem_pack_6_box": {
     "name": "Gem Pack 6 Booster Box",
@@ -55822,6 +56046,8 @@
     "set_tier": "UNASSIGNED",
     "franchise": "pokemon_chinese",
     "language": "zh",
-    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione."
+    "source_note": "Progetto pilota Pokemon Cinese - release_date e' il primo mese con prezzo reale in storico (proxy dichiarato, non una data ufficiale verificata; PriceCharting non espone una release date per questo prodotto). MSRP mai verificato, lasciato None per costruzione.",
+    "data_quality": "thin_unreliable",
+    "data_quality_reason": "serie troppo corta (1 osservazioni)"
   }
 }

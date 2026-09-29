@@ -338,3 +338,82 @@ def compute_grade_raw_ratio_flags(
                 f"della coorte d'eta' (soglia {cutoff:.2f})",
             )
     return flags
+
+
+# Soglia calibrata UNA VOLTA sulla distribuzione empirica del drift su tutto
+# l'universo liquido (1.077 carte con raw+grade9 comuni, finestra 6 mesi),
+# PRIMA di guardare l'effetto sul backtest - vedi
+# scripts/thin_market_ratio_drift_test.py. p97,5 della distribuzione reale
+# (mediana 1,17x, p90 2,12x, p99 3,79x, max 10,28x): un salto netto rispetto
+# al grosso della distribuzione, non un numero scelto per far scattare un
+# caso particolare.
+THIN_MARKET_DRIFT_WINDOW_MONTHS = 6
+THIN_MARKET_DRIFT_RATIO_CUTOFF = 3.0
+
+
+def compute_thin_market_drift_flags(
+    metadata: Dict[str, Any],
+    grade9_prices_df: pd.DataFrame,
+    raw_prices_df: pd.DataFrame,
+    window_months: int = THIN_MARKET_DRIFT_WINDOW_MONTHS,
+    drift_ratio_cutoff: float = THIN_MARKET_DRIFT_RATIO_CUTOFF,
+) -> Dict[str, Tuple[bool, str]]:
+    """Flagga singole gradate il cui rapporto grade9/raw e' esploso di recente
+    rispetto alla propria storia - un segnale di mercato SOTTILE (poche vendite
+    reali al grado spingono l'indice), non un vero re-pricing.
+
+    Trovato valutando un acquisto reale (Azumarill #114 [Delta Species] a
+    90,25EUR): il modello dava "COLPACCIO -52%" (fair value 189,68EUR), ma il
+    prezzo Grade 9 era passato da 47,50EUR a 257,37EUR in 7 mesi (+442%) mentre
+    il RAW della stessa carta, nello stesso periodo, e' salito solo da 26,23EUR
+    a 45,91EUR (+75%) - il rapporto grade9/raw e' triplicato mentre il mercato
+    raw (molto piu' liquido, molte piu' vendite) confermava solo una crescita
+    modesta. compute_grade_raw_ratio_flags() sopra confronta un
+    'cardmarket_ref_price_eur' STATICO (spesso vecchio di mesi/anni) contro un
+    cutoff di COORTE - non vede un salto RECENTE come questo. Qui si confronta
+    la carta con SE STESSA nel tempo (rapporto oggi vs `window_months` fa),
+    indipendente dalla cross-section.
+
+    Diverso da compute_reliability_flags (che guarda salti MENSILI singoli o il
+    range max/min sull'intera storia del solo grade9): un salto graduale
+    distribuito su piu' mesi (come questo caso: nessun singolo mese supera il
+    200%) non viene mai visto da quel filtro, ma resta un artefatto di mercato
+    sottile quando il RAW non conferma la stessa velocita' di crescita.
+
+    ESITO backtest: vedi scripts/thin_market_ratio_drift_test.py. Ritorna SOLO
+    le carte flaggate; le altre (incluse quelle senza storico raw+grade9
+    comune sufficiente) sono is_reliable per costruzione di questo controllo."""
+    flags: Dict[str, Tuple[bool, str]] = {}
+    for item_id, info in metadata.items():
+        if info.get("type") != "single":
+            continue
+        if item_id not in grade9_prices_df.columns or item_id not in raw_prices_df.columns:
+            continue
+        g = grade9_prices_df[item_id].dropna()
+        r = raw_prices_df[item_id].dropna()
+        common_idx = g.index.intersection(r.index)
+        if len(common_idx) < window_months + 1:
+            continue
+        g = g.loc[common_idx]
+        r = r.loc[common_idx]
+        if len(g) < window_months + 1:
+            continue
+        raw_now = float(r.iloc[-1])
+        raw_past = float(r.iloc[-window_months - 1])
+        grade9_now = float(g.iloc[-1])
+        grade9_past = float(g.iloc[-window_months - 1])
+        if raw_now <= 0 or raw_past <= 0 or grade9_past <= 0:
+            continue
+        ratio_now = grade9_now / raw_now
+        ratio_past = grade9_past / raw_past
+        if ratio_past <= 0:
+            continue
+        drift = ratio_now / ratio_past
+        if drift >= drift_ratio_cutoff:
+            flags[item_id] = (
+                False,
+                f"rapporto grade9/raw cresciuto {drift:.1f}x in {window_months} mesi "
+                f"({ratio_past:.2f} -> {ratio_now:.2f}) - possibile mercato sottile sul grado, "
+                f"il raw non conferma la stessa velocita'",
+            )
+    return flags

@@ -31,6 +31,17 @@ Aggiunto compute_grade_raw_ratio_flags() come check indipendente, usando
 cardmarket_ref_price_eur (raw, gia' in metadata, mai usato finora) come
 ancora: 69 carte in piu' flaggate, e testato che escluderle MIGLIORA il
 backtest (Sharpe 1,48->1,57) - falsi positivi da dato sottile, non alfa reale.
+
+AGGIORNAMENTO 2 (richiesto dall'utente dopo aver valutato un acquisto reale -
+"e' possibile aggiungere un controllo per mercato sottile?"): il filtro
+grade9/raw sopra confronta un rapporto STATICO (cardmarket_ref_price_eur,
+spesso vecchio) contro la coorte - non vede un salto RECENTE nel rapporto.
+Aggiunto compute_thin_market_drift_flags(): confronta il rapporto grade9/raw
+della carta con SE STESSA 6 mesi fa (usando le due serie storiche, non un
+riferimento statico) - 31 carte in piu' flaggate nell'universo attuale,
+testato che escluderle e' NEUTRO-LEGGERMENTE POSITIVO sul backtest (Sharpe
+2,37->2,43, DSR 0,995->0,996, walk-forward H1/H2 invariati in segno) - vedi
+scripts/thin_market_ratio_drift_test.py.
 """
 
 import sys
@@ -39,7 +50,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from poke_quant.data.storage import load_metadata, save_metadata, load_price_matrix
-from poke_quant.data.liquidity_filter import compute_reliability_flags, compute_grade_raw_ratio_flags
+from poke_quant.data.liquidity_filter import (
+    compute_reliability_flags, compute_grade_raw_ratio_flags, compute_thin_market_drift_flags,
+)
 from poke_quant.data.unified_singles_panel import build_unified_singles_price_panel
 
 
@@ -65,7 +78,8 @@ def main():
     unified_prices = build_unified_singles_price_panel(grade9_prices, raw_prices)
     single_flags = compute_reliability_flags(unified_prices[[c for c in unified_prices.columns if c in single_ids]])
     ratio_flags = compute_grade_raw_ratio_flags(metadata, grade9_prices)  # solo le non-ok, vedi docstring
-    flags = {**sealed_flags, **single_flags, **ratio_flags}
+    drift_flags = compute_thin_market_drift_flags(metadata, grade9_prices, raw_prices)  # solo le non-ok, vedi docstring
+    flags = {**sealed_flags, **single_flags, **ratio_flags, **drift_flags}
 
     n_flagged = 0
     for item_id, (ok, reason) in flags.items():
