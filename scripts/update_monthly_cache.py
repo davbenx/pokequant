@@ -253,16 +253,29 @@ def main():
     print("   -> Singole BUY Produzione...")
     singles_prod_buy, _ = compute_singles_signal_rows(SINGLES_PROD_PARAMS)
     print("   -> Singole Alternative Produzione...")
-    singles_prod_alt, _ = compute_singles_alternative_rows(SINGLES_PROD_PARAMS)
+    # shown_rows=singles_prod_buy evita che questa funzione ricalcoli
+    # internamente compute_singles_signal_rows(SINGLES_PROD_PARAMS) (trovato
+    # in audit performance 2026-09-29: veniva rifatto identico due righe sopra).
+    singles_prod_alt, _ = compute_singles_alternative_rows(SINGLES_PROD_PARAMS, shown_rows=singles_prod_buy)
     print("   -> Singole Uscite/Avoid Produzione...")
     singles_prod_avoid, _ = compute_singles_avoid_rows(SINGLES_PROD_PARAMS)
 
-    print("   -> Singole BUY DAC7...")
-    singles_dac7_buy, _ = compute_singles_signal_rows(DAC7_SINGLES_PARAMS)
-    print("   -> Singole Alternative DAC7...")
-    singles_dac7_alt, _ = compute_singles_alternative_rows(DAC7_SINGLES_PARAMS)
-    print("   -> Singole Uscite/Avoid DAC7...")
-    singles_dac7_avoid, _ = compute_singles_avoid_rows(DAC7_SINGLES_PARAMS)
+    # DAC7_SINGLES_PARAMS e' un alias letterale di PRODUCTION_PARAMS (vedi
+    # generate_singles_signal.py) - stesso identico output della Produzione,
+    # nessun bisogno di ricalcolare (fit OLS + universo liquido inclusi) 3
+    # volte in piu' per parametri che coincidono esattamente. Se in futuro
+    # DAC7_SINGLES_PARAMS smette di essere un vero alias, il check sotto se
+    # ne accorge da solo e torna al calcolo separato.
+    if DAC7_SINGLES_PARAMS == SINGLES_PROD_PARAMS:
+        print("   -> DAC7 identico a Produzione (stessi parametri) - riuso risultato, nessun ricalcolo.")
+        singles_dac7_buy, singles_dac7_alt, singles_dac7_avoid = singles_prod_buy, singles_prod_alt, singles_prod_avoid
+    else:
+        print("   -> Singole BUY DAC7...")
+        singles_dac7_buy, _ = compute_singles_signal_rows(DAC7_SINGLES_PARAMS)
+        print("   -> Singole Alternative DAC7...")
+        singles_dac7_alt, _ = compute_singles_alternative_rows(DAC7_SINGLES_PARAMS, shown_rows=singles_dac7_buy)
+        print("   -> Singole Uscite/Avoid DAC7...")
+        singles_dac7_avoid, _ = compute_singles_avoid_rows(DAC7_SINGLES_PARAMS)
 
     print(f"   Produzione: {len(singles_prod_buy)} BUY, {len(singles_prod_alt)} Alt, {len(singles_prod_avoid)} Avoid")
     print(f"   DAC7:       {len(singles_dac7_buy)} BUY, {len(singles_dac7_alt)} Alt, {len(singles_dac7_avoid)} Avoid")

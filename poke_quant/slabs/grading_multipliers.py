@@ -1227,8 +1227,12 @@ def get_card_strategy_and_pop_details(
     meta = {}
     try:
         meta = load_metadata()
-    except Exception:
-        pass
+    except Exception as e:
+        # BUG TROVATO (audit performance/bug 2026-09-29): un errore di lettura
+        # qui veniva inghiottito in silenzio - l'utente vedrebbe semplicemente
+        # meta={} (nessun census/strategy resolvibile) senza nessun indizio
+        # del perche'. Non blocca (il fallback resta valido), ma ora si vede.
+        print(f"[get_card_strategy_and_pop_details] load_metadata() fallita: {e}")
 
     if not resolved_id and game_slug and item_slug:
         for iid, info in meta.items():

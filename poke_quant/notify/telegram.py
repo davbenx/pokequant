@@ -25,7 +25,14 @@ def send_telegram_message(text: str, token: Optional[str] = None, chat_id: Optio
     ok = True
     for chunk in chunks:
         try:
-            resp = requests.post(url, data={"chat_id": chat_id, "text": chunk}, timeout=15)
+            # BUG TROVATO (audit performance/bug 2026-09-29): i messaggi reali
+            # (signal_scanner.py, slab_notifier.py) formattano il testo con
+            # *grassetto* Markdown, ma qui non veniva mai passato parse_mode -
+            # l'utente vedeva gli asterischi letterali su Telegram invece del
+            # grassetto. "Markdown" (legacy, non MarkdownV2) e' l'unico modo
+            # coerente col testo gia' costruito altrove, che non fa escaping
+            # di '.', '-', '(' ecc. richiesto da MarkdownV2.
+            resp = requests.post(url, data={"chat_id": chat_id, "text": chunk, "parse_mode": "Markdown"}, timeout=15)
             resp.raise_for_status()
         except Exception as e:
             print(f"[-] Invio Telegram fallito: {e}")

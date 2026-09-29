@@ -63,17 +63,30 @@ ROOT = Path(__file__).resolve().parent.parent
 MAX_LINES_PER_LIST = 15
 
 
-def run_step(description: str, args: list):
+def run_step(description: str, args: list) -> bool:
     print(f"\n--- {description} ---")
     result = subprocess.run([sys.executable] + args, cwd=str(ROOT))
     if result.returncode != 0:
         print(f"[ATTENZIONE] step fallito: {description} (codice {result.returncode})")
+        return False
+    return True
 
 
 def _capped(lines: list) -> list:
     if len(lines) > MAX_LINES_PER_LIST:
         return lines[:MAX_LINES_PER_LIST] + [f"  … e altre {len(lines) - MAX_LINES_PER_LIST}"]
     return lines
+
+
+def _prepend_failure_warning(message: str, failed_steps: list) -> str:
+    if not failed_steps:
+        return message
+    warning = (
+        f"🚨 ATTENZIONE: {len(failed_steps)} step falliti in questa run "
+        f"(dati sottostanti potenzialmente non aggiornati):\n"
+        + "\n".join(f"  - {s}" for s in failed_steps)
+    )
+    return warning + "\n\n" + message
 
 
 def build_message() -> str:
@@ -115,28 +128,44 @@ def build_message() -> str:
 
 
 def main():
-    run_step("Scoperta nuovi set sealed", ["scripts/discover_sealed_universe.py"])
-    # Aggiunti 2026-09-29 (richiesta esplicita dell'utente: "fai in modo che il
-    # motore scarichi dati gia' su One piece e pokemon china"): fino a qui solo
-    # Pokemon EN aveva una scoperta ricorrente - One Piece era fermo a 2 anni fa
-    # (ultimo set curato a mano: 2024-03-15) e Pokemon Cinese non aveva alcuna
-    # scoperta automatica dopo la scansione una tantum di Fase 1.3. Entrambi gli
-    # script sotto ri-scaricano dal vivo la propria categoria PriceCharting a
-    # ogni run (non un elenco congelato) e sono idempotenti (solo nuovi item).
-    run_step("Scoperta nuovi box One Piece", ["scripts/discover_one_piece_sealed_universe.py"])
-    run_step("Scoperta nuovi box Pokemon Cinese", ["scripts/discover_pokemon_chinese_sealed_universe.py"])
-    run_step("Scoperta nuove singole chase", ["scripts/discover_chase_cards.py"])
-    run_step("Scoperta nuove singole di controllo", ["scripts/discover_random_control_singles.py"])
-    run_step("Ricostruzione prezzi con FX reale (sealed + graded singles)", ["scripts/rebuild_prices_with_real_fx.py"])
-    run_step("Aggiornamento filtro attendibilità", ["scripts/flag_unreliable_assets.py"])
+    # BUG TROVATO (audit performance/bug richiesto dall'utente, 2026-09-29):
+    # run_step() stampava solo un warning su stdout (nessuna GitHub Action lo
+    # legge di routine) e main() proseguiva comunque attraverso TUTTI gli step
+    # successivi indipendentemente dall'esito - se rebuild_prices_with_real_fx.py
+    # falliva (es. timeout di rete), il pannello prezzi restava quello del mese
+    # precedente ma build_message()/l'invio Telegram procedevano IDENTICI,
+    # presentando dati vecchi come se fossero freschi, senza nessuna traccia
+    # visibile all'utente. Ora ogni fallimento viene raccolto e (a) antepone un
+    # avviso esplicito al messaggio Telegram stesso, (b) fa uscire con codice
+    # non-zero cosi' la GitHub Action mensile risulta visibilmente rossa.
+    steps = [
+        ("Scoperta nuovi set sealed", ["scripts/discover_sealed_universe.py"]),
+        # Aggiunti 2026-09-29 (richiesta esplicita dell'utente: "fai in modo che il
+        # motore scarichi dati gia' su One piece e pokemon china"): fino a qui solo
+        # Pokemon EN aveva una scoperta ricorrente - One Piece era fermo a 2 anni fa
+        # (ultimo set curato a mano: 2024-03-15) e Pokemon Cinese non aveva alcuna
+        # scoperta automatica dopo la scansione una tantum di Fase 1.3. Entrambi gli
+        # script sotto ri-scaricano dal vivo la propria categoria PriceCharting a
+        # ogni run (non un elenco congelato) e sono idempotenti (solo nuovi item).
+        ("Scoperta nuovi box One Piece", ["scripts/discover_one_piece_sealed_universe.py"]),
+        ("Scoperta nuovi box Pokemon Cinese", ["scripts/discover_pokemon_chinese_sealed_universe.py"]),
+        ("Scoperta nuove singole chase", ["scripts/discover_chase_cards.py"]),
+        ("Scoperta nuove singole di controllo", ["scripts/discover_random_control_singles.py"]),
+        ("Ricostruzione prezzi con FX reale (sealed + graded singles)", ["scripts/rebuild_prices_with_real_fx.py"]),
+        ("Aggiornamento filtro attendibilità", ["scripts/flag_unreliable_assets.py"]),
+    ]
+    failed_steps = [description for description, args in steps if not run_step(description, args)]
 
-    message = build_message()
+    message = _prepend_failure_warning(build_message(), failed_steps)
     print("\n" + "=" * 100)
     print(message)
     print("=" * 100)
 
     sent = send_telegram_message(message)
     print(f"\nNotifica Telegram: {'inviata' if sent else 'non inviata (vedi sopra)'}")
+
+    if failed_steps:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

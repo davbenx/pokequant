@@ -294,7 +294,8 @@ def compute_singles_signal_rows(params: dict = None):
 EXTRA_ALTERNATIVES = 1000
 
 
-def compute_singles_alternative_rows(params: dict = None, extra_positions: int = EXTRA_ALTERNATIVES):
+def compute_singles_alternative_rows(params: dict = None, extra_positions: int = EXTRA_ALTERNATIVES,
+                                      shown_rows: list = None):
     """Carte nel quantile 20% piu' sottovalutato del mese corrente ESCLUSE
     quelle GIA' MOSTRATE come BUY principale (compute_singles_signal_rows) -
     NON allarga il quantile stesso (leva diversa, testata separatamente e
@@ -312,9 +313,17 @@ def compute_singles_alternative_rows(params: dict = None, extra_positions: int =
     NE' nel BUY (freschezza) NE' nelle alternative (rank<60) - invisibile
     ovunque, anche se il modello la considera ancora sottovalutata. Corretto
     usando l'elenco EFFETTIVAMENTE mostrato come esclusione, non il rank
-    grezzo - ora quella carta appare come alternativa."""
+    grezzo - ora quella carta appare come alternativa.
+
+    shown_rows (opzionale, trovato in audit performance 2026-09-29): il
+    chiamante puo' passare qui l'output GIA' calcolato di
+    compute_singles_signal_rows(params) per evitare di rifarlo internamente -
+    scripts/update_monthly_cache.py lo chiamava subito prima con gli stessi
+    identici parametri, ricalcolando (fit OLS incluso) la stessa cosa due
+    volte. Default None = comportamento invariato (lo calcola qui)."""
     params = params or PRODUCTION_PARAMS
-    shown_rows, _ = compute_singles_signal_rows(params)
+    if shown_rows is None:
+        shown_rows, _ = compute_singles_signal_rows(params)
     already_shown = {r["item_id"] for r in shown_rows}
 
     metadata = load_metadata()

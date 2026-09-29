@@ -11,7 +11,7 @@ Verifica:
 """
 
 import pytest
-from poke_quant.slabs.models import GradingCompany, SlabGrade, EdgeType, Subgrades, AvailabilityStatus
+from poke_quant.slabs.models import GradingCompany, SlabGrade, EdgeType, Subgrades, AvailabilityStatus, SlabHolding
 from poke_quant.slabs.edge_calculator import (
     calc_cross_grading_spread,
     calc_pop_saturation_edge,
@@ -169,6 +169,51 @@ def test_opportunity_cost_rotation():
     )
     assert res["should_rotate"] is True
     assert res["net_alpha_differential_pct"] >= 20.0
+
+
+def test_estimate_holding_rotation_inputs_uses_real_buy_date_and_roi():
+    """BUG TROVATO (audit performance/bug richiesto dall'utente, 2026-09-29):
+    scan_slabs_market() usava costanti fisse (7 mesi, 4.0% atteso) IDENTICHE
+    per ogni holding, ignorando buy_date/unrealized_roi_pct gia' disponibili
+    su SlabHolding - la stessa identica decisione di rotazione per una slab
+    comprata ieri a +200% e una comprata 3 anni fa in perdita."""
+    from poke_quant.slabs.slab_scanner import estimate_holding_rotation_inputs
+    import datetime
+
+    today = datetime.date.today()
+    twelve_months_ago = (today.replace(day=1) - datetime.timedelta(days=365)).isoformat()
+
+    # Posizione comprata 12 mesi fa, raddoppiata (+100% -> ~100% annualizzato)
+    strong_holding = SlabHolding(
+        holding_id="h1", card_id="c1", card_name="Strong Card",
+        company=GradingCompany.PSA, grade=SlabGrade.PSA_9, quantity=1,
+        buy_price_eur=100.0, buy_date=twelve_months_ago, current_price_eur=200.0,
+    )
+    months, expected_roi = estimate_holding_rotation_inputs(strong_holding)
+    assert 11 <= months <= 13
+    assert expected_roi > 50.0  # forte performer, non deve sembrare stagnante
+
+    # Posizione comprata 12 mesi fa, ferma (0% ROI)
+    flat_holding = SlabHolding(
+        holding_id="h2", card_id="c2", card_name="Flat Card",
+        company=GradingCompany.PSA, grade=SlabGrade.PSA_9, quantity=1,
+        buy_price_eur=100.0, buy_date=twelve_months_ago, current_price_eur=100.0,
+    )
+    months2, expected_roi2 = estimate_holding_rotation_inputs(flat_holding)
+    assert expected_roi2 == 0.0
+    assert expected_roi2 < expected_roi  # deve distinguere le due posizioni, non dare lo stesso numero
+
+
+def test_estimate_holding_rotation_inputs_falls_back_on_bad_date():
+    from poke_quant.slabs.slab_scanner import estimate_holding_rotation_inputs
+
+    bad_holding = SlabHolding(
+        holding_id="h3", card_id="c3", card_name="Bad Date Card",
+        company=GradingCompany.PSA, grade=SlabGrade.PSA_9, quantity=1,
+        buy_price_eur=100.0, buy_date="not-a-date", current_price_eur=110.0,
+    )
+    months, expected_roi = estimate_holding_rotation_inputs(bad_holding)
+    assert months == 7  # fallback conservativo, comportamento pre-fix
 
 
 def test_era_cycle_rotation():

@@ -33,6 +33,33 @@ from poke_quant.slabs.edge_calculator import (
 )
 
 
+def estimate_holding_rotation_inputs(holding: SlabHolding) -> tuple:
+    """Stima (mesi di possesso, rendimento atteso %) per una posizione posseduta,
+    usati da calc_opportunity_cost_rotation() per decidere se ruotare il capitale.
+
+    BUG TROVATO (audit performance/bug richiesto dall'utente, 2026-09-29):
+    scan_slabs_market() usava due costanti fisse identiche per OGNI holding
+    (7 mesi, 4.0% atteso), ignorando buy_date/unrealized_roi_pct gia'
+    disponibili su SlabHolding - la decisione di ruotare era matematicamente
+    identica per una slab comprata ieri a +200% e una comprata 3 anni fa in
+    perdita. Qui: mesi di possesso reali da buy_date, e rendimento atteso
+    stimato come il ROI realizzato finora ANNUALIZZATO sul periodo di possesso
+    (coerente con target_expected_roi in scan_slabs_market, anch'esso un
+    tasso a 12 mesi) - non un rendimento futuro previsto (nessun modello di
+    re-pricing per gli holding esiste qui), ma un proxy concreto e
+    verificabile, non un numero inventato uguale per tutti."""
+    try:
+        buy_dt = datetime.date.fromisoformat(str(holding.buy_date)[:10])
+        today = datetime.date.today()
+        months_stagnant = max(1, (today.year - buy_dt.year) * 12 + (today.month - buy_dt.month))
+    except (ValueError, TypeError):
+        months_stagnant = 7  # fallback se buy_date non e' parsabile
+
+    roi_base = max(1.0 + holding.unrealized_roi_pct / 100.0, 0.0001)
+    expected_roi_pct = round((roi_base ** (12.0 / months_stagnant) - 1.0) * 100.0, 1)
+    return months_stagnant, expected_roi_pct
+
+
 def scan_slabs_market(
     user_holdings: Optional[List[SlabHolding]] = None,
     us_auction_comps_usd: Optional[Dict[str, float]] = None,
@@ -319,9 +346,7 @@ def scan_slabs_market(
         target_expected_roi = best_target.margin_of_safety_pct + 15.0  # Stima di riallineamento a 12 mesi
 
         for holding in user_holdings:
-            # Stima della stagnazione della posizione attuale
-            holding_stagnant_months = 7  # Default per posizioni storiche
-            holding_expected_roi = 4.0   # Rendimento laterale atteso
+            holding_stagnant_months, holding_expected_roi = estimate_holding_rotation_inputs(holding)
 
             rot_res = calc_opportunity_cost_rotation(
                 holding_expected_cagr_pct=holding_expected_roi,
