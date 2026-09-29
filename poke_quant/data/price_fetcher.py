@@ -1,6 +1,24 @@
 """
 poke_quant/data/price_fetcher.py — Download e parsing delle serie storiche reali dei prezzi
 (mensili, basate su vendite transate reali) da PriceCharting e marketplace.
+
+LIMITE NOTO E ACCETTATO (2026-09-29, Fase 2 del piano dati - decisione esplicita
+dell'utente "accetta il limite, concentrati su prezzi/gradazioni/popolazioni
+realmente ottenibili"): nessun campo di LIQUIDITA'/VOLUME esiste in nessuna fonte
+oggi raggiungibile da questo progetto.
+  - VGPC.chart_data (parsato sotto) espone SOLO coppie [timestamp_ms, prezzo] per
+    livello di gradazione - nessun conteggio di vendite/volume, verificato a mano
+    ispezionando il JSON reale di piu' pagine PriceCharting prima di scrivere
+    questo modulo.
+  - Lo scraping automatico di Cardmarket (che mostra "N venduti" per inserzione)
+    e' bloccato (verificato altrove nel repo - non ripetuto qui).
+  - poke_quant/data/liquidity_filter.py compensa con un PROXY indiretto
+    (stabilita' della serie prezzo: niente salti/range anomali) - non e' una
+    misura di volume reale, e va trattato come tale in qualunque analisi futura
+    che usi questi dati.
+Non inseguito oltre per scelta esplicita dell'utente - se emerge in futuro una
+fonte reale di volume/liquidita', va aggiunta qui con lo stesso standard di
+verifica dal vivo usato per ogni altro dato di questo progetto (mai fabbricata).
 """
 
 from __future__ import annotations

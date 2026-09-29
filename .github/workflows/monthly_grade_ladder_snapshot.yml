@@ -1,0 +1,40 @@
+name: Snapshot Mensile Scala di Gradazione (6 livelli)
+
+# Cadenza indipendente da monthly_signal.yml/monthly_population_snapshot.yml (stesso
+# giorno, orario diverso per non sovrapporsi/competere sulle stesse pagine
+# PriceCharting). Fase 2 del piano "raccogliere tutti i dati possibili per test
+# futuri" (richiesto esplicitamente dall'utente, 2026-09-29): prima
+# scripts/fetch_grade_ladder.py girava solo a mano su un campione di 150 carte
+# chase - ora gira sull'intero universo liquido (rispetta le esclusioni di
+# produzione di Fase 1: Magic e Pokemon Cinese esclusi per franchise, Pokemon JP
+# per lingua) e viene automatizzato come gli altri due dataset mensili.
+on:
+  schedule:
+    - cron: '0 13 2 * *' # Il 2 di ogni mese alle 13:00 UTC
+  workflow_dispatch:
+
+jobs:
+  grade-ladder-snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Scarica la scala di gradazione a 6 livelli sull'universo liquido completo
+        run: python scripts/fetch_grade_ladder.py
+      - name: Esegui suite di test (sanity check post-refresh)
+        run: python -m pytest -q
+      - name: Commit e push della scala di gradazione aggiornata
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data_cache/grade_ladder_prices.json
+          git commit -m "Snapshot mensile automatico scala di gradazione (6 livelli)" || echo "Nessuna modifica da pushare"
+          git pull --rebase origin main || true
+          git push
