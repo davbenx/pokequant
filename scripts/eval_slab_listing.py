@@ -38,6 +38,7 @@ from poke_quant.slabs.grading_multipliers import (
 from poke_quant.config import estimate_usa_import_landed_cost, IMPORT_FROM_USA
 from poke_quant.data.price_fetcher import (
     fetch_pricecharting_variant_grade9,
+    fetch_pricecharting_variant_grade_tier,
     fetch_pricecharting_grade_tier_price,
 )
 from scripts.generate_singles_signal import (
@@ -138,27 +139,9 @@ def evaluate_listing(
         res = -1.0
         pct = 10.0
 
-    # Se variante speciale, interroga prima PriceCharting per il prezzo Grade 9 reale
-    pc_data = None
-    v_key = variant_to_pricecharting_key(variant)
-    if v_key:
-        pc_data = fetch_pricecharting_variant_grade9(info.get("game_slug", ""), info.get("item_slug", ""), v_key)
-
-    if pc_data:
-        pc_eur, pc_usd, pc_url = pc_data
-        base_psa_price = pc_eur
-        base_max_edge_price = round(pc_eur * 1.05, 2)
-        v_desc = f"PriceCharting Grado 9 reale (${pc_usd:.2f} USD)"
-        orig_px = snap[item_id]["current_price"] if item_id in snap else base_psa_price
-        v_mult = round(pc_eur / orig_px, 2) if orig_px > 0 else 1.0
-        benchmark_note = f"PriceCharting Grado 9 reale (${pc_usd:.2f} USD)"
-    else:
-        v_mult, v_desc = get_variant_multiplier(variant, info.get("game_slug"))
-        base_psa_price = round(base_psa_price * v_mult, 2)
-        base_max_edge_price = round(base_max_edge_price * v_mult, 2)
-        benchmark_note = "Prezzo mercato PSA 9"
-
-    # Risoluzione benchmark per il grado scelto (da 10.0 fino a 7.0)
+    # Risoluzione benchmark per il grado scelto (da 10.0 fino a 7.0) - PRIMA
+    # della risoluzione della variante, perche' ora serve per interrogare il
+    # dato reale della variante ESATTAMENTE al grado richiesto (vedi sotto).
     grade_str = str(grade).strip().lower().replace("_", ".")
     is_grade_benchmark_resolved = False
 
@@ -184,21 +167,60 @@ def evaluate_listing(
         grade_tier = "grade9"
         tier_label = "Grado 9.0"
 
+    # Se variante speciale, prova PRIMA il dato reale PriceCharting per il
+    # grado ESATTO richiesto sulla pagina della variante (richiesta esplicita
+    # dell'utente dopo il bug del voto slab non aggiornante il prezzo,
+    # 2026-09-29: "deve prendere i dati reali quanto possibile") - solo se
+    # quella pagina non ha un dato per QUESTO grado specifico si cade sul
+    # Grado 9 reale (sempre disponibile se la variante ha una pagina) + la
+    # stessa scalatura del ramo algoritmico, come gia' corretto in precedenza.
+    pc_data = None
+    pc_variant_tier = None
+    v_key = variant_to_pricecharting_key(variant)
+    if v_key:
+        pc_variant_tier = fetch_pricecharting_variant_grade_tier(
+            info.get("game_slug", ""), info.get("item_slug", ""), v_key, tier=grade_tier
+        )
+        if not pc_variant_tier:
+            pc_data = fetch_pricecharting_variant_grade9(info.get("game_slug", ""), info.get("item_slug", ""), v_key)
+
+    if pc_variant_tier:
+        pc_eur, pc_usd, pc_url = pc_variant_tier
+        base_psa_price = pc_eur
+        base_max_edge_price = round(pc_eur * 1.05, 2)
+        v_desc = f"PriceCharting Variante Reale {tier_label} (${pc_usd:.2f} USD)"
+        benchmark_note = v_desc
+        v_mult = 1.0  # il prezzo e' gia' quello esatto della variante a questo grado
+        is_grade_benchmark_resolved = True
+    elif pc_data:
+        pc_eur, pc_usd, pc_url = pc_data
+        base_psa_price = pc_eur
+        base_max_edge_price = round(pc_eur * 1.05, 2)
+        v_desc = f"PriceCharting Grado 9 reale (${pc_usd:.2f} USD)"
+        orig_px = snap[item_id]["current_price"] if item_id in snap else base_psa_price
+        v_mult = round(pc_eur / orig_px, 2) if orig_px > 0 else 1.0
+        benchmark_note = f"PriceCharting Grado 9 reale (${pc_usd:.2f} USD)"
+    else:
+        v_mult, v_desc = get_variant_multiplier(variant, info.get("game_slug"))
+        base_psa_price = round(base_psa_price * v_mult, 2)
+        base_max_edge_price = round(base_max_edge_price * v_mult, 2)
+        benchmark_note = "Prezzo mercato PSA 9"
+
     # BUG TROVATO (richiesta esplicita dell'utente: valutazione di acquisti reali,
     # "e' importante mantenere edge", 2026-09-29): quando una variante speciale
     # (1st Edition/No Symbol/Shadowless) aveva gia' un prezzo REALE trovato sopra
-    # (pc_data, da fetch_pricecharting_variant_grade9 - la pagina dedicata della
-    # variante), questo fetch successivo interrogava SEMPRE anche la pagina dello
-    # stampa STANDARD (game_slug/item_slug, senza variante) e - se trovava un
-    # prezzo - lo usava per SOVRASCRIVERE silenziosamente base_psa_price, buttando
-    # via il prezzo reale della variante gia' trovato. Risultato concreto: una CGC
-    # 9.0 1st Edition Gym Challenge Sabrina #20 (prezzo reale 1st Ed. $229.99)
-    # veniva valutata contro il benchmark della stampa Unlimited ($106.12),
-    # producendo un falso "SCARTARE / OVERPRICED +72.6%" su una carta che al
-    # benchmark corretto era vicina al fair value. Stessa guardia gia' presente in
-    # app.py (is_pc_grade_resolved) - qui mancava. Se pc_data era gia' risolto, il
-    # fetch generico va saltato, non eseguito e poi ignorato.
-    pc_tier = None if pc_data else fetch_pricecharting_grade_tier_price(
+    # (pc_variant_tier o pc_data, dalla pagina dedicata della variante), questo
+    # fetch successivo interrogava SEMPRE anche la pagina della stampa STANDARD
+    # (game_slug/item_slug, senza variante) e - se trovava un prezzo - lo usava
+    # per SOVRASCRIVERE silenziosamente base_psa_price, buttando via il prezzo
+    # reale della variante gia' trovato. Risultato concreto: una CGC 9.0 1st
+    # Edition Gym Challenge Sabrina #20 (prezzo reale 1st Ed. $229.99) veniva
+    # valutata contro il benchmark della stampa Unlimited ($106.12), producendo
+    # un falso "SCARTARE / OVERPRICED +72.6%" su una carta che al benchmark
+    # corretto era vicina al fair value. Stessa guardia gia' presente in app.py
+    # (is_pc_grade_resolved) - qui mancava. Se un prezzo di variante era gia'
+    # risolto (a qualunque grado), il fetch generico va saltato.
+    pc_tier = None if (pc_variant_tier or pc_data) else fetch_pricecharting_grade_tier_price(
         info.get("game_slug", ""), info.get("item_slug", ""), tier=grade_tier, item_id=item_id
     )
     if pc_tier:

@@ -583,19 +583,79 @@ def build_and_cache_universe(
     return price_df, metadata_map
 
 
-def fetch_pricecharting_variant_grade9(
-    game_slug: str, item_slug: str, variant_type: str = "1st-edition"
+def _variant_candidate_slugs(item_slug: str, variant_type: str) -> List[str]:
+    """Costruisce i possibili slug della pagina PriceCharting dedicata alla
+    variante (es. '<nome>-1st-edition-<numero>' o '1st-edition-<nome>-<numero>') -
+    condiviso tra fetch_pricecharting_variant_grade9 e
+    fetch_pricecharting_variant_grade_tier."""
+    parts = item_slug.rsplit("-", 1)
+    if len(parts) == 2 and parts[1].isdigit():
+        name_part, num_part = parts[0], parts[1]
+        return [f"{name_part}-{variant_type}-{num_part}", f"{variant_type}-{name_part}-{num_part}"]
+    return [f"{item_slug}-{variant_type}", f"{variant_type}-{item_slug}"]
+
+
+def fetch_pricecharting_variant_grade_tier(
+    game_slug: str, item_slug: str, variant_type: str = "1st-edition", tier: str = "grade9"
 ) -> Optional[Tuple[float, float, str]]:
     """
-    Cerca la pagina dedicata della variante su PriceCharting ed estrae l'ultimo prezzo Grade 9 reale.
+    Come fetch_pricecharting_grade_tier_price, ma sulla pagina dedicata della
+    VARIANTE (1st Edition/No Symbol/Shadowless) invece che sulla stampa
+    standard - prova il prezzo REALE per lo specifico grado richiesto.
+
+    TROVATO (richiesta esplicita dell'utente dopo il bug del voto slab che non
+    aggiornava il prezzo per le varianti, 2026-09-29: "deve prendere i dati
+    reali quanto possibile"): PriceCharting espone una colonna reale per grado
+    ANCHE sulla pagina della variante (stesso schema VGPC.chart_data della
+    stampa standard) - prima veniva letta SOLO la colonna Grado 9 ("graded"),
+    sempre, e ogni altro grado veniva stimato algoritmicamente anche quando un
+    dato reale per quel grado specifico era gia' disponibile sulla stessa
+    pagina. fetch_pricecharting_variant_grade9() ora e' un alias di questa
+    funzione con tier="grade9" (comportamento identico a prima per chi la
+    chiama gia').
+
     Restituisce (prezzo_eur, prezzo_usd, url) oppure None se non disponibile.
-    Consulta prima la cache locale data_cache/variant_prices_grade9.json per garantire funzionamento
-    istantaneo e affidabile anche su ambienti cloud (es. Streamlit Cloud / AWS).
+    Consulta prima la cache locale data_cache/variant_prices_grade9.json per
+    garantire funzionamento istantaneo e affidabile anche su ambienti cloud.
     """
     from pathlib import Path
     cache_path = Path(__file__).resolve().parent.parent.parent / "data_cache" / "variant_prices_grade9.json"
-    cache_key = f"{game_slug}:{item_slug}:{variant_type}"
     fx_rate = get_current_eur_usd_rate()
+
+    tier_name, raw_key = _normalize_grade_tier(tier)
+
+    # Mezzi voti interpolati (8.5/7.5): stessa logica di
+    # fetch_pricecharting_grade_tier_price, ma sui due gradi reali vicini
+    # SULLA PAGINA DELLA VARIANTE, non su quella standard.
+    if tier_name == "grade8_5":
+        p8 = fetch_pricecharting_variant_grade_tier(game_slug, item_slug, variant_type, tier="grade8")
+        p9 = fetch_pricecharting_variant_grade_tier(game_slug, item_slug, variant_type, tier="grade9")
+        if p8 and p9:
+            return round((p8[0] + p9[0]) / 2, 2), round((p8[1] + p9[1]) / 2, 2), p8[2]
+        if p8:
+            return round(p8[0] * 1.25, 2), round(p8[1] * 1.25, 2), p8[2]
+        if p9:
+            return round(p9[0] * 0.78, 2), round(p9[1] * 0.78, 2), p9[2]
+        return None
+    if tier_name == "grade7_5":
+        p7 = fetch_pricecharting_variant_grade_tier(game_slug, item_slug, variant_type, tier="grade7")
+        p8 = fetch_pricecharting_variant_grade_tier(game_slug, item_slug, variant_type, tier="grade8")
+        if p7 and p8:
+            return round((p7[0] + p8[0]) / 2, 2), round((p7[1] + p8[1]) / 2, 2), p7[2]
+        if p7:
+            return round(p7[0] * 1.18, 2), round(p7[1] * 1.18, 2), p7[2]
+        if p8:
+            return round(p8[0] * 0.85, 2), round(p8[1] * 0.85, 2), p8[2]
+        return None
+
+    # Grado 9 mantiene ESATTAMENTE la chiave cache originale (senza suffisso
+    # tier) per restare compatibile con data_cache/variant_prices_grade9.json
+    # gia' popolato da fetch_pricecharting_variant_grade9() nelle sessioni
+    # precedenti - solo i tier nuovi (10/9.5/8/7) usano un suffisso dedicato.
+    cache_key = (
+        f"{game_slug}:{item_slug}:{variant_type}" if tier_name == "grade9"
+        else f"{game_slug}:{item_slug}:{variant_type}:{tier_name}"
+    )
 
     # 1. Verifica cache persistente locale
     if cache_path.exists():
@@ -609,18 +669,11 @@ def fetch_pricecharting_variant_grade9(
         except Exception:
             pass
 
-    # 2. Se non presente in cache, tenta scraping in tempo reale
-    candidates = []
-    parts = item_slug.rsplit("-", 1)
-    if len(parts) == 2 and parts[1].isdigit():
-        name_part, num_part = parts[0], parts[1]
-        candidates.append(f"{name_part}-{variant_type}-{num_part}")
-        candidates.append(f"{variant_type}-{name_part}-{num_part}")
-    else:
-        candidates.append(f"{item_slug}-{variant_type}")
-        candidates.append(f"{variant_type}-{item_slug}")
+    if not raw_key:
+        return None
 
-    for slug in candidates:
+    # 2. Se non presente in cache, tenta scraping in tempo reale
+    for slug in _variant_candidate_slugs(item_slug, variant_type):
         url = f"https://www.pricecharting.com/game/{game_slug}/{slug}"
         try:
             resp = requests.get(url, headers=HEADERS, timeout=6)
@@ -628,9 +681,9 @@ def fetch_pricecharting_variant_grade9(
                 m = re.search(r'VGPC\.chart_data\s*=\s*(\{.*?\});', resp.text, re.DOTALL)
                 if m:
                     data = json.loads(m.group(1))
-                    graded = data.get("graded", [])
-                    if graded and len(graded[-1]) >= 2 and graded[-1][1] > 0:
-                        usd = round(graded[-1][1] / 100.0, 2)
+                    pts = data.get(raw_key, [])
+                    if pts and len(pts[-1]) >= 2 and pts[-1][1] > 0:
+                        usd = round(pts[-1][1] / 100.0, 2)
                         eur = round(usd / fx_rate, 2)
                         # Salva in cache per le prossime chiamate
                         try:
@@ -644,6 +697,7 @@ def fetch_pricecharting_variant_grade9(
                                 "variant_type": variant_type,
                                 "game_slug": game_slug,
                                 "item_slug": item_slug,
+                                "tier": tier_name,
                             }
                             cache_path.write_text(json.dumps(cached_data, indent=2), encoding="utf-8")
                         except Exception:
@@ -654,13 +708,45 @@ def fetch_pricecharting_variant_grade9(
     return None
 
 
+def fetch_pricecharting_variant_grade9(
+    game_slug: str, item_slug: str, variant_type: str = "1st-edition"
+) -> Optional[Tuple[float, float, str]]:
+    """Alias storico di fetch_pricecharting_variant_grade_tier(tier="grade9") -
+    mantenuto per compatibilita' con i chiamanti/test esistenti."""
+    return fetch_pricecharting_variant_grade_tier(game_slug, item_slug, variant_type, tier="grade9")
+
+
+def _normalize_grade_tier(tier: str) -> Tuple[str, Optional[str]]:
+    """Mappa un grado (10.0/9.5/9.0/8.5/8.0/7.5/7.0, in qualunque formattazione)
+    a (tier_name interno, chiave raw del JSON VGPC.chart_data di PriceCharting).
+    raw_key=None per i mezzi voti interpolati (8.5/7.5, PriceCharting non li
+    traccia come colonna a se' - vedi interpolazione in
+    fetch_pricecharting_grade_tier_price/fetch_pricecharting_variant_grade_tier).
+    Condivisa tra la pagina standard e quella di variante: stessa identica
+    mappatura, PriceCharting usa lo stesso schema di colonne su entrambe."""
+    normalized_tier = tier.lower().replace(".", "_").replace(" ", "")
+    if "10" in normalized_tier:
+        return "psa10", "manualonly"
+    if "9_5" in normalized_tier or "95" in normalized_tier:
+        return "grade9_5", "boxonly"
+    if "8_5" in normalized_tier or "85" in normalized_tier:
+        return "grade8_5", None
+    if "8" in normalized_tier:
+        return "grade8", "new"
+    if "7_5" in normalized_tier or "75" in normalized_tier:
+        return "grade7_5", None
+    if "7" in normalized_tier:
+        return "grade7", "cib"
+    return "grade9", "graded"
+
+
 def fetch_pricecharting_grade_tier_price(
     game_slug: str, item_slug: str, tier: str = "psa10", item_id: Optional[str] = None
 ) -> Optional[Tuple[float, float, str, str]]:
     """
     Recupera il prezzo reale di un livello di grado specifico (psa10, grade9_5, grade9) da PriceCharting.
     Restituisce (prezzo_eur, prezzo_usd, url, fonte) oppure None se non disponibile.
-    
+
     Priorità di ricerca:
       1. Cache storica locale data_cache/grade_ladder_prices.json
       2. Cache locale dedicata data_cache/pricecharting_tier_cache.json
@@ -672,29 +758,8 @@ def fetch_pricecharting_grade_tier_price(
     tier_cache_file = data_cache_dir / "pricecharting_tier_cache.json"
     fx_rate = get_current_eur_usd_rate()
     url = f"https://www.pricecharting.com/game/{game_slug}/{item_slug}"
-    
-    normalized_tier = tier.lower().replace(".", "_").replace(" ", "")
-    if "10" in normalized_tier:
-        tier_name = "psa10"
-        raw_key = "manualonly"
-    elif "9_5" in normalized_tier or "95" in normalized_tier:
-        tier_name = "grade9_5"
-        raw_key = "boxonly"
-    elif "8_5" in normalized_tier or "85" in normalized_tier:
-        tier_name = "grade8_5"
-        raw_key = None
-    elif "8" in normalized_tier:
-        tier_name = "grade8"
-        raw_key = "new"
-    elif "7_5" in normalized_tier or "75" in normalized_tier:
-        tier_name = "grade7_5"
-        raw_key = None
-    elif "7" in normalized_tier:
-        tier_name = "grade7"
-        raw_key = "cib"
-    else:
-        tier_name = "grade9"
-        raw_key = "graded"
+
+    tier_name, raw_key = _normalize_grade_tier(tier)
 
     # Gestione specifica per mezzi voti interpolati (8.5 e 7.5)
     if tier_name == "grade8_5":

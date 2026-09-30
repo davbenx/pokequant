@@ -36,8 +36,12 @@ def _fair_value(out: str) -> float:
 
 
 @patch("scripts.eval_slab_listing.fetch_pricecharting_grade_tier_price")
+@patch("scripts.eval_slab_listing.fetch_pricecharting_variant_grade_tier")
 @patch("scripts.eval_slab_listing.fetch_pricecharting_variant_grade9")
-def test_variant_price_not_overwritten_by_standard_print_price(mock_variant, mock_tier):
+def test_variant_price_not_overwritten_by_standard_print_price(mock_variant, mock_variant_tier, mock_tier):
+    # Nessun dato reale per il grado ESATTO richiesto sulla pagina variante -
+    # cade sul Grado 9 reale sotto (comportamento testato qui).
+    mock_variant_tier.return_value = None
     # Prezzo reale 1st Edition (quello corretto da usare).
     mock_variant.return_value = (197.97, 229.99, "https://pricecharting.com/fake-1st-ed")
     # Prezzo reale della stampa Unlimited (NON deve vincere sul benchmark).
@@ -58,8 +62,9 @@ def test_variant_price_not_overwritten_by_standard_print_price(mock_variant, moc
 
 
 @patch("scripts.eval_slab_listing.fetch_pricecharting_grade_tier_price")
+@patch("scripts.eval_slab_listing.fetch_pricecharting_variant_grade_tier")
 @patch("scripts.eval_slab_listing.fetch_pricecharting_variant_grade9")
-def test_variant_price_scales_with_selected_grade(mock_variant, mock_tier):
+def test_variant_price_scales_with_selected_grade(mock_variant, mock_variant_tier, mock_tier):
     """BUG TROVATO (l'utente: "modificare il voto slab non modifica i prezzi
     consigliati", 2026-09-29, su Jolteon Holo No Symbol Error): quando la
     variante aveva un prezzo reale (sempre al Grado 9, unico dato che
@@ -69,7 +74,12 @@ def test_variant_price_scales_with_selected_grade(mock_variant, mock_tier):
     fair value piu' BASSO di un 9.0 sulla stessa carta (invertito). Nessuna
     pagina standard deve mai essere interrogata per una variante gia' risolta
     (mock_tier.return_value = None -> se venisse chiamata, il benchmark
-    sparirebbe e il test fallirebbe)."""
+    sparirebbe e il test fallirebbe). mock_variant_tier=None simula "nessun
+    dato reale per il grado esatto sulla pagina variante" per isolare e
+    testare la scalatura di FALLBACK (vedi
+    test_variant_uses_real_tier_data_when_available per il percorso nuovo che
+    trova un dato reale per ogni grado)."""
+    mock_variant_tier.return_value = None
     mock_variant.return_value = (314.61, 365.50, "https://pricecharting.com/fake-no-symbol")
     mock_tier.return_value = None
 
@@ -84,6 +94,29 @@ def test_variant_price_scales_with_selected_grade(mock_variant, mock_tier):
     ordered = [fair_values[g] for g in ["7.0", "8.0", "8.5", "9.0", "9.5", "10.0"]]
     assert ordered == sorted(ordered), f"il fair value deve crescere col voto: {fair_values}"
     assert len(set(ordered)) == 6, f"ogni voto deve dare un fair value diverso: {fair_values}"
+
+
+@patch("scripts.eval_slab_listing.fetch_pricecharting_grade_tier_price")
+@patch("scripts.eval_slab_listing.fetch_pricecharting_variant_grade9")
+@patch("scripts.eval_slab_listing.fetch_pricecharting_variant_grade_tier")
+def test_variant_uses_real_tier_data_when_available(mock_variant_tier, mock_variant_grade9, mock_tier):
+    """Richiesto dall'utente dopo il fix del voto slab: "deve prendere i dati
+    reali quanto possibile". Se PriceCharting ha un dato reale per il grado
+    ESATTO richiesto sulla pagina della variante (non solo Grado 9), quello va
+    usato al posto della stima algoritmica - e il fetch del solo Grado 9 non
+    va nemmeno chiamato, perche' il dato migliore e' gia' disponibile."""
+    mock_variant_tier.return_value = (450.0, 522.5, "https://pricecharting.com/fake-no-symbol-psa10")
+
+    out = _run_and_capture(
+        card_query="jolteon_4", company="CGC", grade="10.0", price_eur=100.0, variant="no_symbol",
+    )
+
+    mock_variant_tier.assert_called_once()
+    _, kwargs = mock_variant_tier.call_args
+    assert kwargs.get("tier") == "psa10"
+    mock_variant_grade9.assert_not_called()
+    mock_tier.assert_not_called()
+    assert "450.00" in out or "522.5" in out
 
 
 def test_grade_95_algorithmic_path_not_double_counted():

@@ -238,5 +238,41 @@
     "variant_type": "1st-edition",
     "game_slug": "pokemon-team-rocket",
     "item_slug": "dark-dragonite-5"
+  },
+  "pokemon-jungle:jolteon-4:no-symbol:grade9_5": {
+    "eur": 346.03,
+    "usd": 402.0,
+    "url": "https://www.pricecharting.com/game/pokemon-jungle/jolteon-no-symbol-4",
+    "variant_type": "no-symbol",
+    "game_slug": "pokemon-jungle",
+    "item_slug": "jolteon-4",
+    "tier": "grade9_5"
+  },
+  "pokemon-jungle:jolteon-4:no-symbol:psa10": {
+    "eur": 2402.54,
+    "usd": 2791.13,
+    "url": "https://www.pricecharting.com/game/pokemon-jungle/jolteon-no-symbol-4",
+    "variant_type": "no-symbol",
+    "game_slug": "pokemon-jungle",
+    "item_slug": "jolteon-4",
+    "tier": "psa10"
+  },
+  "pokemon-jungle:jolteon-4:no-symbol:grade8": {
+    "eur": 133.42,
+    "usd": 155.0,
+    "url": "https://www.pricecharting.com/game/pokemon-jungle/jolteon-no-symbol-4",
+    "variant_type": "no-symbol",
+    "game_slug": "pokemon-jungle",
+    "item_slug": "jolteon-4",
+    "tier": "grade8"
+  },
+  "pokemon-jungle:jolteon-4:no-symbol:grade7": {
+    "eur": 66.6,
+    "usd": 77.37,
+    "url": "https://www.pricecharting.com/game/pokemon-jungle/jolteon-no-symbol-4",
+    "variant_type": "no-symbol",
+    "game_slug": "pokemon-jungle",
+    "item_slug": "jolteon-4",
+    "tier": "grade7"
   }
 }

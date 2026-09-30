@@ -53,6 +53,7 @@ from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSR
 from poke_quant.data.price_fetcher import (
     fetch_pricecharting_cover_image_url,
     fetch_pricecharting_variant_grade9,
+    fetch_pricecharting_variant_grade_tier,
     fetch_pricecharting_grade_tier_price,
     parse_pricecharting_url_or_slug,
     search_metadata_card_by_query,
@@ -514,6 +515,11 @@ def get_singles_backtest_results(mode: str = "production"):
 @st.cache_data(show_spinner=False, ttl=3600)
 def get_cached_pc_variant_grade9(game_slug: str, item_slug: str, variant_key: str):
     return fetch_pricecharting_variant_grade9(game_slug, item_slug, variant_key)
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def get_cached_pc_variant_grade_tier(game_slug: str, item_slug: str, variant_key: str, tier: str):
+    return fetch_pricecharting_variant_grade_tier(game_slug, item_slug, variant_key, tier=tier)
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
@@ -1893,31 +1899,48 @@ def main():
                 if is_special_variant:
                     v_key = variant_to_pricecharting_key(variant_input)
                     if v_key:
-                        pc_data = get_cached_pc_variant_grade9(g_slug, i_slug, v_key)
-                        if pc_data:
-                            pc_eur, pc_usd, pc_url = pc_data
-                            pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": "PriceCharting Variante", "tier": "Grado 9"}
+                        # Richiesta esplicita dell'utente dopo il fix del voto
+                        # slab: "deve prendere i dati reali quanto possibile".
+                        # Prova PRIMA il dato reale PriceCharting per il grado
+                        # ESATTO scelto sulla pagina della variante (non solo
+                        # il Grado 9 di get_cached_pc_variant_grade9 sotto) -
+                        # solo se quella pagina non ha un dato per QUESTO grado
+                        # specifico si cade sul Grado 9 reale + scalatura.
+                        pc_tier_variant = get_cached_pc_variant_grade_tier(g_slug, i_slug, v_key, grade_tier)
+                        if pc_tier_variant:
+                            pc_eur, pc_usd, pc_url = pc_tier_variant
+                            pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": "PriceCharting Variante", "tier": tier_label}
                             base_psa_final = pc_eur
                             base_psa_raw = pc_eur
                             effective_max_edge = round(pc_eur * 1.05, 2)
-                            benchmark_source = f"PriceCharting Variante Reale (${pc_usd:.2f} USD)"
+                            benchmark_source = f"PriceCharting Variante Reale {tier_label} (${pc_usd:.2f} USD)"
                             is_pc_grade_resolved = True
-                            # BUG TROVATO (l'utente: "modificare il voto slab non
-                            # modifica i prezzi consigliati", 2026-09-29):
-                            # get_cached_pc_variant_grade9()/fetch_pricecharting_
-                            # variant_grade9() restituisce SEMPRE il prezzo reale
-                            # al grado 9.0 della variante (chiave "graded" del
-                            # JSON PriceCharting), indipendente dal voto scelto -
-                            # ma is_pc_grade_resolved=True disabilitava la
-                            # scalatura di grado sotto per QUALUNQUE voto,
-                            # lasciando il prezzo bloccato al valore Grado 9 pur
-                            # etichettato come benchmark del grado scelto.
-                            # Verificato: Jolteon #4 No Symbol Error, CGC 9.0 ->
-                            # 283,46€, CGC 10.0 -> 134,65€ (invertito, un voto
-                            # migliore valeva MENO). is_variant_grade9_only
-                            # marca questo caso specifico, usato sotto per capire
-                            # quando il prezzo NON e' davvero abbinato al voto.
-                            is_variant_grade9_only = True
+                        else:
+                            pc_data = get_cached_pc_variant_grade9(g_slug, i_slug, v_key)
+                            if pc_data:
+                                pc_eur, pc_usd, pc_url = pc_data
+                                pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": "PriceCharting Variante", "tier": "Grado 9"}
+                                base_psa_final = pc_eur
+                                base_psa_raw = pc_eur
+                                effective_max_edge = round(pc_eur * 1.05, 2)
+                                benchmark_source = f"PriceCharting Variante Reale (${pc_usd:.2f} USD)"
+                                is_pc_grade_resolved = True
+                                # BUG TROVATO (l'utente: "modificare il voto slab non
+                                # modifica i prezzi consigliati", 2026-09-29):
+                                # get_cached_pc_variant_grade9()/fetch_pricecharting_
+                                # variant_grade9() restituisce SEMPRE il prezzo reale
+                                # al grado 9.0 della variante (chiave "graded" del
+                                # JSON PriceCharting), indipendente dal voto scelto -
+                                # ma is_pc_grade_resolved=True disabilitava la
+                                # scalatura di grado sotto per QUALUNQUE voto,
+                                # lasciando il prezzo bloccato al valore Grado 9 pur
+                                # etichettato come benchmark del grado scelto.
+                                # Verificato: Jolteon #4 No Symbol Error, CGC 9.0 ->
+                                # 283,46€, CGC 10.0 -> 134,65€ (invertito, un voto
+                                # migliore valeva MENO). is_variant_grade9_only
+                                # marca questo caso specifico, usato sotto per capire
+                                # quando il prezzo NON e' davvero abbinato al voto.
+                                is_variant_grade9_only = True
 
                 if not is_pc_grade_resolved:
                     sel_item_id = sel_meta.get("item_id")
