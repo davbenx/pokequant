@@ -34,7 +34,9 @@ from poke_quant.slabs.grading_multipliers import (
     estimate_psa10_from_psa9,
     estimate_grade95_from_psa9,
     get_recommended_grade_for_card,
+    load_grade_ladder_cache,
 )
+from poke_quant.data.liquidity_filter import check_grade_ladder_tier_reliable
 from poke_quant.config import estimate_usa_import_landed_cost, IMPORT_FROM_USA
 from poke_quant.data.price_fetcher import (
     fetch_pricecharting_variant_grade9,
@@ -167,6 +169,21 @@ def evaluate_listing(
         grade_tier = "grade9"
         tier_label = "Grado 9.0"
 
+    # BUCO STRUTTURALE TROVATO (l'utente: "tappa il buco del filtro mercato
+    # sottile", 2026-09-30): compute_thin_market_drift_flags() copre solo il
+    # pannello legacy grade9(PSA9)/raw - un dato reale per un grado specifico
+    # (9.5/10/8/7, da data_cache/grade_ladder_prices.json) non passava da
+    # NESSUN controllo di attendibilita'. Verifica qui la serie storica per
+    # QUESTO grado specifico, indipendentemente da come il benchmark sotto
+    # viene infine risolto - vedi poke_quant.data.liquidity_filter::
+    # check_grade_ladder_tier_reliable per la calibrazione.
+    ladder_flag_reason = None
+    ladder_series = load_grade_ladder_cache().get(item_id, {}).get(grade_tier)
+    if ladder_series:
+        _ladder_ok, _ladder_reason = check_grade_ladder_tier_reliable(ladder_series, tier=grade_tier)
+        if not _ladder_ok:
+            ladder_flag_reason = _ladder_reason
+
     # Se variante speciale, prova PRIMA il dato reale PriceCharting per il
     # grado ESATTO richiesto sulla pagina della variante (richiesta esplicita
     # dell'utente dopo il bug del voto slab non aggiornante il prezzo,
@@ -225,9 +242,29 @@ def evaluate_listing(
     )
     if pc_tier:
         pc_eur, pc_usd, pc_url, pc_source = pc_tier
-        base_psa_price = pc_eur
-        base_max_edge_price = round(pc_eur * 1.05, 2)
-        benchmark_note = f"Dato Reale {pc_source} ({tier_label}: ${pc_usd:.2f} USD)"
+        # BUG TROVATO (indagando "Jolteon PSA 7 no symbol mi dice Fair value
+        # PSA 151.01 EUR, ma su pricecharting e' molto piu' basso",
+        # 2026-09-30): quando NESSUNA pagina PriceCharting dedicata esiste
+        # per la variante scelta (pc_variant_tier e pc_data entrambi None -
+        # tipico se la variante non esiste per quella specifica ristampa),
+        # questo ramo prendeva comunque il prezzo reale della stampa
+        # STANDARD e marcava is_grade_benchmark_resolved=True senza mai
+        # applicare la stima del premio di variante (v_mult restava quello
+        # di default 1.0 dal ramo "else" sopra, gia' eseguito PRIMA che
+        # questo fetch lo sovrascrivesse) - il premio (es. ~1.4x No Symbol)
+        # spariva silenziosamente, pur etichettando il risultato come un
+        # dato reale valido per quella variante. Corretto applicando qui la
+        # stima del moltiplicatore quando la variante e' speciale ma non
+        # abbinata a un dato reale specifico.
+        if v_key and not pc_variant_tier and not pc_data:
+            v_mult, v_desc = get_variant_multiplier(variant, info.get("game_slug"))
+            base_psa_price = round(pc_eur * v_mult, 2)
+            base_max_edge_price = round(pc_eur * v_mult * 1.05, 2)
+            benchmark_note = f"Dato Reale {pc_source} Stampa Standard ({tier_label}: ${pc_usd:.2f} USD) × stima variante {v_mult:.2f}x"
+        else:
+            base_psa_price = pc_eur
+            base_max_edge_price = round(pc_eur * 1.05, 2)
+            benchmark_note = f"Dato Reale {pc_source} ({tier_label}: ${pc_usd:.2f} USD)"
         is_grade_benchmark_resolved = True
     elif pc_data:
         # BUG TROVATO (l'utente: "modificare il voto slab non modifica i prezzi
@@ -364,6 +401,10 @@ def evaluate_listing(
         print(f"   (scripts/flag_unreliable_assets.py): {info.get('data_quality_reason', '')}")
         print("   Il benchmark sopra può essere gonfiato da poche vendite reali al grado.")
         print("   Verificare a mano prima di procedere (es. comp reali recenti sulla stessa carta).")
+    if ladder_flag_reason:
+        print("-" * 76)
+        print(f"🚩 ATTENZIONE MERCATO SOTTILE SU {tier_label.upper()}: {ladder_flag_reason}")
+        print("   Verificare a mano un comp reale recente per questo grado specifico prima di procedere.")
     print("=" * 76 + "\n")
 
 

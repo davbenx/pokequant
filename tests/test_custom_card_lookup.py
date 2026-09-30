@@ -86,3 +86,53 @@ def test_search_metadata_card_by_query():
     # Ignora non-singles
     res4 = search_metadata_card_by_query("booster box", mock_meta)
     assert res4 is None
+
+
+def test_search_ignores_grade_number_substring_false_match():
+    """BUG TROVATO (l'utente: "Jolteon PSA 7 no symbol mi dice Fair value PSA
+    151.01 EUR, ma su pricecharting e' molto piu' basso", 2026-09-30): un voto
+    scritto come numero puro nel campo nome carta (es. "7", parte del form ma
+    l'utente lo scrive comunque nel nome) combaciava per SOTTOSTRINGA con
+    qualunque numero di catalogo che lo contenesse (es. "72", "109") invece
+    che per parola intera - una query per una carta reale ("Charizard #4")
+    con un voto scritto in coda ("charizard 7") poteva quindi far vincere
+    una carta completamente estranea il cui numero contenesse "7" come
+    sottostringa, invece di restare sulla carta corretta o non matchare
+    affatto."""
+    mock_meta = {
+        "charizard_4": {
+            "name": "Charizard #4",
+            "type": "single",
+            "game_slug": "pokemon-base-set",
+            "item_slug": "charizard-4",
+            "era": "vintage",
+        },
+        "unrelated_72": {
+            "name": "Some Unrelated Card #72",
+            "type": "single",
+            "game_slug": "pokemon-unrelated-set",
+            "item_slug": "some-unrelated-card-72",
+            "era": "modern",
+        },
+    }
+    res = search_metadata_card_by_query("charizard 7", mock_meta)
+    assert res is None or res[0] == "charizard_4"
+    assert res is None or res[0] != "unrelated_72"
+
+
+def test_search_strips_grading_company_stopword():
+    """Stessa richiesta: la casa di gradazione (gia' un campo separato nel
+    form) non deve mai contribuire al match o diluire il rapporto di parole
+    combacianti."""
+    mock_meta = {
+        "charizard_4": {
+            "name": "Charizard #4",
+            "type": "single",
+            "game_slug": "pokemon-base-set",
+            "item_slug": "charizard-4",
+            "era": "vintage",
+        },
+    }
+    res = search_metadata_card_by_query("charizard psa", mock_meta)
+    assert res is not None
+    assert res[0] == "charizard_4"

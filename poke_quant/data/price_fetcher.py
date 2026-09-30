@@ -911,6 +911,25 @@ def search_metadata_card_by_query(query: str, metadata: dict) -> Optional[Tuple[
     if not q or len(q) < 2:
         return None
     words = [w for w in re.split(r"[\s\-_#]+", q) if w]
+    # BUG TROVATO (l'utente: "Jolteon PSA 7 no symbol mi dice Fair value PSA
+    # 151.01 EUR, ma su pricecharting e' molto piu' basso", 2026-09-30):
+    # l'utente scrive spesso la casa di gradazione nel campo nome carta
+    # (gia' un selettore separato nel form) - "psa" non matcha mai nessuna
+    # carta ma DILUISCE il denominatore len(words) del rapporto ratio =
+    # matched_words/len(words), facendo scendere sotto la soglia 0.5 la
+    # carta CORRETTA (es. "Jolteon #4 Jungle": matched_words=1/3=0.33,
+    # esclusa) mentre una carta SBAGLIATA il cui game_slug/nome contiene
+    # anche il voto scritto come numero puro (es. "Jolteon δ #7 Delta
+    # Species", dove "7" combacia col proprio numero di set) puo' restare
+    # sopra soglia e vincere per punteggio piu' alto - risultato: query per
+    # una carta con un errore noto (No Symbol Error, solo su Jungle #4)
+    # matcha silenziosamente una ristampa completamente diversa che non ha
+    # quell'errore, con un prezzo base (quindi un "Fair Value") slegato
+    # dalla carta realmente intesa. Le case di gradazione hanno gia' un
+    # selettore dedicato nel form - non sono mai parte del nome di una carta,
+    # si escludono qui PRIMA dello scoring.
+    _GRADING_COMPANY_STOPWORDS = {"psa", "cgc", "bgs", "sgc", "tag", "pca", "graad", "ccc", "aigrading", "ace"}
+    words = [w for w in words if w not in _GRADING_COMPANY_STOPWORDS] or words
     if not words:
         return None
 
@@ -932,7 +951,16 @@ def search_metadata_card_by_query(query: str, metadata: dict) -> Optional[Tuple[
         slug_lower = info.get("item_slug", "").lower()
         game_lower = info.get("game_slug", "").lower()
         full_text = f"{name_lower} {slug_lower} {game_lower}"
-        matched_words = sum(1 for w in words if w in full_text)
+        # BUG TROVATO (stesso caso "Jolteon PSA 7" sopra): "w in full_text"
+        # era un controllo per SOTTOSTRINGA, non per parola intera - un voto
+        # scritto come numero puro (es. "7") combacia con QUALUNQUE numero
+        # di catalogo che lo contiene come sottostringa ("72", "109", ecc.),
+        # facendo vincere carte completamente estranee sulla carta realmente
+        # cercata. Tokenizzando anche full_text e confrontando per parola
+        # intera, "7" combacia solo con un token "7" vero (es. "#7"), non con
+        # "72"/"109".
+        full_text_words = set(re.split(r"[^a-z0-9]+", full_text))
+        matched_words = sum(1 for w in words if w in full_text_words)
         if matched_words > 0:
             ratio = matched_words / len(words)
             if ratio >= 0.5:

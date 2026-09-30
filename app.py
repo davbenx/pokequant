@@ -49,7 +49,9 @@ from poke_quant.engine.strategies.time_series_momentum import TimeSeriesMomentum
 from poke_quant.engine.strategies.scarcity_value_factor import ScarcityValueFactorStrategy
 from poke_quant.engine.position_sizing import age_weight, inverse_vol_split
 from scripts.generate_monthly_signal import compute_signal_rows
-from poke_quant.data.liquidity_filter import liquid_sealed_ids, MAX_PRICE_TO_MSRP_RATIO, liquid_singles_ids
+from poke_quant.data.liquidity_filter import (
+    liquid_sealed_ids, MAX_PRICE_TO_MSRP_RATIO, liquid_singles_ids, check_grade_ladder_tier_reliable,
+)
 from poke_quant.data.price_fetcher import (
     fetch_pricecharting_cover_image_url,
     fetch_pricecharting_variant_grade9,
@@ -76,6 +78,7 @@ from poke_quant.slabs.grading_multipliers import (
     get_recommended_grade_targets,
     get_card_pop_pressure,
     get_card_strategy_and_pop_details,
+    load_grade_ladder_cache,
 )
 
 # Soglie DAC7 (direttiva UE 2021/514): sopra queste soglie annue le piattaforme
@@ -1673,7 +1676,7 @@ def main():
                         "Nome Carta Personalizzata",
                         value="",
                         placeholder="Es. Charizard Holo Base Set, Umbreon VMAX, Lugia V...",
-                        help="Scrivi il nome della carta. Se è presente nel database PokeQuant o inserisci il link PriceCharting, i dati vengono completati in automatico."
+                        help="Scrivi SOLO il nome della carta (senza casa di gradazione/voto/variante, già selezionabili nei campi qui accanto: includerli qui può far riconoscere una ristampa sbagliata). Se è presente nel database PokeQuant o inserisci il link PriceCharting, i dati vengono completati in automatico."
                     )
                     chosen_option = "✏️ Personalizzata"
                 else:
@@ -1884,6 +1887,7 @@ def main():
             benchmark_source = ""
             is_pc_grade_resolved = False
             is_variant_grade9_only = False
+            is_variant_price_matched = False
             pc_live_info = None
 
             # Priorità 1: Se l'utente ha inserito un override manuale > 0.0
@@ -1915,6 +1919,7 @@ def main():
                             effective_max_edge = round(pc_eur * 1.05, 2)
                             benchmark_source = f"PriceCharting Variante Reale {tier_label} (${pc_usd:.2f} USD)"
                             is_pc_grade_resolved = True
+                            is_variant_price_matched = True
                         else:
                             pc_data = get_cached_pc_variant_grade9(g_slug, i_slug, v_key)
                             if pc_data:
@@ -1925,6 +1930,7 @@ def main():
                                 effective_max_edge = round(pc_eur * 1.05, 2)
                                 benchmark_source = f"PriceCharting Variante Reale (${pc_usd:.2f} USD)"
                                 is_pc_grade_resolved = True
+                                is_variant_price_matched = True
                                 # BUG TROVATO (l'utente: "modificare il voto slab non
                                 # modifica i prezzi consigliati", 2026-09-29):
                                 # get_cached_pc_variant_grade9()/fetch_pricecharting_
@@ -1947,11 +1953,40 @@ def main():
                     pc_tier = fetch_pricecharting_grade_tier_price(g_slug, i_slug, tier=grade_tier, item_id=sel_item_id)
                     if pc_tier:
                         pc_eur, pc_usd, pc_url, pc_source = pc_tier
-                        base_psa_final = pc_eur
                         base_psa_raw = pc_eur
-                        effective_max_edge = round(pc_eur * 1.05, 2)
                         pc_live_info = {"eur": pc_eur, "usd": pc_usd, "url": pc_url, "source": pc_source, "tier": tier_label}
-                        benchmark_source = f"PriceCharting Reale {tier_label} (${pc_usd:.2f} USD)"
+                        if is_special_variant:
+                            # BUG TROVATO (indagando "Jolteon PSA 7 no symbol
+                            # mi dice Fair value... molto piu' basso [di
+                            # PriceCharting]", 2026-09-30): quando NESSUNA
+                            # pagina PriceCharting dedicata esiste per la
+                            # variante scelta (es. "No Symbol Error" su una
+                            # stampa che non ha quell'errore, tipico se
+                            # l'utente seleziona la carta sbagliata tra piu'
+                            # ristampe omonime), questo ramo prendeva il
+                            # prezzo reale della stampa STANDARD e lo
+                            # marcava is_pc_grade_resolved=True - il blocco
+                            # sotto che applica la stima del premio di
+                            # variante (v_mult) veniva quindi SALTATO per
+                            # costruzione (si attiva solo se
+                            # "not is_pc_grade_resolved"), buttando via
+                            # silenziosamente l'intero premio della variante
+                            # (es. ~1.4x No Symbol) pur etichettando il
+                            # risultato come dato reale della variante.
+                            # Applicato qui invece esplicitamente: prezzo
+                            # reale della stampa standard, MA moltiplicato
+                            # per la stima del premio (get_variant_multiplier),
+                            # etichettato chiaramente come stima su base reale
+                            # (non come dato reale della variante stessa -
+                            # is_variant_price_matched resta False).
+                            v_mult, v_desc = get_variant_multiplier(variant_input, sel_meta.get("game_slug"))
+                            base_psa_final = round(pc_eur * v_mult, 2)
+                            effective_max_edge = round(pc_eur * v_mult * 1.05, 2)
+                            benchmark_source = f"PriceCharting Reale Stampa Standard {tier_label} (${pc_usd:.2f} USD) × stima variante {v_mult:.2f}x"
+                        else:
+                            base_psa_final = pc_eur
+                            effective_max_edge = round(pc_eur * 1.05, 2)
+                            benchmark_source = f"PriceCharting Reale {tier_label} (${pc_usd:.2f} USD)"
                         is_pc_grade_resolved = True
 
             # Priorità 3: Se non risolto con PriceCharting tier ma abbiamo il prezzo del DB / metadati
@@ -1998,7 +2033,7 @@ def main():
                     v_mult, v_desc = get_variant_multiplier(variant_input, sel_meta.get("game_slug"))
                     base_psa_final = round(base_psa_raw * v_mult, 2)
                     effective_max_edge = round(base_max_edge * v_mult, 2)
-                elif is_special_variant:
+                elif is_special_variant and is_variant_price_matched:
                     # BUG TROVATO (trovato indagando il bug del voto slab, stessa
                     # richiesta dell'utente): quando la variante aveva un prezzo
                     # reale (is_pc_grade_resolved), v_desc cadeva sempre nel ramo
@@ -2008,6 +2043,14 @@ def main():
                     # suo prezzo veniva da un dato reale invece che da una stima.
                     v_mult = 1.0
                     v_desc = f"{variant_input.split('(')[0].strip()} — dato reale PriceCharting"
+                elif is_special_variant:
+                    # Risolto sopra nel fallback "prezzo reale stampa standard ×
+                    # stima variante" (is_pc_grade_resolved=True ma
+                    # is_variant_price_matched=False) - v_mult/v_desc/
+                    # base_psa_final gia' impostati li' col premio applicato,
+                    # non ricalcolare qui (sovrascriverebbe v_mult=1.0 perdendo
+                    # il premio gia' incluso nel prezzo).
+                    pass
                 else:
                     v_mult = 1.0
                     v_desc = "Versione Standard / Unlimited"
@@ -2066,6 +2109,20 @@ def main():
                     mode=singles_mode if 'singles_mode' in locals() else "production",
                 )
                 pop_pressure = strat_pop_details.get("pop_pressure") or get_card_pop_pressure(target_item_id, era_final)
+
+                # BUCO STRUTTURALE TROVATO (l'utente: "tappa il buco del
+                # filtro mercato sottile", 2026-09-30): nessun controllo di
+                # attendibilita' copriva un dato reale per un grado specifico
+                # (9.5/10/8/7, da data_cache/grade_ladder_prices.json) - solo
+                # il pannello legacy grade9(PSA9)/raw era coperto. Verifica
+                # qui la serie storica per QUESTO grado specifico.
+                ladder_flag_reason = None
+                if target_item_id:
+                    ladder_series = load_grade_ladder_cache().get(target_item_id, {}).get(grade_tier)
+                    if ladder_series:
+                        _ladder_ok, _ladder_reason = check_grade_ladder_tier_reliable(ladder_series, tier=grade_tier)
+                        if not _ladder_ok:
+                            ladder_flag_reason = _ladder_reason
 
                 fair_value_calib, sniper_ceiling_calib, adj = adjust_price_for_grading(
                     base_psa_price_eur=base_psa_final,
@@ -2147,6 +2204,7 @@ def main():
                     "v_color": v_color,
                     "adj": adj,
                     "matched_db_info": matched_db_info,
+                    "ladder_flag_reason": ladder_flag_reason,
                 }
 
         # Mostra i risultati se calcolati
@@ -2162,6 +2220,12 @@ def main():
                         f"Il benchmark sopra può essere gonfiato da poche vendite reali al grado — "
                         f"verificare a mano prima di procedere."
                     )
+
+            if res.get("ladder_flag_reason"):
+                st.warning(
+                    f"🚩 **Mercato sottile su questo grado specifico**: {res['ladder_flag_reason']} "
+                    f"Verificare a mano un comp reale recente per questo grado prima di procedere."
+                )
 
             pc_info = res.get("pc_live_info")
             if pc_info and "live" in pc_info.get("source", "").lower():

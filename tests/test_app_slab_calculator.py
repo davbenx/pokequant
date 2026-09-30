@@ -144,3 +144,39 @@ def test_variant_with_real_grade9_price_scales_with_selected_grade():
     ordered = [fair_values[g] for g in ["7.0 Near Mint", "8.5 NM-Mint+", "9.0 Mint", "9.5 Gem Mint", "10.0 Gem Mint"]]
     assert ordered == sorted(ordered), f"il fair value deve crescere col voto: {fair_values}"
     assert len(set(ordered)) == len(ordered), f"ogni voto deve dare un fair value diverso: {fair_values}"
+
+
+def test_grade_ladder_thin_market_flag_shows_warning():
+    """BUCO STRUTTURALE TROVATO (l'utente: "tappa il buco del filtro mercato
+    sottile", 2026-09-30): un dato reale per un grado specifico (9.5/10/8/7,
+    da data_cache/grade_ladder_prices.json) non passava da nessun controllo
+    di attendibilita' - solo il pannello legacy grade9(PSA9)/raw era
+    coperto. Questo test verifica che una carta gia' flaggata da
+    check_grade_ladder_tier_reliable (Colress #135, psa10 - salto 5.1x
+    seguito da 2 mesi fermo, vedi scripts/grade_ladder_thin_market_test.py)
+    mostri un avviso live nel calcolatore."""
+    at = AppTest.from_file(APP_PATH)
+    at.run(timeout=60)
+    assert not at.exception
+
+    at.radio[0].set_value("✏️ Carta Personalizzata / Inserimento Libero (o Link PriceCharting)")
+    at.run(timeout=60)
+    assert not at.exception
+
+    at.text_input[0].set_value("Colress Plasma Storm")
+    at.selectbox[0].set_value("CGC")
+    at.selectbox[1].set_value("10.0 Gem Mint")
+    at.number_input[1].set_value(50.0)
+    at.run(timeout=60)
+    assert not at.exception
+
+    at.button[0].click()
+    at.run(timeout=60)
+    assert not at.exception
+
+    res = at.session_state.get("slab_eval_res")
+    assert res is not None
+    if not res.get("ladder_flag_reason"):
+        pytest.skip("Colress #135 non e' piu' flaggato a psa10 nella cache attuale (ricalibrazione mensile)")
+    warnings_text = " ".join(w.value for w in at.warning)
+    assert "mercato sottile su questo grado specifico" in warnings_text.lower()

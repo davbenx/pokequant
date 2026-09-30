@@ -7,6 +7,7 @@ import pandas as pd
 from poke_quant.data.liquidity_filter import (
     compute_reliability_flags, filter_reliable, is_liquid_sealed, liquid_sealed_ids,
     compute_grade_raw_ratio_flags, liquid_singles_ids, compute_thin_market_drift_flags,
+    check_grade_ladder_tier_reliable, compute_grade_ladder_reliability_flags,
 )
 
 
@@ -396,3 +397,87 @@ def test_thin_market_drift_flags_ignores_sealed_items():
     metadata, grade9, raw = _thin_drift_universe()
     flags = compute_thin_market_drift_flags(metadata, grade9, raw)
     assert "a_sealed_box" not in flags
+
+
+# --- compute_grade_ladder_reliability_flags: buco strutturale trovato
+# dall'utente ("tappa il buco del filtro mercato sottile") dopo aver
+# segnalato una CGC 9.5 con prezzo Grado 9.5 fermo da 2 mesi dopo un salto
+# recente - dato che compute_thin_market_drift_flags sopra non copre affatto,
+# perche' vive in un file diverso (data_cache/grade_ladder_prices.json, per
+# grado, non nel pannello legacy grade9/raw). Caso reale: Charizard &
+# Braixen-GX #212 [Cosmic Eclipse], grade9_5: 92,21(mag) 207,06(giu, +124%)
+# 193,74(lug) 203,55(ago) 203,55(set, identico) - verificato flaggato con
+# scripts/grade_ladder_thin_market_test.py.
+
+def test_grade_ladder_tier_flags_frozen_price_after_recent_jump():
+    series = {
+        "2026-01-01": 10.0, "2026-02-01": 10.0, "2026-03-01": 10.0, "2026-04-01": 10.0,
+        "2026-05-01": 10.0, "2026-06-01": 25.0, "2026-07-01": 25.0,
+    }
+    ok, reason = check_grade_ladder_tier_reliable(series, tier="grade9_5")
+    assert ok is False
+    assert "fermo" in reason and "grade9_5" in reason
+
+
+def test_grade_ladder_tier_stable_series_not_flagged():
+    series = {f"2026-{m:02d}-01": 10.0 for m in range(1, 8)}
+    ok, reason = check_grade_ladder_tier_reliable(series, tier="grade9_5")
+    assert ok is True
+
+
+def test_grade_ladder_tier_jump_confirmed_by_later_sales_not_flagged():
+    """Il prezzo sale ma le vendite REALI continuano ad arrivare (nessun
+    valore ripetuto) - un salto reale confermato, non un artefatto sottile."""
+    series = {
+        "2026-01-01": 10.0, "2026-02-01": 10.0, "2026-03-01": 10.0, "2026-04-01": 10.0,
+        "2026-05-01": 25.0, "2026-06-01": 26.0, "2026-07-01": 27.0,
+    }
+    ok, reason = check_grade_ladder_tier_reliable(series, tier="grade9_5")
+    assert ok is True
+
+
+def test_grade_ladder_tier_frozen_without_jump_not_flagged():
+    """Fermo da mesi ma SENZA nessun salto sospetto - comunissimo su questi
+    tier (23-34% dell'universo), non deve essere flaggato da solo."""
+    series = {
+        "2026-01-01": 10.0, "2026-02-01": 10.5, "2026-03-01": 10.2, "2026-04-01": 10.8,
+        "2026-05-01": 10.3, "2026-06-01": 10.6, "2026-07-01": 10.6,
+    }
+    ok, reason = check_grade_ladder_tier_reliable(series, tier="grade9_5")
+    assert ok is True
+
+
+def test_grade_ladder_tier_unchecked_tier_never_flagged():
+    """grade9 non e' tra i tier controllati qui (gia' coperto da
+    compute_thin_market_drift_flags sul pannello legacy) - nessun giudizio."""
+    series = {
+        "2026-01-01": 10.0, "2026-02-01": 10.0, "2026-03-01": 10.0, "2026-04-01": 10.0,
+        "2026-05-01": 10.0, "2026-06-01": 25.0, "2026-07-01": 25.0,
+    }
+    ok, reason = check_grade_ladder_tier_reliable(series, tier="grade9")
+    assert ok is True
+
+
+def test_grade_ladder_tier_too_short_history_not_flagged():
+    series = {"2026-06-01": 10.0, "2026-07-01": 25.0}
+    ok, reason = check_grade_ladder_tier_reliable(series, tier="grade9_5")
+    assert ok is True
+
+
+def test_compute_grade_ladder_reliability_flags_keys_by_item_and_tier():
+    grade_ladder_data = {
+        "flagged_card": {
+            "grade9_5": {
+                "2026-01-01": 10.0, "2026-02-01": 10.0, "2026-03-01": 10.0, "2026-04-01": 10.0,
+                "2026-05-01": 10.0, "2026-06-01": 25.0, "2026-07-01": 25.0,
+            },
+            "grade8": {f"2026-{m:02d}-01": 5.0 for m in range(1, 8)},
+        },
+        "clean_card": {
+            "grade9_5": {f"2026-{m:02d}-01": 8.0 for m in range(1, 8)},
+        },
+    }
+    flags = compute_grade_ladder_reliability_flags(grade_ladder_data)
+    assert "flagged_card:grade9_5" in flags
+    assert "flagged_card:grade8" not in flags
+    assert "clean_card:grade9_5" not in flags

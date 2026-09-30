@@ -15,7 +15,7 @@ silenziosamente i risultati di una strategia.
 """
 
 from __future__ import annotations
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional, Iterable
 import pandas as pd
 
 DEFAULT_MAX_MONTHLY_JUMP = 2.0   # +-200% in un mese singolo
@@ -416,4 +416,143 @@ def compute_thin_market_drift_flags(
                 f"({ratio_past:.2f} -> {ratio_now:.2f}) - possibile mercato sottile sul grado, "
                 f"il raw non conferma la stessa velocita'",
             )
+    return flags
+
+
+# BUCO STRUTTURALE TROVATO (l'utente, dopo aver segnalato "mercato sottile" su
+# una CGC 9.5 valutata col Valutatore Slab: "tappa il buco del filtro mercato
+# sottile"): compute_thin_market_drift_flags() sopra guarda SOLO il pannello
+# grade9(PSA9)/raw - ma quando l'evaluator trova un dato REALE per un grado
+# specifico (9.5/10/8/7) sulla pagina PriceCharting dedicata, quel numero non
+# passa da NESSUN controllo di attendibilita', perche' vive in un file diverso
+# (data_cache/grade_ladder_prices.json, storico mensile per tier - vedi Fase 2
+# di questa sessione) mai collegato a questo modulo. Caso reale che ha esposto
+# il buco: Charizard & Braixen-GX #212 [Cosmic Eclipse], tier grade9_5 ->
+# 92,21€(mag) 207,06€(giu, +124% in un mese) 193,74€(lug) 203,55€(ago)
+# 203,55€(set, IDENTICO al mese prima - nessuna vendita reale registrata da 2
+# mesi). Nessuno dei due controlli sopra l'avrebbe preso: il salto (+124%) e'
+# sotto la soglia del 200% di compute_reliability_flags, e il rapporto vs raw
+# nella finestra a 6 mesi (1,90x) e' sotto la soglia 3,0x del check sopra (lo
+# stesso problema di finestra "punto fisso" gia' diagnosticato per Azumarill).
+#
+# CALIBRAZIONE (PRIMA di guardare l'effetto sul caso che ha motivato il
+# controllo, stesso principio delle soglie sopra): ne' "salto massimo in una
+# finestra di 6 mesi" ne' "run di valori identici negli ultimi 6 mesi" da soli
+# sono segnali utilizzabili su queste serie per-tier - sono strutturalmente
+# molto piu' rumorose del pannello grade9/raw (mediana del salto singolo
+# mensile gia' 1,6-2,0x su tutto l'universo, altamente COMUNE restare fermi 2+
+# mesi: 23-34% dell'universo a seconda del tier, per la semplice scarsita' di
+# vendite su gradi alti). Il segnale specifico e riproducibile e' la
+# COMBINAZIONE: prezzo FERMO (>=2 mesi identico) DOPO un salto recente - non
+# ancora confermato ne' smentito da una vendita reale successiva. Calcolato
+# su tutto l'universo (script vedi
+# scripts/grade_ladder_thin_market_test.py): tra le carte gia' ferme da 2+
+# mesi, il salto massimo nella finestra e' quasi sempre modesto (mediana
+# ~0,99-1,3x - la maggioranza dei "fermi" non e' affatto sospetta) ma con una
+# coda distinta. Soglie adottate al 90° percentile PER TIER, con
+# interpolazione lineare standard (np.percentile, non un rango grezzo
+# sull'indice troncato - la prima versione di questa calibrazione usava un
+# metodo piu' grezzo e mancava Charizard&Braixen per un soffio, 2,25x vs il
+# suo 2,246x: corretto usando il percentile interpolato standard, non
+# abbassando la soglia apposta per farlo rientrare) - non al 97,5° usato
+# altrove: qui la coda e' meno estrema e un taglio piu' severo lascerebbe
+# passare la classe di caso che ha motivato il controllo, scelta dichiarata
+# esplicitamente, non nascosta:
+#   grade7:   p90 = 1,95x -> soglia 1,95x
+#   grade8:   p90 = 1,90x -> soglia 1,90x
+#   grade9_5: p90 = 2,23x -> soglia 2,23x (Charizard&Braixen: run=2, salto
+#             2,246x - appena sopra, non un caso forzato)
+#   psa10:    p90 = 4,48x -> soglia 4,48x (i grail a PSA 10 sono
+#             strutturalmente piu' volatili anche legittimamente - popolazioni
+#             minuscole, verificato che la coda e' molto piu' estesa)
+# Il Grado 9 resta escluso qui (gia' coperto da compute_thin_market_drift_flags
+# sopra sul pannello legacy grade9/raw).
+GRADE_LADDER_TIERS_CHECKED: Tuple[str, ...] = ("grade7", "grade8", "grade9_5", "psa10")
+GRADE_LADDER_FROZEN_JUMP_CUTOFF: Dict[str, float] = {
+    "grade7": 1.95,
+    "grade8": 1.90,
+    "grade9_5": 2.23,
+    "psa10": 4.48,
+}
+GRADE_LADDER_FROZEN_MIN_MONTHS = 2
+GRADE_LADDER_JUMP_WINDOW_MONTHS = 6
+
+
+def check_grade_ladder_tier_reliable(
+    series: Dict[str, float],
+    tier: str,
+    frozen_min_months: int = GRADE_LADDER_FROZEN_MIN_MONTHS,
+    jump_window_months: int = GRADE_LADDER_JUMP_WINDOW_MONTHS,
+    cutoffs: Optional[Dict[str, float]] = None,
+) -> Tuple[bool, str]:
+    """Nucleo puro (testabile su una singola serie) del controllo "fermo dopo
+    un salto" per una serie storica per-tier di data_cache/grade_ladder_prices.json
+    (es. item['grade9_5']: {"2026-01-01": 82.25, ...}). Vedi il blocco di
+    commenti sopra per la calibrazione. Ritorna (is_reliable, reason)."""
+    cutoffs = cutoffs if cutoffs is not None else GRADE_LADDER_FROZEN_JUMP_CUTOFF
+    cutoff = cutoffs.get(tier)
+    if cutoff is None or not series:
+        return True, ""
+
+    dates = sorted(series.keys())
+    vals = [float(series[d]) for d in dates]
+    if len(vals) < jump_window_months + 1:
+        return True, ""
+
+    recent = vals[-(jump_window_months + 1):]
+
+    # Lunghezza del run finale di valori identici (nessuna vendita reale
+    # registrata da N mesi - il valore mostrato e' l'ultimo noto, non uno
+    # aggiornato).
+    run = 1
+    i = len(recent) - 1
+    while i > 0 and recent[i] == recent[i - 1]:
+        run += 1
+        i -= 1
+    if run < frozen_min_months:
+        return True, ""
+
+    # Massimo salto mensile in QUALUNQUE punto della finestra recente (non
+    # solo appena-prima-del-fermo, che sottostimerebbe un salto avvenuto
+    # all'inizio della finestra - stesso errore gia' diagnosticato e corretto
+    # altrove in questa sessione per il check grade9/raw).
+    max_jump = 1.0
+    for j in range(1, len(recent)):
+        if recent[j - 1] > 0:
+            max_jump = max(max_jump, recent[j] / recent[j - 1], recent[j - 1] / recent[j])
+
+    if max_jump >= cutoff:
+        return False, (
+            f"prezzo {tier} fermo da {run} mesi (nessuna vendita reale registrata) dopo un "
+            f"salto di {max_jump:.1f}x nella finestra di {jump_window_months} mesi - possibile "
+            f"mercato sottile su questo grado specifico, non ancora confermato ne' smentito"
+        )
+    return True, ""
+
+
+def compute_grade_ladder_reliability_flags(
+    grade_ladder_data: Dict[str, Dict[str, Dict[str, float]]],
+    tiers: Iterable[str] = GRADE_LADDER_TIERS_CHECKED,
+    frozen_min_months: int = GRADE_LADDER_FROZEN_MIN_MONTHS,
+    jump_window_months: int = GRADE_LADDER_JUMP_WINDOW_MONTHS,
+    cutoffs: Optional[Dict[str, float]] = None,
+) -> Dict[str, Tuple[bool, str]]:
+    """Applica check_grade_ladder_tier_reliable() a tutto il contenuto di
+    data_cache/grade_ladder_prices.json. A differenza degli altri filtri in
+    questo modulo, la chiave qui e' "{item_id}:{tier}" (non solo item_id) -
+    questo e' un segnale PER GRADO, non per carta: una carta puo' essere
+    perfettamente affidabile a Grado 8 e sottile a PSA 10. Ritorna SOLO le
+    combinazioni non affidabili (stesso pattern degli altri check sopra)."""
+    flags: Dict[str, Tuple[bool, str]] = {}
+    for item_id, tier_series in grade_ladder_data.items():
+        for tier in tiers:
+            series = tier_series.get(tier)
+            if not series:
+                continue
+            ok, reason = check_grade_ladder_tier_reliable(
+                series, tier, frozen_min_months=frozen_min_months,
+                jump_window_months=jump_window_months, cutoffs=cutoffs,
+            )
+            if not ok:
+                flags[f"{item_id}:{tier}"] = (ok, reason)
     return flags

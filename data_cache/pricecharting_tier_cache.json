@@ -43,5 +43,23 @@
     "game_slug": "pokemon-evolving-skies",
     "item_slug": "umbreon-vmax-215",
     "date": "2026-09-29"
+  },
+  "pokemon-rising-rivals:jolteon-26:grade7": {
+    "eur": 9.9,
+    "usd": 11.5,
+    "url": "https://www.pricecharting.com/game/pokemon-rising-rivals/jolteon-26",
+    "tier": "grade7",
+    "game_slug": "pokemon-rising-rivals",
+    "item_slug": "jolteon-26",
+    "date": "2026-09-30"
+  },
+  "pokemon-skyridge:jolteon-H12:grade7": {
+    "eur": 430.39,
+    "usd": 500.0,
+    "url": "https://www.pricecharting.com/game/pokemon-skyridge/jolteon-H12",
+    "tier": "grade7",
+    "game_slug": "pokemon-skyridge",
+    "item_slug": "jolteon-H12",
+    "date": "2026-09-30"
   }
 }
