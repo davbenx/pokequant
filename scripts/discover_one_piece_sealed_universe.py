@@ -67,8 +67,21 @@ def fetch_one_piece_en_game_slugs() -> list:
     """Ri-scarica dal vivo la categoria one-piece-cards di PriceCharting ed
     estrae i console (game_slug) `one-piece-<set>`, escludendo esplicitamente
     `one-piece-japanese-*` (mercato mai validato, vedi docstring del modulo)."""
-    resp = requests.get(CATEGORY_URL, headers=HEADERS, timeout=20)
-    resp.raise_for_status()
+    # BUG TROVATO (workflow mensile GitHub Action fallito, 2026-10-02, run
+    # 37048712828): stesso pattern gia' corretto in discover_sealed_universe.py
+    # e discover_pokemon_chinese_sealed_universe.py il giorno prima (run
+    # 37025114175), ma questa chiamata era rimasta sprotetta - un 429/500
+    # transitorio da PriceCharting (confermato nella run fallita: 143 "429
+    # Client Error" nella stessa run, su questa stessa categoria PriceCharting
+    # appena un attimo prima nel caso Pokemon Cinese) avrebbe fatto crashare
+    # questo script con un traceback non gestito invece di fallire in modo
+    # pulito come i suoi due script fratelli.
+    try:
+        resp = requests.get(CATEGORY_URL, headers=HEADERS, timeout=20)
+        resp.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"[ERRORE] Categoria PriceCharting non raggiungibile o in errore ({e}) - nessuna scoperta questo mese, riprovare al prossimo run.")
+        sys.exit(1)
     all_slugs = set(re.findall(r'href="/console/(one-piece-[a-z0-9-]+)"', resp.text))
     return sorted(s for s in all_slugs if not s.startswith("one-piece-japanese-"))
 
