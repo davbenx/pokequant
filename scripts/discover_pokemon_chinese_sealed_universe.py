@@ -65,8 +65,22 @@ def fetch_chinese_game_slugs() -> list:
     scoperta strutturale usato per il resto del progetto (mai un elenco
     congelato), cosi' un nuovo set cinese uscito dopo oggi viene visto dal
     prossimo run senza bisogno di aggiornare questo file a mano."""
-    resp = requests.get(CATEGORY_URL, headers=HEADERS, timeout=20)
-    resp.raise_for_status()
+    # BUG TROVATO (workflow mensile GitHub Action fallito, 2026-10-02, run
+    # 37025114175): questa chiamata non era protetta da try/except - la
+    # run fallita mostrava decine di 429 "Too Many Requests" da
+    # PriceCharting su altri step nella STESSA run (rebuild_prices_with_real_fx.py,
+    # che tollera i 429 per singolo item e continua) - questa pagina
+    # categoria, colpita dallo stesso rate-limit, crashava invece con un
+    # traceback non gestito prima di stampare qualunque output. Stesso
+    # fix di discover_sealed_universe.py: catturare, loggare, uscire con
+    # codice non-zero SENZA crash (il chiamante lo tratta comunque come
+    # "step fallito" per design, vedi run_monthly_production_signal.py).
+    try:
+        resp = requests.get(CATEGORY_URL, headers=HEADERS, timeout=20)
+        resp.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"[ERRORE] Categoria PriceCharting non raggiungibile o in errore ({e}) - nessuna scoperta questo mese, riprovare al prossimo run.")
+        sys.exit(1)
     slugs = sorted(set(re.findall(r'href="/console/(pokemon-chinese-[a-z0-9-]+)"', resp.text)))
     return slugs
 

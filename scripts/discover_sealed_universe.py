@@ -50,8 +50,24 @@ def main():
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    sets_resp = requests.get("https://api.pokemontcg.io/v2/sets", headers=HEADERS, timeout=20)
-    sets_resp.raise_for_status()
+    # BUG TROVATO (workflow mensile GitHub Action fallito, 2026-10-02, run
+    # 37025114175): questa chiamata non era protetta da try/except - un
+    # singolo errore upstream (pokemontcg.io ha risposto 500, riprodotto
+    # dal vivo lo stesso giorno investigando il fallimento) crashava con
+    # un traceback non gestito PRIMA di stampare qualunque output,
+    # facendo fallire l'intero step con "codice 1" senza un messaggio
+    # chiaro. Lo script e' idempotente (nessuna modifica se non trova
+    # nulla di nuovo) - un fallimento upstream transitorio va riprovato
+    # al mese prossimo, non deve generare un traceback oscuro. L'uscita
+    # resta non-zero (il chiamante run_monthly_production_signal.py la
+    # usa deliberatamente per marcare la CI mensile come rossa, decisione
+    # presa in precedenza in questa sessione), solo senza crash.
+    try:
+        sets_resp = requests.get("https://api.pokemontcg.io/v2/sets", headers=HEADERS, timeout=20)
+        sets_resp.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"[ERRORE] pokemontcg.io non raggiungibile o in errore ({e}) - nessuna scoperta questo mese, riprovare al prossimo run.")
+        sys.exit(1)
     all_sets = sets_resp.json().get("data", [])
     print(f"Set totali in anagrafica: {len(all_sets)}")
 
