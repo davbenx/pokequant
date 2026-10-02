@@ -324,8 +324,25 @@ def evaluate_listing(
         is_grade_benchmark_price=is_grade_benchmark_resolved,
     )
 
-    # Scala il tetto massimo del modello col coefficiente dello sniper
-    calibrated_max_edge_allin = round(base_max_edge_price * adj.sniper_ceiling_factor, 2)
+    # BUG TROVATO verificando il fix PSA_BLEND_PREMIUM_FACTOR (l'utente, 2026-10-02):
+    # questa riga sovrascriveva SEMPRE calibrated_max_edge_allin con una
+    # formula parallela (base_max_edge_price * adj.sniper_ceiling_factor),
+    # ignorando sniper_ceiling_raw gia' calcolato correttamente sopra da
+    # adjust_price_for_grading() - comprese correzioni come PSA_BLEND_
+    # PREMIUM_FACTOR, applicate SOLO dentro quella funzione. Risultato
+    # verificato: Fair Value si aggiornava (92,96€ per Dragonite-EX #106
+    # PSA 9), ma "Tetto Max Edge" e il verdetto finale no (restavano a
+    # 90,37€, il valore pre-fix) - la stessa carta mostrava un fair value
+    # corretto ma una soglia di acquisto/verdetto ancora sbagliati. app.py
+    # (la dashboard) non aveva questo problema: sovrascrive
+    # sniper_ceiling_calib con la stessa formula parallela SOLO quando
+    # `not is_price_grade_matched` (nessun dato reale per il grado esatto,
+    # serve una stima algoritmica) - qui invece scattava sempre,
+    # incondizionatamente. Allineato allo stesso schema di app.py.
+    if is_grade_benchmark_resolved:
+        calibrated_max_edge_allin = round(sniper_ceiling_raw, 2)
+    else:
+        calibrated_max_edge_allin = round(base_max_edge_price * adj.sniper_ceiling_factor, 2)
     
     if is_usa:
         landed_offer = estimate_usa_import_landed_cost(price_eur, item_type="single")

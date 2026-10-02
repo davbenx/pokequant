@@ -180,3 +180,42 @@ def test_grade_ladder_thin_market_flag_shows_warning():
         pytest.skip("Colress #135 non e' piu' flaggato a psa10 nella cache attuale (ricalibrazione mensile)")
     warnings_text = " ".join(w.value for w in at.warning)
     assert "mercato sottile su questo grado specifico" in warnings_text.lower()
+
+
+def test_psa_benchmark_includes_blend_premium_on_real_data():
+    """BUG TROVATO (l'utente: "trovo molte slab ben sopra il prezzo max Edge
+    sul mercato europeo... valuta se questo è calcolato correttamente",
+    2026-10-02, verificato con 5 inserzioni reali indipendenti per
+    Dragonite-EX #106 PSA 9 su eBay/Vinted, gap minimo +9,6% sul comp piu'
+    affidabile): PriceCharting non separa il prezzo per casa di gradazione
+    sotto il Grado 10 - il benchmark "PSA" letto da PriceCharting e' un
+    blend cross-company, non un prezzo PSA puro. Il Fair Value per un
+    acquisto PSA con dato reale deve ora riflettere PSA_BLEND_PREMIUM_FACTOR
+    (1.08x), non il blend grezzo - verificato qui sul percorso REALE che
+    l'utente usa dal browser, con dati live (richiede rete)."""
+    from poke_quant.slabs.grading_multipliers import PSA_BLEND_PREMIUM_FACTOR
+
+    at = AppTest.from_file(APP_PATH)
+    at.run(timeout=60)
+    at.radio[0].set_value("🔍 Cerca tra tutte le 3.100+ carte del Database PokeQuant")
+    at.run(timeout=60)
+    sb = at.selectbox[0]
+    match = [o for o in sb.options if "Dragonite-EX #106" in o]
+    if not match:
+        pytest.skip("Dragonite-EX #106 non trovato nel database attuale")
+    sb.set_value(match[0])
+    at.run(timeout=60)
+    at.selectbox[1].set_value("PSA")
+    at.selectbox[2].set_value("9.0 Mint")
+    at.number_input[1].set_value(94.30)
+    at.run(timeout=60)
+    at.button[0].click()
+    at.run(timeout=60)
+
+    res = at.session_state.get("slab_eval_res")
+    assert res is not None
+    if "Dato Reale" not in res.get("benchmark_source", ""):
+        pytest.skip("Nessun dato reale PriceCharting disponibile per questa carta al momento del test")
+    blend_price = res["base_psa_raw"]
+    assert res["fair_value_calib"] == round(blend_price * PSA_BLEND_PREMIUM_FACTOR, 2)
+    assert res["sniper_ceiling_calib"] >= res["fair_value_calib"]

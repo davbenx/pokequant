@@ -146,3 +146,43 @@ def test_grade_95_algorithmic_path_not_double_counted():
         f"rapporto 9.5/9.0 osservato {observed_ratio:.3f} vs atteso {expected_ratio:.3f} "
         f"(un rapporto molto piu' alto indicherebbe doppio conteggio della pre-scalatura ERA_BGS95_TO_PSA9_RATIO)"
     )
+
+
+def _max_edge(out: str) -> float:
+    m = re.search(r"Tetto Max Edge:\s*([\d.]+)\s*€", out)
+    assert m, f"Tetto Max Edge non trovato nell'output:\n{out}"
+    return float(m.group(1))
+
+
+@patch("scripts.eval_slab_listing.fetch_pricecharting_grade_tier_price")
+@patch("scripts.eval_slab_listing.fetch_pricecharting_variant_grade9")
+def test_psa_blend_premium_applied_to_fair_value_and_ceiling_consistently(mock_variant, mock_tier):
+    """BUG TROVATO verificando il fix PSA_BLEND_PREMIUM_FACTOR (l'utente:
+    "trovo molte slab ben sopra il prezzo max Edge sul mercato europeo...
+    valuta se questo è calcolato correttamente", 2026-10-02): il Tetto Max
+    Edge veniva SEMPRE ricalcolato con una formula parallela
+    (base_max_edge_price * adj.sniper_ceiling_factor) che ignorava
+    sniper_ceiling_raw gia' calcolato da adjust_price_for_grading() - quindi
+    quando quella funzione e' stata corretta per applicare un premio PSA sul
+    blend cross-company PriceCharting (PSA_BLEND_PREMIUM_FACTOR), il Fair
+    Value si aggiornava ma il Tetto Max Edge (e il verdetto finale) no.
+    Verifica qui che siano consistenti: il Tetto deve riflettere lo stesso
+    premio del Fair Value, non il blend grezzo pre-fix."""
+    from poke_quant.slabs.grading_multipliers import PSA_BLEND_PREMIUM_FACTOR
+
+    mock_variant.return_value = None
+    blend_price_usd, blend_price_eur = 99.99, 86.07  # Dragonite-EX #106, caso reale (PriceCharting Grado 9)
+    mock_tier.return_value = (blend_price_eur, blend_price_usd, "https://pricecharting.com/fake", "PriceCharting")
+
+    out = _run_and_capture(card_query="dragonite_ex_106", company="PSA", grade="9.0", price_eur=94.30, shipping_eur=7.00)
+
+    fv = _fair_value(out)
+    ceiling = _max_edge(out)
+    assert fv == round(blend_price_eur * PSA_BLEND_PREMIUM_FACTOR, 2), (
+        f"Fair Value {fv} non riflette il premio PSA sul blend ({blend_price_eur} x {PSA_BLEND_PREMIUM_FACTOR})"
+    )
+    assert ceiling >= fv, f"Tetto Max Edge ({ceiling}) sotto il Fair Value ({fv}) - formula del tetto non corretta"
+    assert ceiling > round(blend_price_eur * 1.05, 2), (
+        "Tetto Max Edge identico al valore pre-fix - la formula parallela sta ancora ignorando "
+        "il premio PSA calcolato da adjust_price_for_grading()"
+    )

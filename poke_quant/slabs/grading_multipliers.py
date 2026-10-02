@@ -867,6 +867,48 @@ def get_grade_benchmarks_ladder(
     return ladder
 
 
+# BUG STRUTTURALE TROVATO (l'utente: "trovo molte slab ben sopra il prezzo
+# max Edge sul mercato europeo... valuta se questo è calcolato
+# correttamente", 2026-10-02 - verificato con 5 inserzioni reali indipendenti
+# per Dragonite-EX #106 PSA 9 su 2 piattaforme, eBay e Vinted: gap minimo
+# +9,6% sul solo prezzo carta, fino a +121% su Vinted). PriceCharting NON
+# separa il prezzo per casa di gradazione sotto il Grado 10 (verificato dal
+# vivo in scripts/grading_company_crossover_arbitrage_test.py, 2026-09-25,
+# fetch reale su 3 carte) - la colonna "graded"/Grado 9 che il modello legge
+# e' un BLEND cross-company (PSA+CGC+BGS+SGC+...), non un prezzo PSA puro.
+# is_grade_benchmark_price=True pero' trattava quel blend COME il prezzo
+# PSA (comp_rel(PSA)=1.0 esatto per definizione), sottostimando
+# sistematicamente un vero slab PSA - che comanda un premio di liquidita'
+# reale sulle case piu' economiche. Fonte citata in
+# same_grade_crossover_arbitrage_test.py (pokeprice.gg, 2026-05-21): "CGC
+# slabs trade at a small discount to PSA... typically 10-20% less for the
+# same grade - purely because PSA has the bigger buyer pool."
+#
+# STIMA RAGIONATA, NON DATO MISURATO: nessuna fonte separa il peso PSA vs
+# altre case dentro il blend PriceCharting - non e' calcolabile con
+# precisione. Se PSA e' la maggioranza (non la totalita') dei volumi di
+# sottomissione per una chase card tipica, e le altre case scambiano ~10-20%
+# sotto PSA (fonte sopra), il blend risulta diluito verso il basso di circa
+# 6-12 punti percentuali rispetto al vero prezzo PSA - 1.08x e' una stima
+# CONSERVATIVA dentro quel range, coerente con (non adattata a forza su)
+# l'unico riscontro reale raccolto finora: Dragonite-EX #106 PSA 9, eBay,
+# gap +9,6% sul solo prezzo carta (94,30€ vs fair value modello 86,07€,
+# rapporto 1,096). UN SOLO caso reale non e' una calibrazione statistica -
+# va rivisto se emergono altri comp reali (vedi scripts/
+# psa_blend_premium_calibration.py per il ragionamento completo e come
+# aggiornarlo). Si applica SOLO quando is_grade_benchmark_price=True (il
+# prezzo base e' davvero il blend PriceCharting per QUEL grado specifico,
+# non una stima algoritmica derivata altrove) - non tocca il pannello
+# storico principale delle strategie (un bias uniforme non altera il
+# Sharpe/CAGR della selezione cross-sezionale, vedi gia' verificato in
+# scripts/eu_price_level_invariance_test.py), e non tocca
+# get_grade_benchmarks_ladder/get_recommended_grade_targets (pannello
+# "voti alternativi consigliati", percorso diverso da quello diagnosticato
+# con dati reali qui - stesso tipo di gap possibile, ma non ancora
+# verificato su quel percorso specifico).
+PSA_BLEND_PREMIUM_FACTOR = 1.08
+
+
 def adjust_price_for_grading(
     base_psa_price_eur: float,
     company: str | GradingCompany,
@@ -884,8 +926,10 @@ def adjust_price_for_grading(
       base_psa_price_eur: Prezzo benchmark PSA (se is_grade_benchmark_price=False: PSA 9 per gradi <=9.5, PSA 10 per grado 10).
       company: Compagnia di gradazione (PSA, BGS, CGC, SGC, TAG, GRAAD, PCA, CCC, AiGrading, ACE).
       grade: Voto (10.0, 9.5, 9.0, 8.5, 8.0, 7.5, 7.0).
-      is_grade_benchmark_price: Se True, indica che base_psa_price_eur è GIÀ il prezzo di mercato reale PSA di quel grado specifico.
-    
+      is_grade_benchmark_price: Se True, indica che base_psa_price_eur è GIÀ il prezzo REALE
+        PriceCharting di quel grado specifico - che e' un BLEND cross-company, non un prezzo
+        PSA puro (vedi PSA_BLEND_PREMIUM_FACTOR sopra), corretto internamente qui sotto.
+
     Ritorna:
       (fair_value_calibrato_eur, max_edge_sniper_ceiling_eur, adjustment_obj)
     """
@@ -901,8 +945,12 @@ def adjust_price_for_grading(
     )
 
     if is_grade_benchmark_price:
-        # Se effective_base_psa è già il prezzo PSA di quel grado (es. estratto da PriceCharting),
-        # si applica solo il fattore relativo della compagnia vs PSA.
+        # effective_base_psa e' il blend cross-company PriceCharting per questo
+        # grado (PSA_BLEND_PREMIUM_FACTOR sopra) - corretto PRIMA di applicare
+        # il fattore relativo della compagnia, cosi' sia PSA (comp_rel=1.0)
+        # sia le altre case (comp_rel relativo a PSA) vengono ancorate al vero
+        # livello PSA, non al blend sottostimato.
+        true_psa_price = effective_base_psa * PSA_BLEND_PREMIUM_FACTOR
         comp_rel = get_company_relative_factor_vs_psa(
             company=company,
             grade=grade,
@@ -910,7 +958,7 @@ def adjust_price_for_grading(
             subgrades_black_label=subgrades_black_label,
             is_pristine=is_pristine,
         )
-        fair_value = effective_base_psa * comp_rel
+        fair_value = true_psa_price * comp_rel
         sniper_ceiling = round(round(fair_value, 2) * 1.05, 2)
     else:
         fair_value = effective_base_psa * adj.multiplier

@@ -429,10 +429,33 @@ def test_adjust_price_for_grading_grade_benchmark():
         era=Era.VINTAGE,
         is_grade_benchmark_price=True,
     )
-    # Fair Value BGS 8.5 deve essere calibrato con comp_rel vs PSA 8.5 (0.921x -> 72.34 €)
-    assert fv == 72.34
-    # Lo sniper ceiling deve essere 72.34 * 1.05 = 75.96 € e NON collassare a 60.20 € per doppio sconto
-    assert sc == 75.96
+    # Fair Value BGS 8.5: comp_rel vs PSA 8.5 (0.921x) applicato al prezzo PSA
+    # vero (78.54 x PSA_BLEND_PREMIUM_FACTOR 1.08 = 84.82, non al blend grezzo
+    # - vedi PSA_BLEND_PREMIUM_FACTOR) -> 78.12 €
+    assert fv == 78.12
+    # Lo sniper ceiling deve essere 78.12 * 1.05 = 82.03 € e NON collassare per doppio sconto
+    assert sc == 82.03
+    assert sc >= fv
+
+
+def test_adjust_price_for_grading_psa_blend_premium_applied():
+    """BUG TROVATO (l'utente: "trovo molte slab ben sopra il prezzo max Edge
+    sul mercato europeo... valuta se questo è calcolato correttamente",
+    2026-10-02): PriceCharting non separa il prezzo per casa di gradazione
+    sotto il Grado 10 - il "prezzo PSA" reale e' in realta' un blend
+    cross-company, sottostimando un vero slab PSA. Verificato con 5
+    inserzioni reali (Dragonite-EX #106 PSA 9): il fair value calibrato deve
+    ora essere ESPLICITAMENTE sopra il blend grezzo per un acquisto PSA con
+    dato reale, non identico ad esso."""
+    from poke_quant.slabs.grading_multipliers import adjust_price_for_grading, PSA_BLEND_PREMIUM_FACTOR, Era
+
+    blend_price = 86.07  # Dragonite-EX #106, PriceCharting Grado 9 reale (caso reale)
+    fv, sc, adj = adjust_price_for_grading(
+        base_psa_price_eur=blend_price, company="PSA", grade="9", era=Era.MID_ERA,
+        is_grade_benchmark_price=True,
+    )
+    assert fv == round(blend_price * PSA_BLEND_PREMIUM_FACTOR, 2)
+    assert fv > blend_price
     assert sc >= fv
 
 
