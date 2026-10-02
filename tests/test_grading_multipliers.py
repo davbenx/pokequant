@@ -235,12 +235,21 @@ def test_get_recommended_grade_for_card():
 def test_fetch_pricecharting_grade_tier_price():
     from poke_quant.data.price_fetcher import fetch_pricecharting_grade_tier_price
 
-    # Verifica lookup su carta con dati reali (Dragonite-EX)
+    # BUG TROVATO (workflow mensile GitHub Action fallito, 2026-10-02, run
+    # 37046412149): questo test assertava un prezzo USD ESATTO ($480.00)
+    # per un dato REALE recuperato dal vivo (rete o cache locale aggiornata
+    # mensilmente, vedi priorita' di ricerca in fetch_pricecharting_grade_tier_price)
+    # - un prezzo di mercato reale che per costruzione deriva nel tempo
+    # (osservato: $481.99 un mese dopo), facendo fallire il test ad ogni
+    # drift anche minimo, non per una vera regressione del codice. Allineato
+    # allo stile range-based gia' usato due righe sotto in questo stesso
+    # file per lo stesso motivo (mezzi voti interpolati) invece di
+    # un'uguaglianza esatta su un dato che non e' sotto il nostro controllo.
     res = fetch_pricecharting_grade_tier_price("pokemon-evolutions", "dragonite-ex-106", tier="psa10")
     assert res is not None
     eur, usd, url, src = res
-    assert usd == 480.0
-    assert eur > 350.0
+    assert 300.0 < usd < 700.0
+    assert eur > 250.0
     assert "pricecharting.com" in url
 
 
@@ -313,22 +322,32 @@ def test_get_grade_benchmarks_ladder():
 def test_fetch_pricecharting_grade_tier_price_lower_grades():
     from poke_quant.data.price_fetcher import fetch_pricecharting_grade_tier_price
 
-    # m_rayquaza_ex_105 ha dati reali per grade8, grade7
+    # m_rayquaza_ex_105 ha dati reali per grade8, grade7. BUG TROVATO (stesso
+    # workflow fallito del test sopra, 2026-10-02, run 37046412149): questi
+    # due valori arrivano dalla cache locale data_cache/grade_ladder_prices.json
+    # (priorita' 1 di fetch_pricecharting_grade_tier_price quando item_id e'
+    # passato), rigenerata ogni mese dal workflow stesso - un'uguaglianza
+    # esatta su un prezzo reale che cambia ad ogni refresh mensile e' fragile
+    # per costruzione (stesso difetto del test sopra), non una vera
+    # regressione quando drifta. Range-based come il resto del file.
     res_g8 = fetch_pricecharting_grade_tier_price("pokemon-roaring-skies", "m-rayquaza-ex-105", tier="grade8", item_id="m_rayquaza_ex_105")
     assert res_g8 is not None
     eur8, usd8, url8, src8 = res_g8
-    assert eur8 == 680.01
+    assert 400.0 < eur8 < 1200.0
 
     res_g7 = fetch_pricecharting_grade_tier_price("pokemon-roaring-skies", "m-rayquaza-ex-105", tier="grade7", item_id="m_rayquaza_ex_105")
     assert res_g7 is not None
     eur7, usd7, url7, src7 = res_g7
-    assert eur7 == 448.9
+    assert 250.0 < eur7 < eur8
 
     # Mezzi voti interpolati
     res_g85 = fetch_pricecharting_grade_tier_price("pokemon-roaring-skies", "m-rayquaza-ex-105", tier="grade8_5", item_id="m_rayquaza_ex_105")
     assert res_g85 is not None
     eur85, _, _, src85 = res_g85
-    assert eur8 < eur85 < 1955.26
+    # Limite superiore relativo a eur8 (non un prezzo reale fisso, stesso
+    # motivo del fix sopra) - un mezzo voto interpolato non supera mai un
+    # premio ragionevole sopra il grado intero sottostante.
+    assert eur8 < eur85 < eur8 * 2.0
     assert "Interpolato" in src85
 
 
@@ -370,10 +389,12 @@ def test_get_recommended_grade_targets():
     assert len(mid["minor_alternatives"]) == 2
     assert [a["grade"] for a in mid["minor_alternatives"]] == ["8.5", "8.0"]
 
-    # 4. Con dati reali PC (m_rayquaza_ex_105)
+    # 4. Con dati reali PC (m_rayquaza_ex_105) - range, non uguaglianza esatta
+    # (stesso motivo del fix in test_fetch_pricecharting_grade_tier_price_lower_grades:
+    # legge data_cache/grade_ladder_prices.json, rigenerata ogni mese).
     ray = get_recommended_grade_targets(base_psa9_eur=1000.0, era=Era.MID_ERA, item_id="m_rayquaza_ex_105")
     assert ray["minor_alternatives"][1]["is_real"] is True
-    assert ray["minor_alternatives"][1]["price_eur"] == 680.01
+    assert 400.0 < ray["minor_alternatives"][1]["price_eur"] < 1200.0
     assert "pop_pressure" in ray
 
 
