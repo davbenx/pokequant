@@ -16,6 +16,7 @@ sulla funzione di libreria sottostante.
 """
 
 from pathlib import Path
+from unittest.mock import patch
 import pytest
 from streamlit.testing.v1 import AppTest
 
@@ -219,3 +220,105 @@ def test_psa_benchmark_includes_blend_premium_on_real_data():
     blend_price = res["base_psa_raw"]
     assert res["fair_value_calib"] == round(blend_price * PSA_BLEND_PREMIUM_FACTOR, 2)
     assert res["sniper_ceiling_calib"] >= res["fair_value_calib"]
+
+
+def test_psa_blend_premium_also_applied_on_db_fallback_without_real_tier_data():
+    """GAP NOTO CHIUSO (dichiarato esplicitamente come non risolto nel fix
+    PSA_BLEND_PREMIUM_FACTOR, 2026-10-02: "il ramo algoritmico di fallback
+    [...] non riceve ancora il premio, perche' condivide il percorso con
+    input manual-override/Cardmarket che NON vanno corretti" - l'utente ha
+    poi chiesto esplicitamente di risolverlo, 2026-10-03: "Tackle into known,
+    deliberately unfixed gap"). Il test precedente copre SOLO il caso in cui
+    PriceCharting ha un dato reale per il grado ESATTO richiesto (Priorità 2,
+    ramo is_grade_benchmark_price=True). Qui si forza invece il grado 7.0 -
+    quasi mai disponibile come dato reale per-tier su PriceCharting - per
+    cadere sul fallback Priorità 3 (pannello storico "Database PokeQuant",
+    lo stesso identico blend cross-company, letto da cache invece che
+    fetchato dal vivo in questo momento) e verificare che riceva la STESSA
+    correzione, non solo il percorso con dato reale. fetch_pricecharting_
+    grade_tier_price e' mockato a None (nessun dato reale per QUALUNQUE
+    grado/carta) per rendere deterministico il percorso di fallback, invece
+    di dipendere dal fatto che PriceCharting non abbia per caso un dato
+    reale per il grado scelto su quella carta in quel momento - verificato
+    dal vivo durante lo sviluppo di questo test: una prima versione senza
+    mock era flaky (risolveva un dato reale Grado 7 reale su una carta
+    scelta a caso)."""
+    from poke_quant.slabs.grading_multipliers import PSA_BLEND_PREMIUM_FACTOR
+    from poke_quant.data.storage import load_metadata, load_price_matrix
+
+    with patch("poke_quant.data.price_fetcher.fetch_pricecharting_grade_tier_price", return_value=None):
+        at = AppTest.from_file(APP_PATH)
+        at.run(timeout=60)
+        at.radio[0].set_value("🔍 Cerca tra tutte le 3.100+ carte del Database PokeQuant")
+        at.run(timeout=60)
+        sb = at.selectbox[0]
+        if not sb.options:
+            pytest.skip("Nessuna carta disponibile nel database attuale")
+        chosen = sb.options[len(sb.options) // 2]  # carta generica, non una mega-chase nota
+        sb.set_value(chosen)
+        at.run(timeout=60)
+        at.selectbox[1].set_value("PSA")
+        at.selectbox[2].set_value("7.0 Near Mint")
+        at.number_input[1].set_value(1.0)
+        at.run(timeout=60)
+        at.button[0].click()
+        at.run(timeout=60)
+
+    res = at.session_state.get("slab_eval_res")
+    assert res is not None
+    if "Database PokeQuant" not in res.get("benchmark_source", "") and "Riconosciuta da DB" not in res.get("benchmark_source", ""):
+        pytest.skip(f"Questa carta ha risolto un dato reale per-tier invece del fallback DB: {res.get('benchmark_source')}")
+
+    metadata = load_metadata()
+    item_id = res["target_item_id"]
+    prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    assert item_id in prices_full.columns, "item_id scelto non nel pannello prezzi"
+    raw_blend_price = float(prices_full[item_id].iloc[-1])
+
+    assert res["base_psa_final"] == round(raw_blend_price * PSA_BLEND_PREMIUM_FACTOR, 2), (
+        f"base_psa_final ({res['base_psa_final']}) non riflette il premio PSA sul blend grezzo "
+        f"({raw_blend_price} × {PSA_BLEND_PREMIUM_FACTOR}) nel ramo di fallback DB"
+    )
+    assert "×" in res["benchmark_source"] or f"{PSA_BLEND_PREMIUM_FACTOR:.2f}" in res["benchmark_source"]
+    assert res["sniper_ceiling_calib"] >= res["fair_value_calib"]
+
+
+def test_cardmarket_fallback_not_affected_by_psa_blend_premium():
+    """Guardia simmetrica al test sopra: cardmarket_ref_price_eur e' una
+    fonte diversa (Cardmarket, non PriceCharting) senza il bias di blending
+    cross-company qui diagnosticato - NON deve mai ricevere
+    PSA_BLEND_PREMIUM_FACTOR, a differenza di last_psa_price. Mocka
+    search_metadata_card_by_query per restituire un metadato sintetico con
+    SOLO cardmarket_ref_price_eur (nessun last_psa_price) - senza il mock il
+    test sarebbe flaky: dipenderebbe dal fatto che una carta reale scelta a
+    caso non abbia per caso un last_psa_price valido in cache (il ramo
+    Cardmarket e' il fallback di un fallback, raro nei dati reali)."""
+    fake_match = (
+        "fake_cardmarket_only_card",
+        {
+            "name": "Carta Sintetica Solo Cardmarket",
+            "game_slug": "pokemon-test-set",
+            "item_slug": "carta-sintetica-solo-cardmarket",
+            "cardmarket_ref_price_eur": 42.0,
+            "release_date": "2015-01-01",
+        },
+    )
+    with patch("poke_quant.data.price_fetcher.search_metadata_card_by_query", return_value=fake_match), \
+         patch("poke_quant.data.price_fetcher.fetch_pricecharting_grade_tier_price", return_value=None):
+        at = AppTest.from_file(APP_PATH)
+        at.run(timeout=60)
+        at.radio[0].set_value("✏️ Carta Personalizzata / Inserimento Libero (o Link PriceCharting)")
+        at.run(timeout=60)
+        at.text_input[0].set_value("Carta Sintetica Solo Cardmarket")
+        at.selectbox[0].set_value("CGC")
+        at.selectbox[1].set_value("9.0 Mint")
+        at.number_input[1].set_value(50.0)
+        at.run(timeout=60)
+        at.button[0].click()
+        at.run(timeout=60)
+
+    res = at.session_state.get("slab_eval_res")
+    assert res is not None
+    assert "Cardmarket" in res.get("benchmark_source", ""), res.get("benchmark_source")
+    assert "×" not in res["benchmark_source"]
+    assert res["base_psa_final"] == 42.0, "il valore Cardmarket non deve subire nessuna correzione"

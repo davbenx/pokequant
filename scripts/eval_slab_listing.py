@@ -26,6 +26,7 @@ from poke_quant.slabs.grading_multipliers import (
     normalize_era,
     get_grading_adjustment,
     adjust_price_for_grading,
+    PSA_BLEND_PREMIUM_FACTOR,
     get_variant_multiplier,
     variant_to_pricecharting_key,
     SPECIAL_VARIANTS,
@@ -141,6 +142,38 @@ def evaluate_listing(
         res = -1.0
         pct = 10.0
 
+    # GAP NOTO CHIUSO (dichiarato esplicitamente come non risolto nel fix
+    # PSA_BLEND_PREMIUM_FACTOR, 2026-10-02 - l'utente: "cambiando il fair
+    # value, bisogna testare anche il prezzo massimo per edge", poi: "tackle
+    # into known, deliberately unfixed gap", 2026-10-03): base_psa_price qui
+    # sopra (snap[item_id]["current_price"]) e' lo stesso identico pannello
+    # PriceCharting Grado 9 BLEND cross-company usato per il resto del
+    # modello - quando nessun dato reale per-grado/variante viene trovato
+    # piu' sotto (is_grade_benchmark_resolved resta False), questo valore
+    # finiva nel ramo "algoritmico" di adjust_price_for_grading() SENZA mai
+    # ricevere il premio PSA_BLEND_PREMIUM_FACTOR (quel ramo assume che il
+    # prezzo passato sia GIA' il vero prezzo PSA, non un blend) - lo stesso
+    # bias quindi si propagava silenziosamente a OGNI stima algoritmica
+    # senza dato reale, non solo al caso "PSA grado 9.0 esatto" citato nel
+    # fix originale (EMPIRICAL_RATIOS_GRADE9[(PSA,"9.0",era)]=1.0 era solo il
+    # sintomo piu' visibile: lo stesso blend non corretto alimenta OGNI
+    # company/grado di quella tabella, che e' calibrata assumendo "base
+    # PSA9" = vero prezzo PSA, non blend).
+    #
+    # Applicato QUI, DOPO il calcolo di scarsita' sopra (res/pct/cutoff_res
+    # sono gia' calcolati e NON vengono toccati) - DELIBERATAMENTE non alla
+    # lettura di snap[item_id]["current_price"] piu' in alto: quel valore
+    # alimenta anche _fit_residuals() sull'intero pannello liquido, dove
+    # un bias asimmetrico su una sola carta (diverso da tutte le altre nello
+    # stesso identico calcolo di rank relativo) romperebbe la semantica del
+    # modello di scarsita' - diverso dal caso gia' verificato in
+    # scripts/eu_price_level_invariance_test.py (un bias UNIFORME su TUTTO
+    # il pannello non altera il ranking). Sovrascritto piu' sotto senza
+    # effetto se un dato reale per-grado/variante viene trovato (pc_eur
+    # fresco rimpiazza interamente questo valore, nessun doppio conteggio).
+    base_psa_price = round(base_psa_price * PSA_BLEND_PREMIUM_FACTOR, 2)
+    base_max_edge_price = round(base_max_edge_price * PSA_BLEND_PREMIUM_FACTOR, 2)
+
     # Risoluzione benchmark per il grado scelto (da 10.0 fino a 7.0) - PRIMA
     # della risoluzione della variante, perche' ora serve per interrogare il
     # dato reale della variante ESATTAMENTE al grado richiesto (vedi sotto).
@@ -221,7 +254,7 @@ def evaluate_listing(
         v_mult, v_desc = get_variant_multiplier(variant, info.get("game_slug"))
         base_psa_price = round(base_psa_price * v_mult, 2)
         base_max_edge_price = round(base_max_edge_price * v_mult, 2)
-        benchmark_note = "Prezzo mercato PSA 9"
+        benchmark_note = f"Prezzo mercato PSA 9 (blend PriceCharting × {PSA_BLEND_PREMIUM_FACTOR:.2f} premio PSA)"
 
     # BUG TROVATO (richiesta esplicita dell'utente: valutazione di acquisti reali,
     # "e' importante mantenere edge", 2026-09-29): quando una variante speciale

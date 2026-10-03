@@ -186,3 +186,49 @@ def test_psa_blend_premium_applied_to_fair_value_and_ceiling_consistently(mock_v
         "Tetto Max Edge identico al valore pre-fix - la formula parallela sta ancora ignorando "
         "il premio PSA calcolato da adjust_price_for_grading()"
     )
+
+
+@patch("scripts.eval_slab_listing.fetch_pricecharting_grade_tier_price")
+@patch("scripts.eval_slab_listing.fetch_pricecharting_variant_grade9")
+def test_psa_blend_premium_applied_on_total_fallback_without_any_real_tier_data(mock_variant, mock_tier):
+    """GAP NOTO CHIUSO (dichiarato esplicitamente come non risolto nel fix
+    PSA_BLEND_PREMIUM_FACTOR, 2026-10-02: "il ramo algoritmico di fallback
+    [...] non riceve ancora il premio" - l'utente ha poi chiesto
+    esplicitamente di risolverlo, 2026-10-03: "Tackle into known,
+    deliberately unfixed gap"). Il test sopra copre solo il caso in cui
+    PriceCharting HA un dato reale per il grado richiesto (fetch_tier
+    restituisce un valore). Qui invece TUTTI i fetch falliscono (nessun dato
+    reale per nessun grado/variante) - caso comune per carte meno popolari -
+    forzando il fallback totale su snap[item_id]["current_price"] (lo stesso
+    pannello blend cross-company usato per tutto il resto del motore). Verifica
+    che anche questo percorso riceva il premio PSA, confrontando con lo
+    stesso identico valore letto direttamente dal pannello storico."""
+    from poke_quant.slabs.grading_multipliers import PSA_BLEND_PREMIUM_FACTOR
+    from poke_quant.data.storage import load_price_matrix
+
+    mock_variant.return_value = None
+    mock_tier.return_value = None
+
+    prices_full = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    raw_blend_price = float(prices_full["jolteon_4"].dropna().iloc[-1])
+
+    out = _run_and_capture(card_query="jolteon_4", company="PSA", grade="7.0", price_eur=1.0)
+    fv = _fair_value(out)
+
+    from poke_quant.slabs.grading_multipliers import EMPIRICAL_RATIOS_GRADE9, GradingCompany, Era
+    # Fair Value algoritmico = base corretta × multiplier PSA/7.0 (nessun
+    # dato reale per nessun grado qui - ramo is_grade_benchmark_price=False,
+    # EMPIRICAL_RATIOS_GRADE9 si aspetta una base che sia GIA' il vero
+    # prezzo PSA, non il blend grezzo).
+    mult_70 = max(EMPIRICAL_RATIOS_GRADE9[(GradingCompany.PSA, "7.0", e)][0] for e in Era)
+    min_mult_70 = min(EMPIRICAL_RATIOS_GRADE9[(GradingCompany.PSA, "7.0", e)][0] for e in Era)
+    expected_min = round(raw_blend_price * PSA_BLEND_PREMIUM_FACTOR * min_mult_70, 2)
+    expected_max = round(raw_blend_price * PSA_BLEND_PREMIUM_FACTOR * mult_70, 2)
+    assert expected_min - 0.02 <= fv <= expected_max + 0.02, (
+        f"Fair Value {fv} non riflette il premio PSA sul blend grezzo ({raw_blend_price}) "
+        f"nel ramo di fallback totale (atteso tra {expected_min} e {expected_max})"
+    )
+    # Senza il fix, il fair value sarebbe round(raw_blend_price * mult_70_era, 2)
+    # per qualunque era - strettamente piu' basso di expected_min di un fattore
+    # PSA_BLEND_PREMIUM_FACTOR.
+    assert fv > round(raw_blend_price * min_mult_70, 2)

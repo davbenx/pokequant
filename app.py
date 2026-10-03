@@ -70,6 +70,7 @@ from poke_quant.slabs.grading_multipliers import (
     Era,
     normalize_era,
     adjust_price_for_grading,
+    PSA_BLEND_PREMIUM_FACTOR,
     get_variant_multiplier,
     variant_to_pricecharting_key,
     ERA_PSA10_TO_PSA9_RATIO,
@@ -1992,19 +1993,50 @@ def main():
             # Priorità 3: Se non risolto con PriceCharting tier ma abbiamo il prezzo del DB / metadati
             if not is_pc_grade_resolved and manual_psa_override == 0.0:
                 if sel_row:
-                    base_psa_raw = float(sel_row["current_price_eur"])
-                    base_max_edge = float(sel_row.get("max_edge_price_eur") or (base_psa_raw * 1.05))
+                    # GAP NOTO CHIUSO (dichiarato esplicitamente come non
+                    # risolto nel fix PSA_BLEND_PREMIUM_FACTOR, 2026-10-02 -
+                    # l'utente: "tackle into known, deliberately unfixed
+                    # gap", 2026-10-03): current_price_eur qui e'
+                    # SEMPRE il pannello PriceCharting Grado 9 BLEND
+                    # cross-company (stesso identico dato di Priorità 2
+                    # sopra, solo gia' in cache mensile invece che fetchato
+                    # dal vivo in questo momento) - andava corretto con lo
+                    # stesso premio PSA, come gia' fatto quando
+                    # is_price_grade_matched=True piu' sotto. Applicato qui
+                    # ALLA FONTE (non dentro adjust_price_for_grading, che
+                    # nel ramo algoritmico applica il moltiplicatore
+                    # azienda/grado assumendo che la base sia GIA' il vero
+                    # prezzo PSA) cosi' sia il fair value sia il tetto
+                    # (ricalcolato in parallelo piu' sotto da
+                    # effective_max_edge quando il grado non e' abbinato)
+                    # risultano automaticamente coerenti, senza bisogno di
+                    # toccare quella funzione condivisa gia' testata.
+                    base_psa_raw = round(float(sel_row["current_price_eur"]) * PSA_BLEND_PREMIUM_FACTOR, 2)
+                    base_max_edge = float(sel_row.get("max_edge_price_eur") or (float(sel_row["current_price_eur"]) * 1.05))
+                    base_max_edge = round(base_max_edge * PSA_BLEND_PREMIUM_FACTOR, 2)
                     base_psa_final = base_psa_raw
                     effective_max_edge = base_max_edge
-                    benchmark_source = f"Database PokeQuant (PSA 9: {base_psa_raw:.2f}€)"
+                    benchmark_source = f"Database PokeQuant (PSA 9: {base_psa_raw:.2f}€, blend × {PSA_BLEND_PREMIUM_FACTOR:.2f})"
                 elif matched_db_info:
-                    db_price = matched_db_info.get("last_psa_price") or matched_db_info.get("cardmarket_ref_price_eur") or 0.0
-                    if db_price > 0:
-                        base_psa_raw = float(db_price)
+                    # Stessa correzione SOLO quando la fonte e' last_psa_price
+                    # (PriceCharting blend, identico caso sopra) - MAI quando
+                    # e' cardmarket_ref_price_eur (fonte diversa, Cardmarket,
+                    # senza il bias di blending cross-company qui diagnosticato
+                    # - nessun motivo per applicarle lo stesso fattore).
+                    last_psa = matched_db_info.get("last_psa_price") or 0.0
+                    cardmarket_ref = matched_db_info.get("cardmarket_ref_price_eur") or 0.0
+                    if last_psa > 0:
+                        base_psa_raw = round(float(last_psa) * PSA_BLEND_PREMIUM_FACTOR, 2)
+                        base_max_edge = round(base_psa_raw * 1.05, 2)
+                        base_psa_final = base_psa_raw
+                        effective_max_edge = base_max_edge
+                        benchmark_source = f"Riconosciuta da DB ({matched_db_info.get('name')}: {base_psa_raw:.2f}€, blend × {PSA_BLEND_PREMIUM_FACTOR:.2f})"
+                    elif cardmarket_ref > 0:
+                        base_psa_raw = float(cardmarket_ref)
                         base_max_edge = base_psa_raw * 1.05
                         base_psa_final = base_psa_raw
                         effective_max_edge = base_max_edge
-                        benchmark_source = f"Riconosciuta da DB ({matched_db_info.get('name')}: {base_psa_raw:.2f}€)"
+                        benchmark_source = f"Riconosciuta da DB - Cardmarket ({matched_db_info.get('name')}: {base_psa_raw:.2f}€)"
 
             # Gestione errore se benchmark è 0.0
             if base_psa_final <= 0.0:
