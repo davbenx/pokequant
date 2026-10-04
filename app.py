@@ -2169,6 +2169,27 @@ def main():
                 if not is_price_grade_matched:
                     sniper_ceiling_calib = round(effective_max_edge * adj.sniper_ceiling_factor, 2)
 
+                # BUG TROVATO (l'utente: "non mi risulta corretto questo
+                # slowbro, verifica su pricecharting", 2026-10-04 - Dark
+                # Slowbro #12 Team Rocket, BGS 9.5, dato reale Grado 9.5):
+                # l'etichetta "Moltiplicatore" mostrava SEMPRE adj.multiplier
+                # (il rapporto company/grado vs PSA 9.0 dalla tabella
+                # EMPIRICAL_RATIOS_GRADE9), anche quando il Fair Value era
+                # calcolato con un fattore DIVERSO (comp_rel, il rapporto vs
+                # PSA allo STESSO grado del dato reale trovato - qui PSA 9.5,
+                # non PSA 9.0 - applicato nel ramo is_grade_benchmark_price=True
+                # di adjust_price_for_grading). Risultato: l'etichetta mostrava
+                # "1.809x" ma il Fair Value corrispondeva a ×1.206 (132.01€ di
+                # base PSA-corretta × 1.206 = 159.20€) - chiunque verificasse a
+                # mano con l'etichetta mostrata (122.23€ × 1.809 = 221€)
+                # trovava un numero diverso dal Fair Value reale, sembrando un
+                # errore di calcolo quando in realta' era solo l'etichetta
+                # sbagliata. Calcolato qui come rapporto EFFETTIVO
+                # fair_value/base - vero per costruzione in ENTRAMBI i rami
+                # (algoritmico e dato-reale), a differenza di adj.multiplier
+                # che riflette solo il primo.
+                effective_multiplier = round(fair_value_calib / base_psa_final, 3) if base_psa_final > 0 else adj.multiplier
+
                 if is_price_grade_matched and pc_live_info:
                     bench_tier_label = pc_live_info.get("tier", f"Grado {grade_val}")
                 elif is_price_grade_matched:
@@ -2235,6 +2256,7 @@ def main():
                     "v_badge": v_badge,
                     "v_color": v_color,
                     "adj": adj,
+                    "effective_multiplier": effective_multiplier,
                     "matched_db_info": matched_db_info,
                     "ladder_flag_reason": ladder_flag_reason,
                 }
@@ -2440,7 +2462,7 @@ def main():
                 f'{rec_badge_html}'
                 f'{pop_badge_html}'
                 f'</div>'
-                f'<span style="font-size: 12px; color: #94a3b8;">Slab: <strong>{res["company_name"]} {res["grade_input"]}</strong>{variant_note} · Moltiplicatore: <strong>{res["adj"].multiplier:.3f}x</strong> · Penalità liquidità: <strong>-{res["adj"].liquidity_penalty_pct:.0f}%</strong></span>'
+                f'<span style="font-size: 12px; color: #94a3b8;">Slab: <strong>{res["company_name"]} {res["grade_input"]}</strong>{variant_note} · Moltiplicatore effettivo: <strong>{res.get("effective_multiplier", res["adj"].multiplier):.3f}x</strong> (su Benchmark mostrato sotto) · Penalità liquidità: <strong>-{res["adj"].liquidity_penalty_pct:.0f}%</strong></span>'
                 f'</div>'
                 f'<div class="kpi-grid" style="margin-bottom: 0;">'
                 f'<div class="kpi-card"><div class="kpi-label">Benchmark PSA ({bench_ref_display})</div><div class="kpi-value">{res["base_psa_final"]:.2f} €</div><div class="kpi-sub">{sub_benchmark}</div></div>'

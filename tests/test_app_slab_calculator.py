@@ -322,3 +322,35 @@ def test_cardmarket_fallback_not_affected_by_psa_blend_premium():
     assert "Cardmarket" in res.get("benchmark_source", ""), res.get("benchmark_source")
     assert "×" not in res["benchmark_source"]
     assert res["base_psa_final"] == 42.0, "il valore Cardmarket non deve subire nessuna correzione"
+
+
+def test_effective_multiplier_matches_fair_value_not_raw_vs_psa9_table_value():
+    """BUG TROVATO (l'utente: "non mi risulta corretto questo slowbro,
+    verifica su pricecharting", 2026-10-04 - Dark Slowbro #12 Team Rocket,
+    BGS 9.5, dato reale PriceCharting per il Grado 9.5): l'etichetta
+    "Moltiplicatore" mostrava SEMPRE adj.multiplier (il rapporto company/
+    grado vs PSA 9.0 dalla tabella EMPIRICAL_RATIOS_GRADE9, qui 1.809x),
+    anche quando il Fair Value era in realta' calcolato con comp_rel (il
+    rapporto vs PSA allo STESSO grado del dato reale trovato - qui PSA 9.5,
+    non PSA 9.0 - usato nel ramo is_grade_benchmark_price=True). Verificato
+    dal vivo sui dati reali PriceCharting (122.23€ base, Fair Value 159.20€):
+    chi verificasse a mano con l'etichetta mostrata (122.23 × 1.809 = 221€)
+    trovava un numero diverso dal Fair Value reale (159.20€), sembrando un
+    errore di calcolo quando era solo l'etichetta sbagliata. Verifica che
+    effective_multiplier (ora mostrato in UI) sia invece sempre coerente per
+    costruzione: base_psa_final × effective_multiplier == fair_value_calib."""
+    res = _submit_calculator(company="BGS", grade="9.5 Gem Mint", offer_price=90.99)
+    assert res is not None
+    assert res["base_psa_final"] > 0
+    reconstructed = res["base_psa_final"] * res["effective_multiplier"]
+    assert abs(reconstructed - res["fair_value_calib"]) < 0.5, (
+        f"base_psa_final × effective_multiplier ({reconstructed:.2f}) deve ricostruire "
+        f"fair_value_calib ({res['fair_value_calib']:.2f}) a meno di arrotondamenti minori"
+    )
+    # Il sintomo esatto del bug: quando la fonte e' un dato reale per un
+    # grado diverso da 9.0 (qui 9.5), adj.multiplier (vs PSA9) e'
+    # strutturalmente diverso da effective_multiplier (vs PSA allo stesso
+    # grado) - se l'etichetta mostrasse ancora adj.multiplier, la riga sopra
+    # fallirebbe per qualunque carta risolta con un dato reale a 9.5/10.0.
+    if "Dato Reale" in res.get("benchmark_source", "") or "PriceCharting Reale" in res.get("benchmark_source", ""):
+        assert abs(res["effective_multiplier"] - res["adj"].multiplier) > 0.01
