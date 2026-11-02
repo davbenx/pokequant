@@ -38,7 +38,7 @@ def _submit_calculator(company: str, grade: str, offer_price: float, shipping: f
     at.button[0].click()
     at.run(timeout=60)
     assert not at.exception
-    return at.session_state.get("slab_eval_res")
+    return at.session_state["slab_eval_res"] if "slab_eval_res" in at.session_state else None
 
 
 def test_sniper_ceiling_never_below_fair_value_grade_95():
@@ -90,7 +90,7 @@ def test_thin_market_flagged_card_shows_warning():
     at.run(timeout=60)
     assert not at.exception
 
-    res = at.session_state.get("slab_eval_res")
+    res = at.session_state["slab_eval_res"] if "slab_eval_res" in at.session_state else None
     assert res is not None
     assert res["matched_db_info"] is not None
     assert res["matched_db_info"].get("data_quality") == "thin_unreliable"
@@ -118,7 +118,7 @@ def _submit_variant_calculator(card_name: str, variant: str, company: str, grade
     at.button[0].click()
     at.run(timeout=60)
     assert not at.exception
-    return at.session_state.get("slab_eval_res")
+    return at.session_state["slab_eval_res"] if "slab_eval_res" in at.session_state else None
 
 
 def test_variant_with_real_grade9_price_scales_with_selected_grade():
@@ -175,7 +175,7 @@ def test_grade_ladder_thin_market_flag_shows_warning():
     at.run(timeout=60)
     assert not at.exception
 
-    res = at.session_state.get("slab_eval_res")
+    res = at.session_state["slab_eval_res"] if "slab_eval_res" in at.session_state else None
     assert res is not None
     if not res.get("ladder_flag_reason"):
         pytest.skip("Colress #135 non e' piu' flaggato a psa10 nella cache attuale (ricalibrazione mensile)")
@@ -213,7 +213,7 @@ def test_psa_benchmark_includes_blend_premium_on_real_data():
     at.button[0].click()
     at.run(timeout=60)
 
-    res = at.session_state.get("slab_eval_res")
+    res = at.session_state["slab_eval_res"] if "slab_eval_res" in at.session_state else None
     assert res is not None
     if "Dato Reale" not in res.get("benchmark_source", ""):
         pytest.skip("Nessun dato reale PriceCharting disponibile per questa carta al momento del test")
@@ -264,7 +264,7 @@ def test_psa_blend_premium_also_applied_on_db_fallback_without_real_tier_data():
         at.button[0].click()
         at.run(timeout=60)
 
-    res = at.session_state.get("slab_eval_res")
+    res = at.session_state["slab_eval_res"] if "slab_eval_res" in at.session_state else None
     assert res is not None
     if "Database PokeQuant" not in res.get("benchmark_source", "") and "Riconosciuta da DB" not in res.get("benchmark_source", ""):
         pytest.skip(f"Questa carta ha risolto un dato reale per-tier invece del fallback DB: {res.get('benchmark_source')}")
@@ -317,7 +317,7 @@ def test_cardmarket_fallback_not_affected_by_psa_blend_premium():
         at.button[0].click()
         at.run(timeout=60)
 
-    res = at.session_state.get("slab_eval_res")
+    res = at.session_state["slab_eval_res"] if "slab_eval_res" in at.session_state else None
     assert res is not None
     assert "Cardmarket" in res.get("benchmark_source", ""), res.get("benchmark_source")
     assert "×" not in res["benchmark_source"]
