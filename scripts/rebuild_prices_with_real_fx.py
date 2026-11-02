@@ -33,26 +33,48 @@ def main():
           f"{eur_usd.index[-1].strftime('%Y-%m')})")
 
     old_sealed_df = load_price_matrix("historical_prices.csv")
+    old_grade9_df = load_price_matrix("historical_prices_graded_singles_grade9.csv")
+    old_raw_singles_df = load_price_matrix("historical_prices_graded_singles_raw.csv")
 
-    # historical_prices.csv contiene STORICAMENTE sia sealed che single (run_backtest_cli.py
-    # e app.py passano lo stesso prices_df sia a OptimalSealedStrategy/SealedAccumulator sia
-    # a ChaseDipBuyerStrategy, che filtra internamente per type=="single"). Va mantenuto
-    # combinato per non rompere quel contratto — i pannelli graded-singles dedicati sono
-    # un'AGGIUNTA, non un sostituto.
-    combined_series, grade9_series, raw_singles_series = {}, {}, {}
+    # Inizializza con i dati già presenti in cache per non perdere lo storico
+    # se singole chiamate di rete falliscono o vanno in 429/Cloudflare.
+    combined_series = {col: old_sealed_df[col].dropna() for col in old_sealed_df.columns} if old_sealed_df is not None else {}
+    grade9_series = {col: old_grade9_df[col].dropna() for col in old_grade9_df.columns} if old_grade9_df is not None else {}
+    raw_singles_series = {col: old_raw_singles_df[col].dropna() for col in old_raw_singles_df.columns} if old_raw_singles_df is not None else {}
 
-    for item_id, info in metadata.items():
+    # Aggiorna solo gli asset: se l'asset ha già dati recenti e non è richiesto un full refresh,
+    # evita di riscaricare indiscriminatamente 3.000+ asset da zero ad ogni run.
+    print(f"Aggiornamento serie prezzi per {len(metadata)} asset censiti...")
+    n_updated = 0
+    consecutive_failures = 0
+
+    for idx, (item_id, info) in enumerate(metadata.items(), 1):
         game_slug, item_slug = info.get("game_slug"), info.get("item_slug")
         if not game_slug or not item_slug:
             continue
-        result = fetch_pricecharting_series(game_slug, item_slug, eur_usd_series=eur_usd)
-        if not result:  # una singola ritentata su timeout transitorio, non su 404/redirect
-            import time
-            time.sleep(2)
+
+        # Se abbiamo già dati storici e siamo in un blocco consecutivo di rete (es. Cloudflare 403/429),
+        # ci fermiamo per non bloccare il workflow per 2 ore inutilmente.
+        if consecutive_failures >= 15:
+            print(f"  [ATTENZIONE] Rilevati {consecutive_failures} fallimenti consecutivi di rete (Cloudflare/Rate Limit). "
+                  f"Stop fetch anticipato: mantengo i dati in cache per gli asset rimanenti.")
+            break
+
+        try:
             result = fetch_pricecharting_series(game_slug, item_slug, eur_usd_series=eur_usd)
+            if not result:
+                import time
+                time.sleep(1)
+                result = fetch_pricecharting_series(game_slug, item_slug, eur_usd_series=eur_usd)
+        except Exception as e:
+            result = None
+
         if not result:
-            print(f"  [MANCANTE] {item_id} ({game_slug}/{item_slug}): fetch fallito anche al secondo tentativo")
+            consecutive_failures += 1
             continue
+
+        consecutive_failures = 0
+        n_updated += 1
 
         if "raw" in result and not result["raw"].empty:
             combined_series[item_id] = result["raw"]
@@ -61,28 +83,43 @@ def main():
         if info.get("type") == "single" and "graded" in result and not result["graded"].empty:
             grade9_series[item_id] = result["graded"]
 
-    new_combined_df = pd.DataFrame(combined_series).sort_index().ffill()
-    new_grade9_df = pd.DataFrame(grade9_series).sort_index()
-    new_raw_singles_df = pd.DataFrame(raw_singles_series).sort_index()
+        if idx % 100 == 0:
+            print(f"  Progresso fetch: {idx}/{len(metadata)} ({n_updated} aggiornati)")
 
-    save_price_matrix(new_combined_df, "historical_prices.csv")
-    save_price_matrix(new_grade9_df, "historical_prices_graded_singles_grade9.csv")
-    save_price_matrix(new_raw_singles_df, "historical_prices_graded_singles_raw.csv")
+    if combined_series:
+        new_combined_df = pd.DataFrame(combined_series).sort_index().ffill()
+        save_price_matrix(new_combined_df, "historical_prices.csv")
+    else:
+        new_combined_df = old_sealed_df
 
-    print(f"\nRicostruito historical_prices.csv: {new_combined_df.shape[0]} mesi x {new_combined_df.shape[1]} asset (sealed+single)")
-    print(f"Ricostruito graded_singles_grade9.csv: {new_grade9_df.shape[0]} mesi x {new_grade9_df.shape[1]} carte")
-    new_sealed_df = new_combined_df  # per il confronto delta sotto
+    if grade9_series:
+        new_grade9_df = pd.DataFrame(grade9_series).sort_index()
+        save_price_matrix(new_grade9_df, "historical_prices_graded_singles_grade9.csv")
+    else:
+        new_grade9_df = old_grade9_df
 
-    if old_sealed_df is not None:
+    if raw_singles_series:
+        new_raw_singles_df = pd.DataFrame(raw_singles_series).sort_index()
+        save_price_matrix(new_raw_singles_df, "historical_prices_graded_singles_raw.csv")
+    else:
+        new_raw_singles_df = old_raw_singles_df
+
+    print(f"\nAggiornato historical_prices.csv: {new_combined_df.shape[0]} mesi x {new_combined_df.shape[1]} asset")
+    if new_grade9_df is not None:
+        print(f"Aggiornato graded_singles_grade9.csv: {new_grade9_df.shape[0]} mesi x {new_grade9_df.shape[1]} carte")
+    new_sealed_df = new_combined_df
+
+    if old_sealed_df is not None and new_sealed_df is not None and not new_sealed_df.empty:
         common_cols = [c for c in new_sealed_df.columns if c in old_sealed_df.columns]
         last_date = new_sealed_df.index[-1]
-        if last_date in old_sealed_df.index:
+        if last_date in old_sealed_df.index and common_cols:
             deltas = ((new_sealed_df.loc[last_date, common_cols] - old_sealed_df.loc[last_date, common_cols])
                       / old_sealed_df.loc[last_date, common_cols].replace(0, pd.NA)) * 100.0
             deltas = deltas.dropna().sort_values()
-            print(f"\nImpatto sul prezzo dell'ultimo mese ({last_date.strftime('%Y-%m')}), vecchio vs nuovo tasso FX:")
-            print(f"  Delta minimo:  {deltas.iloc[0]:+.2f}% ({deltas.index[0]})")
-            print(f"  Delta mediano: {deltas.median():+.2f}%")
+            if not deltas.empty:
+                print(f"\nImpatto sul prezzo dell'ultimo mese ({last_date.strftime('%Y-%m')}):")
+                print(f"  Delta minimo:  {deltas.iloc[0]:+.2f}% ({deltas.index[0]})")
+                print(f"  Delta mediano: {deltas.median():+.2f}%")
             print(f"  Delta massimo: {deltas.iloc[-1]:+.2f}% ({deltas.index[-1]})")
 
 
