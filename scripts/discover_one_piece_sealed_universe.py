@@ -76,11 +76,21 @@ def fetch_one_piece_en_game_slugs() -> list:
     # appena un attimo prima nel caso Pokemon Cinese) avrebbe fatto crashare
     # questo script con un traceback non gestito invece di fallire in modo
     # pulito come i suoi due script fratelli.
-    try:
-        resp = requests.get(CATEGORY_URL, headers=HEADERS, timeout=20)
-        resp.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"[ERRORE] Categoria PriceCharting non raggiungibile o in errore ({e}) - nessuna scoperta questo mese, riprovare al prossimo run.")
+    resp = None
+    last_err = None
+    for attempt in range(4):
+        try:
+            resp = requests.get(CATEGORY_URL, headers=HEADERS, timeout=20)
+            resp.raise_for_status()
+            break
+        except requests.exceptions.RequestException as e:
+            resp = None
+            last_err = e
+            print(f"  [retry {attempt}] {CATEGORY_URL}: {e}")
+            time.sleep(3 * (attempt + 1))
+
+    if resp is None:
+        print(f"[ERRORE] Categoria PriceCharting non raggiungibile o in errore ({last_err}) - nessuna scoperta questo mese, riprovare al prossimo run.")
         sys.exit(1)
     all_slugs = set(re.findall(r'href="/console/(one-piece-[a-z0-9-]+)"', resp.text))
     return sorted(s for s in all_slugs if not s.startswith("one-piece-japanese-"))

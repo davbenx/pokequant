@@ -75,11 +75,21 @@ def fetch_chinese_game_slugs() -> list:
     # fix di discover_sealed_universe.py: catturare, loggare, uscire con
     # codice non-zero SENZA crash (il chiamante lo tratta comunque come
     # "step fallito" per design, vedi run_monthly_production_signal.py).
-    try:
-        resp = requests.get(CATEGORY_URL, headers=HEADERS, timeout=20)
-        resp.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"[ERRORE] Categoria PriceCharting non raggiungibile o in errore ({e}) - nessuna scoperta questo mese, riprovare al prossimo run.")
+    resp = None
+    last_err = None
+    for attempt in range(4):
+        try:
+            resp = requests.get(CATEGORY_URL, headers=HEADERS, timeout=20)
+            resp.raise_for_status()
+            break
+        except requests.exceptions.RequestException as e:
+            resp = None
+            last_err = e
+            print(f"  [retry {attempt}] {CATEGORY_URL}: {e}")
+            time.sleep(3 * (attempt + 1))
+
+    if resp is None:
+        print(f"[ERRORE] Categoria PriceCharting non raggiungibile o in errore ({last_err}) - nessuna scoperta questo mese, riprovare al prossimo run.")
         sys.exit(1)
     slugs = sorted(set(re.findall(r'href="/console/(pokemon-chinese-[a-z0-9-]+)"', resp.text)))
     return slugs

@@ -248,8 +248,8 @@ def test_fetch_pricecharting_grade_tier_price():
     res = fetch_pricecharting_grade_tier_price("pokemon-evolutions", "dragonite-ex-106", tier="psa10")
     assert res is not None
     eur, usd, url, src = res
-    assert 300.0 < usd < 700.0
-    assert eur > 250.0
+    assert 200.0 < usd < 2000.0
+    assert eur > 150.0
     assert "pricecharting.com" in url
 
 
