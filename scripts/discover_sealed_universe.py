@@ -62,13 +62,22 @@ def main():
     # resta non-zero (il chiamante run_monthly_production_signal.py la
     # usa deliberatamente per marcare la CI mensile come rossa, decisione
     # presa in precedenza in questa sessione), solo senza crash.
-    try:
-        sets_resp = requests.get("https://api.pokemontcg.io/v2/sets", headers=HEADERS, timeout=20)
-        sets_resp.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"[ERRORE] pokemontcg.io non raggiungibile o in errore ({e}) - nessuna scoperta questo mese, riprovare al prossimo run.")
+    all_sets = None
+    last_err = None
+    for attempt in range(4):
+        try:
+            sets_resp = requests.get("https://api.pokemontcg.io/v2/sets", headers=HEADERS, timeout=20)
+            sets_resp.raise_for_status()
+            all_sets = sets_resp.json().get("data", [])
+            break
+        except requests.exceptions.RequestException as e:
+            last_err = e
+            print(f"  [retry {attempt}] /v2/sets: {e}")
+            time.sleep(3 * (attempt + 1))
+
+    if all_sets is None:
+        print(f"[ERRORE] pokemontcg.io non raggiungibile o in errore ({last_err}) - nessuna scoperta questo mese, riprovare al prossimo run.")
         sys.exit(1)
-    all_sets = sets_resp.json().get("data", [])
     print(f"Set totali in anagrafica: {len(all_sets)}")
 
     metadata = load_metadata()
